@@ -23,6 +23,20 @@ describe("AppController", () => {
     expect(s.workspace?.roster.some((r) => r.kind === "custom")).toBe(true);
   });
 
+  test("the workspace follows the active chat character; a manual pick stays until the next chat change", async () => {
+    const { app } = setup();
+    await app.init();
+    const status = app.state.status!;
+    app.setStatus({ ...status, activeChatId: "chat-2", activeCharacterId: "char-aria" });
+    await tick();
+    expect(app.state.selectedCharacterId).toBe("char-aria");
+    expect(app.state.workspace?.characterId).toBe("char-aria");
+    await app.selectCharacter("char-seoyeon");
+    app.setStatus({ ...status, activeChatId: "chat-2", activeCharacterId: "char-aria" });
+    await tick();
+    expect(app.state.selectedCharacterId).toBe("char-seoyeon");
+  });
+
   test("optimistic config update and rollback", async () => {
     const { app, mock } = setup();
     await app.init();

@@ -222,6 +222,17 @@ export class AppController {
     else void this.selectCharacter(characterId);
   }
 
+  /**
+   * Applies a backend status. When the active chat moves to another character, the workspace follows it, so
+   * per-character settings (artist, prompts) are edited for the chat the user is in.
+   */
+  setStatus(status: BackendStatus): void {
+    const previous = this.state.status;
+    this.store.patch({ status });
+    const active = status.activeCharacterId;
+    if (active && active !== previous?.activeCharacterId && active !== this.state.selectedCharacterId) void this.selectCharacter(active);
+  }
+
   reloadWorkspace(): Promise<void> {
     return this.selectCharacter(this.state.selectedCharacterId, { reload: true });
   }
@@ -370,13 +381,7 @@ export class AppController {
   }
 
   private wireEvents(): void {
-    this.on("status.changed", (status) => {
-      const previous = this.state.status;
-      this.store.patch({ status });
-      if (previous && previous.activeCharacterId !== status.activeCharacterId && status.activeCharacterId && !this.state.selectedCharacterId) {
-        void this.selectCharacter(status.activeCharacterId);
-      }
-    });
+    this.on("status.changed", (status) => this.setStatus(status));
     this.on("config.changed", ({ config }) => this.store.patch({ config }));
     this.on("chatImageGeneration.changed", ({ settings }) => this.store.patch({ chatImageGeneration: settings }));
     this.on("document.changed", ({ characterId }) => this.documentChanged(characterId));

@@ -162,7 +162,7 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
   const unsubChatSwitched = ctx.events.on("CHAT_SWITCHED", (payload) => {
     const chatId = (payload as { chatId?: unknown } | null)?.chatId;
     store.set({ chatId: typeof chatId === "string" ? chatId : "" });
-    void app.call("session.getStatus", {}).then((status) => app.store.patch({ status })).catch(() => undefined);
+    void app.call("session.getStatus", {}).then((status) => app.setStatus(status)).catch(() => undefined);
   });
 
   void app.init();
