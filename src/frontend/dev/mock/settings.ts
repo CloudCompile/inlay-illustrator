@@ -119,6 +119,10 @@ export function settingsMockHandlers(): MockHandlers {
       if (!connection) return { ok: false, latencyMs: 0, error: { code: "not-found", message: "No connection profile is selected." } };
       return { ok: true, latencyMs: 912, reply: `Hello! (${ctx.db.config.analysis.model || connection.model} via ${connection.name}) You said: "${(text ?? "").slice(0, 60)}"` };
     },
+    "decision.testConnection": async ({ connectionId, model }, ctx) => {
+      await ctx.delay(100);
+      return { ok: true, latencyMs: 42 };
+    },
     "image.testConnection": async ({ connectionId }, ctx) => {
       await ctx.delay(500);
       if (connectionId === "img-comfy") return { ok: false, latencyMs: 0, error: { code: "provider-error", message: "ComfyUI is not reachable at http://127.0.0.1:8188 (ECONNREFUSED)." } };

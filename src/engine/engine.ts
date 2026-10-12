@@ -85,6 +85,7 @@ export interface AssetMaidEngineOptions {
   getIntervalMs?: () => number;
   /** config.novelai.presetCatalog.rawJson: "" = built-in rule-IR catalog; otherwise a custom V4.5 raw catalog JSON. */
   rawCatalogJson?: string;
+  jev?: { network: unknown; getConfig: () => unknown };
   onAnalyzerDiagnostic?: (event: { event: string; detail?: unknown; [key: string]: unknown }) => void;
   onSplitResumeState?: (key: unknown, state: unknown) => void;
   /** Profile switch; default: `input.novelAIConfig.analysisProfile === "v5-hybrid" ? "v5-hybrid" : "v4-5"`. */
@@ -150,8 +151,8 @@ export function createAssetMaidEngine(options: AssetMaidEngineOptions): AssetMai
   );
   const executor = createGenerationBatchExecutor(dispatcher, sessions, options.comfyUIReferences);
   const v45 = createV45Orchestrator(v45Analyzer, promptCompiler, sessions, executor);
-  // Egt(C, void 0, {network, getConfig}) in the original: default rule runtime, JEV pre-pass disabled (no connection).
-  const v5Analyzer = createV5Analyzer(options.analyzerClient, undefined, undefined);
+  // Egt(C, void 0, {network, getConfig}): JEV pre-pass adapter injected.
+  const v5Analyzer = (createV5Analyzer as any)(options.analyzerClient, undefined, options.jev);
   const v5 = createV5Orchestrator(v5Analyzer, sessions, executor, undefined, {
     onSplitResumeState: (key: unknown, state: unknown) => options.onSplitResumeState?.(key, state),
   });

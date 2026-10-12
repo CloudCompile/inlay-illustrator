@@ -13,6 +13,8 @@ export interface RuntimeToastModel {
   kind: "generation" | "notice";
   tone: RuntimeToastTone;
   message: string;
+  /** Formatted retry count `${attempt}/${total}` when retrying (AM `retryCount`). */
+  retryCount?: string;
   detail?: string;
   /** Long error text (shown when the toast is expanded). */
   errorText?: string;
@@ -111,11 +113,14 @@ export function runningDetail(job: GenerationJobSnapshot): string {
 }
 
 export function runningToast(job: GenerationJobSnapshot, now: number): RuntimeToastModel {
+  const retry = job.progress.retry;
+  const retryCount = job.progress.retryCount || (retry && retry.attempt > 0 ? `${retry.attempt}/${retry.total}` : undefined);
   return {
     key: `generation:${job.jobId}`,
     kind: "generation",
     tone: "running",
     message: runningMessage(job),
+    retryCount,
     detail: runningDetail(job) || undefined,
     progress: generationProgress(job),
     action: "cancel",

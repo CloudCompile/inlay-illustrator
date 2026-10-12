@@ -40,6 +40,7 @@ export const RPC_MESSAGE_TYPE = "inlay-illustrator:rpc";
 export type DeepPartial<T> = T extends readonly (infer _U)[] ? T : T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
 
 export interface LlmConnectionSummary { id: string; name: string; provider: string; model: string; isDefault: boolean; hasApiKey: boolean }
+export interface DecisionConnectionSummary { id: string; name: string; provider: string; model: string; isDefault: boolean; hasApiKey: boolean }
 export interface ImageConnectionSummary { id: string; name: string; provider: string; model: string; isDefault: boolean; generationProvider: GenerationProvider; promptCodec: PromptCodecId }
 export interface ModelOption { id: string; label: string }
 
@@ -167,6 +168,8 @@ export interface ProgressInfo {
   /** 0..1 */
   fraction?: number;
   retry?: { attempt: number; total: number };
+  /** Formatted retry count `${attempt}/${total}` for task observability. */
+  retryCount?: string;
   queue?: { position: number; depth: number };
 }
 
@@ -356,11 +359,14 @@ export interface RpcMethods {
 
   /* connections */
   "connections.listLlm": { params: Empty; result: { connections: LlmConnectionSummary[] } };
+  "connections.listDecision": { params: Empty; result: { connections: DecisionConnectionSummary[] } };
   "connections.listImage": { params: Empty; result: { connections: ImageConnectionSummary[] } };
   "connections.listImageModels": { params: { connectionId: string }; result: { models: ModelOption[] } };
   "connections.listLlmModels": { params: { connectionId: string }; result: { models: ModelOption[] } };
+  "connections.listDecisionModels": { params: { connectionId: string }; result: { models: ModelOption[] } };
   /** Settings "message test" (AM `T0t`). */
   "analyzer.testMessage": { params: { text?: string; /** Unsaved draft settings merged over `config.analysis` for this test only. */ analysis?: DeepPartial<AnalyzerSettings> }; result: { ok: boolean; latencyMs: number; reply?: string; error?: RpcError } };
+  "decision.testConnection": { params: { connectionId?: string; model?: string }; result: { ok: boolean; latencyMs: number; error?: RpcError } };
   "image.testConnection": { params: { connectionId?: string }; result: { ok: boolean; latencyMs: number; error?: RpcError } };
 
   /* charx rail / workspace / roster */
@@ -552,7 +558,7 @@ export type RpcEnvelope = RpcRequest | RpcResponse | RpcEvent;
 export const RPC_METHODS = [
   "session.hello", "session.getStatus", "session.closeHostDrawer",
   "config.get", "config.update", "config.factoryReset", "chatImageGeneration.set", "uiState.set",
-  "connections.listLlm", "connections.listImage", "connections.listImageModels", "connections.listLlmModels", "analyzer.testMessage", "image.testConnection",
+  "connections.listLlm", "connections.listDecision", "connections.listImage", "connections.listImageModels", "connections.listLlmModels", "connections.listDecisionModels", "analyzer.testMessage", "decision.testConnection", "image.testConnection",
   "workspace.listCharacters", "workspace.load", "roster.setRegistered", "roster.setActive", "roster.setSourceConnected", "recognitionKeys.set",
   "customCharacters.create", "customCharacters.update", "customCharacters.remove", "customCharacters.setRosterRegistered", "customCharacters.setWorkspaceEnabled", "customCharacters.promote",
   "prompts.saveForms", "prompts.setReferenceEnabled", "prompts.setAnalyzeEnabled", "prompts.setSeed", "prompts.setFramingWeights",

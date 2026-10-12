@@ -94,7 +94,7 @@ export function phaseProgress(
   if (phase === "failed" || phase === "cancelled") fraction = 0;
   const progress: ProgressInfo = { label: label.en, labelKo: label.ko, fraction };
   if (phase === "generating" && detail.imageCount) Object.assign(progress, { done: Math.min(detail.imageCount, detail.imageIndex ?? 0), total: detail.imageCount });
-  if (detail.retry) progress.retry = detail.retry;
+  if (detail.retry) { progress.retry = detail.retry; progress.retryCount = `${detail.retry.attempt}/${detail.retry.total}`; }
   return progress;
 }
 

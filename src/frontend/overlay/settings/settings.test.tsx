@@ -26,7 +26,7 @@ import { anyCharxDirty, fixedResolutionOptions, resetAllPatch, sourceMetadataSta
 import { detectorsOf, nextDetectors, regexError } from "./charx-regex.js";
 import { formatLogList, mergeLogEntries, scopeLabel } from "./logs.js";
 import { pickAnalyzerError } from "./analyzer-errors.js";
-import { llmConnectionOptions, modelOptions } from "./model.js";
+import { decisionConnectionOptions, llmConnectionOptions, modelOptions } from "./model.js";
 import { connectionPatch, resolveImageConnection } from "./image-model.js";
 
 const win = new Window({ url: "http://localhost/" });
@@ -65,7 +65,7 @@ describe("V5 direction helpers", () => {
   });
   test("comic controls: minimum panels only in developer mode; overrides drop defaults", () => {
     const comic = scene.presets.find((p) => p.id === "scene-comic")!;
-    expect(presetControls("analysis", comic, false).map((c) => c.id)).toEqual(["speech-bubble", "landscape"]);
+    expect(presetControls("analysis", comic, false).map((c) => c.id)).toEqual(["frame", "speech-bubble"]);
     expect(presetControls("analysis", comic, true).map((c) => c.id)).toContain("minimum-panels");
     const off = setControlEnabled(undefined, "comic.speech-bubble", false);
     expect(off).toEqual({ "comic.speech-bubble": false });
@@ -78,7 +78,7 @@ describe("V5 direction helpers", () => {
   test("direction patch lists every control so stale overrides cannot survive a deep merge", () => {
     const patch = directionPatch(selectPreset(scene, "scene-default"));
     expect(patch.presetId).toBe("");
-    expect(patch.controlOverrides).toEqual({ "comic.speech-bubble": true, "comic.landscape": false, "comic.minimum-panels": false });
+    expect(patch.controlOverrides).toEqual({ "comic.frame": 0, "comic.speech-bubble": true, "comic.minimum-panels": false });
   });
   test("custom presets: add, then delete selects the first remaining", () => {
     const added = commitPresetDraft("analysis", scene, { id: "scene-x", name: "  Mine ", instruction: "", customInstruction: { enabled: true, text: " close-up " } });
@@ -162,6 +162,9 @@ describe("settings form helpers", () => {
     ];
     expect(resolveImageConnection(images, "")?.id).toBe("c");
     expect(connectionPatch(images, "n")).toEqual({ image: { connectionId: "n", provider: "novelai", model: "" } });
+    const decisions = [{ id: "d1", name: "Decision 1", provider: "lumiverse", model: "jev-latest", isDefault: true, hasApiKey: true }];
+    expect(decisionConnectionOptions(decisions, "gone").map((o) => o.value)).toEqual(["", "d1", "gone"]);
+    expect(decisionConnectionOptions(decisions, "d1")[1].label).toBe("Decision 1 · jev-latest");
   });
 });
 
@@ -220,6 +223,20 @@ describe("settings pages (DOM)", () => {
     (doc.querySelector("[data-settings-save]") as HTMLButtonElement).click();
     await until(() => mock.db.config.analysis.temperature === 0.7);
     await until(() => doc.querySelector('[data-settings-dirty="false"]'));
+
+    // JEV card: test connection button triggers test and displays success badge
+    const jevCard = doc.querySelector("[data-model-jev]");
+    expect(jevCard).not.toBeNull();
+    expect(jevCard?.getAttribute("aria-disabled")).toBeNull();
+    const testBtn = await until(() => {
+      const buttons = Array.from(jevCard?.querySelectorAll("button") ?? []);
+      return buttons.find((b) => b.textContent?.includes("Test connection"));
+    });
+    expect(testBtn).not.toBeNull();
+    (testBtn as HTMLButtonElement).click();
+    await until(() => mock.calls.some((c) => c.method === "decision.testConnection"));
+    await until(() => jevCard?.textContent?.includes("Connected (42ms)"));
+
     controller.destroy();
   });
 

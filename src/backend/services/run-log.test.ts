@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { brandLogMessage, createRunLog } from "./run-log.js";
+import { brandLogMessage, createRunLog, redactSensitive, truncateLog, safeDetails } from "./run-log.js";
 
 describe("run log branding", () => {
   test("replaces the ported cores' Asset Maid prefixes with Inlay", () => {
@@ -14,5 +14,41 @@ describe("run log branding", () => {
     const entry = log.append("warn", "analysis", "[Asset Maid React] retry");
     expect(entry.message).toBe("[Inlay] retry");
     expect(mirrored).toEqual(["[Inlay:analysis] [Inlay] retry"]);
+  });
+});
+
+describe("run log error redaction and truncation", () => {
+  test("redacts sensitive query parameters", () => {
+    expect(redactSensitive("GET /v1/models?key=secret123&other=val")).toBe("GET /v1/models?key=[redacted]&other=val");
+    expect(redactSensitive("https://api.com?api_key=sk-999&access_token=tok&token=abc&secret=xyz")).toBe(
+      "https://api.com?api_key=[redacted]&access_token=[redacted]&token=[redacted]&secret=[redacted]",
+    );
+  });
+
+  test("redacts sensitive HTTP headers and tokens", () => {
+    expect(redactSensitive("authorization: Bearer my-secret-token")).toBe("authorization: Bearer [redacted]");
+    expect(redactSensitive("authorization: Basic dXNlcjpwYXNz")).toBe("authorization: Basic [redacted]");
+    expect(redactSensitive("api-key: custom-api-key-123")).toBe("api-key: [redacted]");
+    expect(redactSensitive("api_key: custom-api-key-456")).toBe("api_key: [redacted]");
+    expect(redactSensitive('{"secret": "hidden_secret", "token": "tok123"}')).toBe(
+      '{"secret": [redacted], "token": [redacted]}',
+    );
+  });
+
+  test("truncates long logs with ...(세부 로그 생략)", () => {
+    const longText = "a".repeat(5000);
+    const truncated = truncateLog(longText, 100);
+    expect(truncated).toBe("a".repeat(100) + "...(세부 로그 생략)");
+  });
+
+  test("safeDetails redacts and truncates Error instances and objects", () => {
+    const err = new Error("Failed at https://api.com?key=supersecret with authorization: Bearer tok123");
+    const safe = safeDetails(err) as { name: string; message: string };
+    expect(safe.message).toBe("Failed at https://api.com?key=[redacted] with authorization: Bearer [redacted]");
+
+    const obj = { url: "https://api.com?token=secrettoken", big: "x".repeat(4500) };
+    const safeObj = safeDetails(obj) as { url: string; big: string };
+    expect(safeObj.url).toBe("https://api.com?token=[redacted]");
+    expect(safeObj.big.endsWith("...(세부 로그 생략)")).toBe(true);
   });
 });

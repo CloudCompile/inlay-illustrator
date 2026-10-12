@@ -498,7 +498,7 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
       const attemptLoop = async (): Promise<{ result: Record<string, unknown>; attempts: number }> => {
         for (let attempt = 1; ; attempt += 1) {
           if (signal?.aborted) throw abortError(signal.reason);
-          onProgress?.({ label: attempt === 1 ? "Generating image" : `Generating image (retry ${attempt - 1}/${retries})`, labelKo: "이미지 생성 중", ...(attempt > 1 ? { retry: { attempt: attempt - 1, total: retries } } : {}) });
+          onProgress?.({ label: attempt === 1 ? "Generating image" : `Generating image (retry ${attempt - 1}/${retries})`, labelKo: "이미지 생성 중", ...(attempt > 1 ? { retry: { attempt: attempt - 1, total: retries }, retryCount: `${attempt - 1}/${retries}` } : {}) });
           try {
             const result = await callOnce();
             if (!str(result.imageId) && !str(result.imageDataUrl)) throw new RpcFailure({ code: "provider-error", message: "The image provider returned no image.", retryable: true, detailCode: "IMAGE_EMPTY_RESULT" });

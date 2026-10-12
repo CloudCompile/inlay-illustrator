@@ -31,6 +31,7 @@ import {
 import { parseLenientJson } from "../../engine/text/json.js";
 import { fail } from "../rpc/errors.js";
 import { createRunLog } from "../services/run-log.js";
+import { createDecisionService } from "../services/decisions.js";
 import type {
   AmSource,
   BackendServices,
@@ -429,6 +430,7 @@ export function createFakeServices(overrides: FakeServicesOverrides = {}): FakeS
     ...overrides.sources,
   };
 
-  fx.services = { host, userId, storage, llm, images, imageBytes, sources, events, log };
+  const decisions = createDecisionService(host, log);
+  fx.services = { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
   return fx;
 }

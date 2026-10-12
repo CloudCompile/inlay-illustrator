@@ -402,8 +402,8 @@ export interface V5Analyzer {
  * fails with `JEV_UNAVAILABLE`, as in Asset Maid without a JEV connection.
  * Original: `Egt` (createV5Analyzer) @117357.
  */
-export function createV5Analyzer(client: V5AnalyzerClient, runtime?: V5RuleRuntime): V5Analyzer {
-  return (coreCreateV5Analyzer as AnyFn)(client, runtime ?? undefined) as V5Analyzer;
+export function createV5Analyzer(client: V5AnalyzerClient, runtime?: V5RuleRuntime, jev?: unknown): V5Analyzer {
+  return (coreCreateV5Analyzer as AnyFn)(client, runtime ?? undefined, jev) as V5Analyzer;
 }
 
 /* ------------------------------------------------------------------------------------------------ split analysis */

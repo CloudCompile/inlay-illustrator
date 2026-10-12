@@ -304,7 +304,7 @@ export async function runReclassification(ctx: JobContext, params: AnalysisStart
   });
   const unsubscribe = controller.subscribe(() => {
     const snap = controller.getSnapshot();
-    ctx.progress({ ...amLabel(String(snap.message ?? "")), ...(snap.total ? { done: snap.completed, total: snap.total } : {}), ...(snap.retry ? { retry: { attempt: snap.retry.attempt, total: snap.retry.total } } : {}) });
+        ctx.progress({ ...amLabel(String(snap.message ?? "")), ...(snap.total ? { done: snap.completed, total: snap.total } : {}), ...(snap.retry ? { retry: { attempt: snap.retry.attempt, total: snap.retry.total }, retryCount: `${snap.retry.attempt}/${snap.retry.total}` } : {}) });
   });
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });

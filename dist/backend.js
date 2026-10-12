@@ -1393,7 +1393,7 @@ var v5_directions_default = {
     {
       id: "scene-ensemble",
       name: "다인 연출",
-      instruction: "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent, duplicate, split, or restore absent Actors. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+      instruction: "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
       scenePresetId: "ensemble"
     },
     {
@@ -1430,6 +1430,42 @@ var v5_directions_default = {
     ensemble: [],
     comic: [
       {
+        id: "frame",
+        label: "프레임",
+        defaultEnabled: true,
+        defaultValue: 0,
+        presentation: "segmented",
+        instructionPosition: "before-preset",
+        variables: {},
+        valueOptions: [
+          {
+            value: 0,
+            label: "자유",
+            variables: {
+              "preset.presentation.orientation": "free"
+            },
+            instructionSuffix: "Frame Decision: Before composing any comic panels, independently choose either a portrait 832 × 1216 pixel frame or a landscape 1216 × 832 pixel frame for each illustration from its scene, action, emotion, timing, and reveal. Commit to that frame first, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit the chosen frame. Do not use a square frame or let separate image-ratio preferences replace this decision."
+          },
+          {
+            value: 1,
+            label: "세로",
+            variables: {
+              "preset.presentation.orientation": "portrait"
+            },
+            instructionSuffix: "Frame Decision: Before composing any comic panels, fix every illustration to a portrait 832 × 1216 pixel frame, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit this frame. Do not let separate image-ratio preferences replace it."
+          },
+          {
+            value: 2,
+            label: "가로",
+            variables: {
+              "preset.presentation.orientation": "landscape"
+            },
+            instructionSuffix: "Frame Decision: Before composing any comic panels, fix every illustration to a landscape 1216 × 832 pixel frame, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit this frame. Do not let separate image-ratio preferences replace it."
+          }
+        ],
+        ref: "comic.frame"
+      },
+      {
         id: "speech-bubble",
         label: "말풍선",
         defaultEnabled: true,
@@ -1437,16 +1473,6 @@ var v5_directions_default = {
           "preset.dialogue.mode": "source_speech_bubble"
         },
         ref: "comic.speech-bubble"
-      },
-      {
-        id: "landscape",
-        label: "가로형",
-        defaultEnabled: false,
-        variables: {
-          "preset.presentation.orientation": "landscape"
-        },
-        instructionSuffix: "The output image resolution is 1216 × 832 pixels in landscape orientation.",
-        ref: "comic.landscape"
       },
       {
         id: "minimum-panels",
@@ -1500,7 +1526,7 @@ var v5_directions_default = {
         {
           id: "scene-ensemble",
           name: "다인 연출",
-          instruction: "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent, duplicate, split, or restore absent Actors. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+          instruction: "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
           scenePresetId: "ensemble"
         },
         {
@@ -3682,7 +3708,7 @@ function createDefaultConfig() {
     enabled: true,
     ui: { language: "en", developerModeEnabled: false, popupClickThroughProtectionEnabled: true, floatingGenerationCountEnabled: false, floatingGenerationCountPosition: null },
     analysis: { connectionId: "", model: "", temperature: 0.2, timeoutMs: DEFAULT_ANALYZER_TIMEOUT_MS, reasoning: { mode: "off", effort: "medium" }, jsonMode: true, vision: "auto", maxTokens: 0 },
-    jevConnection: { rosterSelectionDefault: false, model: DEFAULT_JEV_MODEL },
+    jevConnection: { connectionId: "", rosterSelectionDefault: false, model: DEFAULT_JEV_MODEL },
     novelai: {
       analysisProfile: DEFAULT_ANALYSIS_PROFILE,
       v5UserDirections: createDefaultV5UserDirections(),
@@ -3876,6 +3902,7 @@ function normalizeConfigWithIssues(raw) {
     novelai.characterReferenceEnabled = false;
   const jevRaw = asRecord(hasOwn(input, "jevConnection") ? input.jevConnection : merged.jevConnection);
   const jevConnection = {
+    connectionId: trimString(jevRaw.connectionId),
     rosterSelectionDefault: typeof jevRaw.rosterSelectionDefault === "boolean" ? jevRaw.rosterSelectionDefault : jevRaw.selectionEnabled === true,
     model: typeof jevRaw.model === "string" && jevRaw.model.trim() ? jevRaw.model.trim() : DEFAULT_JEV_MODEL
   };
@@ -4416,10 +4443,13 @@ var RPC_METHODS = [
   "chatImageGeneration.set",
   "uiState.set",
   "connections.listLlm",
+  "connections.listDecision",
   "connections.listImage",
   "connections.listImageModels",
   "connections.listLlmModels",
+  "connections.listDecisionModels",
   "analyzer.testMessage",
+  "decision.testConnection",
   "image.testConnection",
   "workspace.listCharacters",
   "workspace.load",
@@ -5259,15 +5289,17 @@ function m1e(e, t, r) {
         "defaultEnabled",
         "variables",
         "instructionSuffix",
+        "instructionPosition",
+        "presentation",
         "valueOptions",
         "defaultValue"
       ]), _, r);
       const k = jc(I.id);
-      d3.test(k) || pt(r, "invalid-id", `${_}.id`, "Analysis preset control ID must be a lowercase local ID."), v.has(k) && pt(r, "duplicate-id", `${_}.id`, `Duplicate analysis preset control '${k}'.`), v.add(k), (typeof I.label != "string" || !I.label.trim()) && pt(r, "invalid-type", `${_}.label`, "Analysis preset control label must be a non-empty string."), typeof I.defaultEnabled != "boolean" && pt(r, "invalid-type", `${_}.defaultEnabled`, "Analysis preset control defaultEnabled must be boolean."), I.instructionSuffix !== undefined && (typeof I.instructionSuffix != "string" || !I.instructionSuffix.trim()) && pt(r, "invalid-type", `${_}.instructionSuffix`, "Analysis preset control instructionSuffix must be a non-empty string when provided."), s(I.variables, `${_}.variables`);
+      d3.test(k) || pt(r, "invalid-id", `${_}.id`, "Analysis preset control ID must be a lowercase local ID."), v.has(k) && pt(r, "duplicate-id", `${_}.id`, `Duplicate analysis preset control '${k}'.`), v.add(k), (typeof I.label != "string" || !I.label.trim()) && pt(r, "invalid-type", `${_}.label`, "Analysis preset control label must be a non-empty string."), typeof I.defaultEnabled != "boolean" && pt(r, "invalid-type", `${_}.defaultEnabled`, "Analysis preset control defaultEnabled must be boolean."), I.instructionSuffix !== undefined && (typeof I.instructionSuffix != "string" || !I.instructionSuffix.trim()) && pt(r, "invalid-type", `${_}.instructionSuffix`, "Analysis preset control instructionSuffix must be a non-empty string when provided."), s(I.variables, `${_}.variables`), I.instructionPosition !== undefined && I.instructionPosition !== "before-preset" && pt(r, "invalid-value", `${_}.instructionPosition`, "Control instructionPosition must be before-preset."), I.presentation !== undefined && I.presentation !== "segmented" && pt(r, "invalid-value", `${_}.presentation`, "Control presentation must be segmented.");
       const P = I.valueOptions === undefined ? [] : Do(I.valueOptions, `${_}.valueOptions`, r), A = new Set;
       P.forEach((C, E) => {
         const N = `${_}.valueOptions[${E}]`, T = jr(C, N, r);
-        T && (Gr(T, new Set(["value", "variables", "instructionSuffix"]), N, r), !Number.isInteger(T.value) || T.value < 0 ? pt(r, "invalid-value", `${N}.value`, "Analysis preset control numeric values must be non-negative integers.") : A.has(T.value) ? pt(r, "duplicate-id", `${N}.value`, `Duplicate analysis preset control numeric value '${T.value}'.`) : A.add(T.value), s(T.variables, `${N}.variables`), T.instructionSuffix !== undefined && (typeof T.instructionSuffix != "string" || !T.instructionSuffix.trim()) && pt(r, "invalid-type", `${N}.instructionSuffix`, "Analysis preset control numeric instructionSuffix must be a non-empty string when provided."));
+        T && (Gr(T, new Set(["value", "label", "variables", "instructionSuffix"]), N, r), !Number.isInteger(T.value) || T.value < 0 ? pt(r, "invalid-value", `${N}.value`, "Analysis preset control numeric values must be non-negative integers.") : A.has(T.value) ? pt(r, "duplicate-id", `${N}.value`, `Duplicate analysis preset control numeric value '${T.value}'.`) : A.add(T.value), s(T.variables, `${N}.variables`), (I.presentation === "segmented" || T.label !== undefined) && (typeof T.label != "string" || !T.label.trim()) && pt(r, "invalid-type", `${N}.label`, "Segmented value options need a non-empty label."), T.instructionSuffix !== undefined && (typeof T.instructionSuffix != "string" || !T.instructionSuffix.trim()) && pt(r, "invalid-type", `${N}.instructionSuffix`, "Analysis preset control numeric instructionSuffix must be a non-empty string when provided."));
       }), I.defaultValue === undefined != (P.length === 0) ? pt(r, "missing-field", `${_}.defaultValue`, "Analysis preset numeric controls must declare both valueOptions and defaultValue.") : I.defaultValue !== undefined && (!Number.isInteger(I.defaultValue) || !A.has(I.defaultValue)) && pt(r, "invalid-value", `${_}.defaultValue`, "Analysis preset control defaultValue must match one numeric value option.");
     }), a(h.presentation, `${m}.presentation`);
   }), d.join(",") !== pV.join(",") && pt(r, "invalid-value", `${t}.scene.options`, "Analysis presets must contain pov, ensemble, comic in canonical order."), n;
@@ -7095,7 +7127,7 @@ var V5_ANALYSIS_PRESETS = {
       },
       {
         id: "ensemble",
-        instruction: "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent, duplicate, split, or restore absent Actors. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+        instruction: "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
         variables: { "preset.actor.coverage": "all_present" },
         presentation: {
           label: "다인 연출",
@@ -7106,20 +7138,46 @@ var V5_ANALYSIS_PRESETS = {
       {
         id: "comic",
         instruction: "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
-        variables: { "preset.presentation.mode": "comic_page", "preset.presentation.orientation": "portrait" },
+        variables: { "preset.presentation.mode": "comic_page", "preset.presentation.orientation": "free" },
         controls: [
+          {
+            id: "frame",
+            label: "프레임",
+            defaultEnabled: true,
+            defaultValue: 0,
+            presentation: "segmented",
+            instructionPosition: "before-preset",
+            variables: {},
+            valueOptions: [
+              {
+                value: 0,
+                label: "자유",
+                variables: { "preset.presentation.orientation": "free" },
+                instructionSuffix: "Frame Decision: Before composing any comic panels, independently choose either a portrait 832 × 1216 pixel frame or a landscape 1216 × 832 pixel frame for each illustration from its scene, action, emotion, timing, and reveal. Commit to that frame first, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit the chosen frame. Do not use a square frame or let separate image-ratio preferences replace this decision."
+              },
+              {
+                value: 1,
+                label: "세로",
+                variables: {
+                  "preset.presentation.orientation": "portrait"
+                },
+                instructionSuffix: "Frame Decision: Before composing any comic panels, fix every illustration to a portrait 832 × 1216 pixel frame, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit this frame. Do not let separate image-ratio preferences replace it."
+              },
+              {
+                value: 2,
+                label: "가로",
+                variables: {
+                  "preset.presentation.orientation": "landscape"
+                },
+                instructionSuffix: "Frame Decision: Before composing any comic panels, fix every illustration to a landscape 1216 × 832 pixel frame, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit this frame. Do not let separate image-ratio preferences replace it."
+              }
+            ]
+          },
           {
             id: "speech-bubble",
             label: "말풍선",
             defaultEnabled: true,
             variables: { "preset.dialogue.mode": "source_speech_bubble" }
-          },
-          {
-            id: "landscape",
-            label: "가로형",
-            defaultEnabled: false,
-            variables: { "preset.presentation.orientation": "landscape" },
-            instructionSuffix: "The output image resolution is 1216 × 832 pixels in landscape orientation."
           },
           {
             id: "minimum-panels",
@@ -7448,7 +7506,7 @@ var k3 = {
       id: "camera",
       subjects: ["global"],
       order: 110,
-      instruction: "Return camera position, an unambiguous validated scene or body reference, and viewing direction."
+      instruction: "Return camera position, an unambiguous validated scene or body reference, and viewing direction. When referring to characters, use brief visual or spatial descriptions consistent with their established appearance and placement, never names, aliases, or Actor IDs."
     }
   ],
   closed: [
@@ -7854,7 +7912,7 @@ var k3 = {
         { id: "closed_mouth", prompt: [[1, "closed mouth"]] },
         { id: "wavy_mouth", prompt: [[1, "wavy mouth"]] },
         { id: "tongue_out", prompt: [[1, "tongue out"]] },
-        { id: "clenched_teeth", prompt: [[1, "clenched butt, teeth"]] },
+        { id: "clenched_teeth", prompt: [[1, "clenched teeth"]] },
         { id: "heavy_breathing", prompt: [[1, "heavy breathing"]] }
       ]
     },
@@ -9487,18 +9545,42 @@ function OPe(e, t = undefined) {
   }
   return Object.freeze(r);
 }
-function ZV(e, t, r) {
+function iee_zv(e, t, r) {
   if (!t)
     return e;
-  const n = ek[t].flatMap((o) => {
-    const a = Sj(o, r);
-    if (!a.enabled)
-      return [];
-    const i = tk(o, a.value);
-    return [cl(o.instructionSuffix), cl(i?.instructionSuffix)].filter(Boolean);
-  });
-  return n.length ? cl([e, ...n].filter(Boolean).join(`
-`)) : e;
+  const n = ek[t].filter((s) => s.instructionPosition === "before-preset");
+  let o = cl(e);
+  const a = n.flatMap((s) => [s.instructionSuffix, ...s.valueOptions?.map((c) => c.instructionSuffix) ?? []]).map(cl).filter(Boolean);
+  let i;
+  do {
+    i = o;
+    for (const s of a)
+      (o === s || o.startsWith(`${s}
+`)) && (o = o.slice(s.length).trimStart());
+  } while (o !== i);
+  return [
+    ...n.flatMap((s) => {
+      const c = Sj(s, r);
+      return c.enabled ? [s.instructionSuffix, tk(s, c.value)?.instructionSuffix].map(cl).filter(Boolean) : [];
+    }),
+    o
+  ].filter(Boolean).join(`
+`);
+}
+function ZV(e, t, r) {
+  return t ? iee_zv(cl([
+    e,
+    ...ek[t].flatMap((n) => {
+      if (n.instructionPosition === "before-preset")
+        return [];
+      const o = Sj(n, r);
+      if (!o.enabled)
+        return [];
+      const a = tk(n, o.value);
+      return [cl(n.instructionSuffix), cl(a?.instructionSuffix)].filter(Boolean);
+    })
+  ].filter(Boolean).join(`
+`)), t, r) : e;
 }
 function cl(e) {
   return typeof e == "string" ? e.replace(/\r\n?/gu, `
@@ -9526,10 +9608,11 @@ var Qb = Object.freeze({ format: "lowercase_snake_case", pattern: "^[a-z0-9]+(?:
 var LPe = NOVELAI_V5_RAW_CONFIG.analysisPresets.imageRatio.default.instruction;
 var KPe = ({ allowOutfitCreation: e }) => e ? "After Actor/form matching, compare source-evidenced clothing with existing outfits under response_contract.analysis_policy.outfits. Declare only outfits that qualify as new under that policy in root generated_outfit_proposals before slot selection. actor_roster.outfit is default. For a differing Comic-panel outfit, set actor_detail.outfit at exact actorId + placementIndex by id/proposalKey; otherwise inherit. Reuse proposals only where worn." : "Outfit creation is disabled. Select formRef, then an existing outfit. actor_roster.outfit is the illustration default; for a Comic panel with a visibly different existing complete outfit, set actor_detail.outfit by exact id for that occurrence. Otherwise inherit. Keep partial clothing state and nudity in actor_detail modifiers.";
 function $Pe(e) {
-  return cl(e) ? "Follow the Image Ratio Direction block before default size-selection heuristics." : LPe;
+  const t = typeof e === "string" ? cl(e) : cl(e?.imageRatioDirection);
+  return typeof e === "object" && e && e.imageRatioAllowedSizeIds?.length ? "Choose only from analyzer_catalog.sizes; ignore advice naming unavailable sizeIds. " + (e.imageRatioCustomSizes?.length ? "Resolve dimensions in the direction to the matching catalog sizeId. " : "") + (t ? "Follow the Image Ratio Direction block within those candidates." : "Choose from visual flow, posture, and Camera; never Actor count alone.") : t ? "Follow the Image Ratio Direction block before default size-selection heuristics." : LPe;
 }
 function BPe(e) {
-  const t = cl(e.sceneDirection);
+  const t = iee_zv(cl(e.sceneDirection) || (e.comicPageEnabled ? NOVELAI_V5_RAW_CONFIG.analysisPresets.scene.options.find(({ id: r }) => r === "comic")?.instruction ?? "" : ""), e.scenePresetId ?? (e.comicPageEnabled ? "comic" : undefined), e.scenePresetControlOverrides);
   return t ? (e.sceneDirectionSource ?? (e.scenePresetId ? "preset" : "supplemental")) === "preset" ? `# Active Preset Policy
 
 This is the controlling presentation policy. Within current scene evidence, analyzer_catalog, response_contract, and fixed Actor and field ownership, it overrides general presentation, framing, placement, and Camera heuristics. Apply it independently to every illustration.
@@ -9544,11 +9627,13 @@ function HPe(e) {
   const t = cl(e.customInstruction);
   return t ? `# Custom Instruction
 
-Apply this instruction independently to every illustration. Within current scene evidence, analyzer_catalog, response_contract, and fixed Actor and field ownership, it takes priority over the descriptive preferences in Active Preset Policy and general visual heuristics. Preserve the selected presentation format, preset capabilities, explicit preset controls, and the separate image-ratio settings. Do not change response shape, syntax, cardinality, or bindings. For a revision, revision_request.direction retains priority for that request.
+Apply this instruction independently to every illustration. Within current scene evidence, analyzer_catalog, response_contract, and fixed Actor and field ownership, it takes priority over the descriptive preferences in Active Preset Policy and general visual heuristics. ${e.comicPageEnabled ? "Preserve the selected presentation format, preset capabilities, and explicit preset controls. The Frame Decision remains the highest-priority comic composition rule." : "Preserve the selected presentation format, preset capabilities, explicit preset controls, and the separate image-ratio settings."} Do not change response shape, syntax, cardinality, or bindings. For a revision, revision_request.direction retains priority for that request.
 
 ${JSON.stringify(t)}` : "";
 }
 function UPe(e) {
+  if (e.comicPageEnabled)
+    return "";
   const t = cl(e.imageRatioDirection);
   return t ? `# Image Ratio Direction
 
@@ -9557,12 +9642,12 @@ When choosing among analyzer_catalog.sizes, apply this before default size-selec
 ${JSON.stringify(t)}` : "";
 }
 function qPe(e) {
-  return e.comicPageEnabled ? "Comic is the active presentation mode. After actor_roster and interaction are fixed, plan frame_placement from page to detail: page hierarchy, panel boundaries, rhythm, and reading flow; panels in reading order; each panel's shape, Camera, focus, role, and narrative beat; then Actors crossing panel boundaries. Before returning, bind every Interaction item through panelIds to the exact comicPanels panelId values where both endpoints are visible. Keep the five-stage response order and the original interactionIndex for modifiers and participantDetails. A continuing relation may name multiple panels; split items when modifiers or participant details differ. Never broadcast a relation to another occurrence of the same Actor. Object actorIds and interactionIndex must also belong to the owning occurrence's panel. When the same Generated Actor appears in multiple Comic panels, reuse its common candidateKey and proposal despite changes in pose, scale, visible extent, or presentation. Treat page, panel, and cross-panel planning options as sparse evidence, not a checklist: select only materially distinguishing options, allow empty planning modifier arrays, and let integrated natural-language instructions synthesize or extend them rather than enumerate them. Every comicPanels item must choose one semantic id through the same contract as Interaction: use an exact fixed panel id when it accurately describes the visible panel, otherwise generate a concise safe lowercase_snake_case id in that same field. Never use a sentinel such as free. Fixed panel IDs are independent visualization panels: leave visibleActorIds empty and create no Actor occurrence or cross-panel binding for them. The required panel instruction must directly depict that id's visible meaning; a reaction-only shot or verbal mention is invalid for a fixed special panel id. Compare neighboring panels: do not repeat an effectively identical Camera composition unless deliberate repetition serves continuity or rhythm; otherwise give the panel a materially distinct view and express only its visual result in that panel's instruction. Keep identity, outfit, pose, action, expression, state, objects, dialogue, and Interaction in occurrence-bound channels. Panel Camera owns Comic viewpoints; do not apply global single-frame Camera composition. Use only Comic fields and bindings exposed by response_contract." : "Single Frame is the active presentation mode. Use Frame Placement for Actor occurrences and one global Camera for camera position, an unambiguous reference, and viewing direction. Apply composition heuristics where preset policy is silent.";
+  return e.comicPageEnabled ? "Comic is the active presentation mode. After actor_roster and interaction are fixed, first apply the Frame Decision in Active Preset Policy to choose sizeId before any panel composition. Then plan frame_placement from page to detail: page hierarchy, panel boundaries, rhythm, and reading flow; panels in reading order; each panel's shape, Camera, focus, role, and narrative beat; then Actors crossing panel boundaries. Before returning, bind every Interaction item through panelIds to the exact comicPanels panelId values where both endpoints are visible. Keep the five-stage response order and the original interactionIndex for modifiers and participantDetails. A continuing relation may name multiple panels; split items when modifiers or participant details differ. Never broadcast a relation to another occurrence of the same Actor. Object actorIds and interactionIndex must also belong to the owning occurrence's panel. When the same Generated Actor appears in multiple Comic panels, reuse its common candidateKey and proposal despite changes in pose, scale, visible extent, or presentation. Treat page, panel, and cross-panel planning options as sparse evidence, not a checklist: select only materially distinguishing options, allow empty planning modifier arrays, and let integrated natural-language instructions synthesize or extend them rather than enumerate them. Every comicPanels item must choose one semantic id through the same contract as Interaction: use an exact fixed panel id when it accurately describes the visible panel, otherwise generate a concise safe lowercase_snake_case id in that same field. Never use a sentinel such as free. Fixed panel IDs are independent visualization panels: leave visibleActorIds empty and create no Actor occurrence or cross-panel binding for them. The required panel instruction must directly depict that id's visible meaning; a reaction-only shot or verbal mention is invalid for a fixed special panel id. Compare neighboring panels: do not repeat an effectively identical Camera composition unless deliberate repetition serves continuity or rhythm; otherwise give the panel a materially distinct view and express only its visual result in that panel's instruction. Keep identity, outfit, pose, action, expression, state, objects, dialogue, and Interaction in occurrence-bound channels. Panel Camera owns Comic viewpoints; do not apply global single-frame Camera composition. Use only Comic fields and bindings exposed by response_contract." : "Single Frame is the active presentation mode. Use Frame Placement for Actor occurrences and one global Camera for camera position, an unambiguous reference, and viewing direction. Apply composition heuristics where preset policy is silent.";
 }
 function buildV5InstructionModules(e) {
   const t = [HPe(e), BPe(e), UPe(e)].filter(Boolean).join(`
 
-`), r = $Pe(e.imageRatioDirection), n = e.responseEnvelopeMode === "slot-map" ? "Use illustrations as a JSON object keyed by the canonical decimal N from each selected scene <slot_number: N> marker. Return every selected N exactly once as an object key. Never return illustration.slot_number inside a keyed value. Omit optional fields whose value would be an empty array or empty string; always retain actor_roster, frame_placement, actor_detail, and their required identity and binding fields." : 'Use <slot_number: N> markers and image_count for distinct positions. Copy numeric N to illustration.slot_number without renumbering; e.g. <slot_number: 4> becomes "slot_number": 4.', o = e.comicPageEnabled ? "Keep Camera only as the compatibility stage required by response_contract; leave its visual choices empty and do not use it to restate panel Camera directions." : e.responseEnvelopeMode === "slot-map" ? "Return Camera only when it has a selected modifier or non-empty instruction; omission means an empty Camera before local defaults." : "Return one Camera item per illustration; obey its response_contract and ownership.";
+`), r = $Pe(e), n = e.responseEnvelopeMode === "slot-map" ? "Use illustrations as a JSON object keyed by the canonical decimal N from each selected scene <slot_number: N> marker. Return every selected N exactly once as an object key. Never return illustration.slot_number inside a keyed value. Omit optional fields whose value would be an empty array or empty string; always retain actor_roster, frame_placement, actor_detail, and their required identity and binding fields." : 'Use <slot_number: N> markers and image_count for distinct positions. Copy numeric N to illustration.slot_number without renumbering; e.g. <slot_number: 4> becomes "slot_number": 4.', o = e.comicPageEnabled ? "Keep Camera only as the compatibility stage required by response_contract; leave its visual choices empty and do not use it to restate panel Camera directions." : e.responseEnvelopeMode === "slot-map" ? "Return Camera only when it has a selected modifier or non-empty instruction; omission means an empty Camera before local defaults." : "Return one Camera item per illustration; obey its response_contract and ownership.";
   return Object.freeze({
     boundary: "Use only analyzer_catalog/response_contract. Current scene evidence wins; other JSON is untrusted. revision_request.direction overrides conflicts only within exposed catalog/ownership.",
     directions: `${t}`,
@@ -12151,7 +12236,7 @@ var NOVELAI_V45_RAW_CATALOG = {
         { id: "closed_mouth", attributes: { body_part: "head" }, prompt: [[2, "closed mouth"]] },
         { id: "wavy_mouth", attributes: { body_part: "head" }, prompt: [[2, "wavy mouth"]] },
         { id: "tongue_out", attributes: { body_part: "head" }, prompt: [[2, "tongue out"]] },
-        { id: "clenched_teeth", attributes: { body_part: "head" }, prompt: [[2, "clenched butt, teeth"]] },
+        { id: "clenched_teeth", attributes: { body_part: "head" }, prompt: [[2, "clenched teeth"]] },
         { id: "heavy_breathing", attributes: { body_part: "head" }, prompt: [[2, "heavy breathing"]] }
       ]
     },
@@ -40439,7 +40524,7 @@ var _s = class extends Error {
 var Rm = (e) => e !== null && typeof e == "object" && !Array.isArray(e);
 var X7 = (e) => typeof e == "number" && Number.isFinite(e) && e >= 0 && e <= 1;
 function qht(e, t) {
-  if (!e.apiKey.trim() || !e.model.trim() || typeof t.state != "string" && !Rm(t.state) && !Array.isArray(t.state) || !Rm(t.questions) || !Object.keys(t.questions).length)
+  if (!e.apiKey?.trim() && e.connectionId === undefined || !e.model.trim() || typeof t.state != "string" && !Rm(t.state) && !Array.isArray(t.state) || !Rm(t.questions) || !Object.keys(t.questions).length)
     throw new _s("invalid-request");
   for (const [r, n] of Object.entries(t.questions)) {
     if (!r.trim() || !Rm(n) || typeof n.instructions != "string" || !n.instructions.trim())
@@ -40487,6 +40572,8 @@ function Ght(e, t, r) {
   };
 }
 function Kye(e) {
+  if (e && typeof e.evaluate === "function")
+    return e;
   return {
     async evaluate(t, r, n = {}) {
       if (qht(t, r), n.signal?.aborted)
@@ -40694,7 +40781,7 @@ ${JSON.stringify(r.continuity)}` : r.source,
     }));
   };
   try {
-    if (!t.apiKey.trim() || !t.model.trim())
+    if (!t.apiKey?.trim() && t.connectionId === undefined || !t.model?.trim())
       throw new _s("invalid-request");
     return await h("actors", r.candidates.map((y, v) => ({
       candidateKey: y.candidateKey,
@@ -40941,21 +41028,38 @@ function N2(e, t, r, n = false) {
     s.set(k, P !== undefined && P !== I ? null : I);
     const A = Ww(_), C = i.get(A);
     C && C !== I ? c.add(A) : i.set(A, I);
-  }, d = new Set, u = o.actor_roster.map((_, I) => {
+  }, d = new Set, u = new Set(a?.filter((A) => o.actor_roster.some((P) => {
+    const k = bh(P);
+    return Wn(jo(k, "actorId", "actor_id", "id")) === A.actorId && qye(k, t, A).candidateKey === A.candidateKey;
+  })).map((A) => Wn(A.actorId)));
+  let depictionCount = 0;
+  const resolvedRoster = o.actor_roster.map((_, I) => {
     const k = bh(_), P = jo(k, "candidateKey", "candidate_key");
     let A = qye(k, t, a && (P === undefined ? yC(jo(k, "actorId", "actor_id", "id"), a, (N) => [N.actorId, N.candidateKey]) : undefined));
-    const C = a && yC(A.candidateKey, a, (N) => [N.candidateKey]);
-    if (a && !C)
+    const C = a?.filter((N) => N.candidateKey === A.candidateKey) ?? [], R = C.find((N) => N.actorId === A.actorId), M = C.filter((N) => !d.has(Wn(N.actorId)) && !u.has(Wn(N.actorId))), L = R ?? (M.length === 1 ? M[0] : undefined);
+    if (a && !C.length)
       throw new Error(`확정 인물 변경: 목록 밖 인물: ${Wn(A.candidateKey)}`);
-    C && (A = qye(k, t, C));
-    const E = C ? Wn(C.actorId) : `actor_${I + 1}`;
+    if (!L && M.length > 1)
+      throw new Error(`확정 등장 개체 참조가 모호합니다: ${Wn(A.candidateKey)}`);
+    if (L)
+      A = qye(k, t, L);
+    else if (C.length) {
+      const q = (jo(k, "formRef", "form_ref") === undefined ? C : C.filter(($) => $.formRef === A.formRef)).map(($) => qye(k, t, $));
+      if (new Set(q.map(($) => JSON.stringify([$.formRef, $.outfit]))).size !== 1)
+        throw new Error("추가 등장 개체의 폼·의상 상속이 모호합니다.");
+      A = q[0];
+    }
+    const E = L ? Wn(L.actorId) : `actor_${a ? a.length + ++depictionCount : I + 1}`;
     if (d.has(E))
       throw new Error("분할 분석 인물 연결이 중복됩니다.");
     return d.add(E), l(jo(k, "actorId", "actor_id", "id"), E), l(A.candidateKey, E), t.find((N) => N.candidateKey === A.candidateKey)?.identityReferences?.forEach((N) => l(N, E)), { ...A, actorId: E };
   });
-  if (a && u.length !== a.length)
+  if (a?.some((A) => !d.has(Wn(A.actorId))))
     throw new Error("확정 인물 목록의 coverage 불일치");
-  o.actor_roster = a ? a.map((_) => u.find((I) => I.actorId === _.actorId)) : u;
+  o.actor_roster = a ? [
+    ...a.map((A) => resolvedRoster.find((P) => P.actorId === A.actorId)),
+    ...resolvedRoster.filter((A) => !a.some((P) => P.actorId === A.actorId))
+  ] : resolvedRoster;
   const f = (_, I = false) => {
     const k = s.get(Wn(_));
     if (k)
@@ -41146,9 +41250,9 @@ function lgt(e) {
     retryUntilLimit: e instanceof Error && "code" in e && e.code === "V5_RESPONSE_ENVELOPE"
   });
 }
-var dgt = "Copy locked actor_roster unchanged. Resolve omitted or empty occurrence outfit from actor_roster.outfit; explicitly repeating the same effective outfit is equivalent. Detail owns frame placement order, panel IDs and panel composition. Preserve every locked Actor and each Actor's ordered effective outfit transitions. In Comic, additional panel appearances with the same effective outfit are allowed; never introduce a new Actor/form/outfit or omit/reorder an outfit transition. In Single Frame, preserve each Actor's occurrence count. Bind actor_detail 1:1 to the FINAL frame_placement.items by actorId and placementIndex, not to initial occurrences indices. Initial panelId is only a planning hint; final panel references must be internally consistent.";
+var dgt = "Preserve locked actor_roster entries; append distinct actorIds only for additional depictions of locked candidateKey/form/outfit definitions. Resolve omitted or empty occurrence outfit from actor_roster.outfit; explicitly repeating the same effective outfit is equivalent. Detail owns frame placement order, panel IDs and panel composition. Place every locked actorId at least once and preserve its ordered effective outfit transitions. In every preset, additional depictions in one image, one panel or across panels may repeat the same identity and effective outfit; never introduce a new identity/form/outfit or omit/reorder a locked actorId's outfit transition. Bind actor_detail 1:1 to the FINAL frame_placement.items by actorId and placementIndex, not to initial occurrences indices. Initial panelId is only a planning hint; final panel references must be internally consistent.";
 var Wye = Object.freeze({
-  version: 5,
+  version: 8,
   initial: "Return illustrations with slot_number, actor_roster, evidence (exact source quote), scene_intent, temporal_state, state_constraints and occurrences (actorId, placementIndex, optional panelId/outfit). Select exactly image_count unique source slots. Apply original discovery and outfit policies before selecting slots; complete shared generated_actor_proposals/generated_outfit_proposals once. Record binding reasons, explicit state transitions and applicable user constraints without adding new facts or presentation restrictions. A comic page is one slot; assign each visible occurrence once with sequential placementIndex. Preserve actorless scenes with empty roster/occurrences. Leave pose, expression, camera, coordinates, modifiers and tags for detail.",
   detail: "Analyze exactly assigned_slots using the detailed V5 illustration contract. Read the locked definitions and per-slot evidence, scene_intent, temporal_state and state_constraints as planning evidence subordinate to original source and user/preset authority. On source/plan conflict return only {conflict: reason}. Otherwise return only illustrations, with frame_placement, actor_detail, interaction and camera for assigned slots. Never borrow unassigned slots to fill coverage."
 });
@@ -41180,6 +41284,9 @@ function Jye(e, t, r) {
   }
 }
 var Yc = (e) => JSON.stringify(e, (t, r) => r && typeof r == "object" && !Array.isArray(r) ? Object.fromEntries(Object.entries(r).sort(([n], [o]) => n.localeCompare(o))) : r);
+var keyFormKey = (e) => Yc([e?.candidateKey, e?.formRef]);
+var MH = (e) => e.filter((t, r) => r === 0 || t !== e[r - 1]);
+var TC = (e, t) => Yc(e === undefined || e && typeof e == "object" && !Object.keys(e).length ? t : e);
 function ugt(e, t, r, n, o = [], a = {}) {
   const i = Yye(e), s = Zye(i).map((c) => Vye(c.slot_number, () => sgt(N2(c, o, undefined, a.comic), n, a)));
   Jye(s, t, r);
@@ -41248,52 +41355,63 @@ function fgt(e, t, r = false, n = []) {
     Vye(c.slot_number, () => {
       const l = N2(c, n, t.plan.illustrations.find((I) => I.slot_number === c.slot_number), r);
       a[s] = l;
-      const d = t.plan.illustrations.find((I) => I.slot_number === l.slot_number), u = N2({ ...d, occurrences: [] }, n).actor_roster;
-      if (Yc(l.actor_roster) !== Yc(u))
+      const d = t.plan.illustrations.find((I) => I.slot_number === l.slot_number), u = N2({ ...d, occurrences: [] }, n).actor_roster, f = l.actor_roster;
+      if (Yc(f.slice(0, u.length)) !== Yc(u))
         throw new Error(`슬롯 ${l.slot_number}: 확정 인물·폼·의상 변경`);
-      const f = Eo(l.frame_placement).items, m = l.actor_detail;
-      if (!Array.isArray(f) || !Array.isArray(m) || m.length !== f.length)
+      const m = Eo(l.frame_placement).items, h = l.actor_detail;
+      if (!Array.isArray(m) || !Array.isArray(h) || h.length !== m.length)
         throw new Error(`슬롯 ${l.slot_number}: frame_placement.items와 actor_detail은 1:1이어야 합니다.`);
-      const h = new Set, y = new Map;
-      for (const I of m) {
+      const y = new Set, v = new Map;
+      for (const I of h) {
         const k = Eo(I), P = k.placementIndex;
-        if (!Number.isSafeInteger(P) || P < 0 || P >= f.length || h.has(P) || k.actorId !== Eo(f[P]).actorId)
+        if (!Number.isSafeInteger(P) || P < 0 || P >= m.length || y.has(P) || k.actorId !== Eo(m[P]).actorId)
           throw new Error(`슬롯 ${l.slot_number}: actor_detail.placementIndex ${P}의 인물을 최종 frame_placement.items와 일치시키세요.`);
-        h.add(P), y.set(P, k);
+        y.add(P), v.set(P, k);
       }
-      const v = N2(d, n), w = new Map(v.actor_roster.map((I) => [I.actorId, I]));
-      if (f.some((I) => !w.has(Eo(I).actorId)))
+      const w = N2(d, n), x = w.actor_roster, _ = new Map(x.map((k) => [k.actorId, k])), S = new Map(f.map((k) => [k.actorId, k]));
+      for (const k of f.slice(x.length)) {
+        const j = w.occurrences.flatMap((O) => {
+          const C = _.get(O.actorId);
+          return keyFormKey(C) === keyFormKey(k) ? [TC(O.outfit, C.outfit)] : [];
+        });
+        if (!j.includes(TC(k.outfit, undefined)) || m.some((O, C) => Eo(O).actorId === k.actorId && !j.includes(TC(v.get(C).outfit, k.outfit))))
+          throw new Error(`슬롯 ${l.slot_number}: 추가 등장 개체의 확정 인물·폼·의상 변경`);
+      }
+      if (m.some((k) => !S.has(Eo(k).actorId)))
         throw new Error(`슬롯 ${l.slot_number}: 확정 목록에 없는 인물이 배치되었습니다.`);
       if (r && Eo(l.frame_placement).comicPanels !== undefined && !(Array.isArray(Eo(l.frame_placement).comicPanels) && Eo(l.frame_placement).comicPanels.length === 0)) {
-        const I = Eo(l.frame_placement).comicPanels;
-        if (!Array.isArray(I))
+        const k = Eo(l.frame_placement).comicPanels;
+        if (!Array.isArray(k))
           throw new Error(`슬롯 ${l.slot_number}: 최종 comicPanels를 복구할 수 없습니다.`);
-        const k = new Set, P = new Set;
-        for (const A of I) {
-          const C = Eo(A);
-          if (typeof C.panelId != "string" || !C.panelId.trim() || k.has(C.panelId) || !Array.isArray(C.visibleActorIds))
+        const j = new Set, O = new Set;
+        for (const R of k) {
+          const M = Eo(R);
+          if (typeof M.panelId != "string" || !M.panelId.trim() || j.has(M.panelId) || !Array.isArray(M.visibleActorIds))
             throw new Error(`슬롯 ${l.slot_number}: 최종 패널 ID·인물 목록이 잘못되었습니다.`);
-          k.add(C.panelId);
-          for (const E of C.visibleActorIds) {
-            const N = Yc([C.panelId, E]);
-            if (!w.has(E) || P.has(N))
+          j.add(M.panelId);
+          for (const L of M.visibleActorIds) {
+            const Y = Yc([M.panelId, L]);
+            if (!S.has(L) || O.has(Y))
               throw new Error(`슬롯 ${l.slot_number}: 패널 인물 참조가 범위 밖이거나 중복입니다.`);
-            P.add(N);
+            O.add(Y);
           }
         }
-        for (const A of f) {
-          const C = Eo(A);
-          if (!P.delete(Yc([C.panelId, C.actorId])))
+        const C = new Set;
+        for (const R of m) {
+          const M = Eo(R), L = Yc([M.panelId, M.actorId]);
+          if (C.add(L), !O.has(L))
             throw new Error(`슬롯 ${l.slot_number}: 배치를 최종 패널·visibleActorIds와 일치시키세요.`);
         }
-        if (P.size)
+        if ([...O].some((R) => !C.has(R)))
           throw new Error(`슬롯 ${l.slot_number}: 최종 패널의 인물 배치가 누락되었습니다.`);
       }
-      const x = (I, k) => Yc(I === undefined || I && typeof I == "object" && !Array.isArray(I) && !Object.keys(I).length ? k : I), _ = (I) => r ? I.filter((k, P) => P === 0 || k !== I[P - 1]) : I;
-      for (const [I, k] of w) {
-        const P = v.occurrences.filter((E) => E.actorId === I).map((E) => x(E.outfit, k.outfit)), A = new Map((r ? Eo(l.frame_placement).comicPanels ?? [] : []).map((E, N) => [E.panelId, N])), C = f.map((E, N) => ({ placement: Eo(E), index: N })).sort((E, N) => r ? (A.get(E.placement.panelId) ?? 0) - (A.get(N.placement.panelId) ?? 0) : E.index - N.index).flatMap(({ placement: E, index: N }) => E.actorId === I ? [x(y.get(N).outfit, k.outfit)] : []);
-        if (Yc(_(C)) !== Yc(_(P)))
-          throw new Error(`슬롯 ${l.slot_number}, ${I}: 확정 등장·의상 전환 불일치. 기본 의상 상속을 유지하고 ${r ? "의상 전환 순서" : "등장 수와 의상 순서"}를 보존하세요.`);
+      const A = new Map((r ? Eo(l.frame_placement).comicPanels ?? [] : []).map((k, j) => [k.panelId, j])), P = m.map((k, j) => ({ placement: Eo(k), index: j })).sort((k, j) => r ? (A.get(k.placement.panelId) ?? 0) - (A.get(j.placement.panelId) ?? 0) : k.index - j.index);
+      for (const k of x) {
+        const j = w.occurrences.filter((C) => C.actorId === k.actorId).map((C) => TC(C.outfit, k.outfit)), O = P.filter(({ placement: C }) => C.actorId === k.actorId).map(({ index: C }) => TC(v.get(C).outfit, k.outfit));
+        if (!O.length)
+          throw wc(`슬롯 ${l.slot_number}.${k.actorId}`, "missing-actor-occurrence", "확정 등장 개체의 최종 배치가 누락되었습니다.");
+        if (Yc(MH(O)) !== Yc(MH(j)))
+          throw new Error(`슬롯 ${l.slot_number}, ${k.actorId}: 확정 등장·의상 전환 불일치. 기본 의상 상속을 유지하고 의상 전환 순서를 보존하세요.`);
       }
     });
   return {
@@ -41349,20 +41467,21 @@ function mgt(e) {
   };
 }
 function pgt(e, t, r) {
-  const n = (o, a, i) => {
-    const s = o.actors.find((u) => u.actorId === a), c = new Map(o.location.comicPanels?.map((u, f) => [u.panelId, f])), l = [...o.framePlacement].filter((u) => u.actorId === a);
-    i && l.sort((u, f) => (c.get(u.panelId ?? "") ?? 0) - (c.get(f.panelId ?? "") ?? 0));
-    const d = l.map((u) => Yc(o.actorDetails.find((f) => f.placementIndex === u.placementIndex)?.outfit ?? s.outfit));
-    return r ? d.filter((u, f) => f === 0 || d[f - 1] !== u) : d;
+  const n = (a) => Yc([a.candidateKey, a.formId]), o = (a, i, s) => {
+    const c = new Map(a.location.comicPanels?.map((d, u) => [d.panelId, u])), l = [...a.framePlacement].filter((d) => d.actorId === i.actorId);
+    return s && l.sort((d, u) => (c.get(d.panelId ?? "") ?? 0) - (c.get(u.panelId ?? "") ?? 0)), MH(l.map((d) => Yc(a.actorDetails.find((u) => u.placementIndex === d.placementIndex)?.outfit ?? i.outfit)));
   };
-  for (const o of e.illustrations) {
-    const a = t.illustrations.find((i) => i.slotNumber === o.slotNumber);
-    if (!a || o.actors.length !== a.actors.length)
-      throw wc(`슬롯 ${o.slotNumber}.actor_roster`, "recovered-roster-changed", "의미 복구 후 확정 인물 목록이 변경되었습니다.");
-    for (const i of o.actors) {
-      const s = a.actors.find((c) => c.actorId === i.actorId);
-      if (!s || i.candidateKey !== s.candidateKey || i.formId !== s.formId || Yc(i.outfit) !== Yc(s.outfit) || Yc(n(o, i.actorId, r)) !== Yc(n(a, s.actorId, false)))
-        throw wc(`슬롯 ${o.slotNumber}.${i.actorId}`, "recovered-decision-changed", "의미 복구 후 확정 인물·폼·의상 전환이 변경되었습니다.");
+  for (const a of e.illustrations) {
+    const i = t.illustrations.find((s) => s.slotNumber === a.slotNumber);
+    if (!i || a.actors.length < i.actors.length)
+      throw wc(`슬롯 ${a.slotNumber}.actor_roster`, "recovered-roster-changed", "의미 복구 후 확정 인물 목록이 변경되었습니다.");
+    for (const s of i.actors)
+      if (!a.actors.some((c) => c.actorId === s.actorId) || !a.framePlacement.some((c) => c.actorId === s.actorId))
+        throw wc(`슬롯 ${a.slotNumber}.${s.actorId}`, "missing-actor-occurrence", "의미 복구 후 확정 등장 개체의 최종 배치가 누락되었습니다.");
+    for (const s of a.actors) {
+      const c = i.actors.find((f) => f.actorId === s.actorId), l = n(s), d = o(a, s, r), u = i.actors.filter((f) => n(f) === l).flatMap((f) => o(i, f, false));
+      if (c ? n(c) !== l || Yc(s.outfit) !== Yc(c.outfit) || Yc(d) !== Yc(o(i, c, false)) : !u.includes(Yc(s.outfit)) || d.some((f) => !u.includes(f)))
+        throw wc(`슬롯 ${a.slotNumber}.${s.actorId}`, "recovered-decision-changed", "의미 복구 후 확정 인물·폼·의상 전환이 변경되었습니다.");
     }
   }
 }
@@ -41490,12 +41609,21 @@ function eH(e, t) {
   return Array.isArray(e) ? e.map((r) => eH(r, t)) : e && typeof e == "object" ? Object.fromEntries(Object.entries(e).map(([r, n]) => [r, eH(n, t)])) : e;
 }
 function renderV5SplitPhaseSystemInstruction(e, t) {
-  const r = e.instructionModules, n = Object.keys(ebe).filter((o) => ebe[o].includes(t)).map((o) => o === "outfits" && t === "initial" ? r[o].replaceAll("actor_detail.outfit", "occurrences.outfit") : r[o]).filter(Boolean).join(`
+  const r = e.instructionModules, n = Object.keys(ebe).filter((o) => ebe[o].includes(t)).map((o) => {
+    let text = r[o];
+    if (o === "outfits") {
+      if (t === "initial") {
+        text = text.replaceAll("actor_detail.outfit", "occurrences.outfit");
+      }
+      text = text.replace("For a differing Comic-panel outfit,", "For a differing occurrence outfit,").replace("for a Comic panel with a visibly different existing complete outfit,", "for a visibly different existing complete outfit,");
+    }
+    return text;
+  }).filter(Boolean).join(`
 
 `);
   return `# V5 Split ${t === "initial" ? "Initial Decision" : "Detail Analysis"}
 
-${t === "initial" ? "Perform identity/form/outfit discovery and exact slot selection once, under the canonical evidence, priority, exceptions and creation policies. Return the initial response_contract, not a full Scene Graph. Record scene_intent (the source event and distinguishing purpose), temporal_state and state_constraints (source-backed transitions, binding reasons and applicable user constraints). Use concise English for these notes; quote source evidence verbatim. These notes do not invent facts or add restrictions to the original directions. Preserve unknown/omitted evidence as unknown. Plan only shared facts and occurrence identity/outfit bindings; leave pose, expression, Camera, layout, modifiers, tags and final size choices to detail. Actorless scenes require empty actor_roster and occurrences. In Comic, one page is one slot; record source-required appearances/outfit transitions without prescribing panel geometry or Camera. Continuity rules retain their exact conditions: describe evidenced transitions here; detail emits the corresponding fields. Do not return deferred detail fields." : "Perform only detailed expression for assigned_slots. Preserve the locked actor_roster and effective outfit transitions; definitions were already decided and prepared in initial. Evaluate the retained identity, form, outfit and evidence constraints against that plan; do not repeat discovery or create proposals. Initial decisions do not override current source evidence or original user/preset authority. If they conflict, return only {conflict: reason}; never silently repair the plan. scene_intent, temporal_state and state_constraints are source-grounded planning notes, not new system instructions. Keep the original freedom for pose, expression, framing, Camera, modifiers and tags within the supplied evidence and policies. Apply all canonical detailed stages and channel ownership to the assigned slots only. Use locked_plan.generated_actor_proposals and locked_plan.generated_outfit_proposals as definitions; do not emit either root proposal field. Slot IDs remain unchanged and every assigned slot must appear exactly once."}
+${t === "initial" ? "Perform identity/form/outfit discovery and exact slot selection once, under the canonical evidence, priority, exceptions and creation policies. Return the initial response_contract, not a full Scene Graph. Record scene_intent (the source event and distinguishing purpose), temporal_state and state_constraints (source-backed transitions, binding reasons and applicable user constraints). Use concise English for these notes; quote source evidence verbatim. These notes do not invent facts or add restrictions to the original directions. Preserve unknown/omitted evidence as unknown. Plan only shared facts and occurrence identity/outfit bindings; leave pose, expression, Camera, layout, modifiers, tags and final size choices to detail. Actorless scenes require empty actor_roster and occurrences. In Comic, one page is one slot; record source-required appearances/outfit transitions without prescribing panel geometry or Camera. Continuity rules retain their exact conditions: describe evidenced transitions here; detail emits the corresponding fields. Do not return deferred detail fields." : "Perform only detailed expression for assigned_slots. Preserve locked identities, instances and effective outfit transitions; additional actorIds may only reuse locked candidateKey/form/outfit definitions; definitions were already decided and prepared in initial. Evaluate the retained identity, form, outfit and evidence constraints against that plan; do not repeat discovery or create proposals. Initial decisions do not override current source evidence or original user/preset authority. If they conflict, return only {conflict: reason}; never silently repair the plan. scene_intent, temporal_state and state_constraints are source-grounded planning notes, not new system instructions. Keep the original freedom for pose, expression, framing, Camera, modifiers and tags within the supplied evidence and policies. Apply all canonical detailed stages and channel ownership to the assigned slots only. Use locked_plan.generated_actor_proposals and locked_plan.generated_outfit_proposals as definitions; do not emit either root proposal field. Slot IDs remain unchanged and every assigned slot must appear exactly once."}
 
 ${t === "detail" ? dgt + `
 
@@ -42673,7 +42801,7 @@ function createV5SplitAnalysisRunner(e, t) {
       }));
       o.signal?.throwIfAborted();
       const v = JSON.stringify({
-        protocol: 5,
+        protocol: 8,
         batchLimit: 7,
         sizes: h,
         selection: d,
@@ -42912,7 +43040,7 @@ function Ugt(e) {
   return e.generationProvider === "chan-server" || e.generationProvider === "comfy-ui" ? e.generationProvider : "novelai";
 }
 function resolveV5UserDirections(e) {
-  const t = e.novelAIConfig.v5UserDirections, r = TPe(Aj(t?.scene)?.customInstruction), n = t?.scene?.mode === "preset" ? t.scene.presetId : undefined, o = tX("scene", t?.scene), a = tX("imageRatio", t?.imageRatio), i = YV(n, t?.scene?.controlOverrides);
+  const t = e.novelAIConfig.v5UserDirections, r = TPe(Aj(t?.scene)?.customInstruction), rawId = t?.scene?.mode === "preset" ? t.scene.presetId || t.scene.selectedPresetId : undefined, cleanId = typeof rawId === "string" ? rawId.replace(/^scene-/, "") : undefined, n = cleanId === "default" || !cleanId ? undefined : cleanId, o = tX("scene", t?.scene), a = tX("imageRatio", t?.imageRatio), i = YV(n, t?.scene?.controlOverrides);
   return Object.freeze({
     ...r ? { customInstruction: r } : {},
     ...n ? { scenePresetId: n } : {},
@@ -58819,7 +58947,7 @@ async function runCharxRegex(ctx, params) {
     sourceCatalog: { ...session.sourceCatalog, getCachedCharacter: () => ({ character }) },
     analyzer: createAmAnalyzer(ctx.services, {
       purpose: "charx-regex",
-      onRetry: (info) => ctx.progress({ label: `Retrying (${info.attempt}/${info.total})`, labelKo: "재시도", retry: { attempt: info.attempt, total: info.total } })
+      onRetry: (info) => ctx.progress({ label: `Retrying (${info.attempt}/${info.total})`, labelKo: "재시도", retry: { attempt: info.attempt, total: info.total }, retryCount: `${info.attempt}/${info.total}` })
     }),
     config: session.store,
     log: (line) => ctx.services.log.append("warn", "charx-regex", line)
@@ -59100,7 +59228,7 @@ async function runReclassification(ctx, params) {
   });
   const unsubscribe = controller.subscribe(() => {
     const snap = controller.getSnapshot();
-    ctx.progress({ ...amLabel(String(snap.message ?? "")), ...snap.total ? { done: snap.completed, total: snap.total } : {}, ...snap.retry ? { retry: { attempt: snap.retry.attempt, total: snap.retry.total } } : {} });
+    ctx.progress({ ...amLabel(String(snap.message ?? "")), ...snap.total ? { done: snap.completed, total: snap.total } : {}, ...snap.retry ? { retry: { attempt: snap.retry.attempt, total: snap.retry.total }, retryCount: `${snap.retry.attempt}/${snap.retry.total}` } : {} });
   });
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
@@ -62474,8 +62602,10 @@ function phaseProgress(phase, detail = {}) {
   const progress = { label: label.en, labelKo: label.ko, fraction };
   if (phase === "generating" && detail.imageCount)
     Object.assign(progress, { done: Math.min(detail.imageCount, detail.imageIndex ?? 0), total: detail.imageCount });
-  if (detail.retry)
+  if (detail.retry) {
     progress.retry = detail.retry;
+    progress.retryCount = `${detail.retry.attempt}/${detail.retry.total}`;
+  }
   return progress;
 }
 function labelError(code, label, extra = {}) {
@@ -64672,7 +64802,7 @@ function createAssetMaidEngine(options) {
   const dispatcher = createImageGenerationDispatcher({ ...options.imageProviders }, createProviderQueues({ getIntervalMs }), options.getRetryCount ?? (() => 5));
   const executor = createGenerationBatchExecutor(dispatcher, sessions, options.comfyUIReferences);
   const v45 = createV45Orchestrator(v45Analyzer, promptCompiler, sessions, executor);
-  const v5Analyzer = createV5Analyzer(options.analyzerClient, undefined, undefined);
+  const v5Analyzer = createV5Analyzer(options.analyzerClient, undefined, options.jev);
   const v5 = createV5Orchestrator(v5Analyzer, sessions, executor, undefined, {
     onSplitResumeState: (key, state) => options.onSplitResumeState?.(key, state)
   });
@@ -65058,6 +65188,7 @@ function createEnginePort(services, options = {}) {
       getRetryCount: () => snapshot?.runtime.generationAutoRetryCount ?? 5,
       getIntervalMs: () => Math.max(0, Math.min(30, Number(snapshot?.runtime.novelaiParallelIntervalSec) || 0)) * 1000,
       rawCatalogJson: raw,
+      jev: services.decisions ? services.decisions.createJevAdapter(() => snapshot?.jevConnection ?? { rosterSelectionDefault: false, model: "jev-latest" }) : undefined,
       onAnalyzerDiagnostic: (event) => options.onAnalyzerDiagnostic?.(event)
     });
     current = { raw, engine };
@@ -65459,6 +65590,9 @@ var coreHandlers = {
   "connections.listImage": async (_p, ctx) => ({ connections: await ctx.images.listConnections() }),
   "connections.listImageModels": async (params, ctx) => ({ models: await ctx.images.listModels(requireId(params.connectionId, "connectionId")) }),
   "connections.listLlmModels": async (params, ctx) => ({ models: await ctx.llm.listModels(requireId(params.connectionId, "connectionId")) }),
+  "connections.listDecision": async (_p, ctx) => ({ connections: await ctx.decisions.listConnections() }),
+  "connections.listDecisionModels": async (params, ctx) => ({ models: await ctx.decisions.listModels(requireId(params.connectionId, "connectionId")) }),
+  "decision.testConnection": (params, ctx) => ctx.decisions.testConnection(params),
   "analyzer.testMessage": (params, ctx) => ctx.llm.testMessage(params.text, params.analysis ? asRecord3(params.analysis) : undefined),
   "image.testConnection": (params, ctx) => ctx.images.testConnection(params.connectionId),
   "workspace.listCharacters": async (_p, ctx) => ({ characters: await ctx.sources.listCharacters() }),
@@ -66589,7 +66723,7 @@ function createImageService(deps) {
         for (let attempt = 1;; attempt += 1) {
           if (signal?.aborted)
             throw abortError(signal.reason);
-          onProgress?.({ label: attempt === 1 ? "Generating image" : `Generating image (retry ${attempt - 1}/${retries})`, labelKo: "이미지 생성 중", ...attempt > 1 ? { retry: { attempt: attempt - 1, total: retries } } : {} });
+          onProgress?.({ label: attempt === 1 ? "Generating image" : `Generating image (retry ${attempt - 1}/${retries})`, labelKo: "이미지 생성 중", ...attempt > 1 ? { retry: { attempt: attempt - 1, total: retries }, retryCount: `${attempt - 1}/${retries}` } : {} });
           try {
             const result = await callOnce();
             if (!str5(result.imageId) && !str5(result.imageDataUrl))
@@ -67166,18 +67300,47 @@ function createLlmService(deps) {
 
 // src/backend/services/run-log.ts
 var RUN_LOG_LIMIT = 250;
+var MAX_LOG_STRING_LENGTH = 4000;
 function brandLogMessage(message) {
   return message.replace(/^\[Asset Maid(?: React)?\]\s*/u, "[Inlay] ");
+}
+function redactSensitive(text) {
+  let s = text.replace(/((?:authorization)\s*[:=]\s*(?:bearer|basic)\s+)[^\s,}]+/gi, "$1[redacted]");
+  s = s.replace(/([?&](?:key|api[_-]?key|access[_-]?token|token|secret)=)[^&#\s]+/gi, "$1[redacted]");
+  s = s.replace(/("?(?:api[_-]?key|authorization|private[_-]?key|access[_-]?token|token|secret)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^&#\s,}]+)/gi, (m, p1, p2) => {
+    const clean = p2.toLowerCase().replace(/^["']|["']$/g, "").trim();
+    if (clean === "bearer" || clean === "basic" || clean.startsWith("bearer ") || clean.startsWith("basic "))
+      return m;
+    return `${p1}[redacted]`;
+  });
+  return s;
+}
+function truncateLog(text, max = MAX_LOG_STRING_LENGTH) {
+  return text.length > max ? `${text.slice(0, max)}...(세부 로그 생략)` : text;
 }
 function safeDetails(details) {
   if (details === undefined)
     return;
-  if (details instanceof Error)
-    return { name: details.name, message: details.message, code: details.code };
+  if (details instanceof Error) {
+    return {
+      name: details.name,
+      message: truncateLog(redactSensitive(details.message)),
+      code: details.code,
+      ...details.stack ? { stack: truncateLog(redactSensitive(details.stack)) } : {}
+    };
+  }
+  if (typeof details === "string") {
+    return truncateLog(redactSensitive(details));
+  }
   try {
-    return JSON.parse(JSON.stringify(details, (_k, v) => typeof v === "string" && v.length > 4000 ? `${v.slice(0, 4000)}...(${v.length} chars)` : v));
+    return JSON.parse(JSON.stringify(details, (_k, v) => {
+      if (typeof v === "string") {
+        return truncateLog(redactSensitive(v));
+      }
+      return v;
+    }));
   } catch {
-    return String(details);
+    return truncateLog(redactSensitive(String(details)));
   }
 }
 function createRunLog(options = {}) {
@@ -67188,7 +67351,8 @@ function createRunLog(options = {}) {
   return {
     append(level, scope, message, details) {
       seq += 1;
-      const entry = { seq, at: now().toISOString(), level, scope, message: brandLogMessage(message) };
+      const formattedMessage = brandLogMessage(truncateLog(redactSensitive(message)));
+      const entry = { seq, at: now().toISOString(), level, scope, message: formattedMessage };
       const d = safeDetails(details);
       if (d !== undefined)
         entry.details = d;
@@ -68123,6 +68287,114 @@ function createStorageService(host, userId, options = {}) {
   return service;
 }
 
+// src/backend/services/decisions.ts
+function createDecisionService(host, log) {
+  return {
+    async listConnections() {
+      const api = host.decisions;
+      if (!api?.listConnections)
+        return [];
+      try {
+        const list = await api.listConnections();
+        return list.map((c) => ({
+          id: c.id,
+          name: c.name,
+          provider: c.provider,
+          model: c.model,
+          isDefault: !!c.is_default,
+          hasApiKey: !!c.has_api_key
+        }));
+      } catch (err) {
+        log.append("error", "decision", `Failed to list decision connections: ${err instanceof Error ? err.message : String(err)}`);
+        return [];
+      }
+    },
+    async listModels(connectionId) {
+      const api = host.decisions;
+      if (!api?.getModels)
+        return [];
+      try {
+        const models = await api.getModels(connectionId);
+        return models.map((m) => ({
+          id: m.id,
+          label: m.label || m.id,
+          description: m.description
+        }));
+      } catch (err) {
+        log.append("error", "decision", `Failed to list decision models: ${err instanceof Error ? err.message : String(err)}`);
+        return [];
+      }
+    },
+    async testConnection(params, options = {}) {
+      const api = host.decisions;
+      if (!api?.evaluate) {
+        return {
+          ok: false,
+          latencyMs: 0,
+          error: rpcError("unsupported", "Decision API is not supported on this Lumiverse host.")
+        };
+      }
+      const start = Date.now();
+      try {
+        const res = await api.evaluate({
+          connection_id: params.connectionId || undefined,
+          model: params.model || undefined,
+          state: "Inlay decision connection test",
+          questions: {
+            test: {
+              type: "noul",
+              instructions: "Is this connection test functioning?"
+            }
+          }
+        }, { signal: options.signal });
+        return {
+          ok: true,
+          latencyMs: Date.now() - start,
+          model: res.model
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          latencyMs: Date.now() - start,
+          error: rpcError("provider-error", err instanceof Error ? err.message : String(err))
+        };
+      }
+    },
+    createJevAdapter(getConfig) {
+      return {
+        network: {
+          async evaluate(connection, request, options = {}) {
+            const api = host.decisions;
+            if (!api?.evaluate) {
+              throw new Error("JEV_UNAVAILABLE: Lumiverse decisions API is not available on this host.");
+            }
+            const currentCfg = getConfig();
+            const targetModel = connection.model || currentCfg.model || "jev-latest";
+            const connId = connection.connectionId || currentCfg.connectionId || undefined;
+            const start = Date.now();
+            const res = await api.evaluate({
+              connection_id: connId,
+              model: targetModel,
+              state: request.state,
+              questions: request.questions
+            }, { signal: options.signal });
+            return {
+              model: res.model,
+              answers: res.answers,
+              latencyMs: Date.now() - start,
+              usage: {
+                inputTokens: res.usage?.input_tokens ?? 0,
+                outputTokens: res.usage?.output_tokens ?? 0
+              }
+            };
+          }
+        },
+        getConfig
+      };
+    }
+  };
+}
+
 // src/backend/services/index.ts
 function createServices(host, userId) {
   const events = createEventBus(host, userId);
@@ -68133,7 +68405,8 @@ function createServices(host, userId) {
   const llm = createLlmService({ host, userId, loadConfig, log, getJson: (url, options) => imageBytes.getJson(url, options) });
   const images = createImageService({ host, userId, loadConfig, log });
   const sources = createSourcesService({ host, userId, imageBytes, storage, log });
-  return { host, userId, storage, llm, images, imageBytes, sources, events, log };
+  const decisions = createDecisionService(host, log);
+  return { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
 }
 function createServicesRegistry(host, factory = createServices) {
   const byUser = new Map;

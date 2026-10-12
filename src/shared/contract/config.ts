@@ -142,9 +142,11 @@ export interface V5DirectionControl {
   ref: string;
   defaultEnabled: boolean;
   variables: Record<string, string>;
+  instructionPosition?: "before-preset";
+  presentation?: "segmented";
   instructionSuffix?: string;
   defaultValue?: number;
-  valueOptions?: { value: number; variables: Record<string, string>; instructionSuffix?: string }[];
+  valueOptions?: { value: number; label?: string; variables: Record<string, string>; instructionSuffix?: string }[];
 }
 export type V5ControlOverrides = Record<string, boolean | number>;
 export interface V5CustomInstruction { enabled: boolean; text: string }
@@ -346,6 +348,8 @@ export interface AnalyzerSettings {
 }
 
 export interface JevConnectionSettings {
+  /** Lumiverse Decision connection id; "" = host default connection. */
+  connectionId?: string;
   /** Default of the per-charx "roster preselection" toggle. */
   rosterSelectionDefault: boolean;
   model: string;
@@ -503,7 +507,7 @@ export function createDefaultConfig(): InlayConfig {
     enabled: true,
     ui: { language: "en", developerModeEnabled: false, popupClickThroughProtectionEnabled: true, floatingGenerationCountEnabled: false, floatingGenerationCountPosition: null },
     analysis: { connectionId: "", model: "", temperature: 0.2, timeoutMs: DEFAULT_ANALYZER_TIMEOUT_MS, reasoning: { mode: "off", effort: "medium" }, jsonMode: true, vision: "auto", maxTokens: 0 },
-    jevConnection: { rosterSelectionDefault: false, model: DEFAULT_JEV_MODEL },
+    jevConnection: { connectionId: "", rosterSelectionDefault: false, model: DEFAULT_JEV_MODEL },
     novelai: {
       analysisProfile: DEFAULT_ANALYSIS_PROFILE,
       v5UserDirections: createDefaultV5UserDirections(),
@@ -733,6 +737,7 @@ export function normalizeConfigWithIssues(raw: unknown): ConfigNormalizeResult {
 
   const jevRaw = asRecord(hasOwn(input, "jevConnection") ? input.jevConnection : merged.jevConnection);
   const jevConnection: JevConnectionSettings = {
+    connectionId: trimString(jevRaw.connectionId),
     rosterSelectionDefault: typeof jevRaw.rosterSelectionDefault === "boolean" ? jevRaw.rosterSelectionDefault : jevRaw.selectionEnabled === true,
     model: typeof jevRaw.model === "string" && jevRaw.model.trim() ? jevRaw.model.trim() : DEFAULT_JEV_MODEL,
   };

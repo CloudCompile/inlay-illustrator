@@ -12,6 +12,7 @@ import { COUNT_LABELS, ERROR_DIALOG_LABELS, fill, TOAST_LABELS } from "./labels.
 import type { ChatRuntimeStore } from "./runtime-store.js";
 import { buildToastStack, type RuntimeToastModel } from "./toast-model.js";
 import { RetryIcon } from "./widgets.js";
+import { directionPatch, selectPreset } from "../overlay/settings/directions.js";
 
 export type ToastCommand = "cancel" | "retry" | "restart" | "dismiss";
 
@@ -80,9 +81,22 @@ function RuntimeToast({ toast, expanded, onToggle, onCommand }: { toast: Runtime
   }, [toast.key, toast.autoDismissMs, toast.createdAt]);
   const danger = toast.tone === "danger";
   const hasDetails = danger && !!(toast.errorText || toast.detail);
+  const displayMessage = toast.retryCount && toast.message.endsWith(` · ${toast.retryCount}`)
+    ? toast.message.slice(0, -(` · ${toast.retryCount}`.length))
+    : toast.message;
   const copy = (
     <span class="ii-am-chat-toast__copy">
-      <span class="ii-am-chat-toast__message" title={toast.message}>{toast.message}</span>
+      <span class="ii-am-chat-toast__message" title={toast.message}>
+        {toast.retryCount ? (
+          <>
+            <span class="x-risu-am-runtime-toast__message-label ii-am-chat-toast__message-label">{displayMessage}</span>
+            {" · "}
+            <span class="x-risu-am-runtime-toast__retry-count ii-am-chat-toast__retry-count">{toast.retryCount}</span>
+          </>
+        ) : (
+          toast.message
+        )}
+      </span>
       {toast.detail && !danger ? <span class="ii-am-chat-toast__detail" title={toast.detail}>{toast.detail}</span> : null}
     </span>
   );
@@ -211,8 +225,9 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
     const preset = scene.presets.find((p) => p.id === id);
     if (!preset) return;
     setSceneSaving(true);
+    const patchedScene = directionPatch(selectPreset(scene, id));
     await app.updateConfig({
-      novelai: { v5UserDirections: { scene: { ...scene, mode: "preset", selectedPresetId: id, presetId: id, customText: preset.instruction, ...(preset.controlOverrides ? { controlOverrides: preset.controlOverrides } : {}) } } }
+      novelai: { v5UserDirections: { scene: patchedScene } }
     } as never);
     setSceneSaving(false);
   };
@@ -253,8 +268,13 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
       data-ii-expanded={expanded ? "true" : "false"}
       data-ii-count-mode={view.mode}
       data-ii-scene-available={sceneAvailable ? "true" : "false"}
+      data-ii-scene-direction-available={sceneAvailable ? "true" : "false"}
+      data-am-scene-direction-available={sceneAvailable ? "true" : "false"}
+      data-am-count-mode={view.mode}
+      data-am-expanded={expanded ? "true" : "false"}
       data-ii-menu={menu}
       data-ii-floating={floating ? "true" : undefined}
+      data-am-floating={floating ? "true" : undefined}
       data-ii-floating-below={floating && position && position.y < 0.5 ? "true" : undefined}
       style={style}
       onKeyDown={(event) => {

@@ -25,6 +25,7 @@ import type {
   AssetListItem,
   BackendStatus,
   CharacterSummary,
+  DecisionConnectionSummary,
   ImageConnectionSummary,
   LlmConnectionSummary,
   RuntimeLogEntry
@@ -60,6 +61,7 @@ export interface MockDb {
   chatImageGeneration: ChatImageGenerationSettings;
   uiState: UiState;
   llmConnections: LlmConnectionSummary[];
+  decisionConnections: DecisionConnectionSummary[];
   imageConnections: ImageConnectionSummary[];
   characters: MockCharacter[];
   documents: Record<string, CharacterDocument>;
@@ -189,6 +191,9 @@ export function createMockDb(): MockDb {
     llmConnections: [
       { id: "llm-1", name: "OpenAI main", provider: "openai", model: "gpt-5.5", isDefault: true, hasApiKey: true },
       { id: "llm-2", name: "Gemini vision", provider: "google", model: "gemini-3-pro", isDefault: false, hasApiKey: true }
+    ],
+    decisionConnections: [
+      { id: "dec-1", name: "Lumiverse Decision", provider: "lumiverse", model: "jev-latest", isDefault: true, hasApiKey: true }
     ],
     imageConnections: [
       { id: "img-nai", name: "NovelAI", provider: "novelai", model: "nai-diffusion-4-5-full", isDefault: true, generationProvider: "novelai", promptCodec: "novelai-structured" },

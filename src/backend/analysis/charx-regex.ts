@@ -72,7 +72,7 @@ export async function runCharxRegex(ctx: JobContext, params: { force?: boolean }
     sourceCatalog: { ...session.sourceCatalog, getCachedCharacter: () => ({ character }) },
     analyzer: createAmAnalyzer(ctx.services, {
       purpose: "charx-regex",
-      onRetry: (info) => ctx.progress({ label: `Retrying (${info.attempt}/${info.total})`, labelKo: "재시도", retry: { attempt: info.attempt, total: info.total } }),
+      onRetry: (info) => ctx.progress({ label: `Retrying (${info.attempt}/${info.total})`, labelKo: "재시도", retry: { attempt: info.attempt, total: info.total }, retryCount: `${info.attempt}/${info.total}` }),
     }),
     config: session.store,
     log: (line: string) => ctx.services.log.append("warn", "charx-regex", line),

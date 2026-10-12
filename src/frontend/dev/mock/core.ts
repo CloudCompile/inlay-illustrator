@@ -181,6 +181,7 @@ export function coreMockHandlers(): MockHandlers {
       return { ok: true };
     },
     "connections.listLlm": (_p, { db }) => ({ connections: db.llmConnections }),
+    "connections.listDecision": (_p, { db }) => ({ connections: db.decisionConnections }),
     "connections.listImage": (_p, { db }) => ({ connections: db.imageConnections }),
     "workspace.listCharacters": (_p, { db }) => ({ characters: db.characters.map((c) => c.summary) }),
     "workspace.load": ({ characterId }, ctx) => buildSnapshot(ctx.db, characterId, ctx),

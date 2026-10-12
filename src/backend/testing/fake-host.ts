@@ -18,6 +18,8 @@ import type {
   ChatDTO,
   ChatMessageDTO,
   ConnectionProfileDTO,
+  DecisionConnectionProfileDTO,
+  DecisionModelDTO,
   ImageDTO,
   ImageGenConnectionDTO,
   ImageGenRequestDTO,
@@ -70,6 +72,10 @@ export interface FakeHost {
   llmQueue: Array<Scripted<Record<string, unknown>, unknown>>;
   defaultLlmReply: Scripted<Record<string, unknown>, unknown>;
   scriptLlm(...replies: Array<Scripted<Record<string, unknown>, unknown>>): void;
+
+  /* decisions */
+  decisionConnections: DecisionConnectionProfileDTO[];
+  decisionModels: Record<string, DecisionModelDTO[]>;
 
   /* image generation */
   imageConnections: ImageGenConnectionDTO[];
@@ -146,6 +152,8 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   fake.llmQueue = [];
   fake.defaultLlmReply = { content: "{}", finish_reason: "stop", usage: {} };
   fake.scriptLlm = (...replies) => { fake.llmQueue.push(...replies); };
+  fake.decisionConnections = [];
+  fake.decisionModels = {};
   fake.imageConnections = [];
   fake.imageModels = {};
   fake.imageGenCalls = [];
@@ -402,6 +410,21 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
     connections: {
       async list() { return fake.llmConnections.map((c) => ({ ...c })); },
       async get(id: string) { const c = fake.llmConnections.find((x) => x.id === id); return c ? { ...c } : null; },
+    },
+    decisions: {
+      async listConnections() { return fake.decisionConnections.map((c) => ({ ...c })); },
+      async getConnection(id: string) { const c = fake.decisionConnections.find((x) => x.id === id); return c ? { ...c } : null; },
+      async getModels(id: string) { return fake.decisionModels[id] ?? []; },
+      async listProviders() { return []; },
+      async evaluate(input: any) {
+        return {
+          model: input.model ?? "typesafe/jev-latest",
+          answers: Object.fromEntries(
+            Object.keys(input.questions ?? {}).map((k) => [k, { type: "noul", noul: 0.95 }])
+          ),
+          latencyMs: 12,
+        };
+      },
     },
     imageGen: {
       async generate(input: ImageGenRequestDTO & Record<string, unknown>) {

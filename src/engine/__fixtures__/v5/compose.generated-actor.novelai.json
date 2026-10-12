@@ -1,10 +1,4 @@
 {
- "scenario": {
-  "response": "generatedActor",
-  "provider": "novelai",
-  "seed": 49,
-  "freechar": true
- },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -377,11 +371,11 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-82bd78bc1217e302",
+  "requestPayload": "fnv1a64-32ae1f244ea22776",
   "localProjection": {
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
  },
  "plans": [
   {
@@ -978,7 +972,7 @@
     "hash": "fnv1a64-cd0f65e1e6bf2022"
    },
    "decision": {
-    "hash": "fnv1a64-cd36dc628e588641"
+    "hash": "fnv1a64-1995f368e65fcfbe"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1145,7 +1139,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-2cdeb02186f36421"
+    "hash": "fnv1a64-8aeeca88ec6446a6"
    }
   }
  ],

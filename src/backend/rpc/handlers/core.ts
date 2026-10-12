@@ -200,6 +200,9 @@ export const coreHandlers: HandlerGroup = {
   "connections.listImage": async (_p, ctx) => ({ connections: await ctx.images.listConnections() }),
   "connections.listImageModels": async (params, ctx) => ({ models: await ctx.images.listModels(requireId(params.connectionId, "connectionId")) }),
   "connections.listLlmModels": async (params, ctx) => ({ models: await ctx.llm.listModels(requireId(params.connectionId, "connectionId")) }),
+  "connections.listDecision": async (_p, ctx) => ({ connections: await ctx.decisions.listConnections() }),
+  "connections.listDecisionModels": async (params, ctx) => ({ models: await ctx.decisions.listModels(requireId(params.connectionId, "connectionId")) }),
+  "decision.testConnection": (params, ctx) => ctx.decisions.testConnection(params),
   "analyzer.testMessage": (params, ctx) => ctx.llm.testMessage(params.text, params.analysis ? (asRecord(params.analysis) as Partial<AnalyzerSettings>) : undefined),
   "image.testConnection": (params, ctx) => ctx.images.testConnection(params.connectionId),
 

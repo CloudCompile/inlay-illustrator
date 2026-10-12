@@ -18,7 +18,8 @@
     "world_books",
     "regex_scripts",
     "app_manipulation",
-    "ui_panels"
+    "ui_panels",
+    "decisions"
   ],
   "requested_capabilities": [
     "base64_decode"

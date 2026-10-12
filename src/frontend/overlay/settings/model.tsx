@@ -1,12 +1,12 @@
 /** Model settings page (Asset Maid `axt` panel "model" 143574, message test `K0t` 142288, JEV `B0t` 142469). */
 import { useEffect, useRef, useState } from "preact/hooks";
-import { THINKING_LEVELS, type InlayConfig, type ReasoningMode, type ThinkingLevel } from "../../../shared/contract/config.js";
-import type { LlmConnectionSummary, RpcError } from "../../../shared/contract/rpc.js";
+import { DEFAULT_JEV_MODEL, THINKING_LEVELS, type InlayConfig, type ReasoningMode, type ThinkingLevel } from "../../../shared/contract/config.js";
+import type { DecisionConnectionSummary, LlmConnectionSummary, RpcError } from "../../../shared/contract/rpc.js";
 import { useApp, useAppState, useRpcQuery } from "../../state/app-state.js";
 import { toRpcError } from "../../rpc/client.js";
 import { Button, IconButton, Select, StopIcon, Switch, TextArea, TextField, cn, type SelectOption } from "../ui/index.js";
 import { useConfigForm } from "./config-form.js";
-import { CopyIcon, ResetIcon, SendIcon, SpinnerIcon } from "./icons.js";
+import { AlertCircleIcon, CopyIcon, PlugIcon, ResetIcon, SendIcon, SpinnerIcon } from "./icons.js";
 import { COMMON_LABELS as C, MODEL_LABELS as M, PAGE_TITLES } from "./labels.js";
 import { Badge, Card, Column, Columns, ErrorBanner, Field, LoadingBox, NumberField, SaveActions, SettingsFrame, useFieldId } from "./parts.js";
 
@@ -28,7 +28,16 @@ export function modelOptions(models: readonly { id: string; label: string }[], c
   return options;
 }
 
+/** Decision connection select options ("" = Default Decision Connection). */
+export function decisionConnectionOptions(connections: readonly DecisionConnectionSummary[], current: string = ""): SelectOption[] {
+  const options: SelectOption[] = [{ value: "", label: M.jevConnectionDefault }];
+  for (const connection of connections) options.push({ value: connection.id, label: `${connection.name} · ${connection.model}` });
+  if (current && !connections.some((c) => c.id === current)) options.push({ value: current, label: C.existingValue(current) });
+  return options;
+}
+
 export function ModelSettingsPage() {
+  const app = useApp();
   const form = useConfigForm();
   const config = form.config;
   const connections = useRpcQuery("connections.listLlm", {});
@@ -36,7 +45,40 @@ export function ModelSettingsPage() {
   const connectionId = config?.analysis.connectionId ?? "";
   const resolved = list.find((c) => c.id === connectionId) ?? (connectionId ? undefined : list.find((c) => c.isDefault));
   const models = useRpcQuery("connections.listLlmModels", resolved ? { connectionId: resolved.id } : null);
-  const ids = { connection: useFieldId("ii-model-connection"), temperature: useFieldId("ii-model-temperature"), timeout: useFieldId("ii-model-timeout"), maxTokens: useFieldId("ii-model-max-tokens") };
+
+  const decisionConnections = useRpcQuery("connections.listDecision", {});
+  const decisionList = decisionConnections.data?.connections ?? [];
+  const jevConnectionId = config?.jevConnection.connectionId ?? "";
+  const resolvedDecision = decisionList.find((c) => c.id === jevConnectionId) ?? (jevConnectionId ? undefined : decisionList.find((c) => c.isDefault));
+  const [jevTest, setJevTest] = useState<{ status: "idle" | "loading" | "success" | "error"; text?: string }>({ status: "idle" });
+
+  const ids = {
+    connection: useFieldId("ii-model-connection"),
+    temperature: useFieldId("ii-model-temperature"),
+    timeout: useFieldId("ii-model-timeout"),
+    maxTokens: useFieldId("ii-model-max-tokens"),
+    jevConnection: useFieldId("ii-model-jev-connection"),
+    jevModel: useFieldId("ii-model-jev-model")
+  };
+
+  const runJevTest = async () => {
+    if (jevTest.status === "loading" || !config) return;
+    setJevTest({ status: "loading" });
+    try {
+      const result = await app.call("decision.testConnection", {
+        connectionId: config.jevConnection.connectionId || undefined,
+        model: config.jevConnection.model || undefined
+      });
+      if (result.ok) {
+        setJevTest({ status: "success", text: M.jevConnected(result.latencyMs) });
+      } else {
+        const errorMsg = typeof result.error === "string" ? result.error : result.error?.message || M.jevTestFailed;
+        setJevTest({ status: "error", text: errorMsg });
+      }
+    } catch (caught) {
+      setJevTest({ status: "error", text: toRpcError(caught).message || M.jevTestFailed });
+    }
+  };
 
   const actions = <SaveActions dirty={form.dirty} saving={form.saving} error={form.error} onSave={() => void form.save()} />;
   if (!config) return <SettingsFrame section="model" title={PAGE_TITLES.model} actions={actions}><LoadingBox /></SettingsFrame>;
@@ -96,12 +138,50 @@ export function ModelSettingsPage() {
         </Columns>
       </Card>
       <MessageTest dirty={form.dirty} analysis={form.dirty ? config.analysis : undefined} />
-      <Card title={M.jev} end={<Badge>{C.later}</Badge>} className="opacity-60" aria-disabled="true" data-model-jev="">
+      <Card title={M.jev} data-model-jev="">
         <p class="text-xs text-muted-foreground">{M.jevDescription}</p>
-        <Field label={M.jevModel}>
-          <TextField className="bg-surface-prompt-field" value={config.jevConnection.model} disabled aria-label={M.jevModel} />
-        </Field>
-        <p class="text-2xs text-muted-foreground">{M.jevLater}</p>
+        <Columns>
+          <Column>
+            <Field label={M.jevConnection} htmlFor={ids.jevConnection}>
+              <Select id={ids.jevConnection} aria-label={M.jevConnectionAria} value={config.jevConnection.connectionId ?? ""}
+                options={decisionConnectionOptions(decisionList, config.jevConnection.connectionId ?? "")}
+                disabled={decisionConnections.loading && !decisionList.length}
+                onValueChange={(value) => {
+                  setJevTest({ status: "idle" });
+                  void form.apply({ jevConnection: { connectionId: value } });
+                }} />
+            </Field>
+          </Column>
+          <Column>
+            <Field label={M.jevModel} htmlFor={ids.jevModel}>
+              <TextField id={ids.jevModel} className="bg-surface-prompt-field" value={config.jevConnection.model}
+                placeholder={resolvedDecision?.model || DEFAULT_JEV_MODEL} aria-label={M.jevModelAria}
+                onInput={(event) => {
+                  setJevTest({ status: "idle" });
+                  form.draft({ jevConnection: { model: (event.currentTarget as HTMLInputElement).value } });
+                }} />
+            </Field>
+          </Column>
+        </Columns>
+        <div class="flex flex-wrap items-center gap-3">
+          <Button variant="subtle" size="sm" disabled={jevTest.status === "loading"} onClick={() => void runJevTest()}>
+            {jevTest.status === "loading" ? <SpinnerIcon className="size-3.5" /> : <PlugIcon className="size-3.5" />}
+            {M.jevTestConnection}
+          </Button>
+          {jevTest.status === "loading" ? (
+            <span role="status" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <SpinnerIcon className="size-3.5" />
+              {M.jevTesting}
+            </span>
+          ) : jevTest.status === "success" ? (
+            <Badge tone="success">{jevTest.text}</Badge>
+          ) : jevTest.status === "error" ? (
+            <span role="status" class="flex items-center gap-1.5 text-xs text-destructive">
+              <AlertCircleIcon className="size-3.5" />
+              {jevTest.text}
+            </span>
+          ) : null}
+        </div>
       </Card>
     </SettingsFrame>
   );

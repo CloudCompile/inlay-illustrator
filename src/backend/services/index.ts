@@ -9,6 +9,7 @@ import { createLlmService } from "./llm.js";
 import { createRunLog } from "./run-log.js";
 import { createSourcesService } from "./sources.js";
 import { createStorageService } from "./storage.js";
+import { createDecisionService } from "./decisions.js";
 import type { BackendServices, SpindleHost } from "./types.js";
 
 export * from "./types.js";
@@ -19,6 +20,7 @@ export { createLlmService } from "./llm.js";
 export { createRunLog } from "./run-log.js";
 export { createSourcesService } from "./sources.js";
 export { createStorageService } from "./storage.js";
+export { createDecisionService } from "./decisions.js";
 
 export function createServices(host: SpindleHost, userId: string | undefined): BackendServices {
   const events = createEventBus(host, userId);
@@ -29,7 +31,8 @@ export function createServices(host: SpindleHost, userId: string | undefined): B
   const llm = createLlmService({ host, userId, loadConfig, log, getJson: (url, options) => imageBytes.getJson(url, options) });
   const images = createImageService({ host, userId, loadConfig, log });
   const sources = createSourcesService({ host, userId, imageBytes, storage, log });
-  return { host, userId, storage, llm, images, imageBytes, sources, events, log };
+  const decisions = createDecisionService(host, log);
+  return { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
 }
 
 export interface ServicesRegistry {

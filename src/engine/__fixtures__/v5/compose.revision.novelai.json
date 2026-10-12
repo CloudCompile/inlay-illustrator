@@ -1,10 +1,4 @@
 {
- "scenario": {
-  "response": "default",
-  "provider": "novelai",
-  "seed": 47,
-  "revisionDirection": "Make her smile"
- },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -438,11 +432,11 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-36dd2d379eda46e1",
+  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
   "localProjection": {
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
  },
  "plans": [
   {
@@ -1793,7 +1787,7 @@
     "hash": "fnv1a64-bb9cadbe6541645b"
    },
    "decision": {
-    "hash": "fnv1a64-e5ef242402517c87"
+    "hash": "fnv1a64-1c8d2cd87e6a19d8"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1972,7 +1966,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-79ba9094ff378cdf"
+    "hash": "fnv1a64-e4223546a694df78"
    }
   },
   {
@@ -2016,7 +2010,7 @@
     "hash": "fnv1a64-1b478361845318d9"
    },
    "decision": {
-    "hash": "fnv1a64-d92b7bb868e1cdae"
+    "hash": "fnv1a64-d32455bc50c7edd9"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -2157,7 +2151,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-7b2f3f08bfc3e797"
+    "hash": "fnv1a64-418393c386ed4338"
    }
   }
  ],

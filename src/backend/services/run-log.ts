@@ -6,20 +6,63 @@ import type { RuntimeLogEntry } from "../../shared/contract/index.js";
 import type { EventBus, RunLog, SpindleHost } from "./types.js";
 
 export const RUN_LOG_LIMIT = 250;
+export const MAX_LOG_STRING_LENGTH = 4000;
 
 /** The ported cores log with the original "[Asset Maid]" / "[Asset Maid React]" prefixes; show our own name instead. */
 export function brandLogMessage(message: string): string {
   return message.replace(/^\[Asset Maid(?: React)?\]\s*/u, "[Inlay] ");
 }
 
-function safeDetails(details: unknown): unknown {
+/** Redacts sensitive query parameters, HTTP headers, tokens and secrets (AM 0.9.89.3 redaction). */
+export function redactSensitive(text: string): string {
+  let s = text.replace(
+    /((?:authorization)\s*[:=]\s*(?:bearer|basic)\s+)[^\s,}]+/gi,
+    "$1[redacted]",
+  );
+  s = s.replace(
+    /([?&](?:key|api[_-]?key|access[_-]?token|token|secret)=)[^&#\s]+/gi,
+    "$1[redacted]",
+  );
+  s = s.replace(
+    /("?(?:api[_-]?key|authorization|private[_-]?key|access[_-]?token|token|secret)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^&#\s,}]+)/gi,
+    (m, p1, p2) => {
+      const clean = p2.toLowerCase().replace(/^["']|["']$/g, "").trim();
+      if (clean === "bearer" || clean === "basic" || clean.startsWith("bearer ") || clean.startsWith("basic ")) return m;
+      return `${p1}[redacted]`;
+    },
+  );
+  return s;
+}
+
+/** Truncates text exceeding the maximum log length with `...(세부 로그 생략)`. */
+export function truncateLog(text: string, max = MAX_LOG_STRING_LENGTH): string {
+  return text.length > max ? `${text.slice(0, max)}...(세부 로그 생략)` : text;
+}
+
+export function safeDetails(details: unknown): unknown {
   if (details === undefined) return undefined;
-  if (details instanceof Error) return { name: details.name, message: details.message, code: (details as { code?: unknown }).code };
+  if (details instanceof Error) {
+    return {
+      name: details.name,
+      message: truncateLog(redactSensitive(details.message)),
+      code: (details as { code?: unknown }).code,
+      ...(details.stack ? { stack: truncateLog(redactSensitive(details.stack)) } : {}),
+    };
+  }
+  if (typeof details === "string") {
+    return truncateLog(redactSensitive(details));
+  }
   try {
-    // Drop non-JSON values (functions, cycles) and very long strings so the frontend payload stays small.
-    return JSON.parse(JSON.stringify(details, (_k, v) => (typeof v === "string" && v.length > 4000 ? `${v.slice(0, 4000)}...(${v.length} chars)` : v)));
+    return JSON.parse(
+      JSON.stringify(details, (_k, v) => {
+        if (typeof v === "string") {
+          return truncateLog(redactSensitive(v));
+        }
+        return v;
+      }),
+    );
   } catch {
-    return String(details);
+    return truncateLog(redactSensitive(String(details)));
   }
 }
 
@@ -31,7 +74,8 @@ export function createRunLog(options: { events?: EventBus; host?: Pick<SpindleHo
   return {
     append(level, scope, message, details) {
       seq += 1;
-      const entry: RuntimeLogEntry = { seq, at: now().toISOString(), level, scope, message: brandLogMessage(message) };
+      const formattedMessage = brandLogMessage(truncateLog(redactSensitive(message)));
+      const entry: RuntimeLogEntry = { seq, at: now().toISOString(), level, scope, message: formattedMessage };
       const d = safeDetails(details);
       if (d !== undefined) entry.details = d;
       entries.push(entry);

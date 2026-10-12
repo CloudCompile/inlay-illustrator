@@ -43,7 +43,7 @@ export function selectPreset(setting: Pick<V5DirectionSetting, "presets">, prese
     mode: "preset",
     ...(selected ? { selectedPresetId: selected.id } : {}),
     presets,
-    ...(selected?.scenePresetId ? { presetId: selected.scenePresetId } : {}),
+    presetId: selected?.scenePresetId ?? "",
     ...(selected?.controlOverrides ? { controlOverrides: selected.controlOverrides } : {}),
     customText: selected?.instruction ?? ""
   };
@@ -85,9 +85,28 @@ function valueOption(control: V5DirectionControl, value: unknown) {
   return control.valueOptions?.find((option) => option.value === value);
 }
 
+/**
+ * AM `WD`: migrates legacy preset control overrides.
+ * If preset control overrides contain boolean `comic.landscape` and no `comic.frame`, converts `comic.landscape ? 2 : 1` to `comic.frame`.
+ */
+export function migrateLegacyDirectionOverrides<T extends Record<string, unknown> | V5ControlOverrides | undefined>(
+  overrides: T
+): V5ControlOverrides {
+  const base: Record<string, unknown> = overrides && typeof overrides === "object" && !Array.isArray(overrides) ? { ...overrides } : {};
+  if (!("comic.frame" in base) && typeof base["comic.landscape"] === "boolean") {
+    base["comic.frame"] = base["comic.landscape"] ? 2 : 1;
+  }
+  delete base["comic.landscape"];
+  return base as V5ControlOverrides;
+}
+
+/** Legacy alias for `migrateLegacyDirectionOverrides` (AM `WD`). */
+export const WD = migrateLegacyDirectionOverrides;
+
 /** `Sj`: enabled flag (+ value for numeric controls) of a control under `overrides`. */
 export function controlState(control: V5DirectionControl, overrides: V5ControlOverrides | undefined): { enabled: boolean; value?: number } {
-  const raw = overrides?.[control.ref];
+  const effective = control.ref === "comic.frame" ? migrateLegacyDirectionOverrides(overrides) : overrides;
+  const raw = effective?.[control.ref];
   if (control.valueOptions?.length) {
     const value = valueOption(control, raw)?.value ?? control.defaultValue ?? control.valueOptions[0]?.value;
     return { enabled: typeof raw === "number" || raw === true || (raw === undefined && control.defaultEnabled), ...(value !== undefined ? { value } : {}) };
@@ -96,7 +115,7 @@ export function controlState(control: V5DirectionControl, overrides: V5ControlOv
 }
 
 function cleanOverrides(overrides: V5ControlOverrides | undefined): V5ControlOverrides {
-  return { ...(overrides ?? {}) };
+  return migrateLegacyDirectionOverrides(overrides);
 }
 function finish(overrides: V5ControlOverrides): V5ControlOverrides | undefined {
   return Object.keys(overrides).length ? overrides : undefined;

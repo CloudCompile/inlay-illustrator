@@ -1,9 +1,4 @@
 {
- "scenario": {
-  "response": "default",
-  "provider": "chan-server",
-  "seed": 41
- },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -437,11 +432,11 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-36dd2d379eda46e1",
+  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
   "localProjection": {
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
  },
  "plans": [
   {
@@ -1780,7 +1775,7 @@
     "hash": "fnv1a64-bb9cadbe6541645b"
    },
    "decision": {
-    "hash": "fnv1a64-5367fc4d5a55a4ef"
+    "hash": "fnv1a64-b8b6d7141d111c00"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1955,7 +1950,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-d70d739fa47df8b6"
+    "hash": "fnv1a64-9c9fb7ec7ba11391"
    }
   },
   {
@@ -1991,7 +1986,7 @@
     "hash": "fnv1a64-1b478361845318d9"
    },
    "decision": {
-    "hash": "fnv1a64-48f6c929c24d0702"
+    "hash": "fnv1a64-8e7198873409252d"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -2130,7 +2125,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-c31f3f1a2dc1cab4"
+    "hash": "fnv1a64-182066bba876ed7b"
    }
   }
  ],

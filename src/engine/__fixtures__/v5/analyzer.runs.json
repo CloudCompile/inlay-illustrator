@@ -25,9 +25,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-52c9ce873ac0dce2",
+     "messages": "fnv1a64-fbe0941a60854196",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-899c5b8e15ac4d75"
+     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
     }
    }
   ],
@@ -464,11 +464,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -498,9 +498,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-d79502f8d9c1a779",
+     "messages": "fnv1a64-2a96d5651cb8a505",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-47e32ca989f5946e"
+     "cachePartition": "fnv1a64-a797468970574672"
     }
    }
   ],
@@ -797,11 +797,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "persona-automatic"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -831,9 +831,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-159732f8e2168578",
+     "messages": "fnv1a64-68ffe6949b0a1456",
      "schema": "fnv1a64-4d3890e9c366feb4",
-     "cachePartition": "fnv1a64-7bb36e1d54295437"
+     "cachePartition": "fnv1a64-7336617d8c43e701"
     }
    }
   ],
@@ -1243,12 +1243,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-232c0f8644e7fe24",
+   "requestPayload": "fnv1a64-057216cde884b8f8",
    "localProjection": {
-    "characterCoordinates": "fixed",
-    "sizeId": 1
+    "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -1278,9 +1277,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-1ce052346815d92a",
+     "messages": "fnv1a64-9f2347c6041418b5",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-1239c31828d45915"
+     "cachePartition": "fnv1a64-7ed99e54df247dda"
     }
    }
   ],
@@ -1684,11 +1683,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -1718,9 +1717,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-dd2c251684a89d07",
+     "messages": "fnv1a64-3010abe8ed5e9dab",
      "schema": "fnv1a64-4e4855fcc633689a",
-     "cachePartition": "fnv1a64-a38a162d5bbb5310"
+     "cachePartition": "fnv1a64-15b9f6c6105187dc"
     }
    }
   ],
@@ -1930,11 +1929,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-aa017ba4c64d67a7",
+   "requestPayload": "fnv1a64-940d851086ee78b3",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -1964,9 +1963,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-52c9ce873ac0dce2",
+     "messages": "fnv1a64-fbe0941a60854196",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-899c5b8e15ac4d75"
+     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
     }
    }
   ],
@@ -2239,11 +2238,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -2273,9 +2272,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-52c9ce873ac0dce2",
+     "messages": "fnv1a64-fbe0941a60854196",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-899c5b8e15ac4d75"
+     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
     }
    }
   ],
@@ -2600,11 +2599,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -2634,9 +2633,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-52c9ce873ac0dce2",
+     "messages": "fnv1a64-fbe0941a60854196",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-899c5b8e15ac4d75"
+     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
     }
    }
   ],
@@ -2699,9 +2698,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-52c9ce873ac0dce2",
+     "messages": "fnv1a64-fbe0941a60854196",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-899c5b8e15ac4d75"
+     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
     }
    }
   ],
@@ -2757,9 +2756,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-2a420108fdf942bb",
+     "messages": "fnv1a64-1035cb6e60d76357",
      "schema": "fnv1a64-5f38d9df8a93132f",
-     "cachePartition": "fnv1a64-581c04fa2c379914"
+     "cachePartition": "fnv1a64-9fe4d90fd8de59c0"
     }
    }
   ],
@@ -3135,11 +3134,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-82bd78bc1217e302",
+   "requestPayload": "fnv1a64-32ae1f244ea22776",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -3169,9 +3168,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-52c9ce873ac0dce2",
+     "messages": "fnv1a64-fbe0941a60854196",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-899c5b8e15ac4d75"
+     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
     }
    }
   ],
@@ -3463,11 +3462,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -3497,9 +3496,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-22d62a7253bbc9e3",
+     "messages": "fnv1a64-ab38ea5d5421a297",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-3a3f2000d75f3344"
+     "cachePartition": "fnv1a64-2b2b3a4fd85f0c70"
     }
    }
   ],
@@ -3936,11 +3935,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-36dd2d379eda46e1",
+   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  },
@@ -3970,9 +3969,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-b1a8bab6716db06b",
+     "messages": "fnv1a64-3476cab00fbe2227",
      "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-64eb4f1c97441a34"
+     "cachePartition": "fnv1a64-293f08a03c41fda0"
     }
    }
   ],
@@ -4189,11 +4188,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-513bdc6546c8a0f0",
+   "requestPayload": "fnv1a64-768cb3ad8410cc64",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
   },
   "error": null
  }

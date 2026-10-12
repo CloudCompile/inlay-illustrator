@@ -128,7 +128,7 @@ export const CHARX_LABELS = {
   stateAccumulation: { title: "State accumulation", description: "Carries character state into the next generation. When off, saved states are kept." }, // 상태 누적
   nsfwAlways: { title: "Always add NSFW", description: "Adds nsfw in front of every generation prompt." }, // NSFW 항상 추가
   analysisOutput: "Analysis & output", // 분석·출력
-  rosterSelection: { title: "Roster pre-selection", description: "JEV pre-filters the characters and passes them to analysis. Recommended when many characters are registered. (JEV is not available yet.)" }, // 로스터 사전 선정
+  rosterSelection: { title: "Roster pre-selection", description: "JEV pre-filters characters and passes them to analysis using your Lumiverse Decision model connection." }, // 로스터 사전 선정
   fixedResolution: { title: "Fixed resolution", description: "Fixes the generated image resolution to the selected size." }, // 고정 해상도
   fixedResolutionSelect: "Select fixed resolution", // 고정 해상도 선택
   fixedResolutionUse: "Use fixed resolution", // 고정 해상도 사용
@@ -224,8 +224,16 @@ export const MODEL_LABELS = {
   copiedAnswer: "Copied.", // 복사했습니다.
   copyFailed: "Could not copy. Select the answer and copy it manually.", // 복사하지 못했습니다. …
   jev: "JEV",
-  jevDescription: "Connection for roster pre-selection · enable it in character settings", // 로스터 사전 선정용 연결 · 사용 여부는 charx 설정에서 지정
+  jevDescription: "Lumiverse Decision model connection for roster pre-selection.",
+  jevConnection: "Decision connection",
+  jevConnectionAria: "Decision connection profile",
+  jevConnectionDefault: "Default Decision Connection",
+  jevTestConnection: "Test connection",
+  jevTesting: "Testing connection…",
+  jevConnected: (ms?: number) => (ms !== undefined ? `Connected (${ms}ms)` : "Connected"),
+  jevTestFailed: "Connection test failed",
   jevModel: "Model", // 모델
+  jevModelAria: "Decision model",
   jevLater: "The TypeSafe JEV pre-selection is not available yet. It may be added later."
 } as const;
 

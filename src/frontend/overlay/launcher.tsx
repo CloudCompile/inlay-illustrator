@@ -74,7 +74,7 @@ function LauncherBody({ app, store, onOpen, onOpenSettings, fabCorner }: Launche
       <div class="flex items-center justify-between gap-3 rounded-md bg-card px-3 py-2">
         <span class="text-xs font-bold" id="ii-launcher-fab-corner">{L.fabCorner}</span>
         <div class="w-36">
-          <Select<FabCorner> aria-labelledby="ii-launcher-fab-corner" value={corner} options={FAB_CORNER_OPTIONS} onValueChange={(value) => { setCorner(value); fabCorner.set(value); }} />
+          <Select<FabCorner> native aria-labelledby="ii-launcher-fab-corner" value={corner} options={FAB_CORNER_OPTIONS} onValueChange={(value) => { setCorner(value); fabCorner.set(value); }} />
         </div>
       </div>
     </div>

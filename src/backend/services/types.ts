@@ -1,3 +1,4 @@
+import type { DecisionService } from "./decisions.js";
 /**
  * Backend service interfaces (Asset Maid port). Written first so the services, pipeline and analysis modules can be built
  * in parallel. Implementations: src/backend/services/* (factory `createServices`), the chat pipeline in
@@ -438,4 +439,5 @@ export interface BackendServices {
   sources: SourcesService;
   events: EventBus;
   log: RunLog;
+  decisions: DecisionService;
 }

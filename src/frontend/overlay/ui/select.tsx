@@ -18,6 +18,7 @@ export type SelectProps<T extends string = string> = {
   disabled?: boolean;
   id?: string;
   className?: string;
+  native?: boolean;
   "aria-label"?: string;
   "aria-labelledby"?: string;
 };
@@ -36,7 +37,32 @@ function nextEnabled<T extends string>(options: SelectOption<T>[], from: number,
  * Keyboard: Enter/Space/ArrowDown open; arrows, Home/End and type-ahead move;
  * Enter/Space select; Escape/Tab close.
  */
-export function Select<T extends string = string>({ value, options, onValueChange, placeholder = "Select…", disabled, id, className, ...aria }: SelectProps<T>) {
+export function Select<T extends string = string>({ value, options, onValueChange, placeholder = "Select…", disabled, id, className, native, ...aria }: SelectProps<T>) {
+  if (native) {
+    return (
+      <div class={cn("relative flex w-full min-w-0 items-center", className)}>
+        <select
+          id={id}
+          value={value ?? ""}
+          disabled={disabled}
+          onChange={(event) => {
+            const next = (event.currentTarget as HTMLSelectElement).value as T;
+            onValueChange(next);
+          }}
+          class="h-9 w-full appearance-none rounded-md border-0 bg-input px-3 pr-8 text-xs font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/55 disabled:cursor-not-allowed disabled:opacity-45 max-md:h-11 max-md:text-sm cursor-pointer"
+          {...aria}
+        >
+          {placeholder && !value ? <option value="" disabled selected>{placeholder}</option> : null}
+          {options.map((option) => (
+            <option key={option.value} value={option.value} disabled={option.disabled} class="bg-card text-foreground">
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDownIcon className="pointer-events-none absolute right-2.5 size-3.5 text-muted-foreground" />
+      </div>
+    );
+  }
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const trigger = useRef<HTMLButtonElement>(null);

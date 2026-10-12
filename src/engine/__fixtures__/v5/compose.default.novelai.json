@@ -1,10 +1,4 @@
 {
- "scenario": {
-  "response": "default",
-  "provider": "novelai",
-  "seed": 41,
-  "full": true
- },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -438,11 +432,11 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-36dd2d379eda46e1",
+  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
   "localProjection": {
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763"
+  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
  },
  "plans": [
   {
@@ -2504,7 +2498,7 @@
     "analysis_profile": "v5-hybrid",
     "v5_interaction_led": {
      "format": "novelai-v5-interaction-led-history-v1",
-     "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763",
+     "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
      "normalizedGraph": {
       "slotNumber": 0,
       "status": "recovered",
@@ -3819,7 +3813,7 @@
       "analysis_profile": "v5-hybrid",
       "v5_interaction_led": {
        "format": "novelai-v5-interaction-led-history-v1",
-       "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763",
+       "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
        "normalizedGraph": {
         "slotNumber": 0,
         "status": "recovered",
@@ -5557,7 +5551,7 @@
     "analysis_profile": "v5-hybrid",
     "v5_interaction_led": {
      "format": "novelai-v5-interaction-led-history-v1",
-     "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763",
+     "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
      "normalizedGraph": {
       "slotNumber": 1,
       "status": "degraded",
@@ -6368,7 +6362,7 @@
       "analysis_profile": "v5-hybrid",
       "v5_interaction_led": {
        "format": "novelai-v5-interaction-led-history-v1",
-       "catalogFingerprint": "v5.fnv1a64-2d2b8892321dc763",
+       "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
        "normalizedGraph": {
         "slotNumber": 1,
         "status": "degraded",
