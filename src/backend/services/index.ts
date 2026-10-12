@@ -31,7 +31,7 @@ export function createServices(host: SpindleHost, userId: string | undefined): B
   const llm = createLlmService({ host, userId, loadConfig, log, getJson: (url, options) => imageBytes.getJson(url, options) });
   const images = createImageService({ host, userId, loadConfig, log });
   const sources = createSourcesService({ host, userId, imageBytes, storage, log });
-  const decisions = createDecisionService(host, log);
+  const decisions = createDecisionService(host, log, userId);
   return { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
 }
 

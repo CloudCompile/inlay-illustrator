@@ -65188,7 +65188,7 @@ function createEnginePort(services, options = {}) {
       getRetryCount: () => snapshot?.runtime.generationAutoRetryCount ?? 5,
       getIntervalMs: () => Math.max(0, Math.min(30, Number(snapshot?.runtime.novelaiParallelIntervalSec) || 0)) * 1000,
       rawCatalogJson: raw,
-      jev: services.decisions ? services.decisions.createJevAdapter(() => snapshot?.jevConnection ?? { rosterSelectionDefault: false, model: "jev-latest" }) : undefined,
+      jev: services.decisions ? services.decisions.createJevAdapter(() => snapshot?.jevConnection ?? { rosterSelectionDefault: false, model: "jev-latest" }, { userId: services.userId }) : undefined,
       onAnalyzerDiagnostic: (event) => options.onAnalyzerDiagnostic?.(event)
     });
     current = { raw, engine };
@@ -65590,9 +65590,9 @@ var coreHandlers = {
   "connections.listImage": async (_p, ctx) => ({ connections: await ctx.images.listConnections() }),
   "connections.listImageModels": async (params, ctx) => ({ models: await ctx.images.listModels(requireId(params.connectionId, "connectionId")) }),
   "connections.listLlmModels": async (params, ctx) => ({ models: await ctx.llm.listModels(requireId(params.connectionId, "connectionId")) }),
-  "connections.listDecision": async (_p, ctx) => ({ connections: await ctx.decisions.listConnections() }),
-  "connections.listDecisionModels": async (params, ctx) => ({ models: await ctx.decisions.listModels(requireId(params.connectionId, "connectionId")) }),
-  "decision.testConnection": (params, ctx) => ctx.decisions.testConnection(params),
+  "connections.listDecision": async (_p, ctx) => ({ connections: await ctx.decisions.listConnections({ userId: ctx.userId }) }),
+  "connections.listDecisionModels": async (params, ctx) => ({ models: await ctx.decisions.listModels(requireId(params.connectionId, "connectionId"), { userId: ctx.userId }) }),
+  "decision.testConnection": (params, ctx) => ctx.decisions.testConnection({ ...params, userId: ctx.userId }),
   "analyzer.testMessage": (params, ctx) => ctx.llm.testMessage(params.text, params.analysis ? asRecord3(params.analysis) : undefined),
   "image.testConnection": (params, ctx) => ctx.images.testConnection(params.connectionId),
   "workspace.listCharacters": async (_p, ctx) => ({ characters: await ctx.sources.listCharacters() }),
@@ -68288,14 +68288,18 @@ function createStorageService(host, userId, options = {}) {
 }
 
 // src/backend/services/decisions.ts
-function createDecisionService(host, log) {
+function createDecisionService(depsOrHost, maybeLog, maybeUserId) {
+  const host = "host" in depsOrHost ? depsOrHost.host : depsOrHost;
+  const log = "log" in depsOrHost ? depsOrHost.log : maybeLog;
+  const defaultUserId = "userId" in depsOrHost ? depsOrHost.userId : maybeUserId;
   return {
-    async listConnections() {
+    async listConnections(options = {}) {
       const api = host.decisions;
       if (!api?.listConnections)
         return [];
+      const effectiveUserId = options.userId ?? defaultUserId;
       try {
-        const list = await api.listConnections();
+        const list = await api.listConnections(effectiveUserId ? { userId: effectiveUserId } : undefined);
         return list.map((c) => ({
           id: c.id,
           name: c.name,
@@ -68309,12 +68313,13 @@ function createDecisionService(host, log) {
         return [];
       }
     },
-    async listModels(connectionId) {
+    async listModels(connectionId, options = {}) {
       const api = host.decisions;
       if (!api?.getModels)
         return [];
+      const effectiveUserId = options.userId ?? defaultUserId;
       try {
-        const models = await api.getModels(connectionId);
+        const models = await api.getModels(connectionId, effectiveUserId ? { userId: effectiveUserId } : undefined);
         return models.map((m) => ({
           id: m.id,
           label: m.label || m.id,
@@ -68334,6 +68339,7 @@ function createDecisionService(host, log) {
           error: rpcError("unsupported", "Decision API is not supported on this Lumiverse host.")
         };
       }
+      const effectiveUserId = params.userId ?? defaultUserId;
       const start = Date.now();
       try {
         const res = await api.evaluate({
@@ -68345,7 +68351,8 @@ function createDecisionService(host, log) {
               type: "noul",
               instructions: "Is this connection test functioning?"
             }
-          }
+          },
+          ...effectiveUserId ? { userId: effectiveUserId } : {}
         }, { signal: options.signal });
         return {
           ok: true,
@@ -68360,7 +68367,7 @@ function createDecisionService(host, log) {
         };
       }
     },
-    createJevAdapter(getConfig) {
+    createJevAdapter(getConfig, adapterOptions = {}) {
       return {
         network: {
           async evaluate(connection, request, options = {}) {
@@ -68371,12 +68378,14 @@ function createDecisionService(host, log) {
             const currentCfg = getConfig();
             const targetModel = connection.model || currentCfg.model || "jev-latest";
             const connId = connection.connectionId || currentCfg.connectionId || undefined;
+            const effectiveUserId = connection.userId ?? adapterOptions.userId ?? defaultUserId;
             const start = Date.now();
             const res = await api.evaluate({
               connection_id: connId,
               model: targetModel,
               state: request.state,
-              questions: request.questions
+              questions: request.questions,
+              ...effectiveUserId ? { userId: effectiveUserId } : {}
             }, { signal: options.signal });
             return {
               model: res.model,
@@ -68405,7 +68414,7 @@ function createServices(host, userId) {
   const llm = createLlmService({ host, userId, loadConfig, log, getJson: (url, options) => imageBytes.getJson(url, options) });
   const images = createImageService({ host, userId, loadConfig, log });
   const sources = createSourcesService({ host, userId, imageBytes, storage, log });
-  const decisions = createDecisionService(host, log);
+  const decisions = createDecisionService(host, log, userId);
   return { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
 }
 function createServicesRegistry(host, factory = createServices) {

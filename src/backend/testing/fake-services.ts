@@ -430,7 +430,7 @@ export function createFakeServices(overrides: FakeServicesOverrides = {}): FakeS
     ...overrides.sources,
   };
 
-  const decisions = createDecisionService(host, log);
+  const decisions = createDecisionService(host, log, userId);
   fx.services = { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
   return fx;
 }

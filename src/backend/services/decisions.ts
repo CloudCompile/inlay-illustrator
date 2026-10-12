@@ -12,14 +12,24 @@ export interface DecisionTestResult {
   error?: RpcError;
 }
 
+export interface DecisionTestParams {
+  connectionId?: string;
+  model?: string;
+  userId?: string;
+}
+
+export interface DecisionServiceOptions {
+  userId?: string;
+}
+
 export interface DecisionService {
-  listConnections(): Promise<DecisionConnectionSummary[]>;
-  listModels(connectionId: string): Promise<ModelOption[]>;
-  testConnection(params: { connectionId?: string; model?: string }, options?: { signal?: AbortSignal }): Promise<DecisionTestResult>;
-  createJevAdapter(getConfig: () => JevConnectionSettings): {
+  listConnections(options?: DecisionServiceOptions): Promise<DecisionConnectionSummary[]>;
+  listModels(connectionId: string, options?: DecisionServiceOptions): Promise<ModelOption[]>;
+  testConnection(params: DecisionTestParams, options?: { signal?: AbortSignal }): Promise<DecisionTestResult>;
+  createJevAdapter(getConfig: () => JevConnectionSettings, options?: DecisionServiceOptions): {
     network: {
       evaluate(
-        connection: { apiKey?: string; model: string; connectionId?: string },
+        connection: { apiKey?: string; model: string; connectionId?: string; userId?: string },
         request: { state: unknown; questions: Record<string, unknown> },
         options?: { signal?: AbortSignal; timeoutMs?: number },
       ): Promise<{
@@ -33,13 +43,28 @@ export interface DecisionService {
   };
 }
 
-export function createDecisionService(host: SpindleHost, log: RunLog): DecisionService {
+export interface DecisionServiceDeps {
+  host: SpindleHost;
+  log: RunLog;
+  userId?: string;
+}
+
+export function createDecisionService(
+  depsOrHost: DecisionServiceDeps | SpindleHost,
+  maybeLog?: RunLog,
+  maybeUserId?: string,
+): DecisionService {
+  const host = "host" in (depsOrHost as object) ? (depsOrHost as DecisionServiceDeps).host : (depsOrHost as SpindleHost);
+  const log = "log" in (depsOrHost as object) ? (depsOrHost as DecisionServiceDeps).log : maybeLog!;
+  const defaultUserId = "userId" in (depsOrHost as object) ? (depsOrHost as DecisionServiceDeps).userId : maybeUserId;
+
   return {
-    async listConnections(): Promise<DecisionConnectionSummary[]> {
+    async listConnections(options = {}): Promise<DecisionConnectionSummary[]> {
       const api = (host as any).decisions;
       if (!api?.listConnections) return [];
+      const effectiveUserId = options.userId ?? defaultUserId;
       try {
-        const list = await api.listConnections();
+        const list = await api.listConnections(effectiveUserId ? { userId: effectiveUserId } : undefined);
         return list.map((c: any) => ({
           id: c.id,
           name: c.name,
@@ -54,11 +79,12 @@ export function createDecisionService(host: SpindleHost, log: RunLog): DecisionS
       }
     },
 
-    async listModels(connectionId: string): Promise<ModelOption[]> {
+    async listModels(connectionId: string, options = {}): Promise<ModelOption[]> {
       const api = (host as any).decisions;
       if (!api?.getModels) return [];
+      const effectiveUserId = options.userId ?? defaultUserId;
       try {
-        const models = await api.getModels(connectionId);
+        const models = await api.getModels(connectionId, effectiveUserId ? { userId: effectiveUserId } : undefined);
         return models.map((m: any) => ({
           id: m.id,
           label: m.label || m.id,
@@ -79,6 +105,7 @@ export function createDecisionService(host: SpindleHost, log: RunLog): DecisionS
           error: rpcError("unsupported", "Decision API is not supported on this Lumiverse host."),
         };
       }
+      const effectiveUserId = params.userId ?? defaultUserId;
       const start = Date.now();
       try {
         const res = await api.evaluate(
@@ -92,6 +119,7 @@ export function createDecisionService(host: SpindleHost, log: RunLog): DecisionS
                 instructions: "Is this connection test functioning?",
               },
             },
+            ...(effectiveUserId ? { userId: effectiveUserId } : {}),
           },
           { signal: options.signal },
         );
@@ -109,7 +137,7 @@ export function createDecisionService(host: SpindleHost, log: RunLog): DecisionS
       }
     },
 
-    createJevAdapter(getConfig) {
+    createJevAdapter(getConfig, adapterOptions = {}) {
       return {
         network: {
           async evaluate(connection, request, options = {}) {
@@ -120,6 +148,7 @@ export function createDecisionService(host: SpindleHost, log: RunLog): DecisionS
             const currentCfg = getConfig();
             const targetModel = connection.model || currentCfg.model || "jev-latest";
             const connId = connection.connectionId || currentCfg.connectionId || undefined;
+            const effectiveUserId = connection.userId ?? adapterOptions.userId ?? defaultUserId;
             const start = Date.now();
             const res = await api.evaluate(
               {
@@ -127,6 +156,7 @@ export function createDecisionService(host: SpindleHost, log: RunLog): DecisionS
                 model: targetModel,
                 state: request.state as any,
                 questions: request.questions as any,
+                ...(effectiveUserId ? { userId: effectiveUserId } : {}),
               },
               { signal: options.signal },
             );

@@ -56,7 +56,7 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       getRetryCount: () => snapshot?.runtime.generationAutoRetryCount ?? 5,
       getIntervalMs: () => Math.max(0, Math.min(30, Number(snapshot?.runtime.novelaiParallelIntervalSec) || 0)) * 1000,
       rawCatalogJson: raw,
-      jev: services.decisions ? services.decisions.createJevAdapter(() => snapshot?.jevConnection ?? { rosterSelectionDefault: false, model: "jev-latest" }) : undefined,
+      jev: services.decisions ? services.decisions.createJevAdapter(() => snapshot?.jevConnection ?? { rosterSelectionDefault: false, model: "jev-latest" }, { userId: services.userId }) : undefined,
       onAnalyzerDiagnostic: (event) => options.onAnalyzerDiagnostic?.(event),
     });
     current = { raw, engine };
