@@ -268,13 +268,8 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
       data-ii-expanded={expanded ? "true" : "false"}
       data-ii-count-mode={view.mode}
       data-ii-scene-available={sceneAvailable ? "true" : "false"}
-      data-ii-scene-direction-available={sceneAvailable ? "true" : "false"}
-      data-am-scene-direction-available={sceneAvailable ? "true" : "false"}
-      data-am-count-mode={view.mode}
-      data-am-expanded={expanded ? "true" : "false"}
       data-ii-menu={menu}
       data-ii-floating={floating ? "true" : undefined}
-      data-am-floating={floating ? "true" : undefined}
       data-ii-floating-below={floating && position && position.y < 0.5 ? "true" : undefined}
       style={style}
       onKeyDown={(event) => {
