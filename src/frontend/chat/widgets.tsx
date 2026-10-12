@@ -1,7 +1,6 @@
 /**
  * Chat message widgets (Preact): the illustration footer (generate / reroll / retry / stop + revision pager),
- * the edge controls over each baked image (history ‹ ›, count, regenerate ⟳, busy spinner) and the pending
- * placeholder shown while a message job runs before any image exists.
+ * and the edge controls over each baked image (history ‹ ›, count, regenerate ⟳, busy spinner).
  * Markup follows Asset Maid `sIe`/`tPt` (171716-171431) and `Ybe`/`Wbe` (121451-121489); styles: ./styles.ts.
  */
 import {
@@ -14,8 +13,7 @@ import {
   type IllustrationAttributes
 } from "../../shared/contract/chat-dom.js";
 import type { GenerationJobSnapshot } from "../../shared/contract/rpc.js";
-import { EDGE_LABELS, fill, FOOTER_LABELS, PENDING_LABELS } from "./labels.js";
-import { runningDetail } from "./toast-model.js";
+import { EDGE_LABELS, fill, FOOTER_LABELS } from "./labels.js";
 
 const svgProps = { viewBox: "0 0 24 24", "aria-hidden": "true" as const, fill: "none", stroke: "currentColor", "stroke-width": 1.8, "stroke-linecap": "round" as const, "stroke-linejoin": "round" as const };
 
@@ -186,25 +184,6 @@ export function EdgeControls({ attrs, slot, busy, messageBusy, onAction }: EdgeC
           </span>
         </>
       )}
-    </div>
-  );
-}
-
-/** Loading placeholder while a message job runs and no image is baked yet (AM `hbt` loading state). */
-export function PendingPlaceholder({ job, count }: { job?: GenerationJobSnapshot; count: number }) {
-  const n = Math.max(1, Math.min(4, count));
-  const detail = job ? runningDetail(job) : PENDING_LABELS.preparing;
-  return (
-    <div class="ii-am-root ii-am-chat-pending" role="status" aria-label={PENDING_LABELS.generating}>
-      <div class="ii-am-chat-pending__frames">
-        {Array.from({ length: n }, (_, i) => (
-          <span key={i} class="ii-am-chat-pending__frame" aria-hidden="true">
-            <span class="ii-am-chat-pending__skeleton" />
-            {i === 0 ? <span class="ii-am-chat-spinner ii-am-chat-pending__spinner" /> : null}
-          </span>
-        ))}
-      </div>
-      <span class="ii-am-chat-pending__label">{detail || PENDING_LABELS.generating}</span>
     </div>
   );
 }

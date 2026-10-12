@@ -1,6 +1,6 @@
 /**
- * Chat-side controller: decorates Lumiverse chat messages with the injected footer, image edge controls and
- * pending placeholder, keeps per-message UI state (`chatDom.getMessageStates`) fresh, routes clicks to RPC
+ * Chat-side controller: decorates Lumiverse chat messages with the injected footer and image edge controls,
+ * keeps per-message UI state (`chatDom.getMessageStates`) fresh, routes clicks to RPC
  * calls (CHAT_ACTION_RPC), opens the zoom viewer on image clicks, and hosts the body-level runtime surfaces
  * (toast stack, generation-count panel, error dialog).
  */
@@ -17,7 +17,7 @@ import { ChatRuntime, type ToastCommand } from "./runtime.js";
 import { ChatRuntimeStore, errorDialogTitle } from "./runtime-store.js";
 import { CHAT_SIDE_CSS } from "./styles.js";
 import type { RuntimeToastModel } from "./toast-model.js";
-import { ChatFooter, EdgeControls, PendingPlaceholder, revisionPosition, type EdgeAction, type FooterAction } from "./widgets.js";
+import { ChatFooter, EdgeControls, revisionPosition, type EdgeAction, type FooterAction } from "./widgets.js";
 
 export interface ZoomOpenTarget { chatId: string; slotId: string; entryId?: string; messageKey?: string }
 
@@ -217,7 +217,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
       const blocks = bakedBlocks(element);
       if (state && state.eligible && !isStreamingBubble(element)) {
         liveFooters.add(messageId);
-        renderFooter(messageId, element, state, jobs, blocks.length > 0);
+        renderFooter(messageId, element, state, jobs);
       }
       for (const block of blocks) {
         liveFrames.add(block.frame);
@@ -238,7 +238,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     }
   }
 
-  function renderFooter(messageId: string, bubble: Element, state: ChatMessageUiState, jobs: Record<string, GenerationJobSnapshot>, hasBlocks: boolean): void {
+  function renderFooter(messageId: string, bubble: Element, state: ChatMessageUiState, jobs: Record<string, GenerationJobSnapshot>): void {
     const { target, position } = footerTarget(bubble);
     let wrapper = footers.get(messageId);
     if (wrapper && (!wrapper.isConnected || !target.contains(wrapper))) {
@@ -253,15 +253,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     const job = jobForMessage(jobs, state) ?? (state.busy ? state.job : undefined);
     if (job && pendingFooter.has(state.messageKey) && jobs[job.jobId]) pendingFooter.delete(state.messageKey);
     const pending = pendingFooter.has(state.messageKey);
-    const busy = state.busy || !!job || pending;
-    const showPlaceholder = busy && state.slots.length === 0 && !hasBlocks;
-    render(
-      <>
-        {showPlaceholder ? <PendingPlaceholder job={job} count={job?.requestedCount ?? 1} /> : null}
-        <ChatFooter state={state} job={job} pending={pending} onAction={(action) => void onFooterAction(messageId, action)} />
-      </>,
-      wrapper
-    );
+    render(<ChatFooter state={state} job={job} pending={pending} onAction={(action) => void onFooterAction(messageId, action)} />, wrapper);
   }
 
   function renderEdge(block: BakedBlock, state: ChatMessageUiState | null, jobs: Record<string, GenerationJobSnapshot>): void {

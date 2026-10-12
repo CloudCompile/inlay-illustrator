@@ -8,7 +8,6 @@
 export const CHAT_SIDE_CSS = String.raw`
 .ii-am-root.ii-am-chat-footer,
 .ii-am-root.ii-am-chat-edge,
-.ii-am-root.ii-am-chat-pending,
 .ii-am-root.ii-am-chat-runtime-host {
   --ii-am-chat-fg: #f1e5cf;
   --ii-am-chat-muted: #bca98c;
@@ -113,48 +112,6 @@ export const CHAT_SIDE_CSS = String.raw`
   .ii-am-root.ii-am-chat-footer .ii-am-chat-footer__revision-action { width: 36px; height: 40px; }
   .ii-am-root.ii-am-chat-footer .ii-am-chat-footer__revision-count { min-width: 28px; height: 40px; }
 }
-
-/* ---------------- pending placeholder (AM hbt) ---------------- */
-.ii-am-root.ii-am-chat-pending {
-  display: grid !important;
-  justify-items: center;
-  gap: 6px;
-  margin: 10px 0 0 !important;
-  padding: 0 !important;
-  color: var(--ii-am-chat-muted);
-  font: var(--ii-am-chat-font);
-}
-.ii-am-root.ii-am-chat-pending .ii-am-chat-pending__frames { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
-.ii-am-root.ii-am-chat-pending .ii-am-chat-pending__frame {
-  position: relative;
-  display: block;
-  width: min(var(--ii-am-chat-image-width, 70%), 240px);
-  aspect-ratio: 832 / 1216;
-  max-height: 340px;
-  overflow: hidden;
-  border-radius: 8px;
-}
-.ii-am-root.ii-am-chat-pending .ii-am-chat-pending__skeleton {
-  position: absolute;
-  inset: 0;
-  border-radius: 8px;
-  background: linear-gradient(110deg, rgba(241, 229, 207, .05) 20%, rgba(241, 229, 207, .12) 40%, rgba(241, 229, 207, .05) 60%) 0 0 / 220% 100%, rgba(12, 10, 14, .18);
-  backdrop-filter: blur(18px) saturate(1.18);
-  -webkit-backdrop-filter: blur(18px) saturate(1.18);
-  animation: ii-am-chat-shimmer 1.6s linear infinite;
-}
-.ii-am-root.ii-am-chat-pending .ii-am-chat-pending__spinner {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 26px;
-  height: 26px;
-  border-width: 3px;
-  border-color: rgba(242, 223, 204, .26);
-  border-top-color: #f2dfcc;
-  color: #f2dfcc;
-}
-.ii-am-root.ii-am-chat-pending .ii-am-chat-pending__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------------- image edge controls (AM Ybe / vbt) ---------------- */
 .ii-am-root.ii-am-chat-edge {
@@ -623,12 +580,10 @@ export const CHAT_SIDE_CSS = String.raw`
 @media (prefers-reduced-motion: reduce) {
   .ii-am-root .ii-am-chat-spinner,
   .ii-am-root .ii-am-chat-toast__spinner,
-  .ii-am-root .ii-am-chat-edge__spinner,
-  .ii-am-root .ii-am-chat-pending__skeleton { animation: none; }
+  .ii-am-root .ii-am-chat-edge__spinner { animation: none; }
   .ii-am-root .ii-am-chat-toast__progress { transition: none; }
 }
 @keyframes ii-am-chat-spin { to { transform: rotate(360deg); } }
-@keyframes ii-am-chat-shimmer { to { background-position: -220% 0, 0 0; } }
 `;
 
 /** Selector prefixes every rule must start from (checked by tests). */

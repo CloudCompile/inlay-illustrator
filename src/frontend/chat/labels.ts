@@ -1,5 +1,5 @@
 /**
- * English labels of the chat-side UI (footer, image edge controls, pending placeholder, runtime toasts,
+ * English labels of the chat-side UI (footer, image edge controls, runtime toasts,
  * generation-count panel, runtime error dialog). Korean originals (Asset Maid 0.9.88) in trailing comments,
  * spec/ui.md §5-§6. Keep every chat-side string here so a Korean locale can be added later.
  */
@@ -30,11 +30,6 @@ export const EDGE_LABELS = {
   regenerate: CHAT_FOOTER_LABELS.regenerate.en, // 이미지 재생성
   regenerating: CHAT_FOOTER_LABELS.regenerating.en, // 이미지 재생성 중
   openZoom: "Open image viewer" // (port) 확대 보기
-} as const;
-
-export const PENDING_LABELS = {
-  generating: CHAT_FOOTER_LABELS.generating.en, // 이미지 생성 중
-  preparing: "Preparing image generation" // 이미지 생성 준비 중
 } as const;
 
 /** Error toasts raised by chat-side clicks (spec/ui.md §5.1.4, §5.1.6). */

@@ -1,6 +1,6 @@
 /**
  * Chat-side UI (spec/ui.md §5 §6, contract src/shared/contract/chat-dom.ts): footer controls, image
- * history ‹ ›, regenerate, pending placeholder, generation-count panel, runtime toast stack,
+ * history ‹ ›, regenerate, generation-count panel, runtime toast stack,
  * runtime error dialog. Implementation: ./controller.tsx.
  */
 import type { SpindleFrontendContext } from "lumiverse-spindle-types";
