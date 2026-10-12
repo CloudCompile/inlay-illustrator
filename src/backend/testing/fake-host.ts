@@ -401,6 +401,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   };
 
   const host = {
+    host: { descriptorVersion: 1, lumiverseVersion: "test", capabilities: { "decisions-v1": 1 }, extensionInstallationId: "fake" },
     userStorage,
     storage: userStorage,
     generate: {

@@ -68288,10 +68288,7 @@ function createStorageService(host, userId, options = {}) {
 }
 
 // src/backend/services/decisions.ts
-function createDecisionService(depsOrHost, maybeLog, maybeUserId) {
-  const host = "host" in depsOrHost ? depsOrHost.host : depsOrHost;
-  const log = "log" in depsOrHost ? depsOrHost.log : maybeLog;
-  const defaultUserId = "userId" in depsOrHost ? depsOrHost.userId : maybeUserId;
+function createDecisionService(host, log, defaultUserId) {
   return {
     async listConnections(options = {}) {
       const api = host.decisions;

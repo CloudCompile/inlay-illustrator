@@ -43,21 +43,7 @@ export interface DecisionService {
   };
 }
 
-export interface DecisionServiceDeps {
-  host: SpindleHost;
-  log: RunLog;
-  userId?: string;
-}
-
-export function createDecisionService(
-  depsOrHost: DecisionServiceDeps | SpindleHost,
-  maybeLog?: RunLog,
-  maybeUserId?: string,
-): DecisionService {
-  const host = "host" in (depsOrHost as object) ? (depsOrHost as DecisionServiceDeps).host : (depsOrHost as SpindleHost);
-  const log = "log" in (depsOrHost as object) ? (depsOrHost as DecisionServiceDeps).log : maybeLog!;
-  const defaultUserId = "userId" in (depsOrHost as object) ? (depsOrHost as DecisionServiceDeps).userId : maybeUserId;
-
+export function createDecisionService(host: SpindleHost, log: RunLog, defaultUserId?: string): DecisionService {
   return {
     async listConnections(options = {}): Promise<DecisionConnectionSummary[]> {
       const api = (host as any).decisions;
