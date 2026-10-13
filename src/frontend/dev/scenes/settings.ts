@@ -11,6 +11,11 @@ function typeInto(element: HTMLInputElement | HTMLTextAreaElement, value: string
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const RAW_SCENES: Record<string, PreviewScene> = {
+  /** System page scrolled to the chat image card with webtoon mode on. Use with settings=system. */
+  "system-webtoon": async ({ doc }) => {
+    await clickWhenReady(doc, '[aria-label="Webtoon mode"]');
+    (await waitFor(doc, "[data-webtoon-count]")).scrollIntoView({ block: "center" });
+  },
   /** Model page with an unsaved draft (amber dot + enabled save button). Use with settings=model. */
   "settings-dirty": async ({ doc }) => {
     const input = await waitFor<HTMLInputElement>(doc, '[data-settings-page="model"] input[type="number"]');

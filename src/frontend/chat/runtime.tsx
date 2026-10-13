@@ -182,7 +182,7 @@ export function sceneOptions(config: InlayConfig): SceneOption[] {
   return comic ? [all[0]!, comic, ...all.slice(1).filter((o) => o.value !== "scene-comic")].filter(Boolean) : all;
 }
 
-const MODE_LABEL = { fixed: COUNT_LABELS.fixed, range: COUNT_LABELS.range, split: COUNT_LABELS.split } as const;
+const MODE_LABEL = { fixed: COUNT_LABELS.fixed, range: COUNT_LABELS.range, split: COUNT_LABELS.split, webtoon: COUNT_LABELS.webtoon } as const;
 
 function Stepper({ value, bounds, label, decLabel, incLabel, onStep }: { value: number; bounds: { min: number; max: number }; label: string; decLabel: string; incLabel: string; onStep: (delta: -1 | 1) => void }) {
   return (
@@ -202,7 +202,8 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
   const failedValue = useRef<ChatImageGenerationSettings | null>(null);
   const limits = countLimits(config.ui.developerModeEnabled, config.novelai.analysisProfile);
   const view: CountView = countView(settings, limits);
-  const sceneAvailable = config.novelai.analysisProfile === "v5-hybrid" && (config.novelai.v5UserDirections.scene.presets?.length ?? 0) > 0;
+  // Webtoon mode uses its own scene direction: the scene menu would be ignored.
+  const sceneAvailable = view.mode !== "webtoon" && config.novelai.analysisProfile === "v5-hybrid" && (config.novelai.v5UserDirections.scene.presets?.length ?? 0) > 0;
   const options = sceneAvailable ? sceneOptions(config) : [];
   const scene = config.novelai.v5UserDirections.scene;
   const sceneSelection = scene.selectedPresetId ?? scene.presets?.[0]?.id ?? "";
@@ -333,7 +334,7 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
           </button>
           {menu === "count" ? (
             <div class="ii-am-chat-count__menu ii-am-chat-count__mode-menu" role="menu" aria-label={COUNT_LABELS.modeMenu}>
-              {(["fixed", "range", "split"] as const).map((mode) => (
+              {(["fixed", "range", "split", "webtoon"] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -351,7 +352,9 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
           ) : null}
         </span>
         <span class="ii-am-chat-count__values">
-          {view.mode === "fixed" ? (
+          {view.mode === "webtoon" ? (
+            <span class="ii-am-chat-count__note" title={COUNT_LABELS.webtoonNoteTitle}>{COUNT_LABELS.webtoonNote}</span>
+          ) : view.mode === "fixed" ? (
             <Stepper value={view.fixed} bounds={view.bounds.fixed} label={COUNT_LABELS.count} decLabel={COUNT_LABELS.countDecrease} incLabel={COUNT_LABELS.countIncrease} onStep={(d) => run(d > 0 ? "fixed-increment" : "fixed-decrement")} />
           ) : view.mode === "range" ? (
             <>

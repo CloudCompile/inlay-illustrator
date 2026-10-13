@@ -7,6 +7,7 @@
  *    the action menu:
  *      * Reroll images (from this turn)
  *      * Reroll images with sidecar (from this turn)
+ *      * Read as webtoon (the chat's pages as one vertical scroll)
  *      * Open Gallery (native modal)
  *  - When NO images exist for the current turn: 48px circular button at rest.
  *    On mouse hover, it smoothly expands into an animated capsule/pill with
@@ -237,6 +238,8 @@ const MENU_REROLL = "reroll";
 const MENU_SIDECAR = "sidecar";
 const MENU_GALLERY = "gallery";
 const MENU_SETTINGS = "settings";
+const MENU_READER = "reader";
+const SVG_READER = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 9h12M6 15h12"/></svg>`;
 
 const SVG_SETTINGS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 
@@ -309,6 +312,8 @@ export function installInlayFab(
     getCorner: () => FabCorner;
     openGallery: () => void;
     openSettings?: () => void;
+    /** Menu: the webtoon reader of the active chat. */
+    openReader: () => void;
     /** Empty turn: generate illustrations for the latest assistant message. */
     generateLatest: () => Promise<unknown> | void;
     /** Menu: reroll the latest message's illustrations. */
@@ -366,9 +371,10 @@ export function installInlayFab(
   }
 
   const rerollItem = menuItem(MENU_REROLL, "Reroll images (from this turn)", SVG_REFRESH);
+  const readerItem = menuItem(MENU_READER, "Read as webtoon", SVG_READER);
   const galleryItem = menuItem(MENU_GALLERY, "Open Gallery", SVG_GALLERY);
   const settingsItem = menuItem(MENU_SETTINGS, "Open Inlay Illustrator", SVG_SETTINGS);
-  menu.append(rerollItem, galleryItem, settingsItem);
+  menu.append(rerollItem, readerItem, galleryItem, settingsItem);
 
   function applyEdges(element: HTMLElement, edges: Edges): void {
     element.style.left = edges.left ?? "auto";
@@ -510,6 +516,10 @@ export function installInlayFab(
     }
     if (action === MENU_GALLERY) {
       options.openGallery();
+      return;
+    }
+    if (action === MENU_READER) {
+      options.openReader();
       return;
     }
     if (!activeChatId()) return;

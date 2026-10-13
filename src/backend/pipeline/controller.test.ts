@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { cleanMessageContent } from "./markup.js";
 import { createPipelineModule } from "./index.js";
 import { CHAT_ID, createFakeEngine, createPipelineFixture, finished, STORY, waitFor } from "./testing/fixtures.js";
+import { WEBTOON_ANALYZER_TIMEOUT_MS, WEBTOON_SCENE_INSTRUCTION, webtoonSegmentCount } from "./webtoon.js";
 
 function setup(options: Parameters<typeof createPipelineFixture>[0] = {}) {
   const fx = createPipelineFixture(options);
@@ -403,5 +404,27 @@ describe("swipes, events, recovery", () => {
     expect(saved.actorState.revision).toBe(cleared.actorState.revision + 1);
     expect(saved.actorState.actors["persona::persona-1"]!.groups["actor.injury"]).toEqual(["scar"]);
     expect(fx.events.some((e) => e.event === "chatData.changed")).toBe(true);
+  });
+});
+
+describe("webtoon mode", () => {
+  test("plans segments from the message length with the webtoon direction, frame and analyzer timeout", async () => {
+    const paragraph = (i: number) => `Paragraph ${i}. ${"Alice and Shouta argue all the way to the station. ".repeat(19)}`.trim();
+    const content = Array.from({ length: 6 }, (_, i) => paragraph(i)).join("\n\n");
+    const { fx, engine, pipeline } = setup({ messages: [{ id: "u1", content: "Go.", is_user: true }, { id: "m1", content }] });
+    const settings = await fx.services.storage.loadChatImageGenerationSettings();
+    await fx.services.storage.saveChatImageGenerationSettings({ ...settings, webtoonMode: true, analysisMode: "split", splitAnalysis: { totalCount: 5, batchSize: 3 } });
+    await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx).length > 0);
+    expect(finished(fx)[0]!.result).toBe("completed");
+    const input = engine.runs[0]!.input as Record<string, any>;
+    const expected = webtoonSegmentCount(content);
+    expect(expected).toBe(5);
+    expect(input.analyzerInput.context.targetImageCount).toBe(expected);
+    expect(input.splitAnalysis).toBeUndefined();
+    expect(input.requestedSize).toMatchObject({ width: 704, height: 1472 });
+    expect(input.analysisConfig.timeoutMs).toBe(WEBTOON_ANALYZER_TIMEOUT_MS);
+    expect(input.novelAIConfig.v5UserDirections.scene).toMatchObject({ selectedPresetId: "scene-webtoon", presetId: "comic", customText: WEBTOON_SCENE_INSTRUCTION });
+    expect(fx.chatData.get(CHAT_ID)!.plans["illustration:m1@0"]!.countPolicy).toMatchObject({ mode: "fixed", min: expected, max: expected });
   });
 });

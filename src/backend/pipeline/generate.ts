@@ -71,6 +71,7 @@ import { openAutoGeneration, type AutoGeneration } from "./auto.js";
 import type { ChatMessageView } from "./host-chat.js";
 import { cleanMessageContent } from "./markup.js";
 import { formatLabel, PIPELINE_TEXT } from "./labels.js";
+import { WEBTOON_SIZE, webtoonAnalysisConfig, webtoonSceneDirections } from "./webtoon.js";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : {});
@@ -386,7 +387,12 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
   const decorate = (base: Rec): Rec => {
     const runtime = jsonClone(base);
     const novelai = rec(runtime.novelai);
-    runtime.novelai = { ...novelai, naiModel: imageTarget.model, characterReferenceEnabled: imageTarget.isNovelAIV5 ? false : novelai.characterReferenceEnabled };
+    runtime.novelai = {
+      ...novelai,
+      naiModel: imageTarget.model,
+      characterReferenceEnabled: imageTarget.isNovelAIV5 ? false : novelai.characterReferenceEnabled,
+      ...(req.settings.webtoonMode ? { v5UserDirections: webtoonSceneDirections(novelai.v5UserDirections) } : {}),
+    };
     const cp = mergeCharacterPrompts(rec(runtime.characterPrompt), otherPrompts);
     runtime.characterPrompt = { ...cp, characterForms: { ...rec(cp.characterForms), ...generatedForms } };
     runtime.runtime = { ...rec(runtime.runtime), generationProvider: engineProvider };
@@ -566,7 +572,7 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
       matchedAssetCount: W.min,
       totalAssetCount: W.max,
     },
-    analysisConfig: config.analysis,
+    analysisConfig: req.settings.webtoonMode ? webtoonAnalysisConfig(config.analysis) : config.analysis,
     novelAIConfig: { ...resolveNovelAIRunConfig(amConfig, { sourceId }), apiKey: "lumiverse-connection" },
     ...(req.revision
       ? {
@@ -579,7 +585,9 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
         }
       : {}),
     generationProvider: engineProvider,
-    ...(ne.fixedResolution.enabled
+    ...(req.settings.webtoonMode
+      ? { requestedSizeId: WEBTOON_SIZE.id, requestedSize: { ...WEBTOON_SIZE } }
+      : ne.fixedResolution.enabled
       ? { requestedSizeId: ne.fixedResolution.sizeId, requestedSize: resolveImageSize(ne.fixedResolution.sizeId, (config.runtime.customImageSizes ?? []) as never) }
       : {}),
     forceAiChoiceCoordinates: ne.forceAiChoiceCoordinates,

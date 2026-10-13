@@ -326,6 +326,9 @@ export const SYSTEM_LABELS = {
   developerModeDisabled: "Developer mode disabled.",
   chatImages: "Chat image generation",
   autoGeneration: { title: "Automatic generation", description: "Generates illustrations when an AI reply finishes." },
+  webtoonMode: { title: "Webtoon mode", description: "Plans each reply as vertical webtoon segments; the image count follows the message length." }, // 웹툰 모드 / 각 답변을 세로 웹툰 컷으로 구성합니다. 장수는 메시지 길이에 따라 정해집니다.
+  experimental: "Experimental", // 실험적
+  webtoonCount: { title: "Image count", description: "Automatic in webtoon mode: about one segment per 1,250 characters, up to 16. Count and analysis mode settings are not used." }, // 장수 / 웹툰 모드에서는 자동: 약 1,250자당 1컷, 최대 16컷. 장수와 분석 방식 설정은 사용하지 않습니다.
   countMode: { title: "Image count", description: "Number of illustrations per message." },
   countModes: { fixed: "Fixed", range: "Range" },
   count: "Image count",

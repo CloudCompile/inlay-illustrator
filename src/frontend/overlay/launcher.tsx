@@ -2,6 +2,7 @@
 import { useState } from "preact/hooks";
 import { AppContext, useAppState, type AppController } from "../state/app-state.js";
 import { FAB_CORNER_OPTIONS, type FabCorner } from "../fab.js";
+import { READER_LABELS } from "../reader/labels.js";
 import { LAUNCHER_LABELS as L } from "./labels.js";
 import { useStore, type FrontendStore } from "./store.js";
 import { Button, Select, SettingsIcon, Switch, cn } from "./ui/index.js";
@@ -11,6 +12,7 @@ export type LauncherPanelProps = {
   store: FrontendStore;
   onOpen: () => void;
   onOpenSettings: () => void;
+  onOpenReader: () => void;
   fabCorner: { get: () => FabCorner; set: (corner: FabCorner) => void };
 };
 
@@ -31,7 +33,7 @@ function StatusRow({ label, value, tone }: { label: string; value: string; tone?
   );
 }
 
-function LauncherBody({ app, store, onOpen, onOpenSettings, fabCorner }: LauncherPanelProps) {
+function LauncherBody({ app, store, onOpen, onOpenSettings, onOpenReader, fabCorner }: LauncherPanelProps) {
   const snapshot = useStore(store);
   const connection = useAppState((s) => s.connection);
   const connectionError = useAppState((s) => s.connectionError);
@@ -54,6 +56,7 @@ function LauncherBody({ app, store, onOpen, onOpenSettings, fabCorner }: Launche
       <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-1.5">
         <Button className="w-full" onClick={onOpen} aria-pressed={snapshot.overlayOpen}>{L.open}</Button>
         <Button variant="subtle" size="icon" aria-label={L.settings} title={L.settings} onClick={onOpenSettings}><SettingsIcon /></Button>
+        <Button variant="subtle" className="col-span-2 w-full" onClick={onOpenReader} data-ii-launcher-reader="">{READER_LABELS.open}</Button>
       </div>
       <section class="grid rounded-md bg-card px-3 py-2" role="status" aria-live="polite" aria-label={L.status}>
         <StatusRow label={L.backend} value={connectionText} tone={connection === "error" ? "danger" : connection === "ready" ? "success" : undefined} />

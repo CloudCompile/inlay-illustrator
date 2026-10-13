@@ -27,7 +27,7 @@ import type { CountPolicy, CurrentActorState, IllustrationPlan } from "./chat.js
 import type { AnalyzerSettings, ChatImageGenerationSettings, CharxSettingsPatch, EffectiveCharxSettings, GenerationProvider, InlayConfig, PromptCodecId, UiState } from "./config.js";
 import type { CharxSettingField } from "./character.js";
 import type { GenerationOrigin, HistoryTree } from "./history.js";
-import type { ChatMessageUiState } from "./chat-dom.js";
+import type { ChatMessageUiState, ReaderMessage } from "./chat-dom.js";
 
 export const RPC_PROTOCOL_VERSION = 1;
 /** Message `type` used on the Spindle frontend/backend channel. */
@@ -505,6 +505,10 @@ export interface RpcMethods {
    * Without `messageIds`: every eligible assistant message of the chat (with or without data).
    */
   "chatDom.getMessageStates": { params: { chatId: string; messageIds?: string[] }; result: { messages: ChatMessageUiState[] } };
+
+  /* webtoon reader (read-only) */
+  /** Every message of the chat in chat order with the selected page of each slot (slot order) and its clean text. */
+  "reader.getChat": { params: { chatId: string }; result: { messages: ReaderMessage[] } };
 }
 
 export type RpcMethod = keyof RpcMethods;
@@ -585,6 +589,7 @@ export const RPC_METHODS = [
   "zoom.getDetails", "zoom.saveDraft", "zoom.clearDraft", "zoom.importViewed", "zoom.requestAiPromptEdit", "zoom.applyAiPromptEdit",
   "chatState.get", "chatState.clear", "chatState.set",
   "chatDom.getMessageStates",
+  "reader.getChat",
 ] as const satisfies readonly RpcMethod[];
 
 export const RPC_EVENTS = [

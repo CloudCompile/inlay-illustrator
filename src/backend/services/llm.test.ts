@@ -112,6 +112,13 @@ describe("llm service", () => {
     expect(await client.complete({}, [{ role: "user", content: "x" }], { responseMode: "text" })).toMatchObject({ raw: "plain", parsed: "plain" });
   });
 
+  test("analyzerClient uses the timeout of the analysis config the engine passes", async () => {
+    const { fake, llm } = setup();
+    fake.scriptLlm(() => new Promise(() => undefined));
+    const client = llm.analyzerClient({ purpose: "chat-analyzer" });
+    await expect(client.complete({ timeoutMs: 1000 }, [{ role: "user", content: "x" }])).rejects.toMatchObject({ code: "ANALYZER_TIMEOUT" });
+  }, 5000);
+
   test("connections, models, message test", async () => {
     const { fake, llm } = setup();
     expect((await llm.listConnections()).map((c) => [c.id, c.isDefault])).toEqual([["oa", true], ["cl", false]]);

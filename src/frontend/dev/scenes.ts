@@ -7,6 +7,7 @@ import type { FrontendHandles } from "../../frontend.js";
 import { SETTINGS_SCENES } from "./scenes/settings.js";
 import { WORKSPACE_SCENES } from "./scenes/workspace.js";
 import { CHAT_SCENES } from "./scenes/chat.js";
+import { READER_SCENES } from "./scenes/reader.js";
 
 export type PreviewScene = (input: { mock: MockBackend; frontend: FrontendHandles; params: URLSearchParams; doc: Document }) => void | Promise<void>;
 
@@ -84,4 +85,4 @@ const SHELL_SCENES: Record<string, PreviewScene> = {
   }
 };
 
-export const PREVIEW_SCENES: Record<string, PreviewScene> = { ...SHELL_SCENES, ...SETTINGS_SCENES, ...WORKSPACE_SCENES, ...CHAT_SCENES };
+export const PREVIEW_SCENES: Record<string, PreviewScene> = { ...SHELL_SCENES, ...SETTINGS_SCENES, ...WORKSPACE_SCENES, ...CHAT_SCENES, ...READER_SCENES };

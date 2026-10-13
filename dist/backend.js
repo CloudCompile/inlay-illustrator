@@ -4244,7 +4244,7 @@ function buildRuntimeConfig(global, document2, options = {}) {
   return runtime;
 }
 function createDefaultChatImageGenerationSettings() {
-  return { autoGenerationEnabled: true, countPolicy: fixedCountPolicy(1), analysisMode: "single", splitAnalysis: { totalCount: null, batchSize: 3 } };
+  return { autoGenerationEnabled: true, countPolicy: fixedCountPolicy(1), analysisMode: "single", splitAnalysis: { totalCount: null, batchSize: 3 }, webtoonMode: false };
 }
 var DEFAULT_CHAT_IMAGE_GENERATION_SETTINGS = Object.freeze(createDefaultChatImageGenerationSettings());
 function maxSplitBatchSize(totalCount) {
@@ -4260,7 +4260,8 @@ function normalizeChatImageGenerationSettings(value, fallback = DEFAULT_CHAT_IMA
     analysisMode: r.analysisMode === "split" && total !== null ? "split" : "single",
     splitAnalysis: { totalCount: total, batchSize: Math.min(batch, total === null ? 7 : maxSplitBatchSize(total)) },
     autoGenerationEnabled: typeof r.autoGenerationEnabled === "boolean" ? r.autoGenerationEnabled : fallback.autoGenerationEnabled,
-    countPolicy: normalizeCountPolicy(r.countPolicy, fallback.countPolicy, maxCount)
+    countPolicy: normalizeCountPolicy(r.countPolicy, fallback.countPolicy, maxCount),
+    webtoonMode: typeof r.webtoonMode === "boolean" ? r.webtoonMode : fallback.webtoonMode
   };
 }
 function loadChatImageGenerationSettings(stored, legacy = {}) {
@@ -4525,7 +4526,8 @@ var RPC_METHODS = [
   "chatState.get",
   "chatState.clear",
   "chatState.set",
-  "chatDom.getMessageStates"
+  "chatDom.getMessageStates",
+  "reader.getChat"
 ];
 var RPC_EVENTS = [
   "status.changed",
@@ -62612,6 +62614,47 @@ function labelError(code, label, extra = {}) {
   return rpcError(code, label.en, { messageKo: label.ko, ...extra });
 }
 
+// src/backend/pipeline/webtoon.ts
+var WEBTOON_SIZE = { id: 7041472, width: 704, height: 1472 };
+var WEBTOON_ANALYZER_TIMEOUT_MS = ANALYZER_TIMEOUT_MAX_MS;
+var CHARS_PER_SEGMENT = 1250;
+var MAX_SEGMENTS = 16;
+var WEBTOON_SCENE_INSTRUCTION = [
+  "Frame: every segment is a tall vertical strip 704 × 1472 pixels; compose all panels inside it.",
+  "Render each requested illustration as one vertical webtoon segment: a piece of a single continuous top-to-bottom scroll, not a printed manga page. The segments for this message are read back to back, so together they must retell the whole message in story order.",
+  "Segment selection: spread the segments across the entire message from its opening to its final beat, in order, so no major turn of the scene is skipped and no two segments repeat the same moment. Give each segment one beat, a moment where something changes: an action with a consequence, a reveal, a decision, an emotional turn, or a punchline. Leave out connective description, ambient detail, and micro-reactions unless they are the point of the beat.",
+  "Layout: stack panels in a single column read strictly top to bottom; never place panels side by side in a grid. Let the beat's action, emotion, and timing drive bold variation in panel height, camera distance, angle, and focus. Consecutive panels must never repeat the same camera and composition: move from an establishing shot to a close-up, cut to an insert of the key object or hand, flip to the listener's reaction, or drop to a low or high angle when power shifts. Give the peak of the segment the largest panel, borderless or bleeding past the frame when it lands hard. Separate panels with clear gutter space, wider where time passes or the mood shifts. Usually two to four panels; a single panel when one image carries the beat.",
+  "Dialogue: give speech bubbles only to the lines that carry the beat, the lines a reader would quote, usually one to three per segment, each in the speaker's own words and cut to its core when long. Let silent panels carry reactions."
+].join(`
+`);
+var WEBTOON_PRESET = {
+  id: "scene-webtoon",
+  name: "Webtoon",
+  instruction: WEBTOON_SCENE_INSTRUCTION,
+  scenePresetId: "comic",
+  controlOverrides: { "comic.frame": false }
+};
+function webtoonSegmentCount(clean) {
+  return Math.max(1, Math.min(MAX_SEGMENTS, Math.round(clean.trim().length / CHARS_PER_SEGMENT)));
+}
+function webtoonSceneDirections(v5UserDirections) {
+  const current = v5UserDirections && typeof v5UserDirections === "object" ? v5UserDirections : {};
+  return {
+    ...current,
+    scene: {
+      mode: "preset",
+      selectedPresetId: WEBTOON_PRESET.id,
+      presetId: WEBTOON_PRESET.scenePresetId,
+      presets: [WEBTOON_PRESET],
+      controlOverrides: WEBTOON_PRESET.controlOverrides,
+      customText: WEBTOON_PRESET.instruction
+    }
+  };
+}
+function webtoonAnalysisConfig(analysis) {
+  return { ...analysis, timeoutMs: WEBTOON_ANALYZER_TIMEOUT_MS };
+}
+
 // src/backend/pipeline/generate.ts
 var rec2 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str2 = (v) => v == null ? "" : String(v).trim();
@@ -62779,7 +62822,12 @@ async function generateMessageIllustrations(deps, req) {
   const decorate = (base) => {
     const runtime = jsonClone(base);
     const novelai = rec2(runtime.novelai);
-    runtime.novelai = { ...novelai, naiModel: imageTarget.model, characterReferenceEnabled: imageTarget.isNovelAIV5 ? false : novelai.characterReferenceEnabled };
+    runtime.novelai = {
+      ...novelai,
+      naiModel: imageTarget.model,
+      characterReferenceEnabled: imageTarget.isNovelAIV5 ? false : novelai.characterReferenceEnabled,
+      ...req.settings.webtoonMode ? { v5UserDirections: webtoonSceneDirections(novelai.v5UserDirections) } : {}
+    };
     const cp = mergeCharacterPrompts(rec2(runtime.characterPrompt), otherPrompts);
     runtime.characterPrompt = { ...cp, characterForms: { ...rec2(cp.characterForms), ...generatedForms } };
     runtime.runtime = { ...rec2(runtime.runtime), generationProvider: engineProvider };
@@ -62937,7 +62985,7 @@ async function generateMessageIllustrations(deps, req) {
       matchedAssetCount: W.min,
       totalAssetCount: W.max
     },
-    analysisConfig: config.analysis,
+    analysisConfig: req.settings.webtoonMode ? webtoonAnalysisConfig(config.analysis) : config.analysis,
     novelAIConfig: { ...resolveNovelAIRunConfig2(amConfig, { sourceId }), apiKey: "lumiverse-connection" },
     ...req.revision ? {
       revisionDirection: req.revision.direction,
@@ -62946,7 +62994,7 @@ async function generateMessageIllustrations(deps, req) {
       ...req.revision.imageToImage ? { novelAIImageToImage: req.revision.imageToImage, novelAIImageToImageStrength: req.revision.imageToImageStrength, novelAIImageToImageNoise: req.revision.imageToImageNoise } : {}
     } : {},
     generationProvider: engineProvider,
-    ...ne.fixedResolution.enabled ? { requestedSizeId: ne.fixedResolution.sizeId, requestedSize: resolveImageSize2(ne.fixedResolution.sizeId, config.runtime.customImageSizes ?? []) } : {},
+    ...req.settings.webtoonMode ? { requestedSizeId: WEBTOON_SIZE.id, requestedSize: { ...WEBTOON_SIZE } } : ne.fixedResolution.enabled ? { requestedSizeId: ne.fixedResolution.sizeId, requestedSize: resolveImageSize2(ne.fixedResolution.sizeId, config.runtime.customImageSizes ?? []) } : {},
     forceAiChoiceCoordinates: ne.forceAiChoiceCoordinates,
     forceNsfwPrefix: ne.nsfwAlwaysEnabled,
     stateAccumulationEnabled: ne.stateAccumulationEnabled,
@@ -63528,8 +63576,9 @@ function createChatPipelineController(services, engine, options = {}) {
     }
     const settings = opts.settings ?? (attemptKind === "retry" && settingsSnapshots.has(skey) ? settingsSnapshots.get(skey) : await services.storage.loadChatImageGenerationSettings());
     const runSettings = opts.countPolicy ? { ...settings, countPolicy: opts.countPolicy } : settings;
-    const split = runSettings.analysisMode === "split" && !opts.revision;
-    const countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
+    const webtoon = runSettings.webtoonMode && !opts.revision;
+    const split = runSettings.analysisMode === "split" && !opts.revision && !webtoon;
+    let countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
     if (attemptKind !== "retry")
       analyzerCompleted.delete(skey);
     const errorRevision = attemptKind === "retry" ? plan.revisions.find((r) => r.revisionId === plan.activeRevisionId && r.status === "error" && (distinctSlotCount(r.entries) < expectedSlotCount(plan) || !!r.deletedSlotIndices?.length)) : undefined;
@@ -63558,6 +63607,8 @@ function createChatPipelineController(services, engine, options = {}) {
       const document2 = await services.storage.loadCharacterDocument(characterId);
       const visibility = resolveEffectiveConfig(config, { characterId, document: document2 }).nativeAssetVisibility;
       const built = messageSlots(planKey, content, nativeDetectorsFor(characterId, "", document2));
+      if (webtoon)
+        countPolicy = fixedCountPolicy(webtoonSegmentCount(built.clean));
       const slots = built.slots.map((s) => ({ ...s }));
       const revisionSlot = opts.revision ? slots.find((s) => s.slotId === opts.revision.slotId) : undefined;
       if (opts.revision && !revisionSlot)
@@ -65827,6 +65878,33 @@ var coreHandlers = {
   }
 };
 
+// src/backend/pipeline/reader.ts
+function readerPages(state) {
+  return [...state.slots].sort((a, b) => a.slotIndex - b.slotIndex).flatMap((slot) => {
+    const entry = slot.entries.find((e) => e.entryId === slot.selectedEntryId) ?? slot.entries.at(-1);
+    return entry ? [{ slotId: slot.slotId, slotIndex: slot.slotIndex, entryId: entry.entryId, url: entry.url, width: entry.width, height: entry.height }] : [];
+  });
+}
+function readerMessages(views, states) {
+  const stateById = new Map(states.map((s) => [s.messageId, s]));
+  return views.flatMap((view) => {
+    const state = stateById.get(view.id);
+    const pages = state ? readerPages(state) : [];
+    const text = cleanMessageContent(view.content).trim();
+    if (!pages.length && !text)
+      return [];
+    return [{
+      messageId: view.id,
+      swipeIndex: view.swipeId,
+      messageKey: illustrationMessageKey(toHistoryMessageId(view.id, view.swipeId)),
+      role: view.role,
+      name: view.name,
+      text,
+      pages
+    }];
+  });
+}
+
 // src/backend/rpc/handlers/chat.ts
 function pipelineOf(ctx) {
   const pipeline = ctx.modules.pipeline;
@@ -65894,7 +65972,12 @@ var chatHandlers = {
       fail2("bad-request", "baseRevision is required.");
     return pipelineOf(ctx).setChatState(need(params.chatId, "chatId"), params.actorState, params.baseRevision);
   },
-  "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds)
+  "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
+  "reader.getChat": async (params, ctx) => {
+    const chatId = need(params.chatId, "chatId");
+    const [views, { messages }] = await Promise.all([loadMessages(ctx.host, chatId), pipelineOf(ctx).getMessageStates(chatId)]);
+    return { messages: readerMessages(views, messages) };
+  }
 };
 
 // src/backend/analysis/assets.ts
@@ -67263,10 +67346,10 @@ function createLlmService(deps) {
     },
     analyzerClient(clientOptions = {}) {
       return {
-        async complete(_config, messages, options = {}) {
+        async complete(config, messages, options = {}) {
           const o = asRecord3(options);
           const signal = o.signal ?? clientOptions.signal;
-          const timeoutMs = Number(o.timeoutMs);
+          const timeoutMs = Number(o.timeoutMs ?? asRecord3(config).timeoutMs);
           const maxOutputTokens = Number(o.maxOutputTokens ?? o.maxTokens);
           const result = await run({
             purpose: str5(o.purpose) || clientOptions.purpose || "analyzer",
