@@ -222,6 +222,17 @@ export interface GenerationJobSnapshot {
   canRetry: boolean;
   canRestart: boolean;
   error?: RpcError;
+  /** JEV roster pre-selection of this run (AM session `progress.jevSelection`), absent when JEV did not run. */
+  jevSelection?: JevSelectionProgress;
+}
+
+export interface JevSelectionProgress {
+  status: "running" | "completed" | "failed" | "cancelled";
+  completed: number;
+  total: number;
+  /** Selected actors once completed (AM `counts.actors`). */
+  selectedActors?: number;
+  error?: string;
 }
 
 /** Regeneration overrides edited in the zoom view (AM regeneration plan + prompt draft). */

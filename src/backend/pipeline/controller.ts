@@ -544,6 +544,10 @@ export function createChatPipelineController(services: BackendServices, engine: 
           onResolvedCount: (n) => {
             job.snapshot.requestedCount = n;
           },
+          onJevSelection: (selection) => {
+            job.snapshot.jevSelection = selection;
+            emitProgress(job);
+          },
         },
       );
       if (result.error && result.analyzerCompleted) analyzerCompleted.add(skey);

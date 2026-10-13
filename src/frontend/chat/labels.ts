@@ -52,6 +52,18 @@ export const PHASE_LABELS: Record<string, string> = {
   committing: "Finishing generation" // 생성 마무리 중
 };
 
+/** JEV roster row under a generation toast (`sCt` 176461). */
+export const JEV_LABELS = {
+  message: "Roster preparation", // 로스터 준비
+  badgeTitle: "Narrows the cast roster passed to the analysis.", // 분석에 전달할 등장 인물 로스터를 추립니다.
+  checking: "Checking characters · {a}/{t}", // 인물 확인 · {a}/{t}
+  actors: "Characters {n}", // 인물 {n}
+  selected: "Selection complete", // 선정 완료
+  failed: "Failed", // 실패
+  stopped: "Stopped", // 중지됨
+  failedDetail: "Roster selection failed." // 로스터 선정 실행에 실패했습니다.
+} as const;
+
 /** Runtime toast messages (`MCt` 177783 / `GCt` 177969, spec/ui.md §6.3.6). */
 export const TOAST_LABELS = {
   waiting: "Analysis waiting", // 분석 대기

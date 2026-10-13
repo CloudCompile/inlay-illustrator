@@ -5,7 +5,7 @@ import type { GenerationJobSnapshot } from "../../shared/contract/rpc.js";
 import { applyCountAction, countLimits, countToggleText, countView } from "./count-model.js";
 import { historyIdOfKey, jobForMessage, uniqueBubbles } from "./dom.js";
 import { CHAT_SIDE_CSS } from "./styles.js";
-import { buildToastStack, finishedToast, generationProgress, runningMessage } from "./toast-model.js";
+import { buildToastStack, finishedToast, generationProgress, runningMessage, type FinishedGeneration } from "./toast-model.js";
 import { historyPosition, revisionPosition } from "./widgets.js";
 
 const limits = countLimits(false, "v5-hybrid");
@@ -86,11 +86,28 @@ describe("runtime toasts", () => {
       notices: [{ key: "n", tone: "info", message: "hi", createdAt: 1 }],
       dismissed: new Set(["notice:x"]),
       displayIndex,
+      seenAt: new Map(),
       now: 1
     });
     expect(stack.map((t) => [t.key, t.displayIndex])).toEqual([["generation:a", 1], ["generation:b", 2], ["notice:n", undefined]]);
-    const again = buildToastStack({ running: [], finished: [], notices: [], dismissed: new Set(), displayIndex, now: 2 });
+    const again = buildToastStack({ running: [], finished: [], notices: [], dismissed: new Set(), displayIndex, seenAt: new Map(), now: 2 });
     expect(again).toEqual([]);
+  });
+  test("JEV roster row follows its job and keeps its dismiss clock", () => {
+    const seenAt = new Map<string, number>();
+    const build = (running: GenerationJobSnapshot[], finished: FinishedGeneration[], now: number) =>
+      buildToastStack({ running, finished, notices: [], dismissed: new Set(), displayIndex: new Map(), seenAt, now });
+    const checking = job({ jobId: "a", phase: "analyzing-preset", jevSelection: { status: "running", completed: 1, total: 3 } });
+    expect(runningMessage(checking)).toBe("Analysis waiting · 3 images");
+    const [parent, row] = build([checking], [], 1);
+    expect([row.kind, row.parentKey, row.message, row.detail, row.technologyBadge, row.tone, row.jobId]).toEqual(["jev-selection", parent.key, "Roster preparation", "Checking characters · 1/3", "JEV", "running", undefined]);
+    const done = { ...checking, jevSelection: { status: "completed" as const, completed: 3, total: 3, selectedActors: 2 } };
+    const first = build([done], [], 5)[1];
+    expect([first.detail, first.tone, first.autoDismissMs, first.createdAt]).toEqual(["Characters 2", "success", 5000, 5]);
+    expect(build([done], [], 9)[1].createdAt).toBe(5);
+    const ended: FinishedGeneration = { jobId: "a", chatId: "c", messageKey: "k", result: "cancelled", attemptKind: "initial", requestedCount: 3, completedSlots: 0, canRetry: false, canRestart: false, finishedAt: 10, jevSelection: checking.jevSelection };
+    const stopped = build([], [ended], 10)[1];
+    expect([stopped.detail, stopped.tone]).toEqual(["Stopped", "warning"]);
   });
 });
 

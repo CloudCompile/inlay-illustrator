@@ -62616,6 +62616,18 @@ function labelError(code, label, extra = {}) {
 var rec2 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str2 = (v) => v == null ? "" : String(v).trim();
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+function jevSelectionProgress(s) {
+  const status = s.status === "completed" || s.status === "failed" || s.status === "cancelled" ? s.status : "running";
+  const total = Math.max(0, Number(s.total) || 0);
+  const actors = Number(rec2(s.counts).actors);
+  return {
+    status,
+    completed: Math.min(total, Math.max(0, Number(s.completed) || 0)),
+    total,
+    ...Number.isFinite(actors) ? { selectedActors: actors } : {},
+    ...str2(s.error) ? { error: str2(s.error) } : {}
+  };
+}
 function originForAttempt(kind) {
   return kind === "automatic" ? "initial" : kind;
 }
@@ -63095,6 +63107,10 @@ async function generateMessageIllustrations(deps, req) {
     cancelPrevious: true,
     signal: req.signal,
     onEvent(e) {
+      if (e.type === "jev-selection") {
+        req.onJevSelection?.(jevSelectionProgress(rec2(e.jevSelection)));
+        return;
+      }
       const imageCount = Number.isFinite(Number(e.imageCount)) ? Number(e.imageCount) + skipSlotIndexes.length : undefined;
       if (imageCount !== undefined && (e.phase === "planning" || e.analysisComplete === false && e.phase === "analyzing-preset")) {
         resolvedCount = imageCount;
@@ -63584,6 +63600,10 @@ function createChatPipelineController(services, engine, options = {}) {
         onPhase: (phase, detail) => setPhase(job, phase, { imageIndex: detail.imageIndex, imageCount: detail.imageCount ?? requestedCount, providerStage: detail.providerStage }),
         onResolvedCount: (n) => {
           job.snapshot.requestedCount = n;
+        },
+        onJevSelection: (selection) => {
+          job.snapshot.jevSelection = selection;
+          emitProgress(job);
         }
       });
       if (result.error && result.analyzerCompleted)
@@ -65203,9 +65223,29 @@ function createEnginePort(services, options = {}) {
       const engine = engineFor(config);
       const runId = registry.register(context);
       const ref = { providerId: context.engineProvider, queueScopeKey: registry.queueScopeKey(runId) };
+      const sessions = engine.parts.sessions;
+      const onEvent = input.onEvent;
+      let session;
+      let lastJev;
+      const unsubscribe = sessions.subscribe(() => {
+        const jev = session?.progress?.jevSelection;
+        if (!jev || jev === lastJev)
+          return;
+        lastJev = jev;
+        onEvent?.({ type: "jev-selection", jevSelection: jev });
+      });
       try {
-        return await engine.run({ ...input, generationProviderForImage: () => ref });
+        return await engine.run({
+          ...input,
+          onEvent: (e) => {
+            if (e?.session)
+              session = e.session;
+            onEvent?.(e);
+          },
+          generationProviderForImage: () => ref
+        });
       } finally {
+        unsubscribe();
         registry.release(runId);
       }
     },

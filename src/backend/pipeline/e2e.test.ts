@@ -197,6 +197,39 @@ describe("pipeline end to end over the real engine", () => {
     }
   }, 30000);
 
+  test("V5 with JEV roster selection reports its progress on the job snapshot", async () => {
+    setEngineEnv(seededEnv(9));
+    try {
+      const fx = createPipelineFixture({
+        config: {
+          image: { provider: "novelai", model: "nai-diffusion-5-full", connectionId: "img-1" },
+          novelai: { analysisProfile: "v5-hybrid" },
+          jevConnection: { connectionId: "dec-1", rosterSelectionDefault: true },
+          runtime: { generationAutoRetryCount: 0 },
+        },
+      });
+      (fx.services.host as any).decisions = {
+        async evaluate(input: { model?: string; questions?: Record<string, unknown> }) {
+          return { model: input.model ?? "jev-latest", answers: Object.fromEntries(Object.keys(input.questions ?? {}).map((k) => [k, { type: "noul", noul: 0.95 }])), latencyMs: 1 };
+        },
+      };
+      fx.llmReplies.push((request: LlmCompleteRequest) => scriptedV5Analyzer(request));
+      const { pipeline } = createPipelineModule(fx.services);
+      await pipeline.handleGenerationEnded({ chatId: CHAT_ID, messageId: "m1", generationType: "normal" });
+      await waitFor(() => finished(fx).length > 0, 20000);
+      expect(finished(fx)[0]!.error).toBeUndefined();
+      const statuses = fx.events
+        .filter((e) => e.event === "generation.progress")
+        .map((e) => (e.payload as { jevSelection?: { status: string } }).jevSelection?.status)
+        .filter(Boolean);
+      expect(statuses[0]).toBe("running");
+      expect(statuses.at(-1)).toBe("completed");
+      pipeline.dispose();
+    } finally {
+      setEngineEnv(null);
+    }
+  }, 30000);
+
   test("GENERATION_ENDED -> analyzer -> NovelAI request -> History + baked message + continuity", async () => {
     setEngineEnv(seededEnv(7));
     try {

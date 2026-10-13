@@ -2,15 +2,15 @@
  * Pure runtime-toast models for the chat side (Asset Maid `$Ct` 177880, `MCt` 177783, `dht` 114252,
  * spec/ui.md §5.2 and §6.3): generation jobs (running + finished), notices and chat-side errors.
  */
-import type { AttemptKind, GenerationJobSnapshot, GenerationResultKind, RpcError } from "../../shared/contract/rpc.js";
-import { fill, PHASE_LABELS, TOAST_LABELS } from "./labels.js";
+import type { AttemptKind, GenerationJobSnapshot, GenerationResultKind, JevSelectionProgress, RpcError } from "../../shared/contract/rpc.js";
+import { fill, JEV_LABELS, PHASE_LABELS, TOAST_LABELS } from "./labels.js";
 
 export type RuntimeToastTone = "running" | "success" | "warning" | "danger";
 export type RuntimeToastAction = "cancel" | "retry" | "dismiss" | "none";
 
 export interface RuntimeToastModel {
   key: string;
-  kind: "generation" | "notice";
+  kind: "generation" | "notice" | "jev-selection";
   tone: RuntimeToastTone;
   message: string;
   /** Formatted retry count `${attempt}/${total}` when retrying (AM `retryCount`). */
@@ -24,6 +24,10 @@ export interface RuntimeToastModel {
   canRestart?: boolean;
   jobId?: string;
   displayIndex?: number;
+  /** Child rows (JEV roster) render under the toast with this key. */
+  parentKey?: string;
+  technologyBadge?: string;
+  technologyBadgeTitle?: string;
   /** Auto-dismiss after ms (0 = stay). */
   autoDismissMs: number;
   createdAt: number;
@@ -41,12 +45,15 @@ export interface FinishedGeneration {
   canRetry: boolean;
   canRestart: boolean;
   error?: RpcError;
+  jevSelection?: JevSelectionProgress;
   finishedAt: number;
 }
 
 /** Asset Maid auto-dismiss: success/warning toasts after 10 s; running/danger stay. */
 export const TOAST_AUTO_DISMISS_MS = 10_000;
 export const NOTICE_AUTO_DISMISS_MS = 6_000;
+/** AM `iCt`: a settled JEV row closes after 5 s. */
+export const JEV_AUTO_DISMISS_MS = 5_000;
 const START = 0.04;
 
 function imagesText(n: number): string {
@@ -93,7 +100,7 @@ export function runningMessage(job: GenerationJobSnapshot): string {
   } else if (job.status === "queued" || job.phase === "planned") {
     message = TOAST_LABELS.waiting;
   } else if (job.phase === "analyzing-preset" || job.phase === "analyzing-modifiers" || job.phase === "planning") {
-    message = `${TOAST_LABELS.analyzing} · ${imagesText(job.requestedCount || 1)}`;
+    message = `${job.jevSelection?.status === "running" ? TOAST_LABELS.waiting : TOAST_LABELS.analyzing} · ${imagesText(job.requestedCount || 1)}`;
   } else {
     message = `${TOAST_LABELS.generating} · ${Math.min(count, job.completedSlots + 1)}/${count}`;
   }
@@ -127,6 +134,38 @@ export function runningToast(job: GenerationJobSnapshot, now: number): RuntimeTo
     jobId: job.jobId,
     autoDismissMs: 0,
     createdAt: now
+  };
+}
+
+/** AM `sCt` 176461: the JEV roster row under a generation toast. A row still running when its job ended reads as stopped. */
+export function jevToast(selection: JevSelectionProgress, parentKey: string, jobActive: boolean, createdAt = 0): RuntimeToastModel {
+  const status = selection.status === "running" && !jobActive ? "cancelled" : selection.status;
+  const total = Math.max(0, selection.total);
+  const done = Math.min(total, Math.max(0, selection.completed));
+  const detail =
+    status === "running"
+      ? fill(JEV_LABELS.checking, { a: done, t: total })
+      : status === "completed"
+        ? selection.selectedActors !== undefined
+          ? fill(JEV_LABELS.actors, { n: selection.selectedActors })
+          : JEV_LABELS.selected
+        : status === "failed"
+          ? JEV_LABELS.failed
+          : JEV_LABELS.stopped;
+  return {
+    key: `${parentKey}:jev:${status}`,
+    kind: "jev-selection",
+    parentKey,
+    tone: status === "failed" ? "danger" : status === "running" ? "running" : status === "completed" ? "success" : "warning",
+    message: JEV_LABELS.message,
+    technologyBadge: "JEV",
+    technologyBadgeTitle: JEV_LABELS.badgeTitle,
+    detail,
+    ...(status === "failed" ? { errorText: selection.error || JEV_LABELS.failedDetail } : {}),
+    progress: status === "completed" ? 1 : total ? done / total : 0,
+    action: "none",
+    autoDismissMs: status === "running" ? 0 : JEV_AUTO_DISMISS_MS,
+    createdAt
   };
 }
 
@@ -183,6 +222,8 @@ export function buildToastStack(input: {
   notices: NoticeEntry[];
   dismissed: ReadonlySet<string>;
   displayIndex: Map<string, number>;
+  /** First time each JEV row key was shown (keeps its auto-dismiss clock across rebuilds). */
+  seenAt: Map<string, number>;
   now: number;
 }): RuntimeToastModel[] {
   const out: RuntimeToastModel[] = [];
@@ -195,22 +236,31 @@ export function buildToastStack(input: {
     }
     return n;
   };
-  const generation: RuntimeToastModel[] = [];
+  const generation: RuntimeToastModel[][] = [];
+  const add = (toast: RuntimeToastModel, displayIndex: number, selection: JevSelectionProgress | undefined, active: boolean) => {
+    const group = [{ ...toast, displayIndex }];
+    if (selection) {
+      const child = jevToast(selection, toast.key, active);
+      if (!input.seenAt.has(child.key)) input.seenAt.set(child.key, input.now);
+      if (!input.dismissed.has(child.key)) group.push({ ...child, displayIndex, createdAt: input.seenAt.get(child.key)! });
+    }
+    generation.push(group);
+  };
   for (const job of input.running) {
     if (job.status !== "queued" && job.status !== "running") continue;
     const toast = runningToast(job, input.now);
     if (input.dismissed.has(toast.key)) continue;
     seen.add(job.jobId);
-    generation.push({ ...toast, displayIndex: indexOf(job.jobId) });
+    add(toast, indexOf(job.jobId), job.jevSelection, true);
   }
   for (const entry of input.finished) {
     if (seen.has(entry.jobId)) continue;
     const toast = finishedToast(entry);
     if (input.dismissed.has(toast.key)) continue;
-    generation.push({ ...toast, displayIndex: indexOf(entry.jobId) });
+    add(toast, indexOf(entry.jobId), entry.jevSelection, false);
   }
-  generation.sort((a, b) => (a.displayIndex ?? 0) - (b.displayIndex ?? 0));
-  out.push(...generation);
+  generation.sort((a, b) => (a[0].displayIndex ?? 0) - (b[0].displayIndex ?? 0));
+  out.push(...generation.flat());
   for (const notice of input.notices) {
     const toast = noticeToast(notice);
     if (!input.dismissed.has(toast.key)) out.push(toast);

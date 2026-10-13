@@ -24,6 +24,7 @@ import {
   type IllustrationPlanAssetHint,
   type IllustrationPlanEntry,
   type InlayConfig,
+  type JevSelectionProgress,
 } from "../../shared/contract/index.js";
 import {
   assembleAnalyzerInput,
@@ -170,6 +171,21 @@ export interface GenerateMessageRequest {
   assertTarget: () => Promise<void>;
   onPhase?: (phase: string, detail: { imageIndex?: number; imageCount?: number; providerStage?: string }) => void;
   onResolvedCount?: (count: number) => void;
+  onJevSelection?: (selection: JevSelectionProgress) => void;
+}
+
+/** AM session `progress.jevSelection` -> job snapshot shape. */
+function jevSelectionProgress(s: Rec): JevSelectionProgress {
+  const status = s.status === "completed" || s.status === "failed" || s.status === "cancelled" ? s.status : "running";
+  const total = Math.max(0, Number(s.total) || 0);
+  const actors = Number(rec(s.counts).actors);
+  return {
+    status,
+    completed: Math.min(total, Math.max(0, Number(s.completed) || 0)),
+    total,
+    ...(Number.isFinite(actors) ? { selectedActors: actors } : {}),
+    ...(str(s.error) ? { error: str(s.error) } : {}),
+  };
 }
 
 /** Deferred continuity commit (AM `deferContinuityPersistence` 170594), applied inside the chat data write. */
@@ -723,6 +739,10 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     cancelPrevious: true,
     signal: req.signal,
     onEvent(e: Rec) {
+      if (e.type === "jev-selection") {
+        req.onJevSelection?.(jevSelectionProgress(rec(e.jevSelection)));
+        return;
+      }
       const imageCount = Number.isFinite(Number(e.imageCount)) ? Number(e.imageCount) + skipSlotIndexes.length : undefined;
       if (imageCount !== undefined && (e.phase === "planning" || (e.analysisComplete === false && e.phase === "analyzing-preset"))) {
         resolvedCount = imageCount;

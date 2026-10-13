@@ -2,7 +2,7 @@
  * State of the chat-side runtime surfaces (toast stack, error dialog) that does not live in the app store:
  * finished generations, notices, dismissed / expanded toasts, the error-dialog queue, visibility flags.
  */
-import type { AttemptKind, GenerationJobSnapshot, RpcError, RpcEvents } from "../../shared/contract/rpc.js";
+import type { AttemptKind, GenerationJobSnapshot, JevSelectionProgress, RpcError, RpcEvents } from "../../shared/contract/rpc.js";
 import type { FinishedGeneration, NoticeEntry } from "./toast-model.js";
 
 export interface ErrorDialogItem { id: string; title: string; message: string; jobId?: string }
@@ -18,13 +18,14 @@ export class ChatRuntimeStore {
   expanded = new Set<string>();
   errors: ErrorDialogItem[] = [];
   readonly displayIndex = new Map<string, number>();
+  readonly seenAt = new Map<string, number>();
   /** Host overlay open (the chat runtime hides under it). */
   overlayOpen = false;
   /** Zoom viewer open (toasts move above it; the count panel hides). */
   zoomOpen = false;
   /** A chat is active (count panel only on the chat screen). */
   chatActive = false;
-  private readonly jobs = new Map<string, { attemptKind: AttemptKind; requestedCount: number; completedSlots: number; canRetry: boolean; canRestart: boolean }>();
+  private readonly jobs = new Map<string, { attemptKind: AttemptKind; requestedCount: number; completedSlots: number; canRetry: boolean; canRestart: boolean; jevSelection?: JevSelectionProgress }>();
   private readonly seenErrorIds: string[] = [];
   private readonly listeners = new Set<() => void>();
   private noticeCounter = 0;
@@ -58,7 +59,7 @@ export class ChatRuntimeStore {
 
   /** Remembers job facts so a finished event can still name the attempt kind and counts. */
   trackJob(job: GenerationJobSnapshot): void {
-    this.jobs.set(job.jobId, { attemptKind: job.attemptKind, requestedCount: job.requestedCount, completedSlots: job.completedSlots, canRetry: job.canRetry, canRestart: job.canRestart });
+    this.jobs.set(job.jobId, { attemptKind: job.attemptKind, requestedCount: job.requestedCount, completedSlots: job.completedSlots, canRetry: job.canRetry, canRestart: job.canRestart, jevSelection: job.jevSelection });
   }
 
   finish(payload: RpcEvents["generation.finished"], fallbackKind: AttemptKind = "initial"): FinishedGeneration {
@@ -75,6 +76,7 @@ export class ChatRuntimeStore {
       canRetry: payload.result === "failed" && (payload.error?.retryable !== false) && (known?.canRetry ?? true),
       canRestart: payload.result === "failed" && (known?.canRestart ?? false),
       ...(payload.error ? { error: payload.error } : {}),
+      ...(known?.jevSelection ? { jevSelection: known.jevSelection } : {}),
       finishedAt: Date.now()
     };
     this.finished = [...this.finished.filter((f) => f.jobId !== entry.jobId), entry].slice(-MAX_FINISHED);

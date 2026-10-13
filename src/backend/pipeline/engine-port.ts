@@ -72,9 +72,29 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       const engine = engineFor(config);
       const runId = registry.register(context);
       const ref = { providerId: context.engineProvider, queueScopeKey: registry.queueScopeKey(runId) };
+      // JEV roster progress only updates the generation session (AM setPhase(..., {jevSelection})), it emits no run
+      // event. Forward each change of this run's session as a `jev-selection` event.
+      const sessions = engine.parts.sessions as { subscribe(listener: () => void): () => void };
+      const onEvent = (input as { onEvent?: (e: Record<string, unknown>) => void }).onEvent;
+      let session: { progress?: { jevSelection?: unknown } } | undefined;
+      let lastJev: unknown;
+      const unsubscribe = sessions.subscribe(() => {
+        const jev = session?.progress?.jevSelection;
+        if (!jev || jev === lastJev) return;
+        lastJev = jev;
+        onEvent?.({ type: "jev-selection", jevSelection: jev });
+      });
       try {
-        return await engine.run({ ...input, generationProviderForImage: () => ref });
+        return await engine.run({
+          ...input,
+          onEvent: (e: Record<string, unknown>) => {
+            if (e?.session) session = e.session as typeof session;
+            onEvent?.(e);
+          },
+          generationProviderForImage: () => ref,
+        });
       } finally {
+        unsubscribe();
         registry.release(runId);
       }
     },

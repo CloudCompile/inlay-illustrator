@@ -59,15 +59,21 @@ export function ChatRuntime({ app, store, onToastCommand }: ChatRuntimeProps) {
 function ToastStack({ app, store, onCommand }: { app: AppController; store: ChatRuntimeStore; onCommand: ChatRuntimeProps["onToastCommand"] }) {
   const jobs = useSelector(app.store, (s) => s.generationJobs);
   const toasts = useMemo(
-    () => buildToastStack({ running: Object.values(jobs), finished: store.finished, notices: store.notices, dismissed: store.dismissed, displayIndex: store.displayIndex, now: Date.now() }),
+    () => buildToastStack({ running: Object.values(jobs), finished: store.finished, notices: store.notices, dismissed: store.dismissed, displayIndex: store.displayIndex, seenAt: store.seenAt, now: Date.now() }),
     [jobs, store.revision]
   );
   if (store.overlayOpen || toasts.length === 0) return null;
   return (
     <div class="ii-am-chat-toast-stack" role="region" aria-label={TOAST_LABELS.notificationsRegion}>
-      {toasts.map((toast) => (
-        <RuntimeToast key={toast.key} toast={toast} expanded={store.expanded.has(toast.key)} onToggle={() => store.toggleExpanded(toast.key)} onCommand={(command) => onCommand(toast, command)} />
-      ))}
+      {toasts.map((toast) => {
+        const row = <RuntimeToast key={toast.key} toast={toast} expanded={store.expanded.has(toast.key)} onToggle={() => store.toggleExpanded(toast.key)} onCommand={(command) => onCommand(toast, command)} />;
+        return toast.parentKey ? (
+          <div key={toast.key} class="ii-am-chat-toast-child">
+            <span class="ii-am-chat-toast-child__branch" aria-hidden="true">ㄴ</span>
+            {row}
+          </div>
+        ) : row;
+      })}
     </div>
   );
 }
@@ -118,6 +124,7 @@ function RuntimeToast({ toast, expanded, onToggle, onCommand }: { toast: Runtime
             {copy}
           </button>
         ) : copy}
+        {toast.technologyBadge ? <span class="ii-am-chat-toast__technology-badge" title={toast.technologyBadgeTitle ?? toast.technologyBadge}>{toast.technologyBadge}</span> : null}
         {toast.displayIndex ? (
           <span class="ii-am-chat-toast__identifier" aria-label={fill(TOAST_LABELS.jobNumber, { n: toast.displayIndex })}>#{toast.displayIndex}</span>
         ) : null}
