@@ -93,7 +93,6 @@ import { HostGenerationTracker, isIllustratableMessage, loadMessages, swipeConte
 import { formatLabel, labelError, phaseProgress, PIPELINE_TEXT, type Label } from "./labels.js";
 import { bakeMessage, messageSlots, stripForInterceptor, type InterceptorMessage } from "./markup.js";
 import { readSidecar, sidecarPath, updateSidecar } from "./records.js";
-import { webtoonSegmentCount } from "./webtoon.js";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : {});
@@ -462,9 +461,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const settings =
       opts.settings ?? (attemptKind === "retry" && settingsSnapshots.has(skey) ? settingsSnapshots.get(skey)! : await services.storage.loadChatImageGenerationSettings());
     const runSettings: ChatImageGenerationSettings = opts.countPolicy ? { ...settings, countPolicy: opts.countPolicy } : settings;
-    const webtoon = runSettings.webtoonMode && !opts.revision;
-    const split = runSettings.analysisMode === "split" && !opts.revision && !webtoon;
-    let countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
+    const split = runSettings.analysisMode === "split" && !opts.revision;
+    const countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
     if (attemptKind !== "retry") analyzerCompleted.delete(skey);
 
     const errorRevision =
@@ -501,7 +499,6 @@ export function createChatPipelineController(services: BackendServices, engine: 
       const document = await services.storage.loadCharacterDocument(characterId);
       const visibility = resolveEffectiveConfig(config, { characterId, document }).nativeAssetVisibility;
       const built = messageSlots(planKey, content, nativeDetectorsFor(characterId, "", document));
-      if (webtoon) countPolicy = fixedCountPolicy(webtoonSegmentCount(built.clean));
       const slots = built.slots.map((s) => ({ ...s }));
       const revisionSlot = opts.revision ? slots.find((s) => s.slotId === opts.revision!.slotId) : undefined;
       if (opts.revision && !revisionSlot) throw new RpcFailure(labelError("conflict", PIPELINE_TEXT.noSlots));

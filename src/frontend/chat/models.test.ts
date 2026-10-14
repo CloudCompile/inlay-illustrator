@@ -52,16 +52,6 @@ describe("generation-count panel model", () => {
   test("auto toggle", () => {
     expect(applyCountAction(createDefaultChatImageGenerationSettings(), "toggle-auto", limits)!.autoGenerationEnabled).toBe(false);
   });
-  test("webtoon mode: own mode, kept by the auto toggle, left by picking a count mode", () => {
-    const webtoon = applyCountAction(createDefaultChatImageGenerationSettings(), "select-webtoon", limits)!;
-    expect(webtoon.webtoonMode).toBe(true);
-    const view = countView(webtoon, limits);
-    expect(view.mode).toBe("webtoon");
-    expect(countToggleText(view)).toBe("W");
-    expect(applyCountAction(webtoon, "select-webtoon", limits)).toBeNull();
-    expect(applyCountAction(webtoon, "toggle-auto", limits)!.webtoonMode).toBe(true);
-    for (const action of ["select-fixed", "select-range", "select-split"] as const) expect(applyCountAction(webtoon, action, limits)!.webtoonMode).toBe(false);
-  });
 });
 
 function job(patch: Partial<GenerationJobSnapshot> = {}): GenerationJobSnapshot {

@@ -439,24 +439,6 @@ export function chatMockHandlers(): MockHandlers {
         .map((m) => messageUiState(chat, m));
       return { messages };
     },
-    "reader.getChat": ({ chatId }, ctx) => {
-      const chat = mockChat(ctx.db);
-      if (chatId !== chat.chatId) return { messages: [] };
-      return {
-        messages: chat.messages.map((m) => ({
-          messageId: m.messageId,
-          swipeIndex: m.swipeIndex,
-          messageKey: messageKeyOf(m),
-          role: m.role,
-          name: m.name,
-          text: m.paragraphs.join("\n\n"),
-          pages: [...(activeRevision(m)?.slots ?? [])].sort((a, b) => a.slotIndex - b.slotIndex).flatMap((s) => {
-            const entry = s.entries.find((e) => e.entryId === s.selectedEntryId);
-            return entry ? [{ slotId: s.slotId, slotIndex: s.slotIndex, entryId: entry.entryId, url: entry.url, width: entry.width, height: entry.height }] : [];
-          })
-        }))
-      };
-    },
     "generation.start": ({ chatId, messageId, attemptKind }, ctx) => {
       const chat = mockChat(ctx.db);
       const message = findMessage(chat, messageId);

@@ -1157,12 +1157,10 @@ export interface ChatImageGenerationSettings {
   /** "split" = V5 split analysis (needs a total count). */
   analysisMode: "single" | "split";
   splitAnalysis: { totalCount: number | null; batchSize: number };
-  /** Experimental: plan each message as webtoon segments (scene direction, size, count and analyzer timeout are fixed). */
-  webtoonMode: boolean;
 }
 export const SPLIT_ANALYSIS_MAX_TOTAL = 20;
 export function createDefaultChatImageGenerationSettings(): ChatImageGenerationSettings {
-  return { autoGenerationEnabled: true, countPolicy: fixedCountPolicy(1), analysisMode: "single", splitAnalysis: { totalCount: null, batchSize: 3 }, webtoonMode: false };
+  return { autoGenerationEnabled: true, countPolicy: fixedCountPolicy(1), analysisMode: "single", splitAnalysis: { totalCount: null, batchSize: 3 } };
 }
 export const DEFAULT_CHAT_IMAGE_GENERATION_SETTINGS: Readonly<ChatImageGenerationSettings> = Object.freeze(createDefaultChatImageGenerationSettings());
 /** AM `T2`: max batch size for a split total. */
@@ -1184,7 +1182,6 @@ export function normalizeChatImageGenerationSettings(value: unknown, fallback: C
     splitAnalysis: { totalCount: total, batchSize: Math.min(batch, total === null ? 7 : maxSplitBatchSize(total)) },
     autoGenerationEnabled: typeof r.autoGenerationEnabled === "boolean" ? r.autoGenerationEnabled : fallback.autoGenerationEnabled,
     countPolicy: normalizeCountPolicy(r.countPolicy, fallback.countPolicy, maxCount),
-    webtoonMode: typeof r.webtoonMode === "boolean" ? r.webtoonMode : fallback.webtoonMode,
   };
 }
 /** Load-time normalization with the AM notices (157887-157901, English; Korean in `noticeKo`). */

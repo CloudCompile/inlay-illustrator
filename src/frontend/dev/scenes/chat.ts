@@ -51,12 +51,6 @@ export const CHAT_SCENES: Record<string, PreviewScene> = {
     await sleep(100);
     await clickWhenReady(doc, ".ii-am-chat-count__mode .ii-am-chat-count__option");
   },
-  "chat-count-webtoon": async (input) => {
-    const { doc, mock } = input;
-    mock.db.chatImageGeneration = { ...mock.db.chatImageGeneration, webtoonMode: true };
-    await chat(input);
-    await clickWhenReady(doc, ".ii-am-chat-count__toggle");
-  },
   "chat-count-range": async (input) => {
     const { doc, mock } = input;
     mock.db.chatImageGeneration = { ...mock.db.chatImageGeneration, countPolicy: { mode: "range", min: 2, max: 4, values: { fixed: 1, min: 2, max: 4 } } };

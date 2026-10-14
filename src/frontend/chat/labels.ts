@@ -111,9 +111,6 @@ export const COUNT_LABELS = {
   fixed: "Fixed", // 고정
   range: "Range", // 범위
   split: "Split", // 분할
-  webtoon: "Webtoon", // 웹툰
-  webtoonNote: "Auto count", // 자동 장수 (webtoon mode: follows the message length)
-  webtoonNoteTitle: "Webtoon mode: the image count follows the message length.", // 웹툰 모드: 장수는 메시지 길이에 따라 정해집니다.
   splitUnsupported: "Split analysis is supported on V5. Select fixed or range.", // 분할 분석은 V5에서 지원합니다. 고정 또는 범위를 선택하세요.
   count: "Generation count", // 생성 장수
   countDecrease: "Decrease generation count", // 생성 장수 감소

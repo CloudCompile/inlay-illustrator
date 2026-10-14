@@ -178,7 +178,7 @@ describe("FAB turn-aware behavior and hover animation", () => {
       events: { on: () => () => {} }
     };
 
-    const destroy = installInlayFab(ctx as any, { getCorner: () => "bottom-right", openGallery: () => {}, openReader: () => {}, generateLatest: () => { sent.push("generate"); }, rerollLatest: () => { sent.push("reroll"); } });
+    const destroy = installInlayFab(ctx as any, { getCorner: () => "bottom-right", openGallery: () => {}, generateLatest: () => { sent.push("generate"); }, rerollLatest: () => { sent.push("reroll"); } });
     const button = body.children[0];
 
     // With no images in DOM, empty turn class is set
@@ -196,7 +196,7 @@ describe("FAB turn-aware behavior and hover animation", () => {
     const ctx: any = { dom: { addStyle: () => () => {} }, getActiveChat: () => ({ chatId: "chat-42" }), events: { on: () => () => {} } };
     let setHidden: (hidden: boolean) => void = () => {};
     const destroy = installInlayFab(ctx as any, {
-      getCorner: () => "bottom-right", openGallery: () => {}, openReader: () => {}, generateLatest: () => {}, rerollLatest: () => {},
+      getCorner: () => "bottom-right", openGallery: () => {}, generateLatest: () => {}, rerollLatest: () => {},
       subscribeHidden: (listener) => { setHidden = listener; return () => {}; }
     });
     const button = body.children[0];
@@ -232,7 +232,7 @@ describe("FAB turn-aware behavior and hover animation", () => {
       events: { on: () => () => {} }
     };
 
-    const destroy = installInlayFab(ctx as any, { getCorner: () => "bottom-right", openGallery: () => {}, openReader: () => {}, generateLatest: () => {}, rerollLatest: () => {} });
+    const destroy = installInlayFab(ctx as any, { getCorner: () => "bottom-right", openGallery: () => {}, generateLatest: () => {}, rerollLatest: () => {} });
     const button = body.children[0];
 
     // Because the latest message has NO images, it must be empty-turn
@@ -257,7 +257,6 @@ describe("FAB turn-aware behavior and hover animation", () => {
     const sent: unknown[] = [];
     let openedSettings = false;
     let openedGallery = false;
-    let openedReader = false;
 
     const ctx: any = {
       sendToBackend: (payload: unknown) => sent.push(payload),
@@ -270,7 +269,6 @@ describe("FAB turn-aware behavior and hover animation", () => {
     const destroy = installInlayFab(ctx as any, {
       getCorner: () => "bottom-right",
       openGallery: () => { openedGallery = true; },
-      openReader: () => { openedReader = true; },
       openSettings: () => { openedSettings = true; },
       generateLatest: () => {},
       rerollLatest: () => { sent.push("reroll"); }
@@ -285,17 +283,11 @@ describe("FAB turn-aware behavior and hover animation", () => {
     button.click();
     expect(menu.hidden).toBeFalse();
 
-    // Contains 4 menu items: Reroll, Read as webtoon, Gallery, Open Inlay Illustrator
-    expect(menu.children.length).toBe(4);
+    // Contains 3 menu items: Reroll, Gallery, Open Inlay Illustrator
+    expect(menu.children.length).toBe(3);
 
-    // Click the reader item
-    menu.children[1].click();
-    expect(openedReader).toBeTrue();
-    expect(menu.hidden).toBeTrue();
-
-    // Reopen menu and click Gallery item
-    button.click();
-    const galleryItem = menu.children[2];
+    // Click Gallery item
+    const galleryItem = menu.children[1];
     galleryItem.click();
     expect(openedGallery).toBeTrue();
     expect(menu.hidden).toBeTrue();
@@ -303,7 +295,7 @@ describe("FAB turn-aware behavior and hover animation", () => {
     // Reopen menu and click Settings item
     button.click();
     expect(menu.hidden).toBeFalse();
-    const settingsItem = menu.children[3];
+    const settingsItem = menu.children[2];
     settingsItem.click();
     expect(openedSettings).toBeTrue();
     expect(menu.hidden).toBeTrue();

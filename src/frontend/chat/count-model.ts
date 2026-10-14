@@ -11,15 +11,13 @@ import {
 } from "../../shared/contract/chat.js";
 import { maxSplitBatchSize, SPLIT_ANALYSIS_MAX_TOTAL, type ChatImageGenerationSettings } from "../../shared/contract/config.js";
 
-/** "webtoon": experimental webtoon mode, the backend picks the count from the message length. */
-export type CountMode = "fixed" | "range" | "split" | "webtoon";
+export type CountMode = "fixed" | "range" | "split";
 
 export const COUNT_ACTIONS = [
   "toggle-auto",
   "select-fixed",
   "select-range",
   "select-split",
-  "select-webtoon",
   "fixed-decrement",
   "fixed-increment",
   "min-decrement",
@@ -65,7 +63,7 @@ function clamp(value: number, min: number, max: number): number {
 export function countView(settings: ChatImageGenerationSettings, limits: CountLimits): CountView {
   const policy = normalizeCountPolicy(settings.countPolicy, 1, limits.maximumCount);
   const values = policy.values ?? { fixed: policy.max, min: policy.min, max: policy.max };
-  const mode: CountMode = settings.webtoonMode ? "webtoon" : settings.analysisMode === "split" && limits.splitSupported ? "split" : policy.mode;
+  const mode: CountMode = settings.analysisMode === "split" && limits.splitSupported ? "split" : policy.mode;
   const totalCap = SPLIT_ANALYSIS_MAX_TOTAL;
   const total = clamp(settings.splitAnalysis.totalCount ?? Math.min(limits.maximumCount, policy.max), 1, totalCap);
   const batchCap = maxSplitBatchSize(total);
@@ -89,9 +87,8 @@ export function countView(settings: ChatImageGenerationSettings, limits: CountLi
   };
 }
 
-/** Text on the collapsed toggle: "N", "min–max", the split total, or "W" (webtoon: automatic count). */
+/** Text on the collapsed toggle: "N", "min–max" or the split total. */
 export function countToggleText(view: CountView): string {
-  if (view.mode === "webtoon") return "W";
   if (view.mode === "range") return `${view.min}–${view.max}`;
   if (view.mode === "split") return String(view.total);
   return String(view.fixed);
@@ -102,8 +99,8 @@ function withPolicy(settings: ChatImageGenerationSettings, mode: "fixed" | "rang
   const policy = mode === "fixed"
     ? { ...fixedCountPolicy(values.fixed, limit), values: { fixed: clamp(values.fixed, 1, limit), ...range } }
     : normalizeCountPolicy({ mode: "range", values: { fixed: values.fixed, ...range } }, 1, limit);
-  // AM `setCountPolicy` always switches back to single analysis (and leaves webtoon mode).
-  return { ...settings, countPolicy: policy, analysisMode: "single", webtoonMode: false };
+  // AM `setCountPolicy` always switches back to single analysis.
+  return { ...settings, countPolicy: policy, analysisMode: "single" };
 }
 
 /** Applies one panel action. Returns null when the action does nothing (at a bound, unsupported). */
@@ -127,10 +124,8 @@ export function applyCountAction(settings: ChatImageGenerationSettings, action: 
     case "select-split": {
       if (!limits.splitSupported || view.mode === "split") return null;
       const total = view.total;
-      return { ...settings, analysisMode: "split", splitAnalysis: { totalCount: total, batchSize: clamp(settings.splitAnalysis.batchSize, 1, maxSplitBatchSize(total)) }, webtoonMode: false };
+      return { ...settings, analysisMode: "split", splitAnalysis: { totalCount: total, batchSize: clamp(settings.splitAnalysis.batchSize, 1, maxSplitBatchSize(total)) } };
     }
-    case "select-webtoon":
-      return view.mode === "webtoon" ? null : { ...settings, webtoonMode: true };
     case "fixed-decrement":
     case "fixed-increment": {
       const next = step("fixed", action === "fixed-increment" ? 1 : -1);

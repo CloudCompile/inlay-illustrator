@@ -399,28 +399,3 @@ export interface ChatMessageUiState {
   /** Last failure of the plan (for the retry tooltip / toast). */
   lastError?: RpcError;
 }
-
-/* ------------------------------------------------------------------------------------------------
- * Webtoon reader (`reader.getChat`)
- * ---------------------------------------------------------------------------------------------- */
-
-/** Selected entry of one slot of the active revision. */
-export interface ReaderPage {
-  slotId: string;
-  slotIndex: number;
-  entryId: string;
-  url: string;
-  width: number;
-  height: number;
-}
-/** One chat message (active swipe) in chat order: its pages in slot order, and its clean text. */
-export interface ReaderMessage {
-  messageId: string;
-  swipeIndex: number;
-  messageKey: string;
-  role: "system" | "user" | "assistant";
-  name: string;
-  /** Message text without baked illustration blocks. */
-  text: string;
-  pages: ReaderPage[];
-}

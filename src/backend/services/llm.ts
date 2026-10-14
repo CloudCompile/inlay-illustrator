@@ -480,11 +480,10 @@ export function createLlmService(deps: LlmServiceDeps): LlmService {
 
     analyzerClient(clientOptions = {}): AnalyzerClientLike {
       return {
-        async complete(config, messages, options = {}) {
+        async complete(_config, messages, options = {}) {
           const o = asRecord(options);
           const signal = (o.signal as AbortSignal | undefined) ?? clientOptions.signal;
-          // The engine passes the run's `analysisConfig`; its timeout wins over the stored setting (webtoon mode raises it).
-          const timeoutMs = Number(o.timeoutMs ?? asRecord(config).timeoutMs);
+          const timeoutMs = Number(o.timeoutMs);
           const maxOutputTokens = Number(o.maxOutputTokens ?? o.maxTokens);
           const result = await run(
             {

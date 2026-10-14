@@ -1,12 +1,10 @@
 /**
- * RPC handlers owned by the `pipeline` module: generation.*, history.*, zoom.*, chatState.*, chatDom.*, reader.* (see ./index.ts).
+ * RPC handlers owned by the `pipeline` module: generation.*, history.*, zoom.*, chatState.*, chatDom.* (see ./index.ts).
  * Every handler delegates to `ctx.modules.pipeline` (src/backend/pipeline/controller.ts).
  */
 import { fail } from "../errors.js";
 import type { HandlerGroup, RpcContext } from "../types.js";
 import type { ChatPipeline } from "../../pipeline/index.js";
-import { loadMessages } from "../../pipeline/host-chat.js";
-import { readerMessages } from "../../pipeline/reader.js";
 
 function pipelineOf(ctx: RpcContext): ChatPipeline {
   const pipeline = (ctx.modules as { pipeline?: ChatPipeline }).pipeline;
@@ -85,11 +83,4 @@ export const chatHandlers: HandlerGroup = {
 
   /* chat DOM */
   "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
-
-  /* webtoon reader */
-  "reader.getChat": async (params, ctx) => {
-    const chatId = need(params.chatId, "chatId");
-    const [views, { messages }] = await Promise.all([loadMessages(ctx.host, chatId), pipelineOf(ctx).getMessageStates(chatId)]);
-    return { messages: readerMessages(views, messages) };
-  },
 };

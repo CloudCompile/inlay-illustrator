@@ -114,8 +114,6 @@ describe("settings form helpers", () => {
     expect(split.analysisMode).toBe("split");
     expect(split.splitAnalysis.totalCount).toBe(2);
     expect(setSplitTotal(split, 50, 7).splitAnalysis.totalCount).toBe(20);
-    const webtoon = { ...base, webtoonMode: true };
-    for (const next of [setFixedCount(webtoon, 3, 7), setCountMode(webtoon, "range", 7), setAnalysisMode(webtoon, "split", 7), setSplitTotal({ ...split, webtoonMode: true }, 3, 7)]) expect(next.webtoonMode).toBe(true);
   });
   test("charx helpers", () => {
     expect(sourceMetadataState({})).toBe("unknown");
@@ -253,19 +251,6 @@ describe("settings pages (DOM)", () => {
     const toggle = await until(() => doc.querySelector('[aria-label="Use developer mode"]'));
     (toggle as HTMLButtonElement).click();
     await until(() => mock.db.config.ui.developerModeEnabled === true);
-    controller.destroy();
-  });
-
-  test("system page: webtoon mode switch replaces the count controls with the automatic-count note", async () => {
-    const { mock, controller } = await openSettings("system");
-    const toggle = await until(() => doc.querySelector('[aria-label="Webtoon mode"]'));
-    expect(doc.querySelector("[data-webtoon-mode]")?.textContent).toContain("Experimental");
-    expect(doc.querySelector('[aria-label="1 image more"]')).not.toBeNull();
-    (toggle as HTMLButtonElement).click();
-    await until(() => mock.db.chatImageGeneration.webtoonMode === true);
-    await until(() => doc.querySelector("[data-webtoon-count]"));
-    expect(doc.querySelector('[aria-label="1 image more"]')).toBeNull();
-    expect(mock.db.chatImageGeneration.countPolicy).toEqual(createDefaultChatImageGenerationSettings().countPolicy);
     controller.destroy();
   });
 

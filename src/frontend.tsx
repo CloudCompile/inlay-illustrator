@@ -13,14 +13,12 @@ import { RpcClient, spindleTransport } from "./frontend/rpc/client.js";
 import { AppController } from "./frontend/state/app-state.js";
 import { installChatSide } from "./frontend/chat/index.js";
 import { answerFetchBridge } from "./frontend/fetch-bridge.js";
-import { createWebtoonReader, type WebtoonReader } from "./frontend/reader/index.js";
-import { READER_LABELS } from "./frontend/reader/labels.js";
 import { createZoomViewer, type ZoomViewer } from "./frontend/zoom/index.js";
 import { zoomVisibility } from "./frontend/zoom/signal.js";
 import { isFetchBridgeRequest } from "./shared/contract/bridge.js";
 
 /** Handles exposed to dev tools (preview page, tests). */
-export type FrontendHandles = { app: AppController; client: RpcClient; overlay: OverlayController; zoom: ZoomViewer; reader: WebtoonReader };
+export type FrontendHandles = { app: AppController; client: RpcClient; overlay: OverlayController; zoom: ZoomViewer };
 export type SetupOptions = { onReady?: (handles: FrontendHandles) => void };
 
 export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
@@ -59,13 +57,6 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
 
   // Chat side: zoom viewer + controls around baked illustrations.
   const zoom = createZoomViewer(ctx, app);
-  // Webtoon reader: the active chat as one vertical column of its pages (a tapped page opens in the zoom viewer).
-  const reader = createWebtoonReader(ctx, app, { openZoom: (target) => zoom.open(target) });
-  function openReader(): void {
-    const chatId = activeChatId();
-    if (chatId) reader.open(chatId);
-    else app.notify({ tone: "info", message: READER_LABELS.noChat });
-  }
   const removeChatSide = installChatSide(ctx, app, {
     openZoom: (target) => zoom.open(target),
     getActiveChatId: activeChatId,
@@ -91,7 +82,7 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
   launcherRoot.className = OVERLAY_ROOT_CLASS;
   tab.root.replaceChildren(launcherRoot);
   render(
-    <LauncherPanel app={app} store={store} fabCorner={fabCorner} onOpen={() => overlay.open()} onOpenSettings={() => overlay.open({ settings: true })} onOpenReader={openReader} />,
+    <LauncherPanel app={app} store={store} fabCorner={fabCorner} onOpen={() => overlay.open()} onOpenSettings={() => overlay.open({ settings: true })} />,
     launcherRoot
   );
 
@@ -143,7 +134,6 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
       });
     },
     openSettings: () => overlay.open(),
-    openReader,
     generateLatest: () => generateLatest(),
     rerollLatest: () => generateLatest("reroll"),
     subscribeBusy: (listener) => app.store.subscribe(() => listener(Object.keys(app.state.generationJobs).length > 0)),
@@ -154,15 +144,13 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
     composer,
     subscribeHidden: (listener) => {
       const zoomSignal = zoomVisibility(app);
-      const update = () => listener(store.get().overlayOpen || zoomSignal.isOpen() || reader.isOpen());
+      const update = () => listener(store.get().overlayOpen || zoomSignal.isOpen());
       const offStore = store.subscribe(update);
       const offZoom = zoomSignal.subscribe(update);
-      const offReader = reader.subscribe(update);
       update();
       return () => {
         offStore();
         offZoom();
-        offReader();
       };
     }
   });
@@ -174,13 +162,12 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
   const unsubChatSwitched = ctx.events.on("CHAT_SWITCHED", (payload) => {
     const chatId = (payload as { chatId?: unknown } | null)?.chatId;
     store.set({ chatId: typeof chatId === "string" ? chatId : "" });
-    reader.close();
     void app.call("session.getStatus", {}).then((status) => app.setStatus(status)).catch(() => undefined);
   });
 
   void app.init();
   ctx.ready();
-  options.onReady?.({ app, client, overlay, zoom, reader });
+  options.onReady?.({ app, client, overlay, zoom });
 
   const cleanup = () => {
     unsubForeign();
@@ -188,7 +175,6 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
     unsubOverlayDrawer();
     composer.stop();
     removeChatSide();
-    reader.destroy();
     zoom.destroy();
     removeInputBarClick?.();
     inputBarAction?.destroy();

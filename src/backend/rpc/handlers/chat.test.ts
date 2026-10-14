@@ -5,7 +5,7 @@ import { CHAT_ID, createFakeEngine, createPipelineFixture, finished, waitFor } f
 import type { RpcContext } from "../types.js";
 import { chatHandlers } from "./chat.js";
 
-const OWNED = /^(generation|history|zoom|chatState|chatDom|reader)\./u;
+const OWNED = /^(generation|history|zoom|chatState|chatDom)\./u;
 
 function context() {
   const fx = createPipelineFixture();
@@ -32,18 +32,6 @@ describe("chat handler group", () => {
     const details = await chatHandlers["zoom.getDetails"]!({ chatId: CHAT_ID, slotId: slot.slotId }, ctx);
     expect(details.entryId).toBe(slot.selectedEntryId);
     expect((await chatHandlers["generation.listActive"]!({ chatId: CHAT_ID }, ctx)).jobs).toEqual([]);
-  });
-
-  test("reader.getChat lists every message with the generated pages", async () => {
-    const { fx, ctx } = context();
-    const started = await chatHandlers["generation.start"]!({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 }, ctx);
-    await waitFor(() => finished(fx, started.jobId).length > 0);
-    const states = await chatHandlers["chatDom.getMessageStates"]!({ chatId: CHAT_ID }, ctx);
-    const { messages } = await chatHandlers["reader.getChat"]!({ chatId: CHAT_ID }, ctx);
-    expect(messages.map((m) => [m.messageId, m.role])).toEqual([["u1", "user"], ["m1", "assistant"]]);
-    expect(messages[1]!.pages.map((p) => p.slotId)).toEqual(states.messages[0]!.slots.map((s) => s.slotId));
-    expect(messages[1]!.pages.length).toBeGreaterThan(0);
-    expect(messages[1]!.text).not.toContain("inlay_illustrator");
   });
 
   test("bad params are rejected with bad-request", async () => {
