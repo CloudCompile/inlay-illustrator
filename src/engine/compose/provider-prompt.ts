@@ -13,10 +13,10 @@ import {
   ANIMA_DEFAULT_POSITIVE_PREFIX as coreAnimaPos,
   ANIMA_DEFAULT_NEGATIVE_PREFIX as coreAnimaNeg,
   IMAGE_PROVIDER_TABLE as coreProviderTable,
-  n2 as bundledComfyProfile,
-  t7 as resolveComfyProfile,
-  r2 as isOutfitRestylerProfile,
-  Nc as isAnimaFlatProvider,
+  F2 as bundledComfyProfile,
+  eH as resolveComfyProfile,
+  D2 as isOutfitRestylerProfile,
+  Ds as isAnimaFlatProvider,
 } from "../core/asset-maid-core";
 import type { AnimaDiagnostic, ComfyWorkflowProfile, ImageActor, ProviderPrompt, ProviderPromptInput } from "./types";
 

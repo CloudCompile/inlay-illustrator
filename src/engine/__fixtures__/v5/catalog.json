@@ -1,10 +1,10 @@
 {
   "defaultCatalog": {
     "hashes": {
-      "source": "fnv1a64-abcf9c026173f2cf",
-      "semantic": "fnv1a64-34336c429f21bcc9",
-      "analyzer": "fnv1a64-507b1b842e715021",
-      "rules": "fnv1a64-cb823a9cdcf5e829",
+      "source": "fnv1a64-cb86734315195e62",
+      "semantic": "fnv1a64-934d522cebf549c7",
+      "analyzer": "fnv1a64-5cc7e834a868ed72",
+      "rules": "fnv1a64-7fb1a3a7e38a96b9",
       "prompts": "fnv1a64-f85d942a90e3d1e8",
       "weights": "fnv1a64-4d0463fac277af5e",
       "continuity": "fnv1a64-bd22a1f16b22c8b8"
@@ -12,10 +12,10 @@
     "stats": {
       "definitions": 56,
       "options": 291,
-      "sourceRules": 67,
-      "compiledRules": 67
+      "sourceRules": 69,
+      "compiledRules": 69
     },
-    "fingerprint": "v5.fnv1a64-c368130800610ca6",
+    "fingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
     "compilerVersion": "novelai-v5-catalog-v1",
     "sizes": {
       "__map__": [
@@ -211,7 +211,10 @@
       "selection": {
         "by": "ai",
         "min": 0,
-        "max": 1
+        "max": 1,
+        "default": [
+          "cowboy_shot"
+        ]
       },
       "options": {
         "__map__": [
@@ -806,10 +809,10 @@
   "modified": {
     "weight-change": {
       "hashes": {
-        "source": "fnv1a64-07ecd682a7bc705b",
-        "semantic": "fnv1a64-284b8b5e92707e85",
-        "analyzer": "fnv1a64-507b1b842e715021",
-        "rules": "fnv1a64-cb823a9cdcf5e829",
+        "source": "fnv1a64-0165bd65c6576896",
+        "semantic": "fnv1a64-c6787f940ab706db",
+        "analyzer": "fnv1a64-5cc7e834a868ed72",
+        "rules": "fnv1a64-7fb1a3a7e38a96b9",
         "prompts": "fnv1a64-4b954d77520911a4",
         "weights": "fnv1a64-4d0463fac277af5e",
         "continuity": "fnv1a64-bd22a1f16b22c8b8"
@@ -817,10 +820,10 @@
       "stats": {
         "definitions": 56,
         "options": 291,
-        "sourceRules": 67,
-        "compiledRules": 67
+        "sourceRules": 69,
+        "compiledRules": 69
       },
-      "fingerprint": "v5.fnv1a64-d9e0dc61f4a558f5",
+      "fingerprint": "v5.fnv1a64-0fe06212aa605fb2",
       "diagnostics": [],
       "sample": {
         "id": "scene.environment",
@@ -958,10 +961,10 @@
     },
     "new-option": {
       "hashes": {
-        "source": "fnv1a64-bb27cbde9a9b6d20",
-        "semantic": "fnv1a64-95fbb7d35e726bc9",
-        "analyzer": "fnv1a64-56562462e7e55e6f",
-        "rules": "fnv1a64-cb823a9cdcf5e829",
+        "source": "fnv1a64-d37085b9f1a57925",
+        "semantic": "fnv1a64-d34811b291d56d07",
+        "analyzer": "fnv1a64-73e3e3dbb90fef7c",
+        "rules": "fnv1a64-7fb1a3a7e38a96b9",
         "prompts": "fnv1a64-63d0e4b695a1c420",
         "weights": "fnv1a64-4d0463fac277af5e",
         "continuity": "fnv1a64-bd22a1f16b22c8b8"
@@ -969,10 +972,10 @@
       "stats": {
         "definitions": 56,
         "options": 292,
-        "sourceRules": 67,
-        "compiledRules": 67
+        "sourceRules": 69,
+        "compiledRules": 69
       },
-      "fingerprint": "v5.fnv1a64-4d690d7f41cc4bdd",
+      "fingerprint": "v5.fnv1a64-0e519ad3e7ed01fd",
       "diagnostics": [],
       "sample": {
         "id": "scene.time",
@@ -1121,10 +1124,10 @@
     },
     "new-interaction": {
       "hashes": {
-        "source": "fnv1a64-86ddb923520aa118",
-        "semantic": "fnv1a64-d1b22f4eda48bcb5",
-        "analyzer": "fnv1a64-a8bb4fb55951713e",
-        "rules": "fnv1a64-cb823a9cdcf5e829",
+        "source": "fnv1a64-c24d3fde0f80ce9d",
+        "semantic": "fnv1a64-21a568717d3661bb",
+        "analyzer": "fnv1a64-93769dc981741385",
+        "rules": "fnv1a64-7fb1a3a7e38a96b9",
         "prompts": "fnv1a64-75c7221ec519dc2d",
         "weights": "fnv1a64-4d0463fac277af5e",
         "continuity": "fnv1a64-bd22a1f16b22c8b8"
@@ -1132,10 +1135,10 @@
       "stats": {
         "definitions": 56,
         "options": 291,
-        "sourceRules": 67,
-        "compiledRules": 67
+        "sourceRules": 69,
+        "compiledRules": 69
       },
-      "fingerprint": "v5.fnv1a64-0ea9043e7471c5c2",
+      "fingerprint": "v5.fnv1a64-4b56b59f932aa7d1",
       "diagnostics": [],
       "sample": {
         "id": "high_five",

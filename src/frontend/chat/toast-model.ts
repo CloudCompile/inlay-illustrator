@@ -2,8 +2,8 @@
  * Pure runtime-toast models for the chat side (Asset Maid `$Ct` 177880, `MCt` 177783, `dht` 114252,
  * spec/ui.md §5.2 and §6.3): generation jobs (running + finished), notices and chat-side errors.
  */
-import type { AttemptKind, GenerationJobSnapshot, GenerationResultKind, JevSelectionProgress, RpcError } from "../../shared/contract/rpc.js";
-import { fill, JEV_LABELS, PHASE_LABELS, TOAST_LABELS } from "./labels.js";
+import type { AttemptKind, GenerationJobSnapshot, GenerationPhase, GenerationResultKind, GenerationRetryError, JevSelectionProgress, RpcError } from "../../shared/contract/rpc.js";
+import { fill, JEV_LABELS, PHASE_LABELS, RETRY_DETAIL_STAGE_LABEL, RETRY_STAGE_LABELS, TOAST_LABELS } from "./labels.js";
 
 export type RuntimeToastTone = "running" | "success" | "warning" | "danger";
 export type RuntimeToastAction = "cancel" | "retry" | "dismiss" | "none";
@@ -18,6 +18,10 @@ export interface RuntimeToastModel {
   detail?: string;
   /** Long error text (shown when the toast is expanded). */
   errorText?: string;
+  /** Newest retry error (AM `errorDetail`); shown instead of `errorText` when the toast is expanded. */
+  errorDetail?: string;
+  /** Older retry errors, newest first (AM `previousErrors`). */
+  previousErrors?: string[];
   /** 0..1 */
   progress: number;
   action: RuntimeToastAction;
@@ -46,6 +50,9 @@ export interface FinishedGeneration {
   canRestart: boolean;
   error?: RpcError;
   jevSelection?: JevSelectionProgress;
+  /** Last phase and retry errors seen while the job ran. */
+  phase?: GenerationPhase;
+  retryErrors?: GenerationRetryError[];
   finishedAt: number;
 }
 
@@ -62,6 +69,60 @@ function imagesText(n: number): string {
 
 function isRegenerate(kind: AttemptKind): boolean {
   return kind === "regenerate";
+}
+
+/** AM `c0` length cap (the entries are already sanitized by the backend). */
+function clip(text: string): string {
+  return text.slice(0, 3000).trim();
+}
+
+function retryStageLabel(stage: string): string {
+  const detail = /^세부(\d+) 분석$/u.exec(stage);
+  return detail ? fill(RETRY_DETAIL_STAGE_LABEL, { n: detail[1]! }) : (RETRY_STAGE_LABELS[stage] ?? stage);
+}
+
+/** AM `ygt` 115452: one failed attempt; the diagnostic lines only in developer mode. */
+export function retryErrorText(error: GenerationRetryError, diagnostics: boolean): string {
+  return [
+    fill(TOAST_LABELS.retryFailed, { stage: retryStageLabel(error.stage), n: error.attempt }),
+    error.message,
+    ...(diagnostics
+      ? [
+          error.httpStatus && `HTTP ${error.httpStatus}`,
+          error.code && fill(TOAST_LABELS.errorCode, { v: error.code }),
+          error.provider && fill(TOAST_LABELS.provider, { v: error.provider }),
+          error.model && fill(TOAST_LABELS.model, { v: error.model }),
+          error.requestId && fill(TOAST_LABELS.requestId, { v: error.requestId })
+        ]
+      : [])
+  ].filter(Boolean).join("\n");
+}
+
+/** AM `lSe` 177298: the newest failure becomes `errorDetail`, the older ones `previousErrors` (newest first). */
+export function retryErrorDetails(errors: readonly GenerationRetryError[] | undefined, diagnostics: boolean, imageNumber?: number): Pick<RuntimeToastModel, "errorDetail" | "previousErrors"> {
+  if (!errors?.length) return {};
+  const texts = [...errors].reverse().map((error) => [imageNumber && fill(TOAST_LABELS.imageNumber, { n: imageNumber }), retryErrorText(error, diagnostics)].filter(Boolean).join("\n"));
+  return { errorDetail: clip(texts[0]!), previousErrors: texts.slice(1).map(clip) };
+}
+
+/** AM 178969: retry errors of a running or failed job; the image number while generating or for image request errors. */
+function jobRetryErrors(errors: readonly GenerationRetryError[] | undefined, phase: GenerationPhase | undefined, completedSlots: number, diagnostics: boolean): Pick<RuntimeToastModel, "errorDetail" | "previousErrors"> {
+  return retryErrorDetails(errors, diagnostics, phase === "generating" || errors?.[0]?.stage === "이미지 생성" ? completedSlots + 1 : undefined);
+}
+
+/** AM `DO` 179199: the toast opens error details (danger toasts with text, or any toast with retry errors). */
+export function hasErrorDetails(toast: RuntimeToastModel): boolean {
+  return toast.tone === "danger" ? !!(toast.errorDetail || toast.errorText || toast.detail) : toast.action !== "none" && !!toast.errorDetail;
+}
+
+/** First paragraph of the expanded details (AM 179180). */
+export function errorDetailText(toast: RuntimeToastModel): string {
+  return clip(toast.errorDetail || toast.errorText || toast.detail || toast.message);
+}
+
+/** AM `wSe` 179204: text of the copy-error-log button. */
+export function errorLogText(toast: RuntimeToastModel): string {
+  return [errorDetailText(toast), ...(toast.previousErrors ?? [])].filter(Boolean).join("\n\n");
 }
 
 /** AM `dht`: progress fraction of a running job (uses the backend fraction when it sends one). */
@@ -119,7 +180,7 @@ export function runningDetail(job: GenerationJobSnapshot): string {
   return parts.join(" · ");
 }
 
-export function runningToast(job: GenerationJobSnapshot, now: number): RuntimeToastModel {
+export function runningToast(job: GenerationJobSnapshot, now: number, developerMode = false): RuntimeToastModel {
   const retry = job.progress.retry;
   const retryCount = job.progress.retryCount || (retry && retry.attempt > 0 ? `${retry.attempt}/${retry.total}` : undefined);
   return {
@@ -132,6 +193,7 @@ export function runningToast(job: GenerationJobSnapshot, now: number): RuntimeTo
     progress: generationProgress(job),
     action: "cancel",
     jobId: job.jobId,
+    ...jobRetryErrors(job.retryErrors, job.phase, job.completedSlots, developerMode),
     autoDismissMs: 0,
     createdAt: now
   };
@@ -169,7 +231,7 @@ export function jevToast(selection: JevSelectionProgress, parentKey: string, job
   };
 }
 
-export function finishedToast(entry: FinishedGeneration): RuntimeToastModel {
+export function finishedToast(entry: FinishedGeneration, developerMode = false): RuntimeToastModel {
   const regen = isRegenerate(entry.attemptKind);
   const base = { key: `generation:${entry.jobId}`, kind: "generation" as const, jobId: entry.jobId, createdAt: entry.finishedAt };
   if (entry.result === "completed" || entry.result === "presentation-deferred") {
@@ -190,6 +252,7 @@ export function finishedToast(entry: FinishedGeneration): RuntimeToastModel {
     progress: 0,
     action: entry.canRetry ? "retry" : "dismiss",
     canRestart: entry.canRestart,
+    ...jobRetryErrors(entry.retryErrors, entry.phase, entry.completedSlots, developerMode),
     autoDismissMs: 0
   };
 }
@@ -225,6 +288,8 @@ export function buildToastStack(input: {
   /** First time each JEV row key was shown (keeps its auto-dismiss clock across rebuilds). */
   seenAt: Map<string, number>;
   now: number;
+  /** Developer mode adds the diagnostic lines to retry errors (AM `ygt`). */
+  developerMode?: boolean;
 }): RuntimeToastModel[] {
   const out: RuntimeToastModel[] = [];
   const seen = new Set<string>();
@@ -248,14 +313,14 @@ export function buildToastStack(input: {
   };
   for (const job of input.running) {
     if (job.status !== "queued" && job.status !== "running") continue;
-    const toast = runningToast(job, input.now);
+    const toast = runningToast(job, input.now, input.developerMode);
     if (input.dismissed.has(toast.key)) continue;
     seen.add(job.jobId);
     add(toast, indexOf(job.jobId), job.jevSelection, true);
   }
   for (const entry of input.finished) {
     if (seen.has(entry.jobId)) continue;
-    const toast = finishedToast(entry);
+    const toast = finishedToast(entry, input.developerMode);
     if (input.dismissed.has(toast.key)) continue;
     add(toast, indexOf(entry.jobId), entry.jevSelection, false);
   }

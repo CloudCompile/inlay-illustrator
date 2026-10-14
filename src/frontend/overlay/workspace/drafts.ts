@@ -123,6 +123,19 @@ export class FormDraftStore {
     }
   }
 
+  /**
+   * AM `QC` (0.9.89.2 persona outfits): an outfit add / delete / set-default / Active toggle is committed at once
+   * while the form's (`formId` null: every form's) outfits in the draft match the base; with unsaved structural
+   * edits it stays in the draft.
+   */
+  structural(key: string, source: FormCollection, formId: string | null, fn: (value: FormCollection) => FormCollection, saver: DraftSaver): void {
+    this.sync(key, source);
+    const e = this.entry(key)!;
+    const ids = (c: FormCollection) => JSON.stringify(c.forms.filter((f) => !formId || f.id === formId).flatMap((f) => f.outfits.map((o) => `${f.id}\0${o.id}`)).sort());
+    if (ids(e.base) === ids(e.value)) void this.commit(key, source, fn, saver);
+    else this.edit(key, source, fn);
+  }
+
   private put(key: string, entry: DraftEntry): void {
     this.store.set({ ...this.store.get(), [key]: entry });
   }

@@ -2288,6 +2288,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -2296,12 +2299,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "night"
@@ -2365,7 +2362,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -2378,6 +2377,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -2401,7 +2401,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "saliva"
         ],
@@ -2410,6 +2409,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
         "_continuity_expires": {
          "state.after_activity": {
@@ -2417,10 +2417,8 @@
          },
          "state.fluid.saliva": {
           "saliva": 3
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000000,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 1,
@@ -2433,12 +2431,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "night"
@@ -2481,7 +2473,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000000,
@@ -2632,12 +2623,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -2672,7 +2657,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -2689,12 +2676,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -2729,7 +2710,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -3520,6 +3503,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -3528,12 +3514,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "night"
@@ -3620,7 +3600,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -3633,6 +3615,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -3656,7 +3639,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "saliva",
          "drooling"
@@ -3666,6 +3648,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
         "_continuity_expires": {
          "state.after_activity": {
@@ -3674,16 +3657,15 @@
          "state.fluid.saliva": {
           "saliva": 3,
           "drooling": 4
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
         "updatedAtMessageId": "id:m2"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -3703,18 +3685,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
@@ -3727,12 +3705,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "night"
@@ -3776,7 +3748,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000000,
@@ -3797,8 +3768,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000001,
          "updatedAtChatIndex": 0,
@@ -4132,12 +4102,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -4173,7 +4137,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -4192,12 +4158,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -4233,7 +4193,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -4754,6 +4716,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "school gate"
       ]
@@ -4762,12 +4727,6 @@
       "global": {
        "scene.environment": [
         "outdoors"
-       ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "day"
@@ -4847,7 +4806,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "school gate"
        ],
@@ -4860,6 +4821,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "outdoors"
@@ -4883,7 +4845,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "saliva",
          "drooling"
@@ -4893,6 +4854,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 3,
         "_continuity_expires": {
          "state.after_activity": {
@@ -4901,16 +4863,15 @@
          "state.fluid.saliva": {
           "saliva": 3,
           "drooling": 4
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000002,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 3,
         "updatedAtMessageId": "id:m3"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -4930,18 +4891,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
@@ -4954,12 +4911,6 @@
        "global": {
         "scene.environment": [
          "outdoors"
-        ],
-        "scene.location": [
-         "school gate"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "day"
@@ -4999,7 +4950,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000000,
@@ -5020,8 +4970,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000001,
          "updatedAtChatIndex": 0,
@@ -5039,7 +4988,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -5533,12 +5482,6 @@
        "scene.environment": [
         "outdoors"
        ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -5568,9 +5511,12 @@
       }
      },
      "previous_scene_tags": [
+      "bedroom",
       "school gate"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "school gate"
      ],
@@ -5587,12 +5533,6 @@
        "scene.environment": [
         "outdoors"
        ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -5622,9 +5562,12 @@
       }
      },
      "previous_scene_tags": [
+      "bedroom",
       "school gate"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "school gate"
      ],
@@ -6429,6 +6372,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -6437,12 +6383,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "day"
@@ -6526,7 +6466,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -6539,6 +6481,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -6562,7 +6505,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "drooling"
         ],
@@ -6571,6 +6513,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 4,
         "_continuity_expires": {
          "state.fluid.saliva": {
@@ -6578,16 +6521,15 @@
          },
          "state.after_activity": {
           "after_sex": 5
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
         "updatedAtMessageId": "id:m4"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -6607,18 +6549,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
@@ -6631,12 +6569,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "day"
@@ -6679,7 +6611,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000000,
@@ -6700,8 +6631,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000003,
          "updatedAtChatIndex": 0,
@@ -6900,7 +6830,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -7394,12 +7324,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -7434,7 +7358,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -7453,12 +7379,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -7493,7 +7413,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -8092,6 +8014,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -8100,12 +8025,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "night"
@@ -8189,7 +8108,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -8202,6 +8123,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -8225,7 +8147,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "drooling",
          "saliva"
@@ -8235,6 +8156,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 5,
         "_continuity_expires": {
          "state.fluid.saliva": {
@@ -8243,16 +8165,15 @@
          },
          "state.after_activity": {
           "after_fellatio": 6
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000004,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 5,
         "updatedAtMessageId": "id:m5"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -8272,18 +8193,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
@@ -8296,12 +8213,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "night"
@@ -8345,7 +8256,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000004,
@@ -8366,8 +8276,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000003,
          "updatedAtChatIndex": 0,
@@ -8748,7 +8657,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -9242,12 +9151,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -9283,7 +9186,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -9300,12 +9205,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -9341,7 +9240,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -9956,6 +9857,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -9964,12 +9868,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "night"
@@ -10052,7 +9950,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -10065,6 +9965,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -10088,7 +9989,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "drooling",
          "saliva"
@@ -10098,6 +9998,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 6,
         "_continuity_expires": {
          "state.fluid.saliva": {
@@ -10106,16 +10007,15 @@
          },
          "state.after_activity": {
           "after_fellatio": 7
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000005,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 6,
         "updatedAtMessageId": "id:m6"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -10135,18 +10035,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
@@ -10159,12 +10055,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "night"
@@ -10207,7 +10097,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000005,
@@ -10228,8 +10117,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000003,
          "updatedAtChatIndex": 0,
@@ -10791,7 +10679,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -11285,12 +11173,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -11325,7 +11207,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -11342,12 +11226,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "night"
        ]
@@ -11382,7 +11260,9 @@
      "previous_scene_tags": [
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -11951,6 +11831,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "school gate"
       ]
@@ -11959,12 +11842,6 @@
       "global": {
        "scene.environment": [
         "outdoors"
-       ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "day"
@@ -12042,7 +11919,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "school gate"
        ],
@@ -12055,6 +11934,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "outdoors"
@@ -12078,7 +11958,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "saliva"
         ],
@@ -12087,6 +11966,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 7,
         "_continuity_expires": {
          "state.fluid.saliva": {
@@ -12094,16 +11974,15 @@
          },
          "state.after_activity": {
           "after_fellatio": 7
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000006,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 7,
         "updatedAtMessageId": "id:m7"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -12123,18 +12002,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
@@ -12147,12 +12022,6 @@
        "global": {
         "scene.environment": [
          "outdoors"
-        ],
-        "scene.location": [
-         "school gate"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "day"
@@ -12192,7 +12061,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000005,
@@ -12213,8 +12081,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000003,
          "updatedAtChatIndex": 0,
@@ -12232,7 +12099,7 @@
         "capturedAt": 1760000000006,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -12952,7 +12819,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -13446,12 +13313,6 @@
        "scene.environment": [
         "outdoors"
        ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -13481,9 +13342,12 @@
       }
      },
      "previous_scene_tags": [
+      "bedroom",
       "school gate"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "school gate"
      ],
@@ -13500,12 +13364,6 @@
        "scene.environment": [
         "outdoors"
        ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -13535,9 +13393,12 @@
       }
      },
      "previous_scene_tags": [
+      "bedroom",
       "school gate"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "school gate"
      ],
@@ -14086,6 +13947,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "school gate"
       ]
@@ -14094,12 +13958,6 @@
       "global": {
        "scene.environment": [
         "outdoors"
-       ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "day"
@@ -14164,7 +14022,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "school gate"
        ],
@@ -14177,6 +14037,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "outdoors"
@@ -14198,7 +14059,6 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "saliva"
         ],
@@ -14207,20 +14067,20 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 8,
         "_continuity_expires": {
          "state.fluid.saliva": {
           "saliva": 8
-         },
-         "state.fluid.cum.location": {}
+         }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000007,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 8,
         "updatedAtMessageId": "id:m8"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -14240,18 +14100,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
@@ -14264,12 +14120,6 @@
        "global": {
         "scene.environment": [
          "outdoors"
-        ],
-        "scene.location": [
-         "school gate"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "day"
@@ -14303,7 +14153,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000005,
@@ -14324,8 +14173,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000003,
          "updatedAtChatIndex": 0,
@@ -14343,7 +14191,7 @@
         "capturedAt": 1760000000007,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -14508,7 +14356,7 @@
         "capturedAt": 1760000000006,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -15228,7 +15076,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -15722,12 +15570,6 @@
        "scene.environment": [
         "outdoors"
        ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -15753,9 +15595,12 @@
       }
      },
      "previous_scene_tags": [
+      "bedroom",
       "school gate"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "school gate"
      ],
@@ -15772,12 +15617,6 @@
        "scene.environment": [
         "outdoors"
        ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "day"
        ]
@@ -15803,9 +15642,12 @@
       }
      },
      "previous_scene_tags": [
+      "bedroom",
       "school gate"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "bedroom"
+     ],
      "previous_scene_location_tags": [
       "school gate"
      ],
@@ -16326,6 +16168,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "bedroom"
+      ],
       "locationTags": [
        "school gate"
       ]
@@ -16334,12 +16179,6 @@
       "global": {
        "scene.environment": [
         "outdoors"
-       ],
-       "scene.location": [
-        "school gate"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "day"
@@ -16397,7 +16236,9 @@
      "version": 1,
      "scenes": {
       "chat-1": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "bedroom"
+       ],
        "locationTags": [
         "school gate"
        ],
@@ -16410,6 +16251,7 @@
      "characters": {
       "chat-1": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "outdoors"
@@ -16431,24 +16273,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 9,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Alice",
         "updatedAt": 1760000000008,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 9,
         "updatedAtMessageId": "id:m9"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -16468,18 +16307,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
@@ -16492,12 +16327,6 @@
        "global": {
         "scene.environment": [
          "outdoors"
-        ],
-        "scene.location": [
-         "school gate"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "day"
@@ -16531,7 +16360,6 @@
           "scene.location": [
            "bedroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "night"
          },
          "updatedAt": 1760000000005,
@@ -16552,8 +16380,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000003,
          "updatedAtChatIndex": 0,
@@ -16571,7 +16398,7 @@
         "capturedAt": 1760000000008,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -16729,7 +16556,7 @@
         "capturedAt": 1760000000007,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -16894,7 +16721,7 @@
         "capturedAt": 1760000000006,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"
@@ -17614,7 +17441,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "school gate"
+          "bedroom"
          ],
          "locationTags": [
           "school gate"

@@ -224,6 +224,25 @@ export interface GenerationJobSnapshot {
   error?: RpcError;
   /** JEV roster pre-selection of this run (AM session `progress.jevSelection`), absent when JEV did not run. */
   jevSelection?: JevSelectionProgress;
+  /** Failed attempts of this job, oldest first, at most 20 (AM 0.9.89.5 `retryErrors`). Absent when nothing failed. */
+  retryErrors?: GenerationRetryError[];
+}
+
+/**
+ * One failed attempt (AM 0.9.89.5 `FC` @115421; lists are capped at 20 by `LH`). `message` and the string fields are
+ * sanitized (`c0`: credentials redacted, max 3000 chars). `stage` is AM's Korean stage text:
+ * "이미지 생성" (image request), "분석·생성" (whole-run auto retry), "초기 결정" / "세부N 분석" (split analysis steps).
+ */
+export interface GenerationRetryError {
+  attempt: number;
+  stage: string;
+  occurredAt: number;
+  message: string;
+  httpStatus?: number;
+  code?: string;
+  provider?: string;
+  model?: string;
+  requestId?: string;
 }
 
 export interface JevSelectionProgress {

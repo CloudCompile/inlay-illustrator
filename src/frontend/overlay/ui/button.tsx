@@ -16,6 +16,7 @@ export const BUTTON_SIZES = {
   default: "h-8 px-3 max-md:h-11",
   sm: "h-7 px-2.5 max-md:h-11",
   icon: "size-8 p-0 max-md:size-11",
+  iconCompact: "size-6 p-0 pointer-coarse:size-11 [&_svg]:size-3.5",
   workbenchIcon: "h-7.5 w-10 p-0 max-md:size-11",
   commandSm: "size-8.5 rounded-full p-0 max-md:size-11",
   command: "size-9.5 rounded-full p-0 max-md:size-11"

@@ -82,6 +82,12 @@
        "options": [
         "morning"
        ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
+       ]
       }
      ],
      "freeTags": [
@@ -360,6 +366,10 @@
      "actor_2": "black hoodie, jeans, sneakers"
     },
     "completelyNudeActorIds": [],
+    "completelyNudeByOccurrence": {
+     "actor_1:0": false,
+     "actor_2:1": false
+    },
     "actorHumanlike": {
      "actor_1": true,
      "actor_2": true
@@ -457,6 +467,12 @@
        "id": "scene.time",
        "options": [
         "morning"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -589,6 +605,84 @@
     "matchedRules": [
      {
       "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
        "id": "rule:fnv1a64-32e6fe4743f5a7e4",
        "source": {
         "kind": "option",
@@ -630,6 +724,84 @@
      }
     ],
     "ruleCandidates": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -939,6 +1111,9 @@
      ],
      "global:scene.time": [
       "morning"
+     ],
+     "global:framing.crop": [
+      "cowboy_shot"
      ],
      "global:camera.view": [
       "from_side"
@@ -1273,6 +1448,12 @@
         "options": [
          "morning"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [
@@ -1404,6 +1585,84 @@
      "matchedRules": [
       {
        "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
         "id": "rule:fnv1a64-32e6fe4743f5a7e4",
         "source": {
          "kind": "option",
@@ -1445,6 +1704,84 @@
       }
      ],
      "ruleCandidates": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -1755,6 +2092,9 @@
       "global:scene.time": [
        "morning"
       ],
+      "global:framing.crop": [
+       "cowboy_shot"
+      ],
       "global:camera.view": [
        "from_side"
       ],
@@ -2006,25 +2346,24 @@
        "silver hair",
        "blue eyes",
        "source#arm hug",
+       "looking at another",
+       "light smile",
+       "open mouth",
+       "standing",
        "source#sleeve grab",
        "white sailor shirt",
        "navy sailor collar",
        "red neckerchief",
        "navy pleated skirt",
-       "black thighhighs",
-       "brown loafers",
-       "looking at another",
-       "light smile",
-       "open mouth",
-       "standing"
+       "0.8::black thighhighs::"
       ],
       "instructions": [
-       "fingers pinching the hoodie sleeve.",
        "left of the gate pillar.",
+       "fingers pinching the hoodie sleeve.",
        "leaning forward slightly.",
        "waving one hand high."
       ],
-      "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "actorId": "actor_1",
       "placementIndex": 0,
       "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -2038,17 +2377,16 @@
        "male",
        "1::kazehaya shouta::",
        "target#arm hug",
+       "surprised",
+       "standing",
        "target#sleeve grab",
        "black hoodie",
-       "jeans",
-       "sneakers",
-       "surprised",
-       "standing"
+       "jeans"
       ],
       "instructions": [
        "running toward the gate."
       ],
-      "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "actorId": "actor_2",
       "placementIndex": 1,
       "candidateKey": "actor.1fmv888.fk4pvw",
@@ -2136,6 +2474,7 @@
       "order": 9100,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:hair.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00026",
       "semanticKey": "silver hair",
@@ -2153,6 +2492,7 @@
       "order": 9500,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:eyes.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00027",
       "semanticKey": "blue eyes",
@@ -2170,6 +2510,7 @@
       "order": 10300,
       "sourceKind": "external-identity",
       "sourceId": "persona::p1:custom:0",
+      "placementIndex": 1,
       "weight": 1,
       "id": "ledger:00034",
       "semanticKey": "kazehaya shouta",
@@ -2621,6 +2962,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00028",
       "semanticKey": "white sailor shirt",
@@ -2638,6 +2980,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:top",
+      "placementIndex": 1,
       "weight": 1,
       "id": "ledger:00035",
       "semanticKey": "black hoodie",
@@ -2655,6 +2998,7 @@
       "order": 9101,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00029",
       "semanticKey": "navy sailor collar",
@@ -2672,6 +3016,7 @@
       "order": 9102,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00030",
       "semanticKey": "red neckerchief",
@@ -2689,6 +3034,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:bottom",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00031",
       "semanticKey": "navy pleated skirt",
@@ -2706,6 +3052,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:bottom",
+      "placementIndex": 1,
       "weight": 1,
       "id": "ledger:00036",
       "semanticKey": "jeans",
@@ -2723,7 +3070,8 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:legs",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0.8,
       "id": "ledger:00032",
       "semanticKey": "black thighhighs",
       "inputIndex": 32,
@@ -2740,11 +3088,13 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:feet",
-      "weight": 1,
+      "placementIndex": 1,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00037",
       "semanticKey": "sneakers",
       "inputIndex": 37,
-      "status": "applied"
+      "status": "suppressed"
      },
      {
       "lane": "tag",
@@ -2757,11 +3107,13 @@
       "order": 9400,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:feet",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00033",
       "semanticKey": "brown loafers",
       "inputIndex": 33,
-      "status": "applied"
+      "status": "suppressed"
      },
      {
       "lane": "tag",
@@ -2916,7 +3268,7 @@
   "input": {
    "graph": {
     "slotNumber": 1,
-    "status": "degraded",
+    "status": "recovered",
     "presentationMode": "single-frame",
     "actors": [
      {
@@ -2946,6 +3298,12 @@
        "id": "scene.environment",
        "options": [
         "indoors"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "upper_body"
        ]
       }
      ],
@@ -3010,12 +3368,6 @@
      "instruction": "Camera behind the actor looking out the window."
     },
     "diagnostics": [
-     {
-      "code": "frame-scene-modifier-omitted",
-      "impact": "degraded",
-      "path": "$.illustrations[1].frame_placement.modifiers",
-      "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-     },
      {
       "code": "tag-canonicalized",
       "impact": "recovered",
@@ -3184,6 +3536,9 @@
      "actor_1": "grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes"
     },
     "completelyNudeActorIds": [],
+    "completelyNudeByOccurrence": {
+     "actor_1:0": false
+    },
     "actorHumanlike": {
      "actor_1": true
     },
@@ -3202,7 +3557,7 @@
    "draft": {
     "kind": "free_scene",
     "slotNumber": 1,
-    "sourceStatus": "degraded",
+    "sourceStatus": "recovered",
     "presentationMode": "single-frame",
     "actors": [
      {
@@ -3232,6 +3587,12 @@
        "id": "scene.environment",
        "options": [
         "indoors"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "upper_body"
        ]
       }
      ],
@@ -3276,12 +3637,6 @@
      }
     ],
     "responseDiagnostics": [
-     {
-      "code": "frame-scene-modifier-omitted",
-      "impact": "degraded",
-      "path": "$.illustrations[1].frame_placement.modifiers",
-      "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-     },
      {
       "code": "tag-canonicalized",
       "impact": "recovered",
@@ -3354,6 +3709,45 @@
       },
       "sourceOptions": [
        "indoors"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "upper_body"
       ]
      },
      {
@@ -3439,6 +3833,45 @@
       },
       "sourceOptions": [
        "indoors"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "upper_body"
       ]
      },
      {
@@ -3573,6 +4006,9 @@
      ],
      "global:scene.environment": [
       "indoors"
+     ],
+     "global:framing.crop": [
+      "upper_body"
      ],
      "actor:actor_1:0:gaze.direction": [
       "looking_down"
@@ -3822,7 +4258,7 @@
     "draft": {
      "kind": "free_scene",
      "slotNumber": 1,
-     "sourceStatus": "degraded",
+     "sourceStatus": "recovered",
      "presentationMode": "single-frame",
      "actors": [
       {
@@ -3852,6 +4288,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "upper_body"
         ]
        }
       ],
@@ -3896,12 +4338,6 @@
       }
      ],
      "responseDiagnostics": [
-      {
-       "code": "frame-scene-modifier-omitted",
-       "impact": "degraded",
-       "path": "$.illustrations[1].frame_placement.modifiers",
-       "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-      },
       {
        "code": "tag-canonicalized",
        "impact": "recovered",
@@ -3974,6 +4410,45 @@
        },
        "sourceOptions": [
         "indoors"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "upper_body"
        ]
       },
       {
@@ -4059,6 +4534,45 @@
        },
        "sourceOptions": [
         "indoors"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "upper_body"
        ]
       },
       {
@@ -4193,6 +4707,9 @@
       ],
       "global:scene.environment": [
        "indoors"
+      ],
+      "global:framing.crop": [
+       "upper_body"
       ],
       "actor:actor_1:0:gaze.direction": [
        "looking_down"
@@ -4353,6 +4870,7 @@
       "year 2025",
       "masterpiece",
       "best quality",
+      "upper body",
       "indoors",
       "staff room",
       "window",
@@ -4361,7 +4879,7 @@
      "instructions": [
       "Camera behind the actor looking out the window."
      ],
-     "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
+     "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
     },
     "globalNegativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
     "characters": [
@@ -4369,20 +4887,19 @@
       "tags": [
        "male",
        "black hair",
+       "looking down",
+       "exhausted",
+       "2::facing away::",
        "grey suit jacket",
        "white shirt",
        "blue necktie",
-       "grey suit pants",
-       "black dress shoes",
-       "looking down",
-       "exhausted",
-       "2::facing away::"
+       "0.3::grey suit pants::"
       ],
       "instructions": [
        "hands on the window sill.",
        "sighing."
       ],
-      "serializedPrompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+      "serializedPrompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
       "actorId": "actor_1",
       "placementIndex": 0,
       "candidateKey": "actor.m0ais.6ynrym",
@@ -4437,10 +4954,11 @@
       "order": 9100,
       "sourceKind": "external-identity",
       "sourceId": "lore:bob:hair.color:0",
+      "placementIndex": 0,
       "weight": 1,
-      "id": "ledger:00012",
+      "id": "ledger:00013",
       "semanticKey": "black hair",
-      "inputIndex": 12,
+      "inputIndex": 13,
       "status": "applied"
      },
      {
@@ -4454,9 +4972,9 @@
       "sourceKind": "external-artist",
       "sourceId": "detail_anime_illustration_style",
       "weight": 1,
-      "id": "ledger:00018",
+      "id": "ledger:00019",
       "semanticKey": "artist hwansang",
-      "inputIndex": 18,
+      "inputIndex": 19,
       "status": "applied"
      },
      {
@@ -4470,9 +4988,9 @@
       "sourceKind": "external-artist",
       "sourceId": "detail_anime_illustration_style",
       "weight": 1,
-      "id": "ledger:00019",
+      "id": "ledger:00020",
       "semanticKey": "year 2025",
-      "inputIndex": 19,
+      "inputIndex": 20,
       "status": "applied"
      },
      {
@@ -4486,9 +5004,9 @@
       "sourceKind": "external-artist",
       "sourceId": "detail_anime_illustration_style",
       "weight": 1,
-      "id": "ledger:00020",
+      "id": "ledger:00021",
       "semanticKey": "masterpiece",
-      "inputIndex": 20,
+      "inputIndex": 21,
       "status": "applied"
      },
      {
@@ -4502,9 +5020,9 @@
       "sourceKind": "external-artist",
       "sourceId": "detail_anime_illustration_style",
       "weight": 1,
-      "id": "ledger:00021",
+      "id": "ledger:00022",
       "semanticKey": "best quality",
-      "inputIndex": 21,
+      "inputIndex": 22,
       "status": "applied"
      },
      {
@@ -4556,9 +5074,25 @@
       "sourceId": "placement:actor_1:facing:orientation.facing.facing_away",
       "weight": 2,
       "placementIndex": 0,
-      "id": "ledger:00010",
+      "id": "ledger:00011",
       "semanticKey": "facing away",
-      "inputIndex": 10,
+      "inputIndex": 11,
+      "status": "applied"
+     },
+     {
+      "lane": "tag",
+      "destination": {
+       "kind": "global"
+      },
+      "semanticId": "framing.crop.upper_body",
+      "value": "upper body",
+      "order": 4848,
+      "sourceKind": "closed",
+      "sourceId": "scene-location:framing.crop:framing.crop.upper_body",
+      "weight": 1,
+      "id": "ledger:00008",
+      "semanticKey": "upper body",
+      "inputIndex": 8,
       "status": "applied"
      },
      {
@@ -4588,9 +5122,9 @@
       "sourceKind": "recovered-free",
       "sourceId": "scene-location",
       "weight": 1,
-      "id": "ledger:00008",
+      "id": "ledger:00009",
       "semanticKey": "staff room",
-      "inputIndex": 8,
+      "inputIndex": 9,
       "status": "applied"
      },
      {
@@ -4604,9 +5138,9 @@
       "sourceKind": "recovered-free",
       "sourceId": "scene-location",
       "weight": 1,
-      "id": "ledger:00009",
+      "id": "ledger:00010",
       "semanticKey": "window",
-      "inputIndex": 9,
+      "inputIndex": 10,
       "status": "applied"
      },
      {
@@ -4672,9 +5206,9 @@
       "order": 11000,
       "sourceKind": "recovered-free",
       "sourceId": "camera",
-      "id": "ledger:00011",
+      "id": "ledger:00012",
       "semanticKey": "camera behind the actor looking out the window",
-      "inputIndex": 11,
+      "inputIndex": 12,
       "status": "applied"
      },
      {
@@ -4688,10 +5222,11 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:lore:bob:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
-      "id": "ledger:00013",
+      "id": "ledger:00014",
       "semanticKey": "grey suit jacket",
-      "inputIndex": 13,
+      "inputIndex": 14,
       "status": "applied"
      },
      {
@@ -4705,10 +5240,11 @@
       "order": 9101,
       "sourceKind": "external",
       "sourceId": "outfit:lore:bob:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
-      "id": "ledger:00014",
+      "id": "ledger:00015",
       "semanticKey": "white shirt",
-      "inputIndex": 14,
+      "inputIndex": 15,
       "status": "applied"
      },
      {
@@ -4722,10 +5258,11 @@
       "order": 9102,
       "sourceKind": "external",
       "sourceId": "outfit:lore:bob:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
-      "id": "ledger:00015",
+      "id": "ledger:00016",
       "semanticKey": "blue necktie",
-      "inputIndex": 15,
+      "inputIndex": 16,
       "status": "applied"
      },
      {
@@ -4739,10 +5276,11 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:lore:bob:outfit_1:bottom",
-      "weight": 1,
-      "id": "ledger:00016",
+      "placementIndex": 0,
+      "weight": 0.3,
+      "id": "ledger:00017",
       "semanticKey": "grey suit pants",
-      "inputIndex": 16,
+      "inputIndex": 17,
       "status": "applied"
      },
      {
@@ -4756,11 +5294,13 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:lore:bob:outfit_1:feet",
-      "weight": 1,
-      "id": "ledger:00017",
+      "placementIndex": 0,
+      "weight": 0,
+      "suppressionReason": "visibility",
+      "id": "ledger:00018",
       "semanticKey": "black dress shoes",
-      "inputIndex": 17,
-      "status": "applied"
+      "inputIndex": 18,
+      "status": "suppressed"
      },
      {
       "lane": "tag",
@@ -4773,9 +5313,9 @@
       "sourceKind": "external-fixed",
       "sourceId": "character-generation-settings",
       "weight": 1,
-      "id": "ledger:00022",
+      "id": "ledger:00023",
       "semanticKey": "very aesthetic",
-      "inputIndex": 22,
+      "inputIndex": 23,
       "status": "applied"
      }
     ]
@@ -4968,6 +5508,12 @@
        "id": "scene.rating",
        "options": [
         "sfw"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -5237,6 +5783,9 @@
      "actor_1": "white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers"
     },
     "completelyNudeActorIds": [],
+    "completelyNudeByOccurrence": {
+     "actor_1:0": false
+    },
     "actorHumanlike": {
      "actor_1": true
     },
@@ -5284,6 +5833,12 @@
        "id": "scene.rating",
        "options": [
         "sfw"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -5344,8 +5899,87 @@
       }
      }
     ],
-    "matchedRules": [],
+    "matchedRules": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     }
+    ],
     "ruleCandidates": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-7d921ae24ec88be7",
@@ -5438,6 +6072,9 @@
     "ruleProjectionSelections": {
      "global:scene.rating": [
       "sfw"
+     ],
+     "global:framing.crop": [
+      "cowboy_shot"
      ],
      "actor:actor_1:0:state.clothing.surface": [
       "wet_clothes"
@@ -5719,6 +6356,12 @@
         "options": [
          "sfw"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [],
@@ -5778,8 +6421,87 @@
        }
       }
      ],
-     "matchedRules": [],
+     "matchedRules": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      }
+     ],
      "ruleCandidates": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-7d921ae24ec88be7",
@@ -5872,6 +6594,9 @@
      "ruleProjectionSelections": {
       "global:scene.rating": [
        "sfw"
+      ],
+      "global:framing.crop": [
+       "cowboy_shot"
       ],
       "actor:actor_1:0:state.clothing.surface": [
        "wet_clothes"
@@ -6036,19 +6761,18 @@
        "female",
        "silver hair",
        "blue eyes",
+       "wet clothes",
+       "drooling",
+       "tearing up",
+       "cut on hand",
        "white sailor shirt",
        "navy sailor collar",
        "red neckerchief",
        "navy pleated skirt",
-       "black thighhighs",
-       "brown loafers",
-       "wet clothes",
-       "drooling",
-       "tearing up",
-       "cut on hand"
+       "0.8::black thighhighs::"
       ],
       "instructions": [],
-      "serializedPrompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+      "serializedPrompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "actorId": "actor_1",
       "placementIndex": 0,
       "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -6103,6 +6827,7 @@
       "order": 9100,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:hair.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00006",
       "semanticKey": "silver hair",
@@ -6120,6 +6845,7 @@
       "order": 9500,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:eyes.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00007",
       "semanticKey": "blue eyes",
@@ -6273,6 +6999,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00008",
       "semanticKey": "white sailor shirt",
@@ -6290,6 +7017,7 @@
       "order": 9101,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00009",
       "semanticKey": "navy sailor collar",
@@ -6307,6 +7035,7 @@
       "order": 9102,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00010",
       "semanticKey": "red neckerchief",
@@ -6324,6 +7053,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:bottom",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00011",
       "semanticKey": "navy pleated skirt",
@@ -6341,7 +7071,8 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:legs",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0.8,
       "id": "ledger:00012",
       "semanticKey": "black thighhighs",
       "inputIndex": 12,
@@ -6358,11 +7089,13 @@
       "order": 9400,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:feet",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00013",
       "semanticKey": "brown loafers",
       "inputIndex": 13,
-      "status": "applied"
+      "status": "suppressed"
      },
      {
       "lane": "tag",
@@ -6561,6 +7294,12 @@
        "id": "scene.rating",
        "options": [
         "sfw"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -6830,6 +7569,9 @@
      "actor_1": "white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers"
     },
     "completelyNudeActorIds": [],
+    "completelyNudeByOccurrence": {
+     "actor_1:0": false
+    },
     "actorHumanlike": {
      "actor_1": true
     },
@@ -6877,6 +7619,12 @@
        "id": "scene.rating",
        "options": [
         "sfw"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -6937,8 +7685,87 @@
       }
      }
     ],
-    "matchedRules": [],
+    "matchedRules": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     }
+    ],
     "ruleCandidates": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-7d921ae24ec88be7",
@@ -7031,6 +7858,9 @@
     "ruleProjectionSelections": {
      "global:scene.rating": [
       "sfw"
+     ],
+     "global:framing.crop": [
+      "cowboy_shot"
      ],
      "actor:actor_1:0:state.clothing.surface": [
       "wet_clothes"
@@ -7333,6 +8163,12 @@
         "options": [
          "sfw"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [],
@@ -7392,8 +8228,87 @@
        }
       }
      ],
-     "matchedRules": [],
+     "matchedRules": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      }
+     ],
      "ruleCandidates": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-7d921ae24ec88be7",
@@ -7486,6 +8401,9 @@
      "ruleProjectionSelections": {
       "global:scene.rating": [
        "sfw"
+      ],
+      "global:framing.crop": [
+       "cowboy_shot"
       ],
       "actor:actor_1:0:state.clothing.surface": [
        "wet_clothes"
@@ -7653,19 +8571,18 @@
        "female",
        "silver hair",
        "blue eyes",
+       "wet clothes",
+       "drooling",
+       "tearing up",
+       "cut on hand",
        "white sailor shirt",
        "navy sailor collar",
        "red neckerchief",
        "navy pleated skirt",
-       "black thighhighs",
-       "brown loafers",
-       "wet clothes",
-       "drooling",
-       "tearing up",
-       "cut on hand"
+       "0.8::black thighhighs::"
       ],
       "instructions": [],
-      "serializedPrompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+      "serializedPrompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "actorId": "actor_1",
       "placementIndex": 0,
       "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -7720,6 +8637,7 @@
       "order": 9100,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:hair.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00006",
       "semanticKey": "silver hair",
@@ -7737,6 +8655,7 @@
       "order": 9500,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:eyes.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00007",
       "semanticKey": "blue eyes",
@@ -7890,6 +8809,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00008",
       "semanticKey": "white sailor shirt",
@@ -7907,6 +8827,7 @@
       "order": 9101,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00009",
       "semanticKey": "navy sailor collar",
@@ -7924,6 +8845,7 @@
       "order": 9102,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00010",
       "semanticKey": "red neckerchief",
@@ -7941,6 +8863,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:bottom",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00011",
       "semanticKey": "navy pleated skirt",
@@ -7958,7 +8881,8 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:legs",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0.8,
       "id": "ledger:00012",
       "semanticKey": "black thighhighs",
       "inputIndex": 12,
@@ -7975,11 +8899,13 @@
       "order": 9400,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:feet",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00013",
       "semanticKey": "brown loafers",
       "inputIndex": 13,
-      "status": "applied"
+      "status": "suppressed"
      },
      {
       "lane": "tag",
@@ -8226,6 +9152,12 @@
        "options": [
         "morning"
        ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
+       ]
       }
      ],
      "freeTags": [
@@ -8341,7 +9273,7 @@
       "code": "placement-item-fallback",
       "impact": "degraded",
       "path": "$.illustrations[0].frame_placement.items",
-      "message": "Added deterministic fallback placement for 'actor_2'."
+      "message": "Added a deterministic fallback occurrence for 'actor_2'."
      },
      {
       "code": "actor-occurrence-detail-defaulted-empty",
@@ -8503,6 +9435,10 @@
      "actor_2": "black hoodie, jeans, sneakers"
     },
     "completelyNudeActorIds": [],
+    "completelyNudeByOccurrence": {
+     "actor_1:0": false,
+     "actor_2:2": false
+    },
     "actorHumanlike": {
      "actor_1": true,
      "actor_2": true
@@ -8572,6 +9508,12 @@
        "id": "scene.time",
        "options": [
         "morning"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -8662,7 +9604,7 @@
       "code": "placement-item-fallback",
       "impact": "degraded",
       "path": "$.illustrations[0].frame_placement.items",
-      "message": "Added deterministic fallback placement for 'actor_2'."
+      "message": "Added a deterministic fallback occurrence for 'actor_2'."
      },
      {
       "code": "actor-occurrence-detail-defaulted-empty",
@@ -8731,6 +9673,84 @@
      }
     ],
     "matchedRules": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -8880,6 +9900,84 @@
      }
     ],
     "ruleCandidates": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -9196,6 +10294,9 @@
      "global:scene.time": [
       "morning"
      ],
+     "global:framing.crop": [
+      "cowboy_shot"
+     ],
      "global:camera.view": [
       "pov"
      ],
@@ -9494,6 +10595,12 @@
         "options": [
          "morning"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [
@@ -9583,7 +10690,7 @@
        "code": "placement-item-fallback",
        "impact": "degraded",
        "path": "$.illustrations[0].frame_placement.items",
-       "message": "Added deterministic fallback placement for 'actor_2'."
+       "message": "Added a deterministic fallback occurrence for 'actor_2'."
       },
       {
        "code": "actor-occurrence-detail-defaulted-empty",
@@ -9652,6 +10759,84 @@
       }
      ],
      "matchedRules": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -9801,6 +10986,84 @@
       }
      ],
      "ruleCandidates": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -10117,6 +11380,9 @@
       "global:scene.time": [
        "morning"
       ],
+      "global:framing.crop": [
+       "cowboy_shot"
+      ],
       "global:camera.view": [
        "pov"
       ],
@@ -10347,20 +11613,19 @@
        "female",
        "silver hair",
        "blue eyes",
+       "looking at viewer",
+       "light smile",
+       "light blush",
        "white sailor shirt",
        "navy sailor collar",
        "red neckerchief",
        "navy pleated skirt",
-       "black thighhighs",
-       "brown loafers",
-       "looking at viewer",
-       "light smile",
-       "light blush"
+       "0.8::black thighhighs::"
       ],
       "instructions": [
        "reaching toward the viewer."
       ],
-      "serializedPrompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+      "serializedPrompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
       "actorId": "actor_1",
       "placementIndex": 0,
       "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -10464,6 +11729,7 @@
       "order": 9100,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:hair.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00015",
       "semanticKey": "silver hair",
@@ -10481,6 +11747,7 @@
       "order": 9500,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:eyes.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00016",
       "semanticKey": "blue eyes",
@@ -10498,6 +11765,7 @@
       "order": 10300,
       "sourceKind": "external-identity",
       "sourceId": "persona::p1:custom:0",
+      "placementIndex": 2,
       "suppressionReason": "local_rule",
       "id": "ledger:00023",
       "semanticKey": "kazehaya shouta",
@@ -10765,6 +12033,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00017",
       "semanticKey": "white sailor shirt",
@@ -10782,6 +12051,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:top",
+      "placementIndex": 2,
       "suppressionReason": "local_rule",
       "id": "ledger:00024",
       "semanticKey": "black hoodie",
@@ -10799,6 +12069,7 @@
       "order": 9101,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00018",
       "semanticKey": "navy sailor collar",
@@ -10816,6 +12087,7 @@
       "order": 9102,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00019",
       "semanticKey": "red neckerchief",
@@ -10833,6 +12105,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:bottom",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00020",
       "semanticKey": "navy pleated skirt",
@@ -10850,6 +12123,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:bottom",
+      "placementIndex": 2,
       "suppressionReason": "local_rule",
       "id": "ledger:00025",
       "semanticKey": "jeans",
@@ -10867,7 +12141,8 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:legs",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0.8,
       "id": "ledger:00021",
       "semanticKey": "black thighhighs",
       "inputIndex": 21,
@@ -10884,7 +12159,9 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:feet",
-      "suppressionReason": "local_rule",
+      "placementIndex": 2,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00026",
       "semanticKey": "sneakers",
       "inputIndex": 26,
@@ -10901,11 +12178,13 @@
       "order": 9400,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:feet",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00022",
       "semanticKey": "brown loafers",
       "inputIndex": 22,
-      "status": "applied"
+      "status": "suppressed"
      },
      {
       "lane": "tag",
@@ -11093,6 +12372,12 @@
        "options": [
         "morning"
        ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
+       ]
       }
      ],
      "freeTags": [
@@ -11208,7 +12493,7 @@
       "code": "placement-item-fallback",
       "impact": "degraded",
       "path": "$.illustrations[0].frame_placement.items",
-      "message": "Added deterministic fallback placement for 'actor_2'."
+      "message": "Added a deterministic fallback occurrence for 'actor_2'."
      },
      {
       "code": "actor-occurrence-detail-defaulted-empty",
@@ -11371,6 +12656,10 @@
      "actor_2": "black hoodie, jeans, sneakers"
     },
     "completelyNudeActorIds": [],
+    "completelyNudeByOccurrence": {
+     "actor_1:0": false,
+     "actor_2:2": false
+    },
     "actorHumanlike": {
      "actor_1": true,
      "actor_2": true
@@ -11441,6 +12730,12 @@
        "id": "scene.time",
        "options": [
         "morning"
+       ]
+      },
+      {
+       "id": "framing.crop",
+       "options": [
+        "cowboy_shot"
        ]
       }
      ],
@@ -11531,7 +12826,7 @@
       "code": "placement-item-fallback",
       "impact": "degraded",
       "path": "$.illustrations[0].frame_placement.items",
-      "message": "Added deterministic fallback placement for 'actor_2'."
+      "message": "Added a deterministic fallback occurrence for 'actor_2'."
      },
      {
       "code": "actor-occurrence-detail-defaulted-empty",
@@ -11600,6 +12895,84 @@
      }
     ],
     "matchedRules": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -11749,6 +13122,84 @@
      }
     ],
     "ruleCandidates": [
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_1"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-22d73b179b7bc3e3",
+       "source": {
+        "kind": "definition",
+        "definitionId": "framing.crop",
+        "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+       },
+       "phases": [
+        "weight"
+       ],
+       "rule": {
+        "weight": {
+         "prompt": "body_part"
+        },
+        "when": {
+         "actor": "cast"
+        }
+       },
+       "effects": {},
+       "condition": {
+        "actor": "cast"
+       },
+       "weight": {
+        "prompt": "body_part"
+       }
+      },
+      "owner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "chanceOwner": {
+       "kind": "global",
+       "bindingActorId": "actor_2"
+      },
+      "sourceOptions": [
+       "cowboy_shot"
+      ]
+     },
      {
       "rule": {
        "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -12066,6 +13517,9 @@
      "global:scene.time": [
       "morning"
      ],
+     "global:framing.crop": [
+      "cowboy_shot"
+     ],
      "global:camera.view": [
       "pov"
      ],
@@ -12364,6 +13818,12 @@
         "options": [
          "morning"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [
@@ -12453,7 +13913,7 @@
        "code": "placement-item-fallback",
        "impact": "degraded",
        "path": "$.illustrations[0].frame_placement.items",
-       "message": "Added deterministic fallback placement for 'actor_2'."
+       "message": "Added a deterministic fallback occurrence for 'actor_2'."
       },
       {
        "code": "actor-occurrence-detail-defaulted-empty",
@@ -12522,6 +13982,84 @@
       }
      ],
      "matchedRules": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -12671,6 +14209,84 @@
       }
      ],
      "ruleCandidates": [
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_1"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-22d73b179b7bc3e3",
+        "source": {
+         "kind": "definition",
+         "definitionId": "framing.crop",
+         "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+        },
+        "phases": [
+         "weight"
+        ],
+        "rule": {
+         "weight": {
+          "prompt": "body_part"
+         },
+         "when": {
+          "actor": "cast"
+         }
+        },
+        "effects": {},
+        "condition": {
+         "actor": "cast"
+        },
+        "weight": {
+         "prompt": "body_part"
+        }
+       },
+       "owner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "chanceOwner": {
+        "kind": "global",
+        "bindingActorId": "actor_2"
+       },
+       "sourceOptions": [
+        "cowboy_shot"
+       ]
+      },
       {
        "rule": {
         "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -12988,6 +14604,9 @@
       "global:scene.time": [
        "morning"
       ],
+      "global:framing.crop": [
+       "cowboy_shot"
+      ],
       "global:camera.view": [
        "pov"
       ],
@@ -13218,20 +14837,19 @@
        "female",
        "silver hair",
        "blue eyes",
+       "looking at viewer",
+       "light smile",
+       "light blush",
        "white sailor shirt",
        "navy sailor collar",
        "red neckerchief",
        "navy pleated skirt",
-       "black thighhighs",
-       "brown loafers",
-       "looking at viewer",
-       "light smile",
-       "light blush"
+       "0.8::black thighhighs::"
       ],
       "instructions": [
        "reaching toward the viewer."
       ],
-      "serializedPrompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+      "serializedPrompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
       "actorId": "actor_1",
       "placementIndex": 0,
       "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -13335,6 +14953,7 @@
       "order": 9100,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:hair.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00015",
       "semanticKey": "silver hair",
@@ -13352,6 +14971,7 @@
       "order": 9500,
       "sourceKind": "external-identity",
       "sourceId": "lore:alice:eyes.color:0",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00016",
       "semanticKey": "blue eyes",
@@ -13369,6 +14989,7 @@
       "order": 10300,
       "sourceKind": "external-identity",
       "sourceId": "persona::p1:custom:0",
+      "placementIndex": 2,
       "suppressionReason": "local_rule",
       "id": "ledger:00023",
       "semanticKey": "kazehaya shouta",
@@ -13636,6 +15257,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00017",
       "semanticKey": "white sailor shirt",
@@ -13653,6 +15275,7 @@
       "order": 9100,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:top",
+      "placementIndex": 2,
       "suppressionReason": "local_rule",
       "id": "ledger:00024",
       "semanticKey": "black hoodie",
@@ -13670,6 +15293,7 @@
       "order": 9101,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00018",
       "semanticKey": "navy sailor collar",
@@ -13687,6 +15311,7 @@
       "order": 9102,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:top",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00019",
       "semanticKey": "red neckerchief",
@@ -13704,6 +15329,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:bottom",
+      "placementIndex": 0,
       "weight": 1,
       "id": "ledger:00020",
       "semanticKey": "navy pleated skirt",
@@ -13721,6 +15347,7 @@
       "order": 9200,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:bottom",
+      "placementIndex": 2,
       "suppressionReason": "local_rule",
       "id": "ledger:00025",
       "semanticKey": "jeans",
@@ -13738,7 +15365,8 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:legs",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0.8,
       "id": "ledger:00021",
       "semanticKey": "black thighhighs",
       "inputIndex": 21,
@@ -13755,7 +15383,9 @@
       "order": 9300,
       "sourceKind": "external",
       "sourceId": "outfit:persona::p1:outfit_1:feet",
-      "suppressionReason": "local_rule",
+      "placementIndex": 2,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00026",
       "semanticKey": "sneakers",
       "inputIndex": 26,
@@ -13772,11 +15402,13 @@
       "order": 9400,
       "sourceKind": "external",
       "sourceId": "outfit:lore:alice:outfit_1:feet",
-      "weight": 1,
+      "placementIndex": 0,
+      "weight": 0,
+      "suppressionReason": "visibility",
       "id": "ledger:00022",
       "semanticKey": "brown loafers",
       "inputIndex": 22,
-      "status": "applied"
+      "status": "suppressed"
      },
      {
       "lane": "tag",

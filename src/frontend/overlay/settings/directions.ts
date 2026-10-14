@@ -3,8 +3,11 @@
  * `TH` 141517, button order `Cwe` 141503).
  */
 import {
+  IMAGE_SIZE_PRESETS,
+  normalizeCustomImageSizes,
   V5_ANALYZER_SIZE_IDS,
   V5_SCENE_CONTROLS,
+  type CustomImageSize,
   type V5ControlOverrides,
   type V5DirectionControl,
   type V5DirectionPreset,
@@ -16,14 +19,18 @@ export type DirectionKind = "analysis" | "aspect-ratio";
 
 /** Built-in preset order (`Cwe`). */
 const BUILT_IN_ORDER = new Map([["scene-default", 0], ["scene-comic", 1], ["scene-pov", 2], ["scene-ensemble", 3]]);
-/** Size candidates (`Pwe`). */
-export const SIZE_CANDIDATES = [
-  { id: 1, resolution: "832 × 1216" },
-  { id: 2, resolution: "1216 × 832" },
-  { id: 3, resolution: "896 × 1152" },
-  { id: 4, resolution: "1152 × 896" },
-  { id: 5, resolution: "1024 × 1024" }
-] as const;
+export interface SizeCandidate { id: number; sizeId: number; width: number; height: number; custom: boolean }
+/** Size candidates (AM 0.9.89.3 `UQ`): presets, then valid custom sizes numbered from sizeId 6 in stored order. */
+export function sizeCandidates(customSizes: readonly CustomImageSize[] = []): SizeCandidate[] {
+  return [
+    ...IMAGE_SIZE_PRESETS.map((p) => ({ id: p.id, width: p.width, height: p.height, custom: false })),
+    ...normalizeCustomImageSizes(customSizes).map((s) => ({ ...s, custom: true }))
+  ].map((size, i) => ({ ...size, sizeId: size.custom ? i + 1 : size.id }));
+}
+/** AM 0.9.89.3 editor check: some allowed id is still a listed candidate. */
+export function hasUsableSize(candidates: readonly SizeCandidate[], allowedSizeIds: readonly number[] | undefined): boolean {
+  return candidates.some(({ id }) => (allowedSizeIds ?? V5_ANALYZER_SIZE_IDS).includes(id));
+}
 /** Fallback when every size is unchecked (`j0t`). */
 export const LAST_SIZE_FALLBACK = 5;
 
@@ -154,11 +161,14 @@ export function withOverrides(preset: V5DirectionPreset, overrides: V5ControlOve
   return overrides ? { ...rest, controlOverrides: overrides } : rest;
 }
 
-/** Toggles a size candidate (`U` in `Nwe`; empty -> [5]). */
-export function toggleSizeCandidate(current: readonly number[] | undefined, id: number, checked: boolean): number[] {
+/**
+ * Toggles a size candidate (`U` in `Nwe`, AM 0.9.89.3 form). Unchecking keeps ids of removed custom sizes;
+ * no listed candidate left -> [5].
+ */
+export function toggleSizeCandidate(current: readonly number[] | undefined, id: number, checked: boolean, candidates: readonly SizeCandidate[]): number[] {
   const base = current ?? V5_ANALYZER_SIZE_IDS;
-  const next = checked ? SIZE_CANDIDATES.map((size) => size.id as number).filter((size) => size === id || base.includes(size)) : base.filter((size) => size !== id);
-  return next.length ? next : [LAST_SIZE_FALLBACK];
+  const next = checked ? candidates.map((size) => size.id).filter((size) => size === id || base.includes(size)) : base.filter((size) => size !== id);
+  return candidates.some((size) => next.includes(size.id)) ? next : [LAST_SIZE_FALLBACK];
 }
 
 /** New draft preset (`ee` in `Nwe`). */

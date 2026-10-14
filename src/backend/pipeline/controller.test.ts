@@ -127,6 +127,24 @@ describe("manual generation, locks, cancel, retry", () => {
     expect((engine.runs[1]!.input as any).generationType).toBe("illustration-retry");
   });
 
+  test("retry errors: engine image retries and failed runs reach the job snapshot (AM 0.9.89.5 retryErrors)", async () => {
+    const { fx, engine, pipeline } = setup();
+    const imageError = { attempt: 1, stage: "이미지 생성", occurredAt: 1, message: "HTTP 500", httpStatus: 500, provider: "novelai" };
+    engine.beforeImages = (n, input) => {
+      (input.onEvent as (e: unknown) => void)({ type: "retry-errors", imageRetry: { attempt: 1, total: 5 }, retryErrors: [imageError] });
+      if (n === 1) throw Object.assign(new Error("Analyzer returned invalid JSON (api_key=secret)"), { code: "ANALYZER_JSON_PARSE" });
+    };
+    const { jobId } = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, jobId).length > 0);
+    const progress = fx.events.filter((e) => e.event === "generation.progress" && (e.payload as { jobId: string }).jobId === jobId).map((e) => e.payload as any);
+    const withErrors = progress.filter((p) => p.retryErrors?.length);
+    expect(withErrors[0]!.retryErrors).toEqual([imageError]);
+    expect(withErrors[0]!.progress.retryCount).toBe("1/5");
+    const runRecord = withErrors.map((p) => p.retryErrors.find((r: any) => r.stage === "분석·생성")).find(Boolean);
+    expect(runRecord).toMatchObject({ attempt: 1, stage: "분석·생성", code: "ANALYZER_JSON_PARSE" });
+    expect(runRecord.message).not.toContain("secret");
+  });
+
   test("non-retryable failure -> footer retry -> retry run completes", async () => {
     const { fx, engine, pipeline } = setup();
     engine.beforeImages = (n) => {
@@ -157,11 +175,20 @@ describe("history, regenerate, delete", () => {
     const slotId = "illustration:m1@0:slot:0";
     const before = fx.chatData.get(CHAT_ID)!;
     const firstEntry = Object.values(before.history.entriesById).find((e) => e.slotId === slotId)!;
+    const sidecar = fx.json.get("chats/chat-1/pipeline.json") as any;
+    Object.assign(sidecar.records[firstEntry.entryId].characters[0], { centerX: 0.3, centerY: 0.7 });
     const { jobId } = await pipeline.regenerateSlot({ chatId: CHAT_ID, messageKey: "illustration:m1@0", slotId });
     await waitFor(() => finished(fx, jobId).length > 0);
     expect(finished(fx, jobId)[0]!.result).toBe("completed");
     expect(engine.dispatches[0]!.request.seed).toBe("");
     expect(engine.dispatches[0]!.request.prompt).toBe("pos 1");
+    // Chat regenerate leaves the NSFW prefix to the nsfwAlwaysEnabled setting (AM 0.9.89.3).
+    expect((engine.dispatches[0]!.request as any).forceNsfwPrefix).toBeUndefined();
+    // Chat regenerate keeps the original request's coordinates (AM 0.9.89.5 `Oht`).
+    const regenConfig = (engine.dispatches[0]!.request as any).config;
+    expect(regenConfig.forceCharacterCoordinates).toBe(true);
+    expect(regenConfig.useCoords).toBe(true);
+    expect(regenConfig.characterPrompts[0]).toMatchObject({ centerX: 0.3, centerY: 0.7, coordinateMode: "fixed" });
     const doc = fx.chatData.get(CHAT_ID)!;
     const regen = Object.values(doc.history.entriesById).find((e) => e.generationOrigin === "regenerate")!;
     expect(regen.parentEntryId).toBe(firstEntry.entryId);
@@ -232,6 +259,8 @@ describe("history, regenerate, delete", () => {
     const request = engine.dispatches.at(-1)!.request as any;
     expect(request.prompt).toContain(artistB!.prompt);
     expect(request.prompt).not.toContain(artistA!.prompt);
+    // Zoom regenerate never forces the NSFW prefix (AM 0.9.89.3).
+    expect(request.forceNsfwPrefix).toBe(false);
     expect(request.config.characterPrompts[0].prompt).toBe("1boy, black suit jacket, black pants, smile");
     const regen = Object.values(fx.chatData.get(CHAT_ID)!.history.entriesById).find((e) => e.generationOrigin === "regenerate")!;
     const record = (fx.json.get("chats/chat-1/pipeline.json") as any).records[regen.entryId];

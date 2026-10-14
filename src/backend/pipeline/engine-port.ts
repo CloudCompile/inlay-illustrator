@@ -29,7 +29,12 @@ export interface EnginePort {
    * One image request through the engine dispatcher (AM `ye.generate` with `runtime.generationAutoRetryCount` retries,
    * used by single-slot regeneration `$bt` 122319). `request` is an engine `ImageRequest` without `providerRef`.
    */
-  dispatch(request: Record<string, unknown> & { provider: ImageProviderId }, context: EngineRunContext, config: InlayConfig, options?: { signal?: AbortSignal }): Promise<Record<string, unknown>>;
+  dispatch(
+    request: Record<string, unknown> & { provider: ImageProviderId },
+    context: EngineRunContext,
+    config: InlayConfig,
+    options?: { signal?: AbortSignal; onRetry?: (retry: { attempt: number; total: number } | undefined, errors: readonly unknown[]) => void },
+  ): Promise<Record<string, unknown>>;
   dispose(): void;
 }
 
@@ -72,17 +77,26 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       const engine = engineFor(config);
       const runId = registry.register(context);
       const ref = { providerId: context.engineProvider, queueScopeKey: registry.queueScopeKey(runId) };
-      // JEV roster progress only updates the generation session (AM setPhase(..., {jevSelection})), it emits no run
-      // event. Forward each change of this run's session as a `jev-selection` event.
+      // JEV roster progress and retry errors only update the generation session (AM setPhase(..., {jevSelection}),
+      // {imageRetry, retryErrors}, {splitAnalysis}); they emit no run event. Forward each change of this run's session.
       const sessions = engine.parts.sessions as { subscribe(listener: () => void): () => void };
       const onEvent = (input as { onEvent?: (e: Record<string, unknown>) => void }).onEvent;
-      let session: { progress?: { jevSelection?: unknown } } | undefined;
+      let session: { progress?: Record<string, unknown> } | undefined;
       let lastJev: unknown;
+      let lastRetry = JSON.stringify({ retryErrors: [] });
       const unsubscribe = sessions.subscribe(() => {
-        const jev = session?.progress?.jevSelection;
-        if (!jev || jev === lastJev) return;
-        lastJev = jev;
-        onEvent?.({ type: "jev-selection", jevSelection: jev });
+        const progress = session?.progress;
+        const jev = progress?.jevSelection;
+        if (jev && jev !== lastJev) {
+          lastJev = jev;
+          onEvent?.({ type: "jev-selection", jevSelection: jev });
+        }
+        if (!progress) return;
+        const retry = { imageRetry: progress.imageRetry, retryErrors: sessionRetryErrors(progress) };
+        const key = JSON.stringify(retry);
+        if (key === lastRetry) return;
+        lastRetry = key;
+        onEvent?.({ type: "retry-errors", ...retry });
       });
       try {
         return await engine.run({
@@ -105,7 +119,7 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       const providerRef = { providerId: request.provider, queueScopeKey: registry.queueScopeKey(runId) };
       const dispatcher = engine.parts.dispatcher as { generate(r: unknown, o?: unknown): Promise<Record<string, unknown>> };
       try {
-        return await dispatcher.generate({ ...request, providerRef, ...(opts.signal ? { signal: opts.signal } : {}) }, { retryCount: config.runtime.generationAutoRetryCount });
+        return await dispatcher.generate({ ...request, providerRef, ...(opts.signal ? { signal: opts.signal } : {}) }, { retryCount: config.runtime.generationAutoRetryCount, ...(opts.onRetry ? { onRetry: opts.onRetry } : {}) });
       } finally {
         registry.release(runId);
       }
@@ -115,4 +129,19 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       current = null;
     },
   };
+}
+
+/**
+ * Retry errors of a generation session as AM shows them (0.9.89.5 toast `OOt` 178970, split rows 177426-177435):
+ * without split analysis `progress.retryErrors` (image request retries); with split analysis the errors of the steps
+ * that are not finished (the step's image generation errors while it generates, else its analysis errors).
+ */
+function sessionRetryErrors(progress: Record<string, unknown>): unknown[] {
+  const split = progress.splitAnalysis as { steps?: Array<Record<string, any>> } | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
+  if (!split) return Array.isArray(progress.retryErrors) ? progress.retryErrors : [];
+  return (split.steps ?? []).flatMap((step) => {
+    const generation = step.generation as { status?: string; retryErrors?: unknown[] } | undefined;
+    if (generation) return generation.status === "completed" || generation.status === "cancelled" ? [] : (generation.retryErrors ?? []);
+    return ["completed", "reused", "cancelled"].includes(String(step.status)) ? [] : (step.retryErrors ?? []);
+  }).slice(-20);
 }

@@ -5138,6 +5138,23 @@
                 1,
                 "topless"
               ]
+            ],
+            "rules": [
+              {
+                "when": {
+                  "not": {
+                    "attribute": {
+                      "actor.outfit.nude": true
+                    }
+                  }
+                },
+                "remove": {
+                  "prompt": {
+                    "actor.outfit.top": "*",
+                    "actor.outfit.top.*": "*"
+                  }
+                }
+              }
             ]
           },
           {
@@ -5229,6 +5246,23 @@
                 1,
                 "bottomless"
               ]
+            ],
+            "rules": [
+              {
+                "when": {
+                  "not": {
+                    "attribute": {
+                      "actor.outfit.nude": true
+                    }
+                  }
+                },
+                "remove": {
+                  "prompt": {
+                    "actor.outfit.bottom": "*",
+                    "actor.outfit.bottom.*": "*"
+                  }
+                }
+              }
             ]
           },
           {
@@ -6249,7 +6283,8 @@
         "select": {
           "by": "ai",
           "min": 0,
-          "max": 1
+          "max": 1,
+          "default": "cowboy_shot"
         },
         "options": [
           {

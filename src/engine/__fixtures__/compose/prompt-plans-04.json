@@ -21,7 +21,7 @@
       "action.freeform": [
        "waving"
       ],
-      "framing.crop": "upper_body",
+      "framing.crop": "portrait",
       "expression.blush": "",
       "expression.eye.openness": "",
       "expression.eye.reaction": "",
@@ -40,8 +40,8 @@
      }
     },
     "variantId": "default",
-    "frameId": "upper_body",
-    "frameSizeId": 1,
+    "frameId": "portrait",
+    "frameSizeId": 2,
     "sizeId": 42,
     "providerId": "novelai",
     "chanceSeed": "slot:s1",
@@ -64,7 +64,7 @@
        "action.freeform": [
         "waving"
        ],
-       "camera.framing.crop": "upper_body",
+       "camera.framing.crop": "portrait",
        "expression.blush": "",
        "expression.eye.openness": "",
        "expression.eye.reaction": "",
@@ -372,7 +372,7 @@
       "action.freeform": [
        "waving"
       ],
-      "framing.crop": "upper_body",
+      "framing.crop": "portrait",
       "expression.blush": "",
       "expression.eye.openness": "",
       "expression.eye.reaction": "",
@@ -391,9 +391,9 @@
      }
     },
     "variantId": "default",
-    "frameId": "upper_body",
-    "frameSizeId": 1,
-    "sizeId": 1,
+    "frameId": "portrait",
+    "frameSizeId": 2,
+    "sizeId": 2,
     "providerId": "novelai",
     "chanceSeed": "slot:s1",
     "ruleSelections": {
@@ -415,7 +415,7 @@
        "action.freeform": [
         "waving"
        ],
-       "camera.framing.crop": "upper_body",
+       "camera.framing.crop": "portrait",
        "expression.blush": "",
        "expression.eye.openness": "",
        "expression.eye.reaction": "",
@@ -723,7 +723,7 @@
       "action.freeform": [
        "waving"
       ],
-      "framing.crop": "upper_body",
+      "framing.crop": "portrait",
       "expression.blush": "",
       "expression.eye.openness": "",
       "expression.eye.reaction": "",
@@ -742,9 +742,9 @@
      }
     },
     "variantId": "default",
-    "frameId": "upper_body",
-    "frameSizeId": 1,
-    "sizeId": 1,
+    "frameId": "portrait",
+    "frameSizeId": 2,
+    "sizeId": 2,
     "providerId": "novelai",
     "chanceSeed": "slot:s1",
     "ruleSelections": {
@@ -766,7 +766,7 @@
        "action.freeform": [
         "waving"
        ],
-       "camera.framing.crop": "upper_body",
+       "camera.framing.crop": "portrait",
        "expression.blush": "",
        "expression.eye.openness": "",
        "expression.eye.reaction": "",
@@ -1063,7 +1063,7 @@
       "action.freeform": [
        "waving"
       ],
-      "framing.crop": "upper_body",
+      "framing.crop": "portrait",
       "expression.blush": "",
       "expression.eye.openness": "",
       "expression.eye.reaction": "",
@@ -1082,9 +1082,9 @@
      }
     },
     "variantId": "default",
-    "frameId": "upper_body",
-    "frameSizeId": 1,
-    "sizeId": 1,
+    "frameId": "portrait",
+    "frameSizeId": 2,
+    "sizeId": 2,
     "providerId": "novelai",
     "chanceSeed": "slot:s1",
     "participants": [

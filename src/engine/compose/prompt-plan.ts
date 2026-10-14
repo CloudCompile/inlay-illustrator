@@ -10,7 +10,7 @@ import {
   resolveV45FramesAndVariants as coreResolveFrames,
   createV45RuleRuntime,
   NOVELAI_DEFAULTS,
-  qlt as createRuleProjector,
+  Dut as createRuleProjector,
 } from "../core/asset-maid-core";
 import type { ImageActor, ImageProviderId, PromptBuildSpec, PromptInputs, PromptPlan, PromptSegments } from "./types";
 

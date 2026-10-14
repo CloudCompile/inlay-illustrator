@@ -48,9 +48,9 @@ export const PORT_COMPOSE_CORE: V45ComposeCore = {
   NOVELAI_DEFAULTS: portCore.NOVELAI_DEFAULTS,
   applyNsfwPrefixPolicy: portCore.applyNsfwPrefixPolicy,
   attachActorIdsToCharacterPrompts: portCore.attachActorIdsToCharacterPrompts,
-  resolveComfyWorkflowProfile: portCore.t7,
-  isOutfitRestylerProfile: portCore.r2,
-  providerRef: portCore._be,
+  resolveComfyWorkflowProfile: portCore.eH,
+  isOutfitRestylerProfile: portCore.D2,
+  providerRef: portCore.Cve,
 };
 
 export type ImageProviderId = "novelai" | "comfy-ui" | "chan-server";

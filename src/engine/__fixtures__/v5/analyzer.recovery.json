@@ -86,6 +86,12 @@
         "options": [
          "morning"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [
@@ -215,7 +221,7 @@
     },
     {
      "slotNumber": 1,
-     "status": "degraded",
+     "status": "recovered",
      "presentationMode": "single-frame",
      "actors": [
       {
@@ -245,6 +251,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "upper_body"
         ]
        }
       ],
@@ -309,12 +321,6 @@
       "instruction": "Camera behind the actor looking out the window."
      },
      "diagnostics": [
-      {
-       "code": "frame-scene-modifier-omitted",
-       "impact": "degraded",
-       "path": "$.illustrations[1].frame_placement.modifiers",
-       "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-      },
       {
        "code": "tag-canonicalized",
        "impact": "recovered",
@@ -385,6 +391,12 @@
         "id": "scene.time",
         "options": [
          "morning"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -501,7 +513,7 @@
        "code": "placement-item-fallback",
        "impact": "degraded",
        "path": "$.illustrations[0].frame_placement.items",
-       "message": "Added deterministic fallback placement for 'actor_2'."
+       "message": "Added a deterministic fallback occurrence for 'actor_2'."
       },
       {
        "code": "actor-occurrence-detail-defaulted-empty",
@@ -640,6 +652,12 @@
         "id": "scene.weather",
         "options": [
          "rain"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -1201,6 +1219,12 @@
         "options": [
          "night"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [
@@ -1646,26 +1670,19 @@
        }
       }
      ],
-     "interactions": [
-      {
-       "interactionRef": "interaction:0",
-       "id": "kiss",
-       "mode": "directed",
-       "sourceActorId": "actor_1",
-       "bindingStatus": "incomplete",
-       "unresolvedActorRefs": [
-        "targetActorId"
-       ],
-       "modifiers": [],
-       "participantDetails": []
-      }
-     ],
+     "interactions": [],
      "location": {
       "modifiers": [
        {
         "id": "scene.rating",
         "options": [
          "sfw"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -1686,12 +1703,35 @@
        },
        "source": "analyzer",
        "instruction": ""
+      },
+      {
+       "actorId": "actor_1",
+       "placementIndex": 1,
+       "center": {
+        "x": 0.2,
+        "y": 0.2
+       },
+       "source": "analyzer",
+       "instruction": ""
       }
      ],
      "actorDetails": [
       {
        "actorId": "actor_1",
        "placementIndex": 0,
+       "actions": [],
+       "modifiers": [],
+       "freeTags": [],
+       "penetratingInjuries": [],
+       "poseInstruction": "",
+       "actionInstruction": "",
+       "objects": [],
+       "objectInstruction": "",
+       "dialogueInstruction": ""
+      },
+      {
+       "actorId": "actor_1",
+       "placementIndex": 1,
        "actions": [],
        "modifiers": [],
        "freeTags": [],
@@ -1757,12 +1797,6 @@
        "message": "Applied the effective 'sfw' scene rating because the Analyzer omitted it."
       },
       {
-       "code": "placement-omitted",
-       "impact": "degraded",
-       "path": "$.illustrations[0].frame_placement.items[1]",
-       "message": "Omitted a placement with an unknown or duplicate Actor binding."
-      },
-      {
        "code": "actor-detail-omitted",
        "impact": "degraded",
        "path": "$.illustrations[0].actor_detail[0]",
@@ -1775,10 +1809,22 @@
        "message": "Created an empty Actor Detail for placementIndex 0 without inventing pose, action, object, or dialogue meaning."
       },
       {
+       "code": "actor-occurrence-detail-defaulted-empty",
+       "impact": "degraded",
+       "path": "$.illustrations[0].actor_detail",
+       "message": "Created an empty Actor Detail for placementIndex 1 without inventing pose, action, object, or dialogue meaning."
+      },
+      {
        "code": "invalid-camera-stage",
        "impact": "degraded",
        "path": "$.illustrations[0].camera",
        "message": "Replaced an invalid Camera stage with an empty container."
+      },
+      {
+       "code": "interaction-occurrence-binding-ambiguous",
+       "impact": "degraded",
+       "path": "interaction.interaction:0",
+       "message": "Omitted an Interaction with multiple possible endpoint occurrences; Actor identity alone cannot select a visible depiction."
       }
      ]
     },
@@ -1794,6 +1840,12 @@
         "id": "scene.rating",
         "options": [
          "sfw"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -1862,26 +1914,19 @@
        }
       }
      ],
-     "interactions": [
-      {
-       "interactionRef": "interaction:0",
-       "id": "kiss",
-       "mode": "directed",
-       "sourceActorId": "actor_1",
-       "bindingStatus": "incomplete",
-       "unresolvedActorRefs": [
-        "targetActorId"
-       ],
-       "modifiers": [],
-       "participantDetails": []
-      }
-     ],
+     "interactions": [],
      "location": {
       "modifiers": [
        {
         "id": "scene.rating",
         "options": [
          "sfw"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -1902,12 +1947,35 @@
        },
        "source": "analyzer",
        "instruction": ""
+      },
+      {
+       "actorId": "actor_1",
+       "placementIndex": 1,
+       "center": {
+        "x": 0.2,
+        "y": 0.2
+       },
+       "source": "analyzer",
+       "instruction": ""
       }
      ],
      "actorDetails": [
       {
        "actorId": "actor_1",
        "placementIndex": 0,
+       "actions": [],
+       "modifiers": [],
+       "freeTags": [],
+       "penetratingInjuries": [],
+       "poseInstruction": "",
+       "actionInstruction": "",
+       "objects": [],
+       "objectInstruction": "",
+       "dialogueInstruction": ""
+      },
+      {
+       "actorId": "actor_1",
+       "placementIndex": 1,
        "actions": [],
        "modifiers": [],
        "freeTags": [],
@@ -1973,12 +2041,6 @@
        "message": "Applied the effective 'sfw' scene rating because the Analyzer omitted it."
       },
       {
-       "code": "placement-omitted",
-       "impact": "degraded",
-       "path": "$.illustrations[0].frame_placement.items[1]",
-       "message": "Omitted a placement with an unknown or duplicate Actor binding."
-      },
-      {
        "code": "actor-detail-omitted",
        "impact": "degraded",
        "path": "$.illustrations[0].actor_detail[0]",
@@ -1991,10 +2053,22 @@
        "message": "Created an empty Actor Detail for placementIndex 0 without inventing pose, action, object, or dialogue meaning."
       },
       {
+       "code": "actor-occurrence-detail-defaulted-empty",
+       "impact": "degraded",
+       "path": "$.illustrations[0].actor_detail",
+       "message": "Created an empty Actor Detail for placementIndex 1 without inventing pose, action, object, or dialogue meaning."
+      },
+      {
        "code": "invalid-camera-stage",
        "impact": "degraded",
        "path": "$.illustrations[0].camera",
        "message": "Replaced an invalid Camera stage with an empty container."
+      },
+      {
+       "code": "interaction-occurrence-binding-ambiguous",
+       "impact": "degraded",
+       "path": "interaction.interaction:0",
+       "message": "Omitted an Interaction with multiple possible endpoint occurrences; Actor identity alone cannot select a visible depiction."
       }
      ]
     },
@@ -2010,6 +2084,12 @@
         "id": "scene.rating",
         "options": [
          "sfw"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -2091,6 +2171,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -2235,6 +2321,12 @@
         "id": "scene.rating",
         "options": [
          "sfw"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -2389,6 +2481,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -2632,6 +2730,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],

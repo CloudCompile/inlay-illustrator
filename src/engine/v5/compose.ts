@@ -25,8 +25,8 @@ import {
   createGenerationBatchExecutor,
   applyNsfwPrefixPolicy,
   attachActorIdsToCharacterPrompts,
-  n2 as BUNDLED_COMFY_PROFILE,
-  _be as makeProviderRef,
+  F2 as BUNDLED_COMFY_PROFILE,
+  Cve as makeProviderRef,
 } from "../core/asset-maid-core";
 import { createV5Analyzer, type V5AnalyzerClient, type V5AnalyzerResult } from "./analyzer";
 import { createV5RuleRuntime, toV5ContinuitySnapshot, type V5ContinuitySnapshot, type V5ContinuityState, type V5RuleRuntime } from "./runtime";

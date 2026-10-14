@@ -15,7 +15,7 @@ import {
   fnv1a64Hash,
   compileNovelAIV5Catalog,
   getDefaultNovelAIV5Catalog,
-  WFe as catalogFingerprintOf,
+  Aot as catalogFingerprintOf,
 } from "../core/asset-maid-core";
 import type { V5CatalogHashes, V5CompiledCatalog, V5Json, V5RawDiagnostic, V5RawValidationResult } from "./types";
 

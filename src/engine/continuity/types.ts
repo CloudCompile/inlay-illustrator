@@ -94,7 +94,7 @@ export interface VisualContinuityContext {
   previous_message_participants?: { character_keys: string[]; persona_keys: string[] };
 }
 
-/** Minimal controller contract used by `updateVisualContinuity` / `computeDeferredVisualContinuity`. */
+/** Minimal controller contract (`createMemoryContinuityController`). */
 export interface ContinuityMutator {
   mutate(fn: (state: ContinuityState) => void): Promise<void> | void;
 }

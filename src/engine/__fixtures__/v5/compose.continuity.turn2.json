@@ -1,4 +1,11 @@
 {
+ "scenario": {
+  "response": "continuity",
+  "provider": "novelai",
+  "seed": 46,
+  "previous": "default.novelai",
+  "stateAccumulationEnabled": true
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -29,6 +36,12 @@
         "id": "scene.rating",
         "options": [
          "sfw"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -212,11 +225,16 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-768cb3ad8410cc64",
+  "requestPayload": "fnv1a64-da5e39dec9b1e68e",
   "localProjection": {
+   "allowedSizeIds": [
+    1,
+    2,
+    5
+   ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -243,19 +261,18 @@
       "female",
       "silver hair",
       "blue eyes",
+      "wet clothes",
+      "drooling",
+      "tearing up",
+      "cut on hand",
       "white sailor shirt",
       "navy sailor collar",
       "red neckerchief",
       "navy pleated skirt",
-      "black thighhighs",
-      "brown loafers",
-      "wet clothes",
-      "drooling",
-      "tearing up",
-      "cut on hand"
+      "0.8::black thighhighs::"
      ],
      "instructions": [],
-     "serializedPrompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+     "serializedPrompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -310,6 +327,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00006",
      "semanticKey": "silver hair",
@@ -327,6 +345,7 @@
      "order": 9500,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:eyes.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00007",
      "semanticKey": "blue eyes",
@@ -480,6 +499,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00008",
      "semanticKey": "white sailor shirt",
@@ -497,6 +517,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00009",
      "semanticKey": "navy sailor collar",
@@ -514,6 +535,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00010",
      "semanticKey": "red neckerchief",
@@ -531,6 +553,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:bottom",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00011",
      "semanticKey": "navy pleated skirt",
@@ -548,7 +571,8 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:legs",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0.8,
      "id": "ledger:00012",
      "semanticKey": "black thighhighs",
      "inputIndex": 12,
@@ -565,11 +589,13 @@
      "order": 9400,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00013",
      "semanticKey": "brown loafers",
      "inputIndex": 13,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -618,7 +644,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+      "prompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "uc": "bad hands",
       "centerX": 0.5,
       "centerY": 0.5,
@@ -652,7 +678,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+     "prompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
      "negativePrompt": "bad hands"
     }
    ],
@@ -667,16 +693,16 @@
     },
     "outfits": {
      "actor_1": {
-      "start": 32,
-      "end": 140
+      "start": 80,
+      "end": 180
      }
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-20024c68da8b61f4"
+    "hash": "fnv1a64-0e4572f8ef5a2c24"
    },
    "decision": {
-    "hash": "fnv1a64-5ce5e8d6e8659b7f"
+    "hash": "fnv1a64-d2478cf796161021"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -715,7 +741,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_1",
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+      "prompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "uc": "bad hands",
       "identityKey": "lore:alice",
       "identity": {
@@ -766,7 +792,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+      "prompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "uc": "bad hands",
       "centerX": 0.5,
       "centerY": 0.5,
@@ -791,7 +817,7 @@
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, wet clothes, drooling, tearing up, cut on hand",
+      "prompt": "female, silver hair, blue eyes, wet clothes, drooling, tearing up, cut on hand, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "negativePrompt": "bad hands",
       "centerX": 0.5,
       "centerY": 0.5
@@ -817,7 +843,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-99269108d7858464"
+    "hash": "fnv1a64-3e376d8ed453944a"
    }
   }
  ],

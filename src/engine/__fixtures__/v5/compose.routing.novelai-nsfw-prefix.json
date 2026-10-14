@@ -1,4 +1,10 @@
 {
+ "scenario": {
+  "response": "routing",
+  "provider": "novelai",
+  "seed": 45,
+  "forceNsfwPrefix": true
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -85,6 +91,12 @@
         "id": "scene.time",
         "options": [
          "night"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -312,11 +324,16 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+  "requestPayload": "fnv1a64-064e26890e3120df",
   "localProjection": {
+   "allowedSizeIds": [
+    1,
+    2,
+    5
+   ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -351,19 +368,18 @@
       "blue eyes",
       "missionary",
       "target#vaginal",
+      "on back",
+      "no panties",
+      "drooling",
       "target#deep penetration",
       "white sailor shirt",
       "navy sailor collar",
       "red neckerchief",
       "navy pleated skirt",
-      "black thighhighs",
-      "brown loafers",
-      "on back",
-      "no panties",
-      "drooling"
+      "0.8::black thighhighs::"
      ],
      "instructions": [],
-     "serializedPrompt": "female, silver hair, blue eyes, missionary, target#vaginal, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, on back, no panties, drooling",
+     "serializedPrompt": "female, silver hair, blue eyes, missionary, target#vaginal, on back, no panties, drooling, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -378,16 +394,15 @@
       "black hair",
       "penis",
       "source#vaginal",
+      "serious",
       "source#deep penetration",
       "grey suit jacket",
       "white shirt",
       "blue necktie",
-      "grey suit pants",
-      "black dress shoes",
-      "serious"
+      "grey suit pants"
      ],
      "instructions": [],
-     "serializedPrompt": "male, black hair, penis, source#vaginal, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, serious",
+     "serializedPrompt": "male, black hair, penis, source#vaginal, serious, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants",
      "actorId": "actor_2",
      "placementIndex": 1,
      "candidateKey": "actor.m0ais.6ynrym",
@@ -491,6 +506,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00020",
      "semanticKey": "silver hair",
@@ -508,6 +524,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:bob:hair.color:0",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00028",
      "semanticKey": "black hair",
@@ -525,6 +542,7 @@
      "order": 9500,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:eyes.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00021",
      "semanticKey": "blue eyes",
@@ -1042,6 +1060,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00022",
      "semanticKey": "white sailor shirt",
@@ -1059,6 +1078,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00029",
      "semanticKey": "grey suit jacket",
@@ -1076,6 +1096,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00023",
      "semanticKey": "navy sailor collar",
@@ -1093,6 +1114,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00030",
      "semanticKey": "white shirt",
@@ -1110,6 +1132,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00024",
      "semanticKey": "red neckerchief",
@@ -1127,6 +1150,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00031",
      "semanticKey": "blue necktie",
@@ -1144,6 +1168,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:bottom",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00025",
      "semanticKey": "navy pleated skirt",
@@ -1161,6 +1186,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:bottom",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00032",
      "semanticKey": "grey suit pants",
@@ -1178,7 +1204,8 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:legs",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0.8,
      "id": "ledger:00026",
      "semanticKey": "black thighhighs",
      "inputIndex": 26,
@@ -1195,11 +1222,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 1,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00033",
      "semanticKey": "black dress shoes",
      "inputIndex": 33,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1212,11 +1241,13 @@
      "order": 9400,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00027",
      "semanticKey": "brown loafers",
      "inputIndex": 27,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1265,7 +1296,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, on back, no panties, drooling",
+      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, on back, no panties, drooling, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "uc": "bad hands",
       "centerX": 0.5,
       "centerY": 0.6,
@@ -1273,7 +1304,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, black hair, penis, source#vaginal, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, serious",
+      "prompt": "male, black hair, penis, source#vaginal, serious, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "uc": "",
       "centerX": 0.5,
       "centerY": 0.35,
@@ -1307,7 +1338,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, on back, no panties, drooling",
+     "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, on back, no panties, drooling, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
      "negativePrompt": "bad hands"
     },
     {
@@ -1320,7 +1351,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, black hair, penis, source#vaginal, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, serious",
+     "prompt": "male, black hair, penis, source#vaginal, serious, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants",
      "negativePrompt": ""
     }
    ],
@@ -1335,20 +1366,20 @@
     },
     "outfits": {
      "actor_1": {
-      "start": 85,
-      "end": 193
+      "start": 116,
+      "end": 216
      },
      "actor_2": {
-      "start": 66,
-      "end": 145
+      "start": 75,
+      "end": 135
      }
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-33b5e7b105f72997"
+    "hash": "fnv1a64-cd4e3a99d6dab0b7"
    },
    "decision": {
-    "hash": "fnv1a64-80f20159ea04b1ed"
+    "hash": "fnv1a64-4b6e6e4443aa81a2"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1387,7 +1418,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_1",
-      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, on back, no panties, drooling",
+      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, on back, no panties, drooling, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "uc": "bad hands",
       "identityKey": "lore:alice",
       "identity": {
@@ -1401,7 +1432,7 @@
       "actorIndex": 1,
       "placementIndex": 1,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, black hair, penis, source#vaginal, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, serious",
+      "prompt": "male, black hair, penis, source#vaginal, serious, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "uc": "",
       "identityKey": "lore:bob",
       "identity": {
@@ -1460,7 +1491,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, on back, no panties, drooling",
+      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, on back, no panties, drooling, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "uc": "bad hands",
       "centerX": 0.5,
       "centerY": 0.6,
@@ -1468,7 +1499,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, black hair, penis, source#vaginal, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, serious",
+      "prompt": "male, black hair, penis, source#vaginal, serious, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "uc": "",
       "centerX": 0.5,
       "centerY": 0.35,
@@ -1493,7 +1524,7 @@
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, on back, no panties, drooling",
+      "prompt": "female, silver hair, blue eyes, missionary, target#vaginal, on back, no panties, drooling, target#deep penetration, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::",
       "negativePrompt": "bad hands",
       "centerX": 0.5,
       "centerY": 0.6
@@ -1501,7 +1532,7 @@
      {
       "actorId": "actor_2",
       "actorIndex": 1,
-      "prompt": "male, black hair, penis, source#vaginal, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, serious",
+      "prompt": "male, black hair, penis, source#vaginal, serious, source#deep penetration, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "negativePrompt": "",
       "centerX": 0.5,
       "centerY": 0.35
@@ -1527,7 +1558,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-52730bdb21266607"
+    "hash": "fnv1a64-facd7a5d2e914840"
    }
   }
  ],

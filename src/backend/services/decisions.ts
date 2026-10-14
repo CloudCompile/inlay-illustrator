@@ -28,18 +28,9 @@ export interface DecisionService {
   testConnection(params: DecisionTestParams, options?: { signal?: AbortSignal }): Promise<DecisionTestResult>;
   createJevAdapter(getConfig: () => JevConnectionSettings, options?: DecisionServiceOptions): {
     network: {
-      evaluate(
-        connection: { apiKey?: string; model: string; connectionId?: string; userId?: string },
-        request: { state: unknown; questions: Record<string, unknown> },
-        options?: { signal?: AbortSignal; timeoutMs?: number },
-      ): Promise<{
-        model: string;
-        answers: Record<string, unknown>;
-        latencyMs: number;
-        usage?: { inputTokens?: number; outputTokens?: number };
-      }>;
+      fetch(url: string, init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal }): Promise<Response>;
     };
-    getConfig: () => JevConnectionSettings;
+    getConfig: () => JevConnectionSettings & { apiKey: string };
   };
 }
 
@@ -125,39 +116,32 @@ export function createDecisionService(host: SpindleHost, log: RunLog, defaultUse
 
     createJevAdapter(getConfig, adapterOptions = {}) {
       return {
+        // AM sends JEV questions with `network.fetch(POST https://api.typesafe.ai/v1/systemone, {model, state, questions})`
+        // and reads `{model, answers, usage}`. The port answers that request through the Lumiverse decisions API.
         network: {
-          async evaluate(connection, request, options = {}) {
+          async fetch(_url, init) {
             const api = (host as any).decisions;
             if (!api?.evaluate) {
               throw new Error("JEV_UNAVAILABLE: Lumiverse decisions API is not available on this host.");
             }
+            const body = JSON.parse(String(init.body)) as { model: string; state: unknown; questions: Record<string, unknown> };
             const currentCfg = getConfig();
-            const targetModel = connection.model || currentCfg.model || "jev-latest";
-            const connId = connection.connectionId || currentCfg.connectionId || undefined;
-            const effectiveUserId = connection.userId ?? adapterOptions.userId ?? defaultUserId;
-            const start = Date.now();
+            const effectiveUserId = adapterOptions.userId ?? defaultUserId;
             const res = await api.evaluate(
               {
-                connection_id: connId,
-                model: targetModel,
-                state: request.state as any,
-                questions: request.questions as any,
+                connection_id: currentCfg.connectionId || undefined,
+                model: body.model,
+                state: body.state as any,
+                questions: body.questions as any,
                 ...(effectiveUserId ? { userId: effectiveUserId } : {}),
               },
-              { signal: options.signal },
+              { signal: init.signal },
             );
-            return {
-              model: res.model,
-              answers: res.answers,
-              latencyMs: Date.now() - start,
-              usage: {
-                inputTokens: (res.usage?.input_tokens as number) ?? 0,
-                outputTokens: (res.usage?.output_tokens as number) ?? 0,
-              },
-            };
+            return new Response(JSON.stringify({ model: res.model, answers: res.answers, usage: res.usage ?? {} }), { status: 200 });
           },
         },
-        getConfig,
+        // AM checks `connection.apiKey` before a JEV run; the key stays in the Lumiverse connection, so pass a placeholder.
+        getConfig: () => ({ ...getConfig(), apiKey: "lumiverse" }),
       };
     },
   };

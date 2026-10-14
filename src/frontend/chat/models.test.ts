@@ -5,7 +5,7 @@ import type { GenerationJobSnapshot } from "../../shared/contract/rpc.js";
 import { applyCountAction, countLimits, countToggleText, countView } from "./count-model.js";
 import { historyIdOfKey, jobForMessage, uniqueBubbles } from "./dom.js";
 import { CHAT_SIDE_CSS } from "./styles.js";
-import { buildToastStack, finishedToast, generationProgress, runningMessage, type FinishedGeneration } from "./toast-model.js";
+import { buildToastStack, errorDetailText, errorLogText, finishedToast, generationProgress, hasErrorDetails, retryErrorText, runningMessage, runningToast, type FinishedGeneration } from "./toast-model.js";
 import { historyPosition, revisionPosition } from "./widgets.js";
 
 const limits = countLimits(false, "v5-hybrid");
@@ -108,6 +108,41 @@ describe("runtime toasts", () => {
     const ended: FinishedGeneration = { jobId: "a", chatId: "c", messageKey: "k", result: "cancelled", attemptKind: "initial", requestedCount: 3, completedSlots: 0, canRetry: false, canRestart: false, finishedAt: 10, jevSelection: checking.jevSelection };
     const stopped = build([], [ended], 10)[1];
     expect([stopped.detail, stopped.tone]).toEqual(["Stopped", "warning"]);
+  });
+});
+
+describe("retry error details (AM 0.9.89.5)", () => {
+  const imageError = { attempt: 1, stage: "이미지 생성", occurredAt: 1, message: "HTTP 429 Too Many Requests", httpStatus: 429, code: "RATE_LIMITED", provider: "novelai", model: "nai-diffusion-4-5-full", requestId: "req-1" };
+  const runError = { attempt: 2, stage: "분석·생성", occurredAt: 2, message: "Analyzer response was not JSON" };
+
+  test("one entry: stage label, attempt, message; diagnostics only in developer mode (AM ygt)", () => {
+    expect(retryErrorText(imageError, false)).toBe("Image generation · Request attempt 1 failed\nHTTP 429 Too Many Requests");
+    expect(retryErrorText(imageError, true)).toBe(
+      "Image generation · Request attempt 1 failed\nHTTP 429 Too Many Requests\nHTTP 429\nError code: RATE_LIMITED\nProvider: novelai\nModel: nai-diffusion-4-5-full\nRequest ID: req-1"
+    );
+    expect(retryErrorText({ ...runError, stage: "세부2 분석" }, true)).toBe("Detail 2 analysis · Request attempt 2 failed\nAnalyzer response was not JSON");
+    expect(retryErrorText({ ...runError, stage: "초기 결정" }, false).split("\n")[0]).toBe("Initial decision · Request attempt 2 failed");
+  });
+
+  test("running job: newest error is the detail, older ones are previous errors; image number while generating (AM lSe)", () => {
+    const toast = runningToast(job({ completedSlots: 1, retryErrors: [imageError, { ...imageError, attempt: 2, message: "HTTP 500" }] }), 1);
+    expect(toast.errorDetail).toBe("Image 2\nImage generation · Request attempt 2 failed\nHTTP 500");
+    expect(toast.previousErrors).toEqual(["Image 2\nImage generation · Request attempt 1 failed\nHTTP 429 Too Many Requests"]);
+    expect(hasErrorDetails(toast)).toBe(true);
+    expect(errorLogText(toast)).toBe(`${toast.errorDetail}\n\n${toast.previousErrors![0]}`);
+    const analyzing = runningToast(job({ phase: "analyzing-preset", retryErrors: [runError] }), 1);
+    expect([analyzing.errorDetail, analyzing.previousErrors]).toEqual(["Analysis & generation · Request attempt 2 failed\nAnalyzer response was not JSON", []]);
+    expect(hasErrorDetails(runningToast(job(), 1))).toBe(false);
+  });
+
+  test("failed job keeps its retry errors; finished ok/cancelled jobs show none", () => {
+    const base: FinishedGeneration = { jobId: "j", chatId: "c", messageKey: "k", result: "failed", attemptKind: "initial", requestedCount: 2, completedSlots: 0, canRetry: true, canRestart: false, finishedAt: 1, error: { code: "provider-error", message: "Run failed" }, phase: "analyzing-preset", retryErrors: [runError] };
+    const failed = finishedToast(base, true);
+    expect(errorDetailText(failed)).toBe("Analysis & generation · Request attempt 2 failed\nAnalyzer response was not JSON");
+    expect(failed.detail).toBe("Run failed");
+    expect(finishedToast({ ...base, result: "cancelled" }).errorDetail).toBeUndefined();
+    expect(finishedToast({ ...base, result: "completed" }).errorDetail).toBeUndefined();
+    expect(errorLogText(finishedToast({ ...base, retryErrors: undefined }))).toBe("Run failed");
   });
 });
 

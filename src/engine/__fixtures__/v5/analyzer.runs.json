@@ -25,9 +25,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-fbe0941a60854196",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
+     "messages": "fnv1a64-77e07e89511ed0dd",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-6df4f55c558c9e12"
     }
    }
   ],
@@ -114,6 +114,12 @@
          "id": "scene.time",
          "options": [
           "morning"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -244,7 +250,7 @@
      },
      {
       "slotNumber": 1,
-      "status": "degraded",
+      "status": "recovered",
       "presentationMode": "single-frame",
       "actors": [
        {
@@ -274,6 +280,12 @@
          "id": "scene.environment",
          "options": [
           "indoors"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "upper_body"
          ]
         }
        ],
@@ -338,12 +350,6 @@
        "instruction": "Camera behind the actor looking out the window."
       },
       "diagnostics": [
-       {
-        "code": "frame-scene-modifier-omitted",
-        "impact": "degraded",
-        "path": "$.illustrations[1].frame_placement.modifiers",
-        "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-       },
        {
         "code": "tag-canonicalized",
         "impact": "recovered",
@@ -464,11 +470,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -498,9 +509,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-2a96d5651cb8a505",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-a797468970574672"
+     "messages": "fnv1a64-124fce418dbd8ba6",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-9920f89fe1a1cbe9"
     }
    }
   ],
@@ -559,6 +570,12 @@
          "id": "scene.time",
          "options": [
           "morning"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -675,7 +692,7 @@
         "code": "placement-item-fallback",
         "impact": "degraded",
         "path": "$.illustrations[0].frame_placement.items",
-        "message": "Added deterministic fallback placement for 'actor_2'."
+        "message": "Added a deterministic fallback occurrence for 'actor_2'."
        },
        {
         "code": "actor-occurrence-detail-defaulted-empty",
@@ -797,11 +814,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "persona-automatic"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -831,9 +853,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-68ffe6949b0a1456",
-     "schema": "fnv1a64-4d3890e9c366feb4",
-     "cachePartition": "fnv1a64-7336617d8c43e701"
+     "messages": "fnv1a64-e6c9fd59b3e0e228",
+     "schema": "fnv1a64-3d85696c61d6cb87",
+     "cachePartition": "fnv1a64-fa918d42b2c08ef7"
     }
    }
   ],
@@ -1243,11 +1265,11 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-057216cde884b8f8",
+   "requestPayload": "fnv1a64-29fdfa8dcd19ee7d",
    "localProjection": {
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -1277,9 +1299,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-9f2347c6041418b5",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-7ed99e54df247dda"
+     "messages": "fnv1a64-0fa1508ba173a996",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-674b7aa6d2fe3f81"
     }
    }
   ],
@@ -1405,6 +1427,12 @@
          "id": "scene.weather",
          "options": [
           "rain"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -1683,11 +1711,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -1717,9 +1750,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-3010abe8ed5e9dab",
-     "schema": "fnv1a64-4e4855fcc633689a",
-     "cachePartition": "fnv1a64-15b9f6c6105187dc"
+     "messages": "fnv1a64-52bc7c3a5b6a5220",
+     "schema": "fnv1a64-a351fa7404a8eaea",
+     "cachePartition": "fnv1a64-37455b70358a7fbf"
     }
    }
   ],
@@ -1753,6 +1786,12 @@
          "id": "scene.rating",
          "options": [
           "sfw"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -1929,11 +1968,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-940d851086ee78b3",
+   "requestPayload": "fnv1a64-597a1c374a59a859",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -1963,9 +2007,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-fbe0941a60854196",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
+     "messages": "fnv1a64-77e07e89511ed0dd",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-6df4f55c558c9e12"
     }
    }
   ],
@@ -2005,6 +2049,12 @@
          "id": "scene.environment",
          "options": [
           "indoors"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -2238,11 +2288,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -2272,9 +2327,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-fbe0941a60854196",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
+     "messages": "fnv1a64-77e07e89511ed0dd",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-6df4f55c558c9e12"
     }
    }
   ],
@@ -2301,26 +2356,19 @@
         }
        }
       ],
-      "interactions": [
-       {
-        "interactionRef": "interaction:0",
-        "id": "kiss",
-        "mode": "directed",
-        "sourceActorId": "actor_1",
-        "bindingStatus": "incomplete",
-        "unresolvedActorRefs": [
-         "targetActorId"
-        ],
-        "modifiers": [],
-        "participantDetails": []
-       }
-      ],
+      "interactions": [],
       "location": {
        "modifiers": [
         {
          "id": "scene.rating",
          "options": [
           "sfw"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -2341,12 +2389,35 @@
         },
         "source": "analyzer",
         "instruction": ""
+       },
+       {
+        "actorId": "actor_1",
+        "placementIndex": 1,
+        "center": {
+         "x": 0.2,
+         "y": 0.2
+        },
+        "source": "analyzer",
+        "instruction": ""
        }
       ],
       "actorDetails": [
        {
         "actorId": "actor_1",
         "placementIndex": 0,
+        "actions": [],
+        "modifiers": [],
+        "freeTags": [],
+        "penetratingInjuries": [],
+        "poseInstruction": "",
+        "actionInstruction": "",
+        "objects": [],
+        "objectInstruction": "",
+        "dialogueInstruction": ""
+       },
+       {
+        "actorId": "actor_1",
+        "placementIndex": 1,
         "actions": [],
         "modifiers": [],
         "freeTags": [],
@@ -2412,12 +2483,6 @@
         "message": "Applied the effective 'sfw' scene rating because the Analyzer omitted it."
        },
        {
-        "code": "placement-omitted",
-        "impact": "degraded",
-        "path": "$.illustrations[0].frame_placement.items[1]",
-        "message": "Omitted a placement with an unknown or duplicate Actor binding."
-       },
-       {
         "code": "actor-detail-omitted",
         "impact": "degraded",
         "path": "$.illustrations[0].actor_detail[0]",
@@ -2430,10 +2495,22 @@
         "message": "Created an empty Actor Detail for placementIndex 0 without inventing pose, action, object, or dialogue meaning."
        },
        {
+        "code": "actor-occurrence-detail-defaulted-empty",
+        "impact": "degraded",
+        "path": "$.illustrations[0].actor_detail",
+        "message": "Created an empty Actor Detail for placementIndex 1 without inventing pose, action, object, or dialogue meaning."
+       },
+       {
         "code": "invalid-camera-stage",
         "impact": "degraded",
         "path": "$.illustrations[0].camera",
         "message": "Replaced an invalid Camera stage with an empty container."
+       },
+       {
+        "code": "interaction-occurrence-binding-ambiguous",
+        "impact": "degraded",
+        "path": "interaction.interaction:0",
+        "message": "Omitted an Interaction with multiple possible endpoint occurrences; Actor identity alone cannot select a visible depiction."
        }
       ]
      },
@@ -2449,6 +2526,12 @@
          "id": "scene.rating",
          "options": [
           "sfw"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -2599,11 +2682,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -2633,9 +2721,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-fbe0941a60854196",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
+     "messages": "fnv1a64-77e07e89511ed0dd",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-6df4f55c558c9e12"
     }
    }
   ],
@@ -2698,9 +2786,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-fbe0941a60854196",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
+     "messages": "fnv1a64-77e07e89511ed0dd",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-6df4f55c558c9e12"
     }
    }
   ],
@@ -2756,9 +2844,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-1035cb6e60d76357",
-     "schema": "fnv1a64-5f38d9df8a93132f",
-     "cachePartition": "fnv1a64-9fe4d90fd8de59c0"
+     "messages": "fnv1a64-c65751b79fed9d3c",
+     "schema": "fnv1a64-3c886b3cb09f232a",
+     "cachePartition": "fnv1a64-138c5a09738646cb"
     }
    }
   ],
@@ -2848,6 +2936,12 @@
          "id": "scene.environment",
          "options": [
           "indoors"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -3134,11 +3228,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-32ae1f244ea22776",
+   "requestPayload": "fnv1a64-5607995f3c67def4",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -3168,9 +3267,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-fbe0941a60854196",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-c6cf48ed96fb1ce1"
+     "messages": "fnv1a64-77e07e89511ed0dd",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-6df4f55c558c9e12"
     }
    }
   ],
@@ -3236,6 +3335,12 @@
          "id": "scene.environment",
          "options": [
           "indoors"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -3462,11 +3567,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -3496,9 +3606,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-ab38ea5d5421a297",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-2b2b3a4fd85f0c70"
+     "messages": "fnv1a64-41e885bd55897f5c",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-d64783d6d3b83c13"
     }
    }
   ],
@@ -3585,6 +3695,12 @@
          "id": "scene.time",
          "options": [
           "morning"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -3715,7 +3831,7 @@
      },
      {
       "slotNumber": 1,
-      "status": "degraded",
+      "status": "recovered",
       "presentationMode": "single-frame",
       "actors": [
        {
@@ -3745,6 +3861,12 @@
          "id": "scene.environment",
          "options": [
           "indoors"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "upper_body"
          ]
         }
        ],
@@ -3809,12 +3931,6 @@
        "instruction": "Camera behind the actor looking out the window."
       },
       "diagnostics": [
-       {
-        "code": "frame-scene-modifier-omitted",
-        "impact": "degraded",
-        "path": "$.illustrations[1].frame_placement.modifiers",
-        "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-       },
        {
         "code": "tag-canonicalized",
         "impact": "recovered",
@@ -3935,11 +4051,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+   "requestPayload": "fnv1a64-064e26890e3120df",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  },
@@ -3969,9 +4090,9 @@
      }
     },
     "hashes": {
-     "messages": "fnv1a64-3476cab00fbe2227",
-     "schema": "fnv1a64-50e7f0bcd7eeb864",
-     "cachePartition": "fnv1a64-293f08a03c41fda0"
+     "messages": "fnv1a64-09e059e77080af3c",
+     "schema": "fnv1a64-f3a356dac71a9e91",
+     "cachePartition": "fnv1a64-1195d6495c14dfab"
     }
    }
   ],
@@ -4005,6 +4126,12 @@
          "id": "scene.rating",
          "options": [
           "sfw"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -4188,11 +4315,16 @@
     "actor.m0ais.6ynrym": "lore:bob",
     "actor.1fmv888.fk4pvw": "persona::p1"
    },
-   "requestPayload": "fnv1a64-768cb3ad8410cc64",
+   "requestPayload": "fnv1a64-da5e39dec9b1e68e",
    "localProjection": {
+    "allowedSizeIds": [
+     1,
+     2,
+     5
+    ],
     "characterCoordinates": "fixed"
    },
-   "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+   "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
   },
   "error": null
  }

@@ -1,4 +1,10 @@
 {
+ "scenario": {
+  "response": "ensemble",
+  "directions": "ensemble",
+  "provider": "comfy-ui",
+  "seed": 44
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -121,6 +127,12 @@
         "id": "scene.weather",
         "options": [
          "rain"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -399,11 +411,16 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+  "requestPayload": "fnv1a64-064e26890e3120df",
   "localProjection": {
+   "allowedSizeIds": [
+    1,
+    2,
+    5
+   ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -444,18 +461,17 @@
       "blue eyes",
       "source#hug",
       "mutual#holding hands",
-      "straw hat",
-      "white sundress",
-      "sandals",
       "seductive smile",
       "wet clothes",
       "wet hair",
-      "bruise on arm"
+      "bruise on arm",
+      "straw hat",
+      "white sundress"
      ],
      "instructions": [
       "swinging the joined hands."
      ],
-     "serializedPrompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.",
+     "serializedPrompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -470,18 +486,17 @@
       "1::kazehaya shouta::",
       "target#hug",
       "target#embracing",
+      "embarrassed",
+      "blush",
       "mutual#pointing at each other",
       "black hoodie",
-      "jeans",
-      "sneakers",
-      "embarrassed",
-      "blush"
+      "jeans"
      ],
      "instructions": [
       "between the two.",
       "arms pinned to the sides."
      ],
-     "serializedPrompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, mutual#pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.",
+     "serializedPrompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, embarrassed, blush, mutual#pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.",
      "actorId": "actor_2",
      "placementIndex": 1,
      "candidateKey": "actor.1fmv888.fk4pvw",
@@ -496,20 +511,19 @@
       "black hair",
       "source#embracing",
       "mutual#holding hands",
+      "looking back",
+      "sweat",
+      "2::facing away::",
       "mutual#pointing at each other",
       "grey suit jacket",
       "white shirt",
       "blue necktie",
-      "grey suit pants",
-      "black dress shoes",
-      "looking back",
-      "sweat",
-      "2::facing away::"
+      "grey suit pants"
      ],
      "instructions": [
       "awkward grip."
      ],
-     "serializedPrompt": "male, black hair, source#embracing, mutual#holding hands, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, 2::facing away::\nawkward grip.",
+     "serializedPrompt": "male, black hair, source#embracing, mutual#holding hands, looking back, sweat, 2::facing away::, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
      "actorId": "actor_3",
      "placementIndex": 2,
      "candidateKey": "actor.m0ais.6ynrym",
@@ -614,6 +628,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00036",
      "semanticKey": "silver hair",
@@ -631,6 +646,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:bob:hair.color:0",
+     "placementIndex": 2,
      "weight": 1,
      "id": "ledger:00045",
      "semanticKey": "black hair",
@@ -648,6 +664,7 @@
      "order": 9500,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:eyes.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00037",
      "semanticKey": "blue eyes",
@@ -665,6 +682,7 @@
      "order": 10300,
      "sourceKind": "external-identity",
      "sourceId": "persona::p1:custom:0",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00041",
      "semanticKey": "kazehaya shouta",
@@ -1268,6 +1286,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_2:head",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00038",
      "semanticKey": "straw hat",
@@ -1285,6 +1304,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00042",
      "semanticKey": "black hoodie",
@@ -1302,6 +1322,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 2,
      "weight": 1,
      "id": "ledger:00046",
      "semanticKey": "grey suit jacket",
@@ -1319,6 +1340,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 2,
      "weight": 1,
      "id": "ledger:00047",
      "semanticKey": "white shirt",
@@ -1336,6 +1358,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 2,
      "weight": 1,
      "id": "ledger:00048",
      "semanticKey": "blue necktie",
@@ -1353,6 +1376,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_2:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00039",
      "semanticKey": "white sundress",
@@ -1370,6 +1394,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:bottom",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00043",
      "semanticKey": "jeans",
@@ -1387,6 +1412,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:bottom",
+     "placementIndex": 2,
      "weight": 1,
      "id": "ledger:00049",
      "semanticKey": "grey suit pants",
@@ -1404,11 +1430,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_2:feet",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00040",
      "semanticKey": "sandals",
      "inputIndex": 40,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1421,11 +1449,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 1,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00044",
      "semanticKey": "sneakers",
      "inputIndex": 44,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1438,11 +1468,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 2,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00050",
      "semanticKey": "black dress shoes",
      "inputIndex": 50,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1471,7 +1503,7 @@
     "providerId": "comfy-ui",
     "queueScopeKey": "image-provider:comfy-ui:global"
    },
-   "prompt": "masterpiece, best quality, score_7, safe, 1girl, 2boys, @hwansang, year 2025, dutch angle, from above, indoors, rain, classroom, window, desk, blackboard, very aesthetic\nRain streaks on the classroom windows. High camera near the ceiling corner.\n\nfemale, silver hair, blue eyes, hug, holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.\n\nmale, kazehaya shouta, pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.\n\nmale, black hair, embracing, holding hands, pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, facing away\nawkward grip.",
+   "prompt": "masterpiece, best quality, score_7, safe, 1girl, 2boys, @hwansang, year 2025, dutch angle, from above, indoors, rain, classroom, window, desk, blackboard, very aesthetic\nRain streaks on the classroom windows. High camera near the ceiling corner.\n\nfemale, silver hair, blue eyes, hug, holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.\n\nmale, kazehaya shouta, embarrassed, blush, pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.\n\nmale, black hair, embracing, holding hands, looking back, sweat, facing away, pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
    "negativePrompt": "worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, bad anatomy, text, watermark, lowres\n\nbad hands",
    "seed": "1234567",
    "width": 1216,
@@ -2629,7 +2661,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_2",
      "identitySuppressed": false,
-     "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.",
+     "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.",
      "negativePrompt": "bad hands"
     },
     {
@@ -2642,7 +2674,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, mutual#pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.",
+     "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, embarrassed, blush, mutual#pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.",
      "negativePrompt": ""
     },
     {
@@ -2655,31 +2687,31 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, black hair, source#embracing, mutual#holding hands, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, 2::facing away::\nawkward grip.",
+     "prompt": "male, black hair, source#embracing, mutual#holding hands, looking back, sweat, 2::facing away::, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
      "negativePrompt": ""
     }
    ],
    "promptSegments": {
     "outfits": {
      "actor_1": {
-      "start": 66,
-      "end": 100
+      "start": 121,
+      "end": 146
      },
      "actor_2": {
-      "start": 89,
-      "end": 118
+      "start": 109,
+      "end": 128
      },
      "actor_3": {
-      "start": 89,
-      "end": 168
+      "start": 128,
+      "end": 188
      }
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-17533cb4392c79df"
+    "hash": "fnv1a64-655f17f359be9f97"
    },
    "decision": {
-    "hash": "fnv1a64-c896705e65996067"
+    "hash": "fnv1a64-27769e3bf1d753e7"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -2718,7 +2750,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_2",
-      "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.",
+      "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.",
       "uc": "bad hands",
       "identityKey": "lore:alice",
       "identity": {
@@ -2732,7 +2764,7 @@
       "actorIndex": 1,
       "placementIndex": 1,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, mutual#pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.",
+      "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, embarrassed, blush, mutual#pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.",
       "uc": "",
       "identityKey": "persona::p1",
       "identity": {
@@ -2746,7 +2778,7 @@
       "actorIndex": 2,
       "placementIndex": 2,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, black hair, source#embracing, mutual#holding hands, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, 2::facing away::\nawkward grip.",
+      "prompt": "male, black hair, source#embracing, mutual#holding hands, looking back, sweat, 2::facing away::, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
       "uc": "",
       "identityKey": "lore:bob",
       "identity": {
@@ -2873,7 +2905,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.",
+      "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.",
       "uc": "bad hands",
       "centerX": 0.25,
       "centerY": 0.5,
@@ -2881,7 +2913,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, mutual#pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.",
+      "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, embarrassed, blush, mutual#pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.",
       "uc": "",
       "centerX": 0.5,
       "centerY": 0.5,
@@ -2889,7 +2921,7 @@
      },
      {
       "actorSlot": "actor_3",
-      "prompt": "male, black hair, source#embracing, mutual#holding hands, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, 2::facing away::\nawkward grip.",
+      "prompt": "male, black hair, source#embracing, mutual#holding hands, looking back, sweat, 2::facing away::, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
       "uc": "",
       "centerX": 0.77,
       "centerY": 0.45,
@@ -2908,25 +2940,25 @@
     "formatterRevision": 1,
     "globalPositivePrompt": "masterpiece, best quality, score_7, safe, 1girl, 2boys, @hwansang, year 2025, dutch angle, from above, indoors, rain, classroom, window, desk, blackboard, very aesthetic\nRain streaks on the classroom windows. High camera near the ceiling corner.",
     "globalNegativePrompt": "worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, bad anatomy, text, watermark, lowres",
-    "positivePrompt": "masterpiece, best quality, score_7, safe, 1girl, 2boys, @hwansang, year 2025, dutch angle, from above, indoors, rain, classroom, window, desk, blackboard, very aesthetic\nRain streaks on the classroom windows. High camera near the ceiling corner.\n\nfemale, silver hair, blue eyes, hug, holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.\n\nmale, kazehaya shouta, pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.\n\nmale, black hair, embracing, holding hands, pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, facing away\nawkward grip.",
+    "positivePrompt": "masterpiece, best quality, score_7, safe, 1girl, 2boys, @hwansang, year 2025, dutch angle, from above, indoors, rain, classroom, window, desk, blackboard, very aesthetic\nRain streaks on the classroom windows. High camera near the ceiling corner.\n\nfemale, silver hair, blue eyes, hug, holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.\n\nmale, kazehaya shouta, embarrassed, blush, pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.\n\nmale, black hair, embracing, holding hands, looking back, sweat, facing away, pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
     "negativePrompt": "worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration, bad anatomy, text, watermark, lowres\n\nbad hands",
     "characterPrompts": [
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, straw hat, white sundress, sandals, seductive smile, wet clothes, wet hair, bruise on arm\nswinging the joined hands.",
+      "prompt": "female, silver hair, blue eyes, source#hug, mutual#holding hands, seductive smile, wet clothes, wet hair, bruise on arm, straw hat, white sundress\nswinging the joined hands.",
       "negativePrompt": "bad hands"
      },
      {
       "actorId": "actor_2",
       "actorIndex": 1,
-      "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, mutual#pointing at each other, black hoodie, jeans, sneakers, embarrassed, blush\nbetween the two. arms pinned to the sides.",
+      "prompt": "male, 1::kazehaya shouta::, target#hug, target#embracing, embarrassed, blush, mutual#pointing at each other, black hoodie, jeans\nbetween the two. arms pinned to the sides.",
       "negativePrompt": ""
      },
      {
       "actorId": "actor_3",
       "actorIndex": 2,
-      "prompt": "male, black hair, source#embracing, mutual#holding hands, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking back, sweat, 2::facing away::\nawkward grip.",
+      "prompt": "male, black hair, source#embracing, mutual#holding hands, looking back, sweat, 2::facing away::, mutual#pointing at each other, grey suit jacket, white shirt, blue necktie, grey suit pants\nawkward grip.",
       "negativePrompt": ""
      }
     ],
@@ -2950,7 +2982,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-81ecdacbd0705eab"
+    "hash": "fnv1a64-19a89237e01e7e99"
    }
   }
  ],

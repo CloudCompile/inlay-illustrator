@@ -232,7 +232,8 @@ function normalizeDirectionPreset(value: unknown, kind: "scene" | "imageRatio"):
   if (!id || !name || id === migrated || artistCg) return null;
   const scene = kind === "scene" ? scenePresetIdOf(r.scenePresetId) : undefined;
   const overrides = scene ? controlOverridesFor(scene, normalizeControlOverrides(r.controlOverrides)) : undefined;
-  const sizes = kind === "imageRatio" ? [...new Set(asArray(r.allowedSizeIds).filter((n): n is number => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 5))] : [];
+  // AM 0.9.89.3 `y5e`: preset ids 1..5 or custom size ids (>= 1e9, kept even when the custom size is gone).
+  const sizes = kind === "imageRatio" ? [...new Set(asArray(r.allowedSizeIds).filter((n): n is number => (Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 5) || isCustomImageSizeId(n)))] : [];
   return {
     id,
     name,

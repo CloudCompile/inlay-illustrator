@@ -1,8 +1,9 @@
-// Fixtures: bun C:/Users/eme4/asset-maid-port/scratch/engine/continuity/gen.mjs  (runs the ORIGINAL bundle)
+// Fixtures: bun C:/Users/eme4/asset-maid-port/scratch/port-0.9.89.5/reslice/gen/engine/continuity/gen.mjs  (runs the ORIGINAL 0.9.89.5 bundle; storage bridge from 0.9.88)
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as core from "../core/asset-maid-core";
+import * as storageCore from "./storage-core";
 import { setEngineEnv } from "../core/env";
 import { seededEnv } from "../testing/env";
 import { toPlain } from "../testing/plain";
@@ -25,16 +26,14 @@ const fns: ContinuityCoreFns = {
   createV45RuleRuntime: core.createV45RuleRuntime,
   createEmptyContinuityState: core.createEmptyContinuityState,
   applyVisualContinuityToPlan: core.applyVisualContinuityToPlan,
-  updateVisualContinuity: core.updateVisualContinuity,
   computeDeferredVisualContinuity: core.computeDeferredVisualContinuity,
-  reconcileContinuityCheckpoints: core.reconcileContinuityCheckpoints,
   buildVisualContinuityContext: core.buildVisualContinuityContext,
-  writeContinuityCheckpointsToChatStore: core.writeContinuityCheckpointsToChatStore,
-  readContinuityCheckpointsFromChatStore: core.readContinuityCheckpointsFromChatStore,
+  writeContinuityCheckpointsToChatStore: storageCore.writeContinuityCheckpointsToChatStore,
+  readContinuityCheckpointsFromChatStore: storageCore.readContinuityCheckpointsFromChatStore,
   rebuildContinuityFromChatStore: core.rebuildContinuityFromChatStore,
   rebuildContinuityAtMessage: core.rebuildContinuityAtMessage,
-  readLocalLoreActorState: core.readLocalLoreActorState,
-  writeLocalLoreActorState: core.writeLocalLoreActorState,
+  readLocalLoreActorState: storageCore.readLocalLoreActorState,
+  writeLocalLoreActorState: storageCore.writeLocalLoreActorState,
   mergeLocalLoreActorState: core.mergeLocalLoreActorState,
   toLocalLoreActorEntry: core.toLocalLoreActorEntry,
   getLatestContinuityCheckpointSnapshot: core.getLatestContinuityCheckpointSnapshot,

@@ -999,7 +999,7 @@
       "scenePresetId": "comic",
       "controlOverrides": {
        "comic.speech-bubble": false,
-       "comic.frame": 2,
+       "comic.landscape": true,
        "comic.minimum-panels": 3
       }
      }
@@ -1007,7 +1007,7 @@
     "presetId": "comic",
     "controlOverrides": {
      "comic.speech-bubble": false,
-     "comic.frame": 2,
+     "comic.landscape": true,
      "comic.minimum-panels": 3
     },
     "customText": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment."

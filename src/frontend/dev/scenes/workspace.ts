@@ -113,6 +113,12 @@ const SCENES: Record<string, PreviewScene> = {
     await ready(doc, '[data-artist-list="novelai"]');
     await clickLabel(doc, '[data-artist-list="novelai"]', "v5 verified style settings");
   },
+  /** A user-defined artist with a long title (2-line title, delete / edit column). */
+  "artists-user": async ({ mock, doc }) => {
+    (mock.db.config.characterPrompt.artistPrompts as unknown as object[]).push({ id: "artist_preview_user", title: "Soft watercolor storybook style with pastel palette and loose ink lines", prompt: "artist:preview, watercolor, pastel colors, ink lineart" });
+    await tab(doc, "artists");
+    await ready(doc, '[data-artist-card="artist_preview_user"]');
+  },
   "artists-anima": async ({ frontend, doc }) => {
     await tab(doc, "artists");
     await ready(doc, "[data-artist-list]");

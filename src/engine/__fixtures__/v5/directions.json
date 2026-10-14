@@ -1,0 +1,652 @@
+{
+ "cases": [
+  {
+   "name": "allowed-2",
+   "run": {
+    "novelAIConfig": {
+     "v5UserDirections": {
+      "scene": {
+       "mode": "preset",
+       "selectedPresetId": "scene-default",
+       "presets": [
+        {
+         "id": "scene-default",
+         "name": "삽화",
+         "instruction": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+        },
+        {
+         "id": "scene-pov",
+         "name": "pov 연출",
+         "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+         "scenePresetId": "pov"
+        },
+        {
+         "id": "scene-ensemble",
+         "name": "다인 연출",
+         "instruction": "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+         "scenePresetId": "ensemble"
+        },
+        {
+         "id": "scene-comic",
+         "name": "카툰 연출",
+         "instruction": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+         "scenePresetId": "comic"
+        }
+       ],
+       "customText": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+      },
+      "imageRatio": {
+       "mode": "preset",
+       "selectedPresetId": "image-ratio-default",
+       "presets": [
+        {
+         "id": "image-ratio-default",
+         "name": "기본",
+         "instruction": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+         "allowedSizeIds": [
+          2
+         ]
+        },
+        {
+         "id": "image-ratio-unspecified",
+         "name": "미지정",
+         "instruction": "Choose the sizeId that best fits the current illustration from the allowed candidates. Apply no additional aspect-ratio preference.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        }
+       ],
+       "customText": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+      }
+     }
+    }
+   },
+   "expected": {
+    "directions": {
+     "sceneDirection": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events.",
+     "sceneDirectionSource": "preset",
+     "imageRatioDirection": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+     "imageRatioAllowedSizeIds": [
+      2
+     ]
+    },
+    "request": {
+     "ok": {
+      "sizes": [
+       {
+        "id": 2,
+        "width": 1216,
+        "height": 832,
+        "use": [
+         "Broad environments, lateral action or gaze, or horizontal negative space."
+        ]
+       }
+      ],
+      "imageRatio": null
+     }
+    }
+   }
+  },
+  {
+   "name": "allowed-1-5-custom",
+   "run": {
+    "novelAIConfig": {
+     "v5UserDirections": {
+      "scene": {
+       "mode": "preset",
+       "selectedPresetId": "scene-default",
+       "presets": [
+        {
+         "id": "scene-default",
+         "name": "삽화",
+         "instruction": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+        },
+        {
+         "id": "scene-pov",
+         "name": "pov 연출",
+         "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+         "scenePresetId": "pov"
+        },
+        {
+         "id": "scene-ensemble",
+         "name": "다인 연출",
+         "instruction": "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+         "scenePresetId": "ensemble"
+        },
+        {
+         "id": "scene-comic",
+         "name": "카툰 연출",
+         "instruction": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+         "scenePresetId": "comic"
+        }
+       ],
+       "customText": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+      },
+      "imageRatio": {
+       "mode": "preset",
+       "selectedPresetId": "image-ratio-default",
+       "presets": [
+        {
+         "id": "image-ratio-default",
+         "name": "기본",
+         "instruction": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+         "allowedSizeIds": [
+          1,
+          5,
+          1000000002
+         ]
+        },
+        {
+         "id": "image-ratio-unspecified",
+         "name": "미지정",
+         "instruction": "Choose the sizeId that best fits the current illustration from the allowed candidates. Apply no additional aspect-ratio preference.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        }
+       ],
+       "customText": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+      }
+     }
+    },
+    "customImageSizes": [
+     {
+      "id": 1000000001,
+      "width": 1280,
+      "height": 768,
+      "label": "wide"
+     },
+     {
+      "id": 1000000002,
+      "width": 768,
+      "height": 1280
+     }
+    ]
+   },
+   "expected": {
+    "directions": {
+     "sceneDirection": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events.",
+     "sceneDirectionSource": "preset",
+     "imageRatioDirection": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+     "imageRatioAllowedSizeIds": [
+      1,
+      5,
+      1000000002
+     ],
+     "imageRatioCustomSizes": [
+      {
+       "id": 1000000002,
+       "sizeId": 7,
+       "width": 768,
+       "height": 1280
+      }
+     ]
+    },
+    "request": {
+     "ok": {
+      "sizes": [
+       {
+        "id": 1,
+        "width": 832,
+        "height": 1216,
+        "use": [
+         "Vertical posture, height differences, vertical motion, or layered surroundings."
+        ]
+       },
+       {
+        "id": 5,
+        "width": 1024,
+        "height": 1024,
+        "use": [
+         "Centered, frontal, symmetric, or compact framing; neutral when neither axis dominates."
+        ]
+       },
+       {
+        "id": 7,
+        "width": 768,
+        "height": 1280
+       }
+      ],
+      "imageRatio": null
+     }
+    }
+   }
+  },
+  {
+   "name": "allowed-missing-custom",
+   "run": {
+    "novelAIConfig": {
+     "v5UserDirections": {
+      "scene": {
+       "mode": "preset",
+       "selectedPresetId": "scene-default",
+       "presets": [
+        {
+         "id": "scene-default",
+         "name": "삽화",
+         "instruction": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+        },
+        {
+         "id": "scene-pov",
+         "name": "pov 연출",
+         "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+         "scenePresetId": "pov"
+        },
+        {
+         "id": "scene-ensemble",
+         "name": "다인 연출",
+         "instruction": "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+         "scenePresetId": "ensemble"
+        },
+        {
+         "id": "scene-comic",
+         "name": "카툰 연출",
+         "instruction": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+         "scenePresetId": "comic"
+        }
+       ],
+       "customText": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+      },
+      "imageRatio": {
+       "mode": "preset",
+       "selectedPresetId": "image-ratio-default",
+       "presets": [
+        {
+         "id": "image-ratio-default",
+         "name": "기본",
+         "instruction": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+         "allowedSizeIds": [
+          1000000009
+         ]
+        },
+        {
+         "id": "image-ratio-unspecified",
+         "name": "미지정",
+         "instruction": "Choose the sizeId that best fits the current illustration from the allowed candidates. Apply no additional aspect-ratio preference.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        }
+       ],
+       "customText": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+      }
+     }
+    },
+    "customImageSizes": [
+     {
+      "id": 1000000001,
+      "width": 1280,
+      "height": 768,
+      "label": "wide"
+     },
+     {
+      "id": 1000000002,
+      "width": 768,
+      "height": 1280
+     }
+    ]
+   },
+   "expected": {
+    "directions": {
+     "sceneDirection": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events.",
+     "sceneDirectionSource": "preset",
+     "imageRatioDirection": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+     "imageRatioAllowedSizeIds": [
+      1000000009
+     ]
+    },
+    "request": {
+     "error": {
+      "message": "이미지 비율 지침에 사용 가능한 크기가 없습니다. 크기를 다시 선택해주세요."
+     }
+    }
+   }
+  },
+  {
+   "name": "fixed-preset",
+   "run": {
+    "novelAIConfig": {
+     "v5UserDirections": {
+      "scene": {
+       "mode": "preset",
+       "selectedPresetId": "scene-default",
+       "presets": [
+        {
+         "id": "scene-default",
+         "name": "삽화",
+         "instruction": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+        },
+        {
+         "id": "scene-pov",
+         "name": "pov 연출",
+         "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+         "scenePresetId": "pov"
+        },
+        {
+         "id": "scene-ensemble",
+         "name": "다인 연출",
+         "instruction": "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+         "scenePresetId": "ensemble"
+        },
+        {
+         "id": "scene-comic",
+         "name": "카툰 연출",
+         "instruction": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+         "scenePresetId": "comic"
+        }
+       ],
+       "customText": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+      },
+      "imageRatio": {
+       "mode": "preset",
+       "selectedPresetId": "image-ratio-default",
+       "presets": [
+        {
+         "id": "image-ratio-default",
+         "name": "기본",
+         "instruction": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        },
+        {
+         "id": "image-ratio-unspecified",
+         "name": "미지정",
+         "instruction": "Choose the sizeId that best fits the current illustration from the allowed candidates. Apply no additional aspect-ratio preference.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        }
+       ],
+       "customText": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+      }
+     }
+    },
+    "requestedSizeId": 3,
+    "requestedSize": {
+     "id": 3,
+     "width": 896,
+     "height": 1152
+    },
+    "customImageSizes": [
+     {
+      "id": 1000000001,
+      "width": 1280,
+      "height": 768,
+      "label": "wide"
+     },
+     {
+      "id": 1000000002,
+      "width": 768,
+      "height": 1280
+     }
+    ]
+   },
+   "expected": {
+    "directions": {
+     "sceneDirection": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events.",
+     "sceneDirectionSource": "preset",
+     "imageRatioDirection": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+     "imageRatioAllowedSizeIds": [
+      3
+     ]
+    },
+    "request": {
+     "ok": {
+      "sizes": [
+       {
+        "id": 3,
+        "width": 896,
+        "height": 1152
+       }
+      ],
+      "imageRatio": null
+     }
+    }
+   }
+  },
+  {
+   "name": "fixed-custom",
+   "run": {
+    "novelAIConfig": {
+     "v5UserDirections": {
+      "scene": {
+       "mode": "preset",
+       "selectedPresetId": "scene-default",
+       "presets": [
+        {
+         "id": "scene-default",
+         "name": "삽화",
+         "instruction": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+        },
+        {
+         "id": "scene-pov",
+         "name": "pov 연출",
+         "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+         "scenePresetId": "pov"
+        },
+        {
+         "id": "scene-ensemble",
+         "name": "다인 연출",
+         "instruction": "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+         "scenePresetId": "ensemble"
+        },
+        {
+         "id": "scene-comic",
+         "name": "카툰 연출",
+         "instruction": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+         "scenePresetId": "comic"
+        }
+       ],
+       "customText": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+      },
+      "imageRatio": {
+       "mode": "preset",
+       "selectedPresetId": "image-ratio-default",
+       "presets": [
+        {
+         "id": "image-ratio-default",
+         "name": "기본",
+         "instruction": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        },
+        {
+         "id": "image-ratio-unspecified",
+         "name": "미지정",
+         "instruction": "Choose the sizeId that best fits the current illustration from the allowed candidates. Apply no additional aspect-ratio preference.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        }
+       ],
+       "customText": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+      }
+     }
+    },
+    "requestedSizeId": 1000000001,
+    "requestedSize": {
+     "id": 1000000001,
+     "width": 1280,
+     "height": 768,
+     "label": "wide"
+    },
+    "customImageSizes": [
+     {
+      "id": 1000000001,
+      "width": 1280,
+      "height": 768,
+      "label": "wide"
+     },
+     {
+      "id": 1000000002,
+      "width": 768,
+      "height": 1280
+     }
+    ]
+   },
+   "expected": {
+    "directions": {
+     "sceneDirection": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events.",
+     "sceneDirectionSource": "preset",
+     "imageRatioDirection": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+     "imageRatioAllowedSizeIds": [
+      1000000001
+     ],
+     "imageRatioCustomSizes": [
+      {
+       "id": 1000000001,
+       "sizeId": 6,
+       "width": 1280,
+       "height": 768
+      }
+     ]
+    },
+    "request": {
+     "ok": {
+      "sizes": [
+       {
+        "id": 6,
+        "width": 1280,
+        "height": 768
+       }
+      ],
+      "imageRatio": null
+     }
+    }
+   }
+  },
+  {
+   "name": "comic",
+   "run": {
+    "novelAIConfig": {
+     "v5UserDirections": {
+      "scene": {
+       "mode": "preset",
+       "selectedPresetId": "scene-comic",
+       "presets": [
+        {
+         "id": "scene-default",
+         "name": "삽화",
+         "instruction": "Write Camera once per illustration and only for camera position, one validated scene or body reference, and viewing direction. Use a scene reference when uncertain. Never repeat placement, action, Interaction, pose, body state, fluid, clothing, emotion, location content, or past events."
+        },
+        {
+         "id": "scene-pov",
+         "name": "pov 연출",
+         "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+         "scenePresetId": "pov"
+        },
+        {
+         "id": "scene-ensemble",
+         "name": "다인 연출",
+         "instruction": "For each requested image independently, identify its depicted time and place from the full message, then identify every independent entity actually present there before matching registered candidates. Include people, robots, animals, monsters, summons, and other non-human entities regardless of registration. actor_candidates is an identity reference list, not a scene attendance list. Registration, appearance or outfit records, generation history, and continuity alone never establish presence. Match only scene-confirmed entities to actor_candidates; for each unmatched entity, follow the base Actor-selection contract to define generated_actor_proposals before referencing its free_N in actor_roster. Never substitute a similar registered character for an unmatched entity. Include every clearly present Actor together; do not distribute them across images depicting the same scene or merge casts from different times or places. Place required Interaction participants first, then every remaining confirmed Actor, registered or free. Lack of action, dialogue, or direct Interaction is not a reason to omit one. If the cast does not fit comfortably, widen the framing or adjust the arrangement instead of dropping an Actor. Give every included Actor occurrence its own Frame Placement and Actor Detail, and keep it visually distinguishable. Omission from an individual image description does not mean departure only when presence was established in the same continuous scene and context gives no evidence of departure. Exclude mere mentions, remembered or hypothetical people outside the depicted scene, remote speakers who are not physically present, Actors who have explicitly or clearly left, are off-screen, or belong to another scene. Do not invent or split Actor identities, or restore absent Actors; repeated visible depictions share candidateKey with distinct actorIds in one image or panel. Do not weaken required Interactions or create unreadable overcrowding merely to increase the Actor count. Before returning, verify both that every included Actor has scene-presence evidence and that no confirmed entity is omitted; do not add response fields for this check.",
+         "scenePresetId": "ensemble"
+        },
+        {
+         "id": "scene-comic",
+         "name": "카툰 연출",
+         "instruction": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+         "scenePresetId": "comic"
+        }
+       ],
+       "presetId": "comic",
+       "customText": "Render each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment."
+      },
+      "imageRatio": {
+       "mode": "preset",
+       "selectedPresetId": "image-ratio-default",
+       "presets": [
+        {
+         "id": "image-ratio-default",
+         "name": "기본",
+         "instruction": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        },
+        {
+         "id": "image-ratio-unspecified",
+         "name": "미지정",
+         "instruction": "Choose the sizeId that best fits the current illustration from the allowed candidates. Apply no additional aspect-ratio preference.",
+         "allowedSizeIds": [
+          1,
+          2,
+          5
+         ]
+        }
+       ],
+       "customText": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+      }
+     }
+    },
+    "requestedSizeId": 2,
+    "requestedSize": {
+     "id": 2,
+     "width": 1216,
+     "height": 832
+    },
+    "customImageSizes": [
+     {
+      "id": 1000000001,
+      "width": 1280,
+      "height": 768,
+      "label": "wide"
+     },
+     {
+      "id": 1000000002,
+      "width": 768,
+      "height": 1280
+     }
+    ]
+   },
+   "expected": {
+    "directions": {
+     "scenePresetId": "comic",
+     "sceneDirection": "Frame Decision: Before composing any comic panels, independently choose either a portrait 832 × 1216 pixel frame or a landscape 1216 × 832 pixel frame for each illustration from its scene, action, emotion, timing, and reveal. Commit to that frame first, then compose the page and every panel within it. This frame decision is the highest-priority comic composition rule; other comic directions must fit the chosen frame. Do not use a square frame or let separate image-ratio preferences replace this decision.\nRender each requested illustration as one coherent manga page. Let the scene's action, emotion, timing, and reveal drive bold variation in panel scale, shape, overlap, camera, focus, spacing, and visual hierarchy instead of defaulting to a uniform row, column, stack, or grid. Panels and Actors may break, overlay, or span boundaries when that strengthens the presentation. Keep the reading flow unmistakable even when the page is asymmetric, layered, or non-linear. Use only as many meaningful panels as the scene needs, and do not force color or monochrome treatment.",
+     "sceneDirectionSource": "preset",
+     "imageRatioDirection": "Choose from visual flow, placement, action, gaze, environment, framing, crop, and negative space, never Actor count alone. If visible upper bodies align side by side as the main composition, choose sizeId 1. For parallel lying Actors, choose sizeId 1 when viewed from above; otherwise choose sizeId 2."
+    },
+    "request": {
+     "ok": {
+      "sizes": [
+       {
+        "id": 1,
+        "width": 832,
+        "height": 1216,
+        "use": [
+         "Vertical posture, height differences, vertical motion, or layered surroundings."
+        ]
+       },
+       {
+        "id": 2,
+        "width": 1216,
+        "height": 832,
+        "use": [
+         "Broad environments, lateral action or gaze, or horizontal negative space."
+        ]
+       }
+      ],
+      "imageRatio": null
+     }
+    }
+   }
+  }
+ ]
+}

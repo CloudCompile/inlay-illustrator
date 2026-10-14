@@ -12,8 +12,8 @@ import {
   createCatalogSourceResolver as coreCreateCatalogSourceResolver,
   createV45AnalyzerEngine,
   NOVELAI_DEFAULTS,
-  D$e as buildRuleIRAnalyzerProjection,
-  d9e as computeAnalyzerProjectionFingerprint,
+  nJe as buildRuleIRAnalyzerProjection,
+  OJe as computeAnalyzerProjectionFingerprint,
 } from "../core/asset-maid-core";
 
 /** Read-only map used by the compiled catalog (AM class `Z5e` @38345, toStringTag "ImmutableMap"). */

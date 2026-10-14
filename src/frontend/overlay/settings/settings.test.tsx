@@ -19,6 +19,7 @@ import {
   selectedPreset,
   setControlEnabled,
   setControlValue,
+  sizeCandidates,
   toggleSizeCandidate
 } from "./directions.js";
 import { saveCustomSize, setAnalysisMode, setCountMode, setCountRange, setFixedCount, setSplitTotal } from "./system-helpers.js";
@@ -88,8 +89,17 @@ describe("V5 direction helpers", () => {
     expect(removePreset(added, "scene-x").selectedPresetId).toBe(scene.presets[0]!.id);
   });
   test("size candidates keep order and never become empty", () => {
-    expect(toggleSizeCandidate([1, 2, 5], 3, true)).toEqual([1, 2, 3, 5]);
-    expect(toggleSizeCandidate([5], 5, false)).toEqual([5]);
+    const presets = sizeCandidates();
+    expect(toggleSizeCandidate([1, 2, 5], 3, true, presets)).toEqual([1, 2, 3, 5]);
+    expect(toggleSizeCandidate([5], 5, false, presets)).toEqual([5]);
+  });
+  test("custom sizes follow the presets and are selected by id", () => {
+    const custom = 1e9 + 7;
+    const candidates = sizeCandidates([{ id: custom, width: 640, height: 640 }]);
+    expect(candidates.at(-1)).toEqual({ id: custom, sizeId: 6, width: 640, height: 640, custom: true });
+    expect(toggleSizeCandidate([1, 2, 5], custom, true, candidates)).toEqual([1, 2, 5, custom]);
+    expect(toggleSizeCandidate([2, 1e9 + 8], 2, false, candidates)).toEqual([5]);
+    expect(toggleSizeCandidate([1, 2, 1e9 + 8], 2, false, candidates)).toEqual([1, 1e9 + 8]);
   });
 });
 

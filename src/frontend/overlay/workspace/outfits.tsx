@@ -2,6 +2,7 @@
  * Outfit list secondary pane, character (AM `mst` 99453 + `ust` rows + `pst` dock) and persona
  * (AM `S_t` 148315 + `I_t` cards + `k_t` dock). Text fields edit the form draft (saved by the dock Save
  * button); Active / Analyze toggles are saved at once; menu actions (promote / move / delete) edit the draft.
+ * Persona add / delete / set-default / Active save at once unless the form's outfit list has unsaved edits (AM 0.9.89.2 `QC`).
  */
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
@@ -73,6 +74,10 @@ function useOutfitModel({ ctx, owner, draftKey, source }: OutfitPaneModel) {
     activeOutfitId,
     edit: (fn: (c: FormCollection) => FormCollection) => drafts.edit(draftKey, source, fn),
     commit: (fn: (c: FormCollection) => FormCollection) => void drafts.commit(draftKey, source, fn, save),
+    /** Add / delete / set-default: persona outfits follow AM `QC`; character outfits edit the draft. */
+    structural: (formId: string, fn: (c: FormCollection) => FormCollection) => (owner.kind === "persona" ? drafts.structural(draftKey, source, formId, fn, save) : drafts.edit(draftKey, source, fn)),
+    /** Active toggles (`formId` null = every form): persona outfits follow AM `QC`; character outfits save at once. */
+    setCandidates: (formId: string | null, fn: (c: FormCollection) => FormCollection) => (owner.kind === "persona" ? drafts.structural(draftKey, source, formId, fn, save) : void drafts.commit(draftKey, source, fn, save)),
     save: () => void drafts.save(draftKey, save),
     setFilter: (formId: string) => {
       sessions.update(characterId, (s) => ({ outfitFormFilter: { ...s.outfitFormFilter, [key]: formId }, ...(formId !== "all" ? { formSelection: { ...s.formSelection, [key]: formId } } : {}) }));
@@ -146,9 +151,9 @@ function OutfitCard({ model, ctx, owner, formId, outfit, index, active, onActiva
     }))
   ] : [
     ...(outfit.origin === "ai-auto" ? [{ id: "register", label: OUTFIT_LABELS.promoteRegistered, disabled: (outfit.status ?? "ready") !== "ready", title: (outfit.status ?? "ready") !== "ready" ? OUTFIT_LABELS.promoteRegisteredDisabled : undefined, onSelect: () => model.edit((c) => patchOutfit(c, formId, outfit.id, { origin: undefined, status: undefined })) }] : []),
-    ...(!isDefault ? [{ id: "default", label: OUTFIT_LABELS.promoteDefault, onSelect: () => model.edit((c) => promoteOutfitToDefault(c, formId, outfit.id)) }] : []),
+    ...(!isDefault ? [{ id: "default", label: OUTFIT_LABELS.promoteDefault, onSelect: () => model.structural(formId, (c) => promoteOutfitToDefault(c, formId, outfit.id)) }] : []),
     { id: "move", label: `${OUTFIT_LABELS.moveForm} ›`, disabled: !!moveDisabled, title: moveDisabled, keepOpen: true, onSelect: () => setMoving(true) },
-    ...(!isDefault ? [{ id: "delete", label: OUTFIT_LABELS.deleteOutfit, destructive: true, onSelect: () => model.edit((c) => deleteOutfit(c, formId, outfit.id)) }] : [])
+    ...(!isDefault ? [{ id: "delete", label: OUTFIT_LABELS.deleteOutfit, destructive: true, onSelect: () => model.structural(formId, (c) => deleteOutfit(c, formId, outfit.id)) }] : [])
   ];
   const set = (patch: Partial<Outfit>) => model.edit((c) => patchOutfit(c, formId, outfit.id, patch));
   const pickerTarget = owner.kind === "character"
@@ -157,7 +162,7 @@ function OutfitCard({ model, ctx, owner, formId, outfit, index, active, onActiva
   return (
     <article ref={ref} class={cn("grid gap-2 rounded-lg bg-surface-workbench p-2.5 transition-colors", active && "bg-surface-workbench-active ring-1 ring-primary/40")} onPointerDownCapture={onActivate} onFocusCapture={onActivate} data-outfit-card={outfit.id} data-state={active ? "active" : "inactive"}>
       <div class="flex min-w-0 items-center gap-1.5">
-        {!isDefault ? <LabeledCheckbox label={COMMON_LABELS.active} background="card" checked={outfit.candidateEnabled} onCheckedChange={(v) => model.commit((c) => patchOutfit(c, formId, outfit.id, { candidateEnabled: v }))} /> : null}
+        {!isDefault ? <LabeledCheckbox label={COMMON_LABELS.active} background="card" checked={outfit.candidateEnabled} onCheckedChange={(v) => model.setCandidates(formId, (c) => patchOutfit(c, formId, outfit.id, { candidateEnabled: v }))} /> : null}
         {ctx.provider.referenceUiVisible ? (
           <LabeledCheckbox label={COMMON_LABELS.analyze} background="card" disabled={!outfit.referenceAsset && !ctx.session.reclass.prompts}
             checked={outfit.referenceAnalysisEnabled !== false} onCheckedChange={(v) => model.commit((c) => patchOutfit(c, formId, outfit.id, { referenceAnalysisEnabled: v }))} />
@@ -232,7 +237,7 @@ export function OutfitDock(props: OutfitPaneModel) {
     <>
       <SaveButton label={persona ? PERSONA_LABELS.outfitSave : OUTFIT_LABELS.savePrompts} dirty={model.draft.dirty} saving={model.draft.saving} error={model.draft.error} onSave={model.save} />
       <LabeledCheckbox label={COMMON_LABELS.active} disabled={!outfits.length} checked={triState(outfits.map((o) => o.outfit.candidateEnabled))}
-        onCheckedChange={(v) => model.commit((c) => outfits.reduce((acc, o) => patchOutfit(acc, o.formId, o.outfit.id, { candidateEnabled: v }), c))} />
+        onCheckedChange={(v) => model.setCandidates(formId, (c) => outfits.reduce((acc, o) => patchOutfit(acc, o.formId, o.outfit.id, { candidateEnabled: v }), c))} />
     </>
   );
   const controls = (
@@ -250,8 +255,8 @@ export function OutfitDock(props: OutfitPaneModel) {
       <IconButton variant="command" size="command" label={persona ? PERSONA_LABELS.outfitAdd : OUTFIT_LABELS.addOutfit} title={formId ? (persona ? PERSONA_LABELS.outfitAdd : OUTFIT_LABELS.addOutfit) : OUTFIT_LABELS.selectFormFirst} disabled={!formId}
         onClick={() => {
           if (!formId) return;
-          let created = "";
-          model.edit((c) => { const r = addOutfit(c, formId); created = r.outfitId; return r.collection; });
+          const created = addOutfit(model.collection, formId).outfitId;
+          model.structural(formId, (c) => addOutfit(c, formId, { id: created }).collection);
           if (created) model.setActive(created);
         }}><PlusIcon /></IconButton>
   );

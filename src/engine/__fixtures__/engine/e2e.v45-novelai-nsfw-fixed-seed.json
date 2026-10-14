@@ -2515,6 +2515,7 @@
     "completedStages": 1,
     "totalStages": 1,
     "attempt": 1,
+    "retryErrors": [],
     "imageIndex": 1,
     "imageCount": 1,
     "provider": "novelai",

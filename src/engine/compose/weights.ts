@@ -5,8 +5,8 @@ import {
   applyNovelAIPromptWeight as coreApplyWeight,
   applyNonArtistWeightToPrompt as coreApplyToPrompt,
   applyNonArtistWeightToRequest as coreApplyToRequest,
-  Aa as coreNormalizeWeight,
-  Mu as coreNormalizeWeightSyntax,
+  ja as coreNormalizeWeight,
+  Uu as coreNormalizeWeightSyntax,
 } from "../core/asset-maid-core";
 import type { NonArtistPromptSource, NonArtistPromptWeight, NonArtistWeightConfig, PromptSegments, WeightablePrompt } from "./types";
 

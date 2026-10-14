@@ -1,4 +1,10 @@
 {
+ "scenario": {
+  "response": "comic",
+  "directions": "comic",
+  "provider": "novelai",
+  "seed": 43
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -405,11 +411,11 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-057216cde884b8f8",
+  "requestPayload": "fnv1a64-29fdfa8dcd19ee7d",
   "localProjection": {
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -1522,7 +1528,7 @@
     "hash": "fnv1a64-866e24f2f050caf8"
    },
    "decision": {
-    "hash": "fnv1a64-e89b6b6c6d6fcf99"
+    "hash": "fnv1a64-dc3ddaf46ccd4f04"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1791,7 +1797,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-f5dd0e8b42769e5a"
+    "hash": "fnv1a64-b20eec669a083857"
    }
   }
  ],

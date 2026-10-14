@@ -1,7 +1,7 @@
 /** Analysis settings page (Asset Maid `R0t` 141557, `jwe` 141579, `Ewe` 141657, `Nwe` 141681). All changes save at once. */
 import type { FunctionComponent } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { V5_ANALYZER_SIZE_IDS, type AnalysisProfile, type V5DirectionPreset, type V5DirectionSetting, type V5UserDirections } from "../../../shared/contract/config.js";
+import { V5_ANALYZER_SIZE_IDS, type AnalysisProfile, type CustomImageSize, type V5DirectionPreset, type V5DirectionSetting, type V5UserDirections } from "../../../shared/contract/config.js";
 import { Button, TextArea, TextField, TrashIcon, XIcon, cn } from "../ui/index.js";
 import { useConfigForm } from "./config-form.js";
 import {
@@ -9,6 +9,7 @@ import {
   commitPresetDraft,
   controlState,
   directionPatch,
+  hasUsableSize,
   newPresetDraft,
   orderedPresets,
   presetControls,
@@ -19,7 +20,7 @@ import {
   setControlEnabled,
   setControlValue,
   setCustomInstruction,
-  SIZE_CANDIDATES,
+  sizeCandidates,
   toggleSizeCandidate,
   withOverrides,
   type DirectionKind
@@ -54,6 +55,7 @@ export function AnalysisProfilePage() {
           {config.novelai.analysisProfile === "v5-hybrid" ? (
             <DirectionEditors
               directions={config.novelai.v5UserDirections}
+              customImageSizes={config.runtime.customImageSizes}
               developerMode={config.ui.developerModeEnabled}
               onSave={async (key, setting) => {
                 await form.applyStrict({ novelai: { v5UserDirections: { [key]: directionPatch(setting) } } });
@@ -88,11 +90,11 @@ export function ProfileSelector({ value, onChange }: { value: AnalysisProfile; o
 
 type DirectionKey = keyof V5UserDirections;
 
-function DirectionEditors({ directions, developerMode, onSave }: { directions: V5UserDirections; developerMode: boolean; onSave: (key: DirectionKey, setting: V5DirectionSetting) => Promise<void> }) {
+function DirectionEditors({ directions, customImageSizes, developerMode, onSave }: { directions: V5UserDirections; customImageSizes: readonly CustomImageSize[]; developerMode: boolean; onSave: (key: DirectionKey, setting: V5DirectionSetting) => Promise<void> }) {
   return (
     <div class="grid min-w-0 content-start gap-8" data-v5-instruction-grid="">
       <DirectionEditor kind="analysis" settingKey="scene" title={A.sceneTitle} saved={directions.scene} developerMode={developerMode} onSave={onSave} />
-      <DirectionEditor kind="aspect-ratio" settingKey="imageRatio" title={A.imageRatioTitle} saved={directions.imageRatio} developerMode={developerMode} onSave={onSave} />
+      <DirectionEditor kind="aspect-ratio" settingKey="imageRatio" title={A.imageRatioTitle} saved={directions.imageRatio} customImageSizes={customImageSizes} developerMode={developerMode} onSave={onSave} />
     </div>
   );
 }
@@ -101,11 +103,12 @@ const ACTION_WRAP = "inline-flex h-8 items-center rounded-md bg-surface-control 
 const ACTION_BUTTON = "h-6 w-8 rounded-sm max-md:h-9 max-md:w-9";
 
 /** One direction editor (`Nwe`). */
-export function DirectionEditor({ kind, settingKey, title, saved, developerMode, onSave }: {
+export function DirectionEditor({ kind, settingKey, title, saved, customImageSizes = [], developerMode, onSave }: {
   kind: DirectionKind;
   settingKey: DirectionKey;
   title: string;
   saved: V5DirectionSetting;
+  customImageSizes?: readonly CustomImageSize[];
   developerMode: boolean;
   onSave: (key: DirectionKey, setting: V5DirectionSetting) => Promise<void>;
 }) {
@@ -129,6 +132,9 @@ export function DirectionEditor({ kind, settingKey, title, saved, developerMode,
   const draftName = draft?.name.trim() ?? "";
   const controls = presetControls(kind, shown, developerMode);
   const { builtIns, custom } = orderedPresets(kind, presets);
+  const sizes = sizeCandidates(customImageSizes);
+  const hasCustomSizes = sizes.some((size) => size.custom);
+  const sizeUsable = kind !== "aspect-ratio" || hasUsableSize(sizes, shown?.allowedSizeIds);
 
   useEffect(() => {
     if (!editing && customText === null) {
@@ -173,7 +179,7 @@ export function DirectionEditor({ kind, settingKey, title, saved, developerMode,
     if (await persist(setCustomInstruction(saved, selected.id, customText))) setCustom(null);
   };
   const saveDraft = () => {
-    if (!draft || !draftName || saving) return;
+    if (!draft || !draftName || !sizeUsable || saving) return;
     void persist(commitPresetDraft(kind, saved, { ...draft, name: draftName }));
   };
   const remove = (id: string) => {
@@ -228,7 +234,7 @@ export function DirectionEditor({ kind, settingKey, title, saved, developerMode,
         <XIcon />
       </Button>
       <Button size="workbenchIcon" aria-label={draft ? A.savePreset : A.saveCustomInstruction} title={draft ? A.savePreset : A.saveCustomInstruction}
-        disabled={saving || (draft !== null && !draftName)} onClick={draft ? saveDraft : () => void saveCustomInstruction()}>
+        disabled={saving || (draft !== null && (!draftName || !sizeUsable))} onClick={draft ? saveDraft : () => void saveCustomInstruction()}>
         {saving ? <SpinnerIcon /> : <SaveIcon />}
       </Button>
     </div>
@@ -290,18 +296,21 @@ export function DirectionEditor({ kind, settingKey, title, saved, developerMode,
       <div class={cn("grid min-h-0 gap-2.5 rounded-lg bg-card p-2.5 md:h-56 md:min-h-56", kind === "aspect-ratio" && "md:grid-cols-[max-content_minmax(0,1fr)]", controls.length > 0 && "md:grid-cols-[minmax(0,1fr)_max-content]")}
         data-v5-instruction-frame={kind}>
         {kind === "aspect-ratio" ? (
-          <div class="grid h-full min-h-0 grid-cols-1 grid-rows-[repeat(5,minmax(0,1fr))] gap-2 text-xs leading-6 text-muted-foreground mobile:grid-cols-2 mobile:grid-rows-none" role="group" aria-label={A.sizeCandidates} data-v5-image-ratio-reference="">
-            {SIZE_CANDIDATES.map((size) => (
-              <LabeledCheckbox key={size.id} label={`sizeId ${size.id} · ${size.resolution}`} checked={(shown?.allowedSizeIds ?? V5_ANALYZER_SIZE_IDS).includes(size.id)}
-                disabled={!editing} background="promptField" className="h-full w-full min-w-0 whitespace-nowrap tabular-nums"
-                onCheckedChange={(checked) => setDraft((current) => current && { ...current, allowedSizeIds: toggleSizeCandidate(current.allowedSizeIds, size.id, checked) })} />
-            ))}
+          <div class={cn("h-full min-h-0 text-xs leading-6 text-muted-foreground", hasCustomSizes && "h-56 overflow-y-auto overscroll-contain md:h-full")} data-v5-image-ratio-reference="">
+            <div class={cn("grid h-full min-h-0 grid-cols-1 gap-2", !hasCustomSizes && "grid-rows-[repeat(5,minmax(0,1fr))] mobile:grid-cols-2 mobile:grid-rows-none")}
+              style={hasCustomSizes ? { gridTemplateRows: `repeat(${sizes.length}, calc((100% - 2rem) / 5))` } : undefined} role="group" aria-label={A.sizeCandidates}>
+              {sizes.map((size) => (
+                <LabeledCheckbox key={size.id} label={`sizeId ${size.sizeId} · ${size.width} × ${size.height}`} checked={(shown?.allowedSizeIds ?? V5_ANALYZER_SIZE_IDS).includes(size.id)}
+                  disabled={!editing} background="promptField" className="h-full w-full min-w-0 whitespace-nowrap tabular-nums"
+                  onCheckedChange={(checked) => setDraft((current) => current && { ...current, allowedSizeIds: toggleSizeCandidate(current.allowedSizeIds, size.id, checked, sizes) })} />
+              ))}
+            </div>
           </div>
         ) : null}
         <div class={cn("grid h-full min-h-0 min-w-0 gap-2.5", kind === "aspect-ratio" && "md:grid-rows-[auto_minmax(0,1fr)]")}>
           {kind === "aspect-ratio" ? (
             <p class="text-xs leading-6 text-muted-foreground">
-              {A.sizeHelpBefore} <strong class="font-extrabold text-foreground">sizeId n</strong>{A.sizeHelpAfter}
+              {A.sizeHelpBefore} <strong class="font-extrabold text-foreground">{A.sizeHelpStrong}</strong>{A.sizeHelpAfter}
             </p>
           ) : null}
           <TextArea
@@ -353,6 +362,7 @@ export function DirectionEditor({ kind, settingKey, title, saved, developerMode,
           </div>
         ) : null}
       </div>
+      {sizeUsable ? null : <p class="text-xs text-destructive" role="alert">{A.noUsableSize}</p>}
       {error ? <p class="text-xs text-destructive" role="alert">{error}</p> : null}
     </section>
   );

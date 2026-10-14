@@ -1,15 +1,16 @@
 /**
  * Parity driver for v4-5 visual continuity sequences. The SAME driver runs in the fixture generator (ORIGINAL bundle
- * functions via `__AM_eval`) and in the bun tests (port core exports).
+ * functions via `__AM_eval`) and in the bun tests (port exports).
  *
- * Per turn (mirrors E1t 169508-169524 / 169812-169856):
- *   reconcile?  reconcileContinuityCheckpoints(state, chatKey, liveIds)                         Pte
+ * Per turn (0.9.88 names; 0.9.89.5 names in the fixture generator):
  *   context     buildVisualContinuityContext(state, chatKey, [primaryKey, secondaryKey], ...)   NAt
  *   apply       applyVisualContinuityToPlan(plan, ruleRuntime, {previousCharacterStateMap, ...}) z9e
- *   update      live: updateVisualContinuity (fKe) | deferred: computeDeferredVisualContinuity (mKe)
+ *   update      state = computeDeferredVisualContinuity({basisState: state, ...})               0.9.89.5 `_Ye`
+ *               (0.9.89 dropped the in-place update `fKe` and the checkpoint reconcile `Pte`)
  *   storage     setItem: writeContinuityCheckpointsToChatStore (NBe) + readContinuityCheckpointsFromChatStore (OBe)
  *               + toLocalLoreActorEntry (zne) + writeLocalLoreActorState (Tne)
  *               getItem: rebuildContinuityFromChatStore (aoe) + mergeLocalLoreActorState (Lne) + readLocalLoreActorState (Wv)
+ *               NBe / OBe / Tne / Wv are the 0.9.88 storage bridge (`storage-core.ts`; the generator loads the 0.9.88 bundle for them).
  *   v5 basis    createV5ContinuityBasis(getLatestContinuityCheckpointSnapshot(state, chatKey, "novelai-v5"))  vN / D5e
  */
 import { toPlain } from "../../testing/plain";
@@ -21,9 +22,7 @@ export interface ContinuityCoreFns {
   createV45RuleRuntime: Fn; // DLe
   createEmptyContinuityState: Fn; // $g
   applyVisualContinuityToPlan: Fn; // z9e
-  updateVisualContinuity: Fn; // fKe
-  computeDeferredVisualContinuity: Fn; // mKe
-  reconcileContinuityCheckpoints: Fn; // Pte
+  computeDeferredVisualContinuity: Fn; // _Ye (0.9.89.5)
   buildVisualContinuityContext: Fn; // NAt
   writeContinuityCheckpointsToChatStore: Fn; // NBe
   readContinuityCheckpointsFromChatStore: Fn; // OBe
@@ -44,12 +43,11 @@ export interface ContinuityTurn {
   messageIndex: number;
   chatIndex?: number;
   advanceTurn?: boolean;
+  /** "none" skips the update; "live" and "deferred" both run `_Ye` since 0.9.89 (kept so the recorded sequences stay readable). */
   mode: "live" | "deferred" | "none";
   historyRevisionId?: string;
   historyRevisionOrder?: number;
   outfitReferences?: unknown[];
-  /** Run Pte before the turn with these live message ids (chat message ids in order). */
-  reconcileLiveIds?: string[];
   /** Run the storage round trip (setItem then getItem) after the turn. */
   storageRoundTrip?: boolean;
 }
@@ -60,34 +58,19 @@ export interface ContinuitySequence {
   chatKey: string;
   stateAccumulationEnabled?: boolean;
   turns: ContinuityTurn[];
-  /** Message ids of the chat after the sequence (for the final reconcile / rebuild checks). */
-  finalLiveIds?: string[][];
 }
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
-function memoryController(state: any) {
-  return {
-    state,
-    async mutate(fn: (s: any) => void) {
-      fn(this.state);
-    },
-  };
-}
-
 export async function runContinuitySequence(fns: ContinuityCoreFns, seq: ContinuitySequence): Promise<unknown[]> {
   const rt = fns.createV45RuleRuntime();
-  const controller = memoryController(fns.createEmptyContinuityState());
+  let state: any = fns.createEmptyContinuityState();
   const chat: any = { message: [], localLore: [] };
   const store: any = { messages: {} };
   const out: unknown[] = [];
   const ck = seq.chatKey;
   for (const [index, turn] of seq.turns.entries()) {
     const rec: Record<string, unknown> = { turn: index };
-    if (turn.reconcileLiveIds) {
-      rec.reconcile = fns.reconcileContinuityCheckpoints(controller.state, ck, turn.reconcileLiveIds);
-    }
-    const state = controller.state;
     const plan = clone(turn.plan);
     const first = plan.images[0] ?? {};
     const keyOf = (slot: string) => String(first.actors?.[slot]?.lorebook_prompt_key ?? "");
@@ -113,20 +96,15 @@ export async function runContinuitySequence(fns: ContinuityCoreFns, seq: Continu
       nsfwSourceImageTokens: continuity.nsfwSourceImageTokens,
       modifiers: continuity.plan.images.map((i: any) => i.modifiers),
     };
-    const common = {
-      controller,
-      continuity,
-      chatKey: ck,
-      chatIndex: turn.chatIndex ?? 0,
-      messageIndex: turn.messageIndex,
-      messageId: turn.messageId,
-      outfitReferences: turn.outfitReferences ?? [],
-    };
-    if (turn.mode === "live") await fns.updateVisualContinuity(common);
-    else if (turn.mode === "deferred")
-      await fns.computeDeferredVisualContinuity({
-        ...common,
-        basisState: clone(controller.state),
+    if (turn.mode !== "none")
+      state = fns.computeDeferredVisualContinuity({
+        continuity,
+        chatKey: ck,
+        chatIndex: turn.chatIndex ?? 0,
+        messageIndex: turn.messageIndex,
+        messageId: turn.messageId,
+        outfitReferences: turn.outfitReferences ?? [],
+        basisState: state,
         historyRevisionId: turn.historyRevisionId,
         historyRevisionOrder: turn.historyRevisionOrder,
       });
@@ -138,7 +116,7 @@ export async function runContinuitySequence(fns: ContinuityCoreFns, seq: Continu
     gens.push({ id: turn.historyRevisionId ?? `gen-${index}`, slots: { "0": [{ assetName: `img-${index}` }] } });
     if (turn.storageRoundTrip) {
       // setItem (180489-180508)
-      fns.writeContinuityCheckpointsToChatStore(store, controller.state, ck);
+      fns.writeContinuityCheckpointsToChatStore(store, state, ck);
       const indexById = new Map<string, number>(chat.message.map((m: any, i: number) => [m.chatId, i]));
       const fromStore = fns.readContinuityCheckpointsFromChatStore(store, ck, indexById);
       const lore = fns.readLocalLoreActorState(chat);
@@ -151,15 +129,10 @@ export async function runContinuitySequence(fns: ContinuityCoreFns, seq: Continu
       rec.storage = { store: clone(store), localLore: clone(chat.localLore), rebuilt };
       rec.rebuiltAtMessage = fns.rebuildContinuityAtMessage(store, ck, chat.message.map((m: any) => m.chatId), rawId);
     }
-    rec.v5Basis = fns.createV5ContinuityBasis(fns.getLatestContinuityCheckpointSnapshot(controller.state, ck, "novelai-v5"));
-    rec.v5BasisFromCharacters = fns.createV5ContinuityBasis({ characters: controller.state.characters[ck] ?? {} });
-    rec.state = clone(toPlain(controller.state));
+    rec.v5Basis = fns.createV5ContinuityBasis(fns.getLatestContinuityCheckpointSnapshot(state, ck, "novelai-v5"));
+    rec.v5BasisFromCharacters = fns.createV5ContinuityBasis({ characters: state.characters[ck] ?? {} });
+    rec.state = clone(toPlain(state));
     out.push(toPlain(rec));
-  }
-  for (const live of seq.finalLiveIds ?? []) {
-    const copy = clone(controller.state);
-    const status = fns.reconcileContinuityCheckpoints(copy, ck, live);
-    out.push(toPlain({ reconcile: live, status, state: copy }));
   }
   return out;
 }

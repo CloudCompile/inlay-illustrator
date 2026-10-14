@@ -91,8 +91,30 @@ export const TOAST_LABELS = {
   showErrorDetails: "Show error details", // 오류 상세 보기
   hideErrorDetails: "Hide error details", // 오류 상세 접기
   notificationsRegion: "Image generation notifications", // (port) 이미지 생성 알림
-  stoppedNotice: "Image generation stopped" // 이미지 생성 중지됨
+  stoppedNotice: "Image generation stopped", // 이미지 생성 중지됨
+  // Retry error details (AM 0.9.89.5 `ygt` 115452, `lSe` 177298, toast `TOt` 179144).
+  retryFailed: "{stage} · Request attempt {n} failed", // {stage} · 요청 {n}차 실패
+  imageNumber: "Image {n}", // {n}번 이미지
+  errorCode: "Error code: {v}", // 오류 코드: {v}
+  provider: "Provider: {v}", // 공급자: {v}
+  model: "Model: {v}", // 모델: {v}
+  requestId: "Request ID: {v}", // 요청 ID: {v}
+  showPreviousErrors: "Show previous errors ({n})", // 이전 오류 {n}건 보기
+  hidePreviousErrors: "Hide previous errors ({n})", // 이전 오류 {n}건 접기
+  copyErrorLog: "Copy error log", // 오류 로그 복사
+  copied: "Copied", // 복사됨
+  copyFailed: "Copy failed · Select the error text manually.", // 복사 실패 · 오류 내용을 직접 선택해 주세요.
+  hideDetails: "Hide details" // 상세 접기
 } as const;
+
+/** Stage names of retry errors (`GenerationRetryError.stage` carries AM's Korean text). */
+export const RETRY_STAGE_LABELS: Record<string, string> = {
+  "이미지 생성": "Image generation", // 이미지 생성
+  "분석·생성": "Analysis & generation", // 분석·생성
+  "초기 결정": "Initial decision" // 초기 결정
+};
+/** Split detail step `세부{n} 분석`. */
+export const RETRY_DETAIL_STAGE_LABEL = "Detail {n} analysis";
 
 /** Generation-count panel (spec/ui.md §6.2.4). */
 export const COUNT_LABELS = {

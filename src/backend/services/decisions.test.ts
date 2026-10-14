@@ -61,22 +61,24 @@ describe("DecisionService", () => {
     expect(capturedInput.userId).toBe("test-user-456");
   });
 
-  test("createJevAdapter provides network evaluate for Qht passing userId", async () => {
+  test("createJevAdapter answers the TypeSafe systemone request through host.decisions with userId", async () => {
     const fake = createFakeHost({ userId: "test-user-789" });
     let capturedInput: any = null;
     (fake.host.decisions as any).evaluate = async (input: any) => {
       capturedInput = input;
-      return { model: input.model, answers: input.questions };
+      return { model: input.model, answers: { q1: { type: "noul", noul: 1 } }, usage: { input_tokens: 3, output_tokens: 1 } };
     };
     const log = createRunLog({ events: createEventBus(fake.host, fake.userId), host: fake.host });
     const svc = createDecisionService(fake.host, log, fake.userId);
 
     const adapter = svc.createJevAdapter(() => ({ connectionId: "dec-1", model: "typesafe/jev-latest", rosterSelectionDefault: true }));
-    const evalRes = await adapter.network.evaluate(
-      { model: "typesafe/jev-latest", connectionId: "dec-1" },
-      { state: "story text", questions: { q1: { type: "noul", instructions: "Present?" } } }
-    );
-    expect(evalRes.model).toBe("typesafe/jev-latest");
-    expect(capturedInput.userId).toBe("test-user-789");
+    expect(adapter.getConfig().apiKey).toBe("lumiverse");
+    const res = await adapter.network.fetch("https://api.typesafe.ai/v1/systemone", {
+      method: "POST",
+      headers: {},
+      body: JSON.stringify({ model: "typesafe/jev-latest", state: "story text", questions: { q1: { type: "noul", instructions: "Present?" } } }),
+    });
+    expect(await res.json()).toEqual({ model: "typesafe/jev-latest", answers: { q1: { type: "noul", noul: 1 } }, usage: { input_tokens: 3, output_tokens: 1 } });
+    expect(capturedInput).toMatchObject({ connection_id: "dec-1", model: "typesafe/jev-latest", userId: "test-user-789" });
   });
 });

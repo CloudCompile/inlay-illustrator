@@ -1,4 +1,10 @@
 {
+ "scenario": {
+  "response": "default",
+  "provider": "novelai",
+  "seed": 41,
+  "full": true
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -82,6 +88,12 @@
         "id": "scene.time",
         "options": [
          "morning"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -212,7 +224,7 @@
     },
     {
      "slotNumber": 1,
-     "status": "degraded",
+     "status": "recovered",
      "presentationMode": "single-frame",
      "actors": [
       {
@@ -242,6 +254,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "upper_body"
         ]
        }
       ],
@@ -306,12 +324,6 @@
       "instruction": "Camera behind the actor looking out the window."
      },
      "diagnostics": [
-      {
-       "code": "frame-scene-modifier-omitted",
-       "impact": "degraded",
-       "path": "$.illustrations[1].frame_placement.modifiers",
-       "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-      },
       {
        "code": "tag-canonicalized",
        "impact": "recovered",
@@ -432,11 +444,16 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+  "requestPayload": "fnv1a64-064e26890e3120df",
   "localProjection": {
+   "allowedSizeIds": [
+    1,
+    2,
+    5
+   ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -473,25 +490,24 @@
       "silver hair",
       "blue eyes",
       "source#arm hug",
+      "looking at another",
+      "light smile",
+      "open mouth",
+      "standing",
       "source#sleeve grab",
       "white sailor shirt",
       "navy sailor collar",
       "red neckerchief",
       "navy pleated skirt",
-      "black thighhighs",
-      "brown loafers",
-      "looking at another",
-      "light smile",
-      "open mouth",
-      "standing"
+      "0.8::black thighhighs::"
      ],
      "instructions": [
-      "fingers pinching the hoodie sleeve.",
       "left of the gate pillar.",
+      "fingers pinching the hoodie sleeve.",
       "leaning forward slightly.",
       "waving one hand high."
      ],
-     "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+     "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -505,17 +521,16 @@
       "male",
       "1::kazehaya shouta::",
       "target#arm hug",
+      "surprised",
+      "standing",
       "target#sleeve grab",
       "black hoodie",
-      "jeans",
-      "sneakers",
-      "surprised",
-      "standing"
+      "jeans"
      ],
      "instructions": [
       "running toward the gate."
      ],
-     "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+     "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
      "actorId": "actor_2",
      "placementIndex": 1,
      "candidateKey": "actor.1fmv888.fk4pvw",
@@ -603,6 +618,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00026",
      "semanticKey": "silver hair",
@@ -620,6 +636,7 @@
      "order": 9500,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:eyes.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00027",
      "semanticKey": "blue eyes",
@@ -637,6 +654,7 @@
      "order": 10300,
      "sourceKind": "external-identity",
      "sourceId": "persona::p1:custom:0",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00034",
      "semanticKey": "kazehaya shouta",
@@ -1088,6 +1106,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00028",
      "semanticKey": "white sailor shirt",
@@ -1105,6 +1124,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00035",
      "semanticKey": "black hoodie",
@@ -1122,6 +1142,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00029",
      "semanticKey": "navy sailor collar",
@@ -1139,6 +1160,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00030",
      "semanticKey": "red neckerchief",
@@ -1156,6 +1178,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:bottom",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00031",
      "semanticKey": "navy pleated skirt",
@@ -1173,6 +1196,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:bottom",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00036",
      "semanticKey": "jeans",
@@ -1190,7 +1214,8 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:legs",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0.8,
      "id": "ledger:00032",
      "semanticKey": "black thighhighs",
      "inputIndex": 32,
@@ -1207,11 +1232,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 1,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00037",
      "semanticKey": "sneakers",
      "inputIndex": 37,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1224,11 +1251,13 @@
      "order": 9400,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00033",
      "semanticKey": "brown loafers",
      "inputIndex": 33,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1260,6 +1289,7 @@
      "year 2025",
      "masterpiece",
      "best quality",
+     "upper body",
      "indoors",
      "staff room",
      "window",
@@ -1268,7 +1298,7 @@
     "instructions": [
      "Camera behind the actor looking out the window."
     ],
-    "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
+    "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
    },
    "globalNegativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
    "characters": [
@@ -1276,20 +1306,19 @@
      "tags": [
       "male",
       "black hair",
+      "looking down",
+      "exhausted",
+      "2::facing away::",
       "grey suit jacket",
       "white shirt",
       "blue necktie",
-      "grey suit pants",
-      "black dress shoes",
-      "looking down",
-      "exhausted",
-      "2::facing away::"
+      "0.3::grey suit pants::"
      ],
      "instructions": [
       "hands on the window sill.",
       "sighing."
      ],
-     "serializedPrompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+     "serializedPrompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.m0ais.6ynrym",
@@ -1344,10 +1373,11 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:bob:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
-     "id": "ledger:00012",
+     "id": "ledger:00013",
      "semanticKey": "black hair",
-     "inputIndex": 12,
+     "inputIndex": 13,
      "status": "applied"
     },
     {
@@ -1361,9 +1391,9 @@
      "sourceKind": "external-artist",
      "sourceId": "detail_anime_illustration_style",
      "weight": 1,
-     "id": "ledger:00018",
+     "id": "ledger:00019",
      "semanticKey": "artist hwansang",
-     "inputIndex": 18,
+     "inputIndex": 19,
      "status": "applied"
     },
     {
@@ -1377,9 +1407,9 @@
      "sourceKind": "external-artist",
      "sourceId": "detail_anime_illustration_style",
      "weight": 1,
-     "id": "ledger:00019",
+     "id": "ledger:00020",
      "semanticKey": "year 2025",
-     "inputIndex": 19,
+     "inputIndex": 20,
      "status": "applied"
     },
     {
@@ -1393,9 +1423,9 @@
      "sourceKind": "external-artist",
      "sourceId": "detail_anime_illustration_style",
      "weight": 1,
-     "id": "ledger:00020",
+     "id": "ledger:00021",
      "semanticKey": "masterpiece",
-     "inputIndex": 20,
+     "inputIndex": 21,
      "status": "applied"
     },
     {
@@ -1409,9 +1439,9 @@
      "sourceKind": "external-artist",
      "sourceId": "detail_anime_illustration_style",
      "weight": 1,
-     "id": "ledger:00021",
+     "id": "ledger:00022",
      "semanticKey": "best quality",
-     "inputIndex": 21,
+     "inputIndex": 22,
      "status": "applied"
     },
     {
@@ -1463,9 +1493,25 @@
      "sourceId": "placement:actor_1:facing:orientation.facing.facing_away",
      "weight": 2,
      "placementIndex": 0,
-     "id": "ledger:00010",
+     "id": "ledger:00011",
      "semanticKey": "facing away",
-     "inputIndex": 10,
+     "inputIndex": 11,
+     "status": "applied"
+    },
+    {
+     "lane": "tag",
+     "destination": {
+      "kind": "global"
+     },
+     "semanticId": "framing.crop.upper_body",
+     "value": "upper body",
+     "order": 4848,
+     "sourceKind": "closed",
+     "sourceId": "scene-location:framing.crop:framing.crop.upper_body",
+     "weight": 1,
+     "id": "ledger:00008",
+     "semanticKey": "upper body",
+     "inputIndex": 8,
      "status": "applied"
     },
     {
@@ -1495,9 +1541,9 @@
      "sourceKind": "recovered-free",
      "sourceId": "scene-location",
      "weight": 1,
-     "id": "ledger:00008",
+     "id": "ledger:00009",
      "semanticKey": "staff room",
-     "inputIndex": 8,
+     "inputIndex": 9,
      "status": "applied"
     },
     {
@@ -1511,9 +1557,9 @@
      "sourceKind": "recovered-free",
      "sourceId": "scene-location",
      "weight": 1,
-     "id": "ledger:00009",
+     "id": "ledger:00010",
      "semanticKey": "window",
-     "inputIndex": 9,
+     "inputIndex": 10,
      "status": "applied"
     },
     {
@@ -1579,9 +1625,9 @@
      "order": 11000,
      "sourceKind": "recovered-free",
      "sourceId": "camera",
-     "id": "ledger:00011",
+     "id": "ledger:00012",
      "semanticKey": "camera behind the actor looking out the window",
-     "inputIndex": 11,
+     "inputIndex": 12,
      "status": "applied"
     },
     {
@@ -1595,10 +1641,11 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
-     "id": "ledger:00013",
+     "id": "ledger:00014",
      "semanticKey": "grey suit jacket",
-     "inputIndex": 13,
+     "inputIndex": 14,
      "status": "applied"
     },
     {
@@ -1612,10 +1659,11 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
-     "id": "ledger:00014",
+     "id": "ledger:00015",
      "semanticKey": "white shirt",
-     "inputIndex": 14,
+     "inputIndex": 15,
      "status": "applied"
     },
     {
@@ -1629,10 +1677,11 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
-     "id": "ledger:00015",
+     "id": "ledger:00016",
      "semanticKey": "blue necktie",
-     "inputIndex": 15,
+     "inputIndex": 16,
      "status": "applied"
     },
     {
@@ -1646,10 +1695,11 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:bottom",
-     "weight": 1,
-     "id": "ledger:00016",
+     "placementIndex": 0,
+     "weight": 0.3,
+     "id": "ledger:00017",
      "semanticKey": "grey suit pants",
-     "inputIndex": 16,
+     "inputIndex": 17,
      "status": "applied"
     },
     {
@@ -1663,11 +1713,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:feet",
-     "weight": 1,
-     "id": "ledger:00017",
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
+     "id": "ledger:00018",
      "semanticKey": "black dress shoes",
-     "inputIndex": 17,
-     "status": "applied"
+     "inputIndex": 18,
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1680,9 +1732,9 @@
      "sourceKind": "external-fixed",
      "sourceId": "character-generation-settings",
      "weight": 1,
-     "id": "ledger:00022",
+     "id": "ledger:00023",
      "semanticKey": "very aesthetic",
-     "inputIndex": 22,
+     "inputIndex": 23,
      "status": "applied"
     }
    ]
@@ -1716,7 +1768,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "uc": "bad hands",
       "centerX": 0.35,
       "centerY": 0.5,
@@ -1724,7 +1776,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "uc": "",
       "centerX": 0.68,
       "centerY": 0.52,
@@ -1745,7 +1797,7 @@
     "providerId": "novelai",
     "queueScopeKey": "image-provider:novelai:global"
    },
-   "prompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
+   "prompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
    "negativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
    "seed": "1234567",
    "width": 832,
@@ -1766,7 +1818,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+      "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
       "uc": "",
       "centerX": 0.5,
       "centerY": 0.45,
@@ -1800,7 +1852,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+     "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
      "negativePrompt": "bad hands"
     },
     {
@@ -1813,7 +1865,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+     "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
      "negativePrompt": ""
     }
    ],
@@ -1828,12 +1880,12 @@
     },
     "outfits": {
      "actor_1": {
-      "start": 68,
-      "end": 176
+      "start": 123,
+      "end": 223
      },
      "actor_2": {
-      "start": 64,
-      "end": 93
+      "start": 85,
+      "end": 104
      }
     }
    },
@@ -1899,6 +1951,12 @@
        "scene.time",
        [
         "morning"
+       ]
+      ],
+      [
+       "framing.crop",
+       [
+        "cowboy_shot"
        ]
       ]
      ],
@@ -2498,7 +2556,7 @@
     "analysis_profile": "v5-hybrid",
     "v5_interaction_led": {
      "format": "novelai-v5-interaction-led-history-v1",
-     "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
+     "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
      "normalizedGraph": {
       "slotNumber": 0,
       "status": "recovered",
@@ -2578,6 +2636,12 @@
          "id": "scene.time",
          "options": [
           "morning"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "cowboy_shot"
          ]
         }
        ],
@@ -2754,25 +2818,24 @@
          "silver hair",
          "blue eyes",
          "source#arm hug",
+         "looking at another",
+         "light smile",
+         "open mouth",
+         "standing",
          "source#sleeve grab",
          "white sailor shirt",
          "navy sailor collar",
          "red neckerchief",
          "navy pleated skirt",
-         "black thighhighs",
-         "brown loafers",
-         "looking at another",
-         "light smile",
-         "open mouth",
-         "standing"
+         "0.8::black thighhighs::"
         ],
         "instructions": [
-         "fingers pinching the hoodie sleeve.",
          "left of the gate pillar.",
+         "fingers pinching the hoodie sleeve.",
          "leaning forward slightly.",
          "waving one hand high."
         ],
-        "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+        "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
         "actorId": "actor_1",
         "placementIndex": 0,
         "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -2786,17 +2849,16 @@
          "male",
          "1::kazehaya shouta::",
          "target#arm hug",
+         "surprised",
+         "standing",
          "target#sleeve grab",
          "black hoodie",
-         "jeans",
-         "sneakers",
-         "surprised",
-         "standing"
+         "jeans"
         ],
         "instructions": [
          "running toward the gate."
         ],
-        "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+        "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
         "actorId": "actor_2",
         "placementIndex": 1,
         "candidateKey": "actor.1fmv888.fk4pvw",
@@ -2884,6 +2946,7 @@
         "order": 9100,
         "sourceKind": "external-identity",
         "sourceId": "lore:alice:hair.color:0",
+        "placementIndex": 0,
         "weight": 1,
         "id": "ledger:00026",
         "semanticKey": "silver hair",
@@ -2901,6 +2964,7 @@
         "order": 9500,
         "sourceKind": "external-identity",
         "sourceId": "lore:alice:eyes.color:0",
+        "placementIndex": 0,
         "weight": 1,
         "id": "ledger:00027",
         "semanticKey": "blue eyes",
@@ -2918,6 +2982,7 @@
         "order": 10300,
         "sourceKind": "external-identity",
         "sourceId": "persona::p1:custom:0",
+        "placementIndex": 1,
         "weight": 1,
         "id": "ledger:00034",
         "semanticKey": "kazehaya shouta",
@@ -3369,6 +3434,7 @@
         "order": 9100,
         "sourceKind": "external",
         "sourceId": "outfit:lore:alice:outfit_1:top",
+        "placementIndex": 0,
         "weight": 1,
         "id": "ledger:00028",
         "semanticKey": "white sailor shirt",
@@ -3386,6 +3452,7 @@
         "order": 9100,
         "sourceKind": "external",
         "sourceId": "outfit:persona::p1:outfit_1:top",
+        "placementIndex": 1,
         "weight": 1,
         "id": "ledger:00035",
         "semanticKey": "black hoodie",
@@ -3403,6 +3470,7 @@
         "order": 9101,
         "sourceKind": "external",
         "sourceId": "outfit:lore:alice:outfit_1:top",
+        "placementIndex": 0,
         "weight": 1,
         "id": "ledger:00029",
         "semanticKey": "navy sailor collar",
@@ -3420,6 +3488,7 @@
         "order": 9102,
         "sourceKind": "external",
         "sourceId": "outfit:lore:alice:outfit_1:top",
+        "placementIndex": 0,
         "weight": 1,
         "id": "ledger:00030",
         "semanticKey": "red neckerchief",
@@ -3437,6 +3506,7 @@
         "order": 9200,
         "sourceKind": "external",
         "sourceId": "outfit:lore:alice:outfit_1:bottom",
+        "placementIndex": 0,
         "weight": 1,
         "id": "ledger:00031",
         "semanticKey": "navy pleated skirt",
@@ -3454,6 +3524,7 @@
         "order": 9200,
         "sourceKind": "external",
         "sourceId": "outfit:persona::p1:outfit_1:bottom",
+        "placementIndex": 1,
         "weight": 1,
         "id": "ledger:00036",
         "semanticKey": "jeans",
@@ -3471,7 +3542,8 @@
         "order": 9300,
         "sourceKind": "external",
         "sourceId": "outfit:lore:alice:outfit_1:legs",
-        "weight": 1,
+        "placementIndex": 0,
+        "weight": 0.8,
         "id": "ledger:00032",
         "semanticKey": "black thighhighs",
         "inputIndex": 32,
@@ -3488,11 +3560,13 @@
         "order": 9300,
         "sourceKind": "external",
         "sourceId": "outfit:persona::p1:outfit_1:feet",
-        "weight": 1,
+        "placementIndex": 1,
+        "weight": 0,
+        "suppressionReason": "visibility",
         "id": "ledger:00037",
         "semanticKey": "sneakers",
         "inputIndex": 37,
-        "status": "applied"
+        "status": "suppressed"
        },
        {
         "lane": "tag",
@@ -3505,11 +3579,13 @@
         "order": 9400,
         "sourceKind": "external",
         "sourceId": "outfit:lore:alice:outfit_1:feet",
-        "weight": 1,
+        "placementIndex": 0,
+        "weight": 0,
+        "suppressionReason": "visibility",
         "id": "ledger:00033",
         "semanticKey": "brown loafers",
         "inputIndex": 33,
-        "status": "applied"
+        "status": "suppressed"
        },
        {
         "lane": "tag",
@@ -3621,7 +3697,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_1",
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "uc": "bad hands",
       "identityKey": "lore:alice",
       "identity": {
@@ -3635,7 +3711,7 @@
       "actorIndex": 1,
       "placementIndex": 1,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "uc": "",
       "identityKey": "persona::p1",
       "identity": {
@@ -3694,7 +3770,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "uc": "bad hands",
       "centerX": 0.35,
       "centerY": 0.5,
@@ -3702,7 +3778,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "uc": "",
       "centerX": 0.68,
       "centerY": 0.52,
@@ -3727,7 +3803,7 @@
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "negativePrompt": "bad hands",
       "centerX": 0.35,
       "centerY": 0.5
@@ -3735,7 +3811,7 @@
      {
       "actorId": "actor_2",
       "actorIndex": 1,
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "negativePrompt": "",
       "centerX": 0.68,
       "centerY": 0.52
@@ -3781,7 +3857,7 @@
        {
         "actorId": "actor_1",
         "actorIndex": 0,
-        "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+        "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
         "negativePrompt": "bad hands",
         "centerX": 0.35,
         "centerY": 0.5
@@ -3789,7 +3865,7 @@
        {
         "actorId": "actor_2",
         "actorIndex": 1,
-        "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+        "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
         "negativePrompt": "",
         "centerX": 0.68,
         "centerY": 0.52
@@ -3813,7 +3889,7 @@
       "analysis_profile": "v5-hybrid",
       "v5_interaction_led": {
        "format": "novelai-v5-interaction-led-history-v1",
-       "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
+       "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
        "normalizedGraph": {
         "slotNumber": 0,
         "status": "recovered",
@@ -3893,6 +3969,12 @@
            "id": "scene.time",
            "options": [
             "morning"
+           ]
+          },
+          {
+           "id": "framing.crop",
+           "options": [
+            "cowboy_shot"
            ]
           }
          ],
@@ -4069,25 +4151,24 @@
            "silver hair",
            "blue eyes",
            "source#arm hug",
+           "looking at another",
+           "light smile",
+           "open mouth",
+           "standing",
            "source#sleeve grab",
            "white sailor shirt",
            "navy sailor collar",
            "red neckerchief",
            "navy pleated skirt",
-           "black thighhighs",
-           "brown loafers",
-           "looking at another",
-           "light smile",
-           "open mouth",
-           "standing"
+           "0.8::black thighhighs::"
           ],
           "instructions": [
-           "fingers pinching the hoodie sleeve.",
            "left of the gate pillar.",
+           "fingers pinching the hoodie sleeve.",
            "leaning forward slightly.",
            "waving one hand high."
           ],
-          "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+          "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
           "actorId": "actor_1",
           "placementIndex": 0,
           "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -4101,17 +4182,16 @@
            "male",
            "1::kazehaya shouta::",
            "target#arm hug",
+           "surprised",
+           "standing",
            "target#sleeve grab",
            "black hoodie",
-           "jeans",
-           "sneakers",
-           "surprised",
-           "standing"
+           "jeans"
           ],
           "instructions": [
            "running toward the gate."
           ],
-          "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+          "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
           "actorId": "actor_2",
           "placementIndex": 1,
           "candidateKey": "actor.1fmv888.fk4pvw",
@@ -4199,6 +4279,7 @@
           "order": 9100,
           "sourceKind": "external-identity",
           "sourceId": "lore:alice:hair.color:0",
+          "placementIndex": 0,
           "weight": 1,
           "id": "ledger:00026",
           "semanticKey": "silver hair",
@@ -4216,6 +4297,7 @@
           "order": 9500,
           "sourceKind": "external-identity",
           "sourceId": "lore:alice:eyes.color:0",
+          "placementIndex": 0,
           "weight": 1,
           "id": "ledger:00027",
           "semanticKey": "blue eyes",
@@ -4233,6 +4315,7 @@
           "order": 10300,
           "sourceKind": "external-identity",
           "sourceId": "persona::p1:custom:0",
+          "placementIndex": 1,
           "weight": 1,
           "id": "ledger:00034",
           "semanticKey": "kazehaya shouta",
@@ -4684,6 +4767,7 @@
           "order": 9100,
           "sourceKind": "external",
           "sourceId": "outfit:lore:alice:outfit_1:top",
+          "placementIndex": 0,
           "weight": 1,
           "id": "ledger:00028",
           "semanticKey": "white sailor shirt",
@@ -4701,6 +4785,7 @@
           "order": 9100,
           "sourceKind": "external",
           "sourceId": "outfit:persona::p1:outfit_1:top",
+          "placementIndex": 1,
           "weight": 1,
           "id": "ledger:00035",
           "semanticKey": "black hoodie",
@@ -4718,6 +4803,7 @@
           "order": 9101,
           "sourceKind": "external",
           "sourceId": "outfit:lore:alice:outfit_1:top",
+          "placementIndex": 0,
           "weight": 1,
           "id": "ledger:00029",
           "semanticKey": "navy sailor collar",
@@ -4735,6 +4821,7 @@
           "order": 9102,
           "sourceKind": "external",
           "sourceId": "outfit:lore:alice:outfit_1:top",
+          "placementIndex": 0,
           "weight": 1,
           "id": "ledger:00030",
           "semanticKey": "red neckerchief",
@@ -4752,6 +4839,7 @@
           "order": 9200,
           "sourceKind": "external",
           "sourceId": "outfit:lore:alice:outfit_1:bottom",
+          "placementIndex": 0,
           "weight": 1,
           "id": "ledger:00031",
           "semanticKey": "navy pleated skirt",
@@ -4769,6 +4857,7 @@
           "order": 9200,
           "sourceKind": "external",
           "sourceId": "outfit:persona::p1:outfit_1:bottom",
+          "placementIndex": 1,
           "weight": 1,
           "id": "ledger:00036",
           "semanticKey": "jeans",
@@ -4786,7 +4875,8 @@
           "order": 9300,
           "sourceKind": "external",
           "sourceId": "outfit:lore:alice:outfit_1:legs",
-          "weight": 1,
+          "placementIndex": 0,
+          "weight": 0.8,
           "id": "ledger:00032",
           "semanticKey": "black thighhighs",
           "inputIndex": 32,
@@ -4803,11 +4893,13 @@
           "order": 9300,
           "sourceKind": "external",
           "sourceId": "outfit:persona::p1:outfit_1:feet",
-          "weight": 1,
+          "placementIndex": 1,
+          "weight": 0,
+          "suppressionReason": "visibility",
           "id": "ledger:00037",
           "semanticKey": "sneakers",
           "inputIndex": 37,
-          "status": "applied"
+          "status": "suppressed"
          },
          {
           "lane": "tag",
@@ -4820,11 +4912,13 @@
           "order": 9400,
           "sourceKind": "external",
           "sourceId": "outfit:lore:alice:outfit_1:feet",
-          "weight": 1,
+          "placementIndex": 0,
+          "weight": 0,
+          "suppressionReason": "visibility",
           "id": "ledger:00033",
           "semanticKey": "brown loafers",
           "inputIndex": 33,
-          "status": "applied"
+          "status": "suppressed"
          },
          {
           "lane": "tag",
@@ -4915,7 +5009,7 @@
       {
        "actorId": "actor_1",
        "actorIndex": 0,
-       "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+       "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
        "negativePrompt": "bad hands",
        "centerX": 0.35,
        "centerY": 0.5
@@ -4923,7 +5017,7 @@
       {
        "actorId": "actor_2",
        "actorIndex": 1,
-       "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+       "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
        "negativePrompt": "",
        "centerX": 0.68,
        "centerY": 0.52
@@ -4962,7 +5056,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+     "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
      "negativePrompt": ""
     }
    ],
@@ -4977,15 +5071,15 @@
     },
     "outfits": {
      "actor_1": {
-      "start": 18,
-      "end": 97
+      "start": 61,
+      "end": 128
      }
     }
    },
    "analysisMetadata": {
     "v": 1,
     "p": "v5",
-    "st": "degraded",
+    "st": "recovered",
     "sl": 1,
     "r": [
      [
@@ -5008,6 +5102,12 @@
        "scene.environment",
        [
         "indoors"
+       ]
+      ],
+      [
+       "framing.crop",
+       [
+        "upper_body"
        ]
       ]
      ],
@@ -5113,7 +5213,6 @@
      }
     },
     "rc": [
-     "frame-scene-modifier-omitted",
      "tag-canonicalized"
     ],
     "pr": [
@@ -5551,10 +5650,10 @@
     "analysis_profile": "v5-hybrid",
     "v5_interaction_led": {
      "format": "novelai-v5-interaction-led-history-v1",
-     "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
+     "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
      "normalizedGraph": {
       "slotNumber": 1,
-      "status": "degraded",
+      "status": "recovered",
       "presentationMode": "single-frame",
       "actors": [
        {
@@ -5584,6 +5683,12 @@
          "id": "scene.environment",
          "options": [
           "indoors"
+         ]
+        },
+        {
+         "id": "framing.crop",
+         "options": [
+          "upper_body"
          ]
         }
        ],
@@ -5649,12 +5754,6 @@
       },
       "diagnostics": [
        {
-        "code": "frame-scene-modifier-omitted",
-        "impact": "degraded",
-        "path": "$.illustrations[1].frame_placement.modifiers",
-        "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-       },
-       {
         "code": "tag-canonicalized",
         "impact": "recovered",
         "path": "$.illustrations[1].frame_placement.freeTags[0]",
@@ -5663,12 +5762,6 @@
       ]
      },
      "diagnostics": [
-      {
-       "code": "frame-scene-modifier-omitted",
-       "impact": "degraded",
-       "path": "$.illustrations[1].frame_placement.modifiers",
-       "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-      },
       {
        "code": "tag-canonicalized",
        "impact": "recovered",
@@ -5688,6 +5781,7 @@
         "year 2025",
         "masterpiece",
         "best quality",
+        "upper body",
         "indoors",
         "staff room",
         "window",
@@ -5696,7 +5790,7 @@
        "instructions": [
         "Camera behind the actor looking out the window."
        ],
-       "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
+       "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
       },
       "globalNegativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
       "characters": [
@@ -5704,20 +5798,19 @@
         "tags": [
          "male",
          "black hair",
+         "looking down",
+         "exhausted",
+         "2::facing away::",
          "grey suit jacket",
          "white shirt",
          "blue necktie",
-         "grey suit pants",
-         "black dress shoes",
-         "looking down",
-         "exhausted",
-         "2::facing away::"
+         "0.3::grey suit pants::"
         ],
         "instructions": [
          "hands on the window sill.",
          "sighing."
         ],
-        "serializedPrompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+        "serializedPrompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
         "actorId": "actor_1",
         "placementIndex": 0,
         "candidateKey": "actor.m0ais.6ynrym",
@@ -5772,10 +5865,11 @@
         "order": 9100,
         "sourceKind": "external-identity",
         "sourceId": "lore:bob:hair.color:0",
+        "placementIndex": 0,
         "weight": 1,
-        "id": "ledger:00012",
+        "id": "ledger:00013",
         "semanticKey": "black hair",
-        "inputIndex": 12,
+        "inputIndex": 13,
         "status": "applied"
        },
        {
@@ -5789,9 +5883,9 @@
         "sourceKind": "external-artist",
         "sourceId": "detail_anime_illustration_style",
         "weight": 1,
-        "id": "ledger:00018",
+        "id": "ledger:00019",
         "semanticKey": "artist hwansang",
-        "inputIndex": 18,
+        "inputIndex": 19,
         "status": "applied"
        },
        {
@@ -5805,9 +5899,9 @@
         "sourceKind": "external-artist",
         "sourceId": "detail_anime_illustration_style",
         "weight": 1,
-        "id": "ledger:00019",
+        "id": "ledger:00020",
         "semanticKey": "year 2025",
-        "inputIndex": 19,
+        "inputIndex": 20,
         "status": "applied"
        },
        {
@@ -5821,9 +5915,9 @@
         "sourceKind": "external-artist",
         "sourceId": "detail_anime_illustration_style",
         "weight": 1,
-        "id": "ledger:00020",
+        "id": "ledger:00021",
         "semanticKey": "masterpiece",
-        "inputIndex": 20,
+        "inputIndex": 21,
         "status": "applied"
        },
        {
@@ -5837,9 +5931,9 @@
         "sourceKind": "external-artist",
         "sourceId": "detail_anime_illustration_style",
         "weight": 1,
-        "id": "ledger:00021",
+        "id": "ledger:00022",
         "semanticKey": "best quality",
-        "inputIndex": 21,
+        "inputIndex": 22,
         "status": "applied"
        },
        {
@@ -5891,9 +5985,25 @@
         "sourceId": "placement:actor_1:facing:orientation.facing.facing_away",
         "weight": 2,
         "placementIndex": 0,
-        "id": "ledger:00010",
+        "id": "ledger:00011",
         "semanticKey": "facing away",
-        "inputIndex": 10,
+        "inputIndex": 11,
+        "status": "applied"
+       },
+       {
+        "lane": "tag",
+        "destination": {
+         "kind": "global"
+        },
+        "semanticId": "framing.crop.upper_body",
+        "value": "upper body",
+        "order": 4848,
+        "sourceKind": "closed",
+        "sourceId": "scene-location:framing.crop:framing.crop.upper_body",
+        "weight": 1,
+        "id": "ledger:00008",
+        "semanticKey": "upper body",
+        "inputIndex": 8,
         "status": "applied"
        },
        {
@@ -5923,9 +6033,9 @@
         "sourceKind": "recovered-free",
         "sourceId": "scene-location",
         "weight": 1,
-        "id": "ledger:00008",
+        "id": "ledger:00009",
         "semanticKey": "staff room",
-        "inputIndex": 8,
+        "inputIndex": 9,
         "status": "applied"
        },
        {
@@ -5939,9 +6049,9 @@
         "sourceKind": "recovered-free",
         "sourceId": "scene-location",
         "weight": 1,
-        "id": "ledger:00009",
+        "id": "ledger:00010",
         "semanticKey": "window",
-        "inputIndex": 9,
+        "inputIndex": 10,
         "status": "applied"
        },
        {
@@ -6007,9 +6117,9 @@
         "order": 11000,
         "sourceKind": "recovered-free",
         "sourceId": "camera",
-        "id": "ledger:00011",
+        "id": "ledger:00012",
         "semanticKey": "camera behind the actor looking out the window",
-        "inputIndex": 11,
+        "inputIndex": 12,
         "status": "applied"
        },
        {
@@ -6023,10 +6133,11 @@
         "order": 9100,
         "sourceKind": "external",
         "sourceId": "outfit:lore:bob:outfit_1:top",
+        "placementIndex": 0,
         "weight": 1,
-        "id": "ledger:00013",
+        "id": "ledger:00014",
         "semanticKey": "grey suit jacket",
-        "inputIndex": 13,
+        "inputIndex": 14,
         "status": "applied"
        },
        {
@@ -6040,10 +6151,11 @@
         "order": 9101,
         "sourceKind": "external",
         "sourceId": "outfit:lore:bob:outfit_1:top",
+        "placementIndex": 0,
         "weight": 1,
-        "id": "ledger:00014",
+        "id": "ledger:00015",
         "semanticKey": "white shirt",
-        "inputIndex": 14,
+        "inputIndex": 15,
         "status": "applied"
        },
        {
@@ -6057,10 +6169,11 @@
         "order": 9102,
         "sourceKind": "external",
         "sourceId": "outfit:lore:bob:outfit_1:top",
+        "placementIndex": 0,
         "weight": 1,
-        "id": "ledger:00015",
+        "id": "ledger:00016",
         "semanticKey": "blue necktie",
-        "inputIndex": 15,
+        "inputIndex": 16,
         "status": "applied"
        },
        {
@@ -6074,10 +6187,11 @@
         "order": 9200,
         "sourceKind": "external",
         "sourceId": "outfit:lore:bob:outfit_1:bottom",
-        "weight": 1,
-        "id": "ledger:00016",
+        "placementIndex": 0,
+        "weight": 0.3,
+        "id": "ledger:00017",
         "semanticKey": "grey suit pants",
-        "inputIndex": 16,
+        "inputIndex": 17,
         "status": "applied"
        },
        {
@@ -6091,11 +6205,13 @@
         "order": 9300,
         "sourceKind": "external",
         "sourceId": "outfit:lore:bob:outfit_1:feet",
-        "weight": 1,
-        "id": "ledger:00017",
+        "placementIndex": 0,
+        "weight": 0,
+        "suppressionReason": "visibility",
+        "id": "ledger:00018",
         "semanticKey": "black dress shoes",
-        "inputIndex": 17,
-        "status": "applied"
+        "inputIndex": 18,
+        "status": "suppressed"
        },
        {
         "lane": "tag",
@@ -6108,9 +6224,9 @@
         "sourceKind": "external-fixed",
         "sourceId": "character-generation-settings",
         "weight": 1,
-        "id": "ledger:00022",
+        "id": "ledger:00023",
         "semanticKey": "very aesthetic",
-        "inputIndex": 22,
+        "inputIndex": 23,
         "status": "applied"
        }
       ]
@@ -6207,7 +6323,7 @@
     "previous_scene_location_tags": []
    },
    "promptPlan": {
-    "globalPositive": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
+    "globalPositive": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
     "bodyAction": "",
     "negativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
     "characters": [
@@ -6216,7 +6332,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+      "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
       "uc": "",
       "identityKey": "lore:bob",
       "identity": {
@@ -6230,7 +6346,7 @@
     "width": 832,
     "height": 1216,
     "sizeId": 1,
-    "selectedFraming": "",
+    "selectedFraming": "upper_body",
     "selectedVariantId": "",
     "artistId": "detail_anime_illustration_style",
     "artistName": "v5 style",
@@ -6267,7 +6383,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+      "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
       "uc": "",
       "centerX": 0.5,
       "centerY": 0.45,
@@ -6284,15 +6400,15 @@
     "sourceFormat": "novelai-v5-interaction-led-prompt-v1",
     "requestFormat": "novelai-v5-hybrid",
     "formatterRevision": 1,
-    "globalPositivePrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
+    "globalPositivePrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
     "globalNegativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
-    "positivePrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
+    "positivePrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
     "negativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
     "characterPrompts": [
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+      "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
       "negativePrompt": "",
       "centerX": 0.5,
       "centerY": 0.45
@@ -6332,13 +6448,13 @@
      },
      "prompt": {
       "kind": "structured",
-      "positive": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
+      "positive": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
       "negative": "bad anatomy, text, watermark, lowres, worst quality, text",
       "characters": [
        {
         "actorId": "actor_1",
         "actorIndex": 0,
-        "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+        "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
         "negativePrompt": "",
         "centerX": 0.5,
         "centerY": 0.45
@@ -6362,10 +6478,10 @@
       "analysis_profile": "v5-hybrid",
       "v5_interaction_led": {
        "format": "novelai-v5-interaction-led-history-v1",
-       "catalogFingerprint": "v5.fnv1a64-c368130800610ca6",
+       "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
        "normalizedGraph": {
         "slotNumber": 1,
-        "status": "degraded",
+        "status": "recovered",
         "presentationMode": "single-frame",
         "actors": [
          {
@@ -6395,6 +6511,12 @@
            "id": "scene.environment",
            "options": [
             "indoors"
+           ]
+          },
+          {
+           "id": "framing.crop",
+           "options": [
+            "upper_body"
            ]
           }
          ],
@@ -6460,12 +6582,6 @@
         },
         "diagnostics": [
          {
-          "code": "frame-scene-modifier-omitted",
-          "impact": "degraded",
-          "path": "$.illustrations[1].frame_placement.modifiers",
-          "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-         },
-         {
           "code": "tag-canonicalized",
           "impact": "recovered",
           "path": "$.illustrations[1].frame_placement.freeTags[0]",
@@ -6474,12 +6590,6 @@
         ]
        },
        "diagnostics": [
-        {
-         "code": "frame-scene-modifier-omitted",
-         "impact": "degraded",
-         "path": "$.illustrations[1].frame_placement.modifiers",
-         "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
-        },
         {
          "code": "tag-canonicalized",
          "impact": "recovered",
@@ -6499,6 +6609,7 @@
           "year 2025",
           "masterpiece",
           "best quality",
+          "upper body",
           "indoors",
           "staff room",
           "window",
@@ -6507,7 +6618,7 @@
          "instructions": [
           "Camera behind the actor looking out the window."
          ],
-         "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
+         "serializedPrompt": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window."
         },
         "globalNegativePrompt": "bad anatomy, text, watermark, lowres, worst quality, text",
         "characters": [
@@ -6515,20 +6626,19 @@
           "tags": [
            "male",
            "black hair",
+           "looking down",
+           "exhausted",
+           "2::facing away::",
            "grey suit jacket",
            "white shirt",
            "blue necktie",
-           "grey suit pants",
-           "black dress shoes",
-           "looking down",
-           "exhausted",
-           "2::facing away::"
+           "0.3::grey suit pants::"
           ],
           "instructions": [
            "hands on the window sill.",
            "sighing."
           ],
-          "serializedPrompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+          "serializedPrompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
           "actorId": "actor_1",
           "placementIndex": 0,
           "candidateKey": "actor.m0ais.6ynrym",
@@ -6583,10 +6693,11 @@
           "order": 9100,
           "sourceKind": "external-identity",
           "sourceId": "lore:bob:hair.color:0",
+          "placementIndex": 0,
           "weight": 1,
-          "id": "ledger:00012",
+          "id": "ledger:00013",
           "semanticKey": "black hair",
-          "inputIndex": 12,
+          "inputIndex": 13,
           "status": "applied"
          },
          {
@@ -6600,9 +6711,9 @@
           "sourceKind": "external-artist",
           "sourceId": "detail_anime_illustration_style",
           "weight": 1,
-          "id": "ledger:00018",
+          "id": "ledger:00019",
           "semanticKey": "artist hwansang",
-          "inputIndex": 18,
+          "inputIndex": 19,
           "status": "applied"
          },
          {
@@ -6616,9 +6727,9 @@
           "sourceKind": "external-artist",
           "sourceId": "detail_anime_illustration_style",
           "weight": 1,
-          "id": "ledger:00019",
+          "id": "ledger:00020",
           "semanticKey": "year 2025",
-          "inputIndex": 19,
+          "inputIndex": 20,
           "status": "applied"
          },
          {
@@ -6632,9 +6743,9 @@
           "sourceKind": "external-artist",
           "sourceId": "detail_anime_illustration_style",
           "weight": 1,
-          "id": "ledger:00020",
+          "id": "ledger:00021",
           "semanticKey": "masterpiece",
-          "inputIndex": 20,
+          "inputIndex": 21,
           "status": "applied"
          },
          {
@@ -6648,9 +6759,9 @@
           "sourceKind": "external-artist",
           "sourceId": "detail_anime_illustration_style",
           "weight": 1,
-          "id": "ledger:00021",
+          "id": "ledger:00022",
           "semanticKey": "best quality",
-          "inputIndex": 21,
+          "inputIndex": 22,
           "status": "applied"
          },
          {
@@ -6702,9 +6813,25 @@
           "sourceId": "placement:actor_1:facing:orientation.facing.facing_away",
           "weight": 2,
           "placementIndex": 0,
-          "id": "ledger:00010",
+          "id": "ledger:00011",
           "semanticKey": "facing away",
-          "inputIndex": 10,
+          "inputIndex": 11,
+          "status": "applied"
+         },
+         {
+          "lane": "tag",
+          "destination": {
+           "kind": "global"
+          },
+          "semanticId": "framing.crop.upper_body",
+          "value": "upper body",
+          "order": 4848,
+          "sourceKind": "closed",
+          "sourceId": "scene-location:framing.crop:framing.crop.upper_body",
+          "weight": 1,
+          "id": "ledger:00008",
+          "semanticKey": "upper body",
+          "inputIndex": 8,
           "status": "applied"
          },
          {
@@ -6734,9 +6861,9 @@
           "sourceKind": "recovered-free",
           "sourceId": "scene-location",
           "weight": 1,
-          "id": "ledger:00008",
+          "id": "ledger:00009",
           "semanticKey": "staff room",
-          "inputIndex": 8,
+          "inputIndex": 9,
           "status": "applied"
          },
          {
@@ -6750,9 +6877,9 @@
           "sourceKind": "recovered-free",
           "sourceId": "scene-location",
           "weight": 1,
-          "id": "ledger:00009",
+          "id": "ledger:00010",
           "semanticKey": "window",
-          "inputIndex": 9,
+          "inputIndex": 10,
           "status": "applied"
          },
          {
@@ -6818,9 +6945,9 @@
           "order": 11000,
           "sourceKind": "recovered-free",
           "sourceId": "camera",
-          "id": "ledger:00011",
+          "id": "ledger:00012",
           "semanticKey": "camera behind the actor looking out the window",
-          "inputIndex": 11,
+          "inputIndex": 12,
           "status": "applied"
          },
          {
@@ -6834,10 +6961,11 @@
           "order": 9100,
           "sourceKind": "external",
           "sourceId": "outfit:lore:bob:outfit_1:top",
+          "placementIndex": 0,
           "weight": 1,
-          "id": "ledger:00013",
+          "id": "ledger:00014",
           "semanticKey": "grey suit jacket",
-          "inputIndex": 13,
+          "inputIndex": 14,
           "status": "applied"
          },
          {
@@ -6851,10 +6979,11 @@
           "order": 9101,
           "sourceKind": "external",
           "sourceId": "outfit:lore:bob:outfit_1:top",
+          "placementIndex": 0,
           "weight": 1,
-          "id": "ledger:00014",
+          "id": "ledger:00015",
           "semanticKey": "white shirt",
-          "inputIndex": 14,
+          "inputIndex": 15,
           "status": "applied"
          },
          {
@@ -6868,10 +6997,11 @@
           "order": 9102,
           "sourceKind": "external",
           "sourceId": "outfit:lore:bob:outfit_1:top",
+          "placementIndex": 0,
           "weight": 1,
-          "id": "ledger:00015",
+          "id": "ledger:00016",
           "semanticKey": "blue necktie",
-          "inputIndex": 15,
+          "inputIndex": 16,
           "status": "applied"
          },
          {
@@ -6885,10 +7015,11 @@
           "order": 9200,
           "sourceKind": "external",
           "sourceId": "outfit:lore:bob:outfit_1:bottom",
-          "weight": 1,
-          "id": "ledger:00016",
+          "placementIndex": 0,
+          "weight": 0.3,
+          "id": "ledger:00017",
           "semanticKey": "grey suit pants",
-          "inputIndex": 16,
+          "inputIndex": 17,
           "status": "applied"
          },
          {
@@ -6902,11 +7033,13 @@
           "order": 9300,
           "sourceKind": "external",
           "sourceId": "outfit:lore:bob:outfit_1:feet",
-          "weight": 1,
-          "id": "ledger:00017",
+          "placementIndex": 0,
+          "weight": 0,
+          "suppressionReason": "visibility",
+          "id": "ledger:00018",
           "semanticKey": "black dress shoes",
-          "inputIndex": 17,
-          "status": "applied"
+          "inputIndex": 18,
+          "status": "suppressed"
          },
          {
           "lane": "tag",
@@ -6919,9 +7052,9 @@
           "sourceKind": "external-fixed",
           "sourceId": "character-generation-settings",
           "weight": 1,
-          "id": "ledger:00022",
+          "id": "ledger:00023",
           "semanticKey": "very aesthetic",
-          "inputIndex": 22,
+          "inputIndex": 23,
           "status": "applied"
          }
         ]
@@ -7000,13 +7133,13 @@
      "profileRevision": 0,
      "promptFormat": "novelai-v5-hybrid",
      "formatterRevision": 1,
-     "positive": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
+     "positive": "2::1boy::, 1.5::artist:hwansang ::, year 2025, masterpiece, best quality, upper body, indoors, staff room, window, very aesthetic\nCamera behind the actor looking out the window.",
      "negative": "bad anatomy, text, watermark, lowres, worst quality, text",
      "characters": [
       {
        "actorId": "actor_1",
        "actorIndex": 0,
-       "prompt": "male, black hair, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes, looking down, exhausted, 2::facing away::\nhands on the window sill. sighing.",
+       "prompt": "male, black hair, looking down, exhausted, 2::facing away::, grey suit jacket, white shirt, blue necktie, 0.3::grey suit pants::\nhands on the window sill. sighing.",
        "negativePrompt": "",
        "centerX": 0.5,
        "centerY": 0.45

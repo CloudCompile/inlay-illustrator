@@ -14,8 +14,8 @@
  *   Ct = createProfileOrchestrator({v45: Ze, v5: st, resolveProfile})   Lht 115023
  *
  * Dropped from the original wiring: the NovelAI HTTP client + its queue (xAt/Pyt/kyt), Chan Server (jft), ComfyUI
- * transport (rmt/Rft) and the JEV "TypeSafe" roster pre-pass network (Egt 3rd argument). The backend supplies
- * provider adapters with the dispatcher contract instead (see README "Image providers").
+ * transport (rmt/Rft). The backend supplies provider adapters with the dispatcher contract instead (see README "Image providers").
+ * The JEV roster pre-pass (Egt 3rd argument) gets `options.jev`: `network.fetch` answers AM's TypeSafe request.
  */
 import {
   createCatalogSourceResolver,
@@ -85,6 +85,7 @@ export interface AssetMaidEngineOptions {
   getIntervalMs?: () => number;
   /** config.novelai.presetCatalog.rawJson: "" = built-in rule-IR catalog; otherwise a custom V4.5 raw catalog JSON. */
   rawCatalogJson?: string;
+  /** JEV pre-pass: `network.fetch(url, init)` (AM TypeSafe systemone request) and `getConfig()` (`{model, apiKey, ...}`). */
   jev?: { network: unknown; getConfig: () => unknown };
   onAnalyzerDiagnostic?: (event: { event: string; detail?: unknown; [key: string]: unknown }) => void;
   onSplitResumeState?: (key: unknown, state: unknown) => void;

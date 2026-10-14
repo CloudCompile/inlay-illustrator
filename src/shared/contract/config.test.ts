@@ -120,6 +120,11 @@ describe("parity with Asset Maid fEe", () => {
       expect(normalizeV5UserDirections(item.input ?? undefined)).toEqual(item.output);
     });
   }
+  test("image ratio presets keep custom size ids (AM 0.9.89.3 y5e)", () => {
+    const custom = 1e9 + 5;
+    const d = normalizeV5UserDirections({ imageRatio: { mode: "preset", selectedPresetId: "image-ratio-x", presets: [{ id: "image-ratio-x", name: "Mine", instruction: "", allowedSizeIds: [2, custom, 7, 1e9 + 0.5, custom] }] } });
+    expect(d.imageRatio.presets.find((p) => p.id === "image-ratio-x")?.allowedSizeIds).toEqual([2, custom]);
+  });
 });
 
 describe("per-character override resolution parity (ki/xE/ONe/jNe/NNe/ENe/RNe)", () => {

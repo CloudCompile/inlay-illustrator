@@ -70,6 +70,21 @@ export const CHAT_SCENES: Record<string, PreviewScene> = {
     await sleep(300);
     (doc.querySelector('.ii-am-chat-toast[data-ii-tone="danger"] .ii-am-chat-toast__error-toggle') as HTMLElement | null)?.click();
   },
+  /** Use with `dev=1` for the diagnostic lines (HTTP, error code, provider, model, request ID). */
+  "chat-toast-retries": async (input) => {
+    const { doc, mock } = input;
+    const data = mockChat(mock.db);
+    await chat(input);
+    const imageError = (attempt: number, httpStatus: number, message: string) => ({ attempt, stage: "이미지 생성", occurredAt: attempt, message, httpStatus, code: "NOVELAI_IMAGE_REQUEST_FAILED", provider: "novelai", model: "nai-diffusion-4-5-full", requestId: `req-${attempt}a7c` });
+    const base = { chatId: data.chatId, attemptKind: "initial" as const, failedSlots: 0, canRetry: true, canRestart: false };
+    mock.emit("generation.progress", { ...base, jobId: "job-retry-1", messageKey: "illustration:msg-4@0", status: "running", phase: "generating", progress: { label: "Image 2/3", retry: { attempt: 3, total: 5 } }, requestedCount: 3, completedSlots: 1, retryErrors: [imageError(1, 429, "NovelAI returned HTTP 429 (Too Many Requests)."), imageError(2, 500, "NovelAI returned HTTP 500 (Internal Server Error)."), imageError(3, 503, "NovelAI returned HTTP 503 (Service Unavailable).")] });
+    mock.emit("generation.progress", { ...base, jobId: "job-retry-2", messageKey: "illustration:msg-5@0", status: "running", phase: "analyzing-preset", progress: { label: "Analyzer analyzing" }, requestedCount: 2, completedSlots: 0, retryErrors: [{ attempt: 1, stage: "분석·생성", occurredAt: 1, message: "Analyzer response was not valid JSON.", code: "ANALYZER_INVALID_JSON" }] });
+    mock.emit("generation.finished", { jobId: "job-retry-2", chatId: data.chatId, messageKey: "illustration:msg-5@0", result: "failed", error: { code: "provider-error", message: "Analyzer response was not valid JSON.", detailCode: "ANALYZER_INVALID_JSON", retryable: true } });
+    const toast = '.ii-am-chat-toast[data-ii-toast-key="generation:job-retry-1"]';
+    await clickWhenReady(doc, `${toast} .ii-am-chat-toast__error-toggle`);
+    await clickWhenReady(doc, `${toast} [data-ii-toast-action="history"]`);
+    await clickWhenReady(doc, `${toast} [data-ii-toast-action="copy-error"]`);
+  },
   "chat-error": async (input) => {
     const { mock } = input;
     await chat(input);

@@ -11,15 +11,15 @@ import {
   buildV5ActorCandidates,
   resolveV5ImageCount,
   buildV5SceneSlots,
-  _gt as buildLayoutContinuity,
+  Zyt as buildLayoutContinuity,
   createV5ContinuityBasis,
-  UDe as buildActorModifierContinuity,
-  qDe as buildSceneModifierContinuity,
-  XDe as buildNaturalLanguageContinuity,
+  xrt as buildActorModifierContinuity,
+  _rt as buildSceneModifierContinuity,
+  krt as buildNaturalLanguageContinuity,
   buildV5StructuredOutputSchema,
-  mgt as toInitialPhaseSchema,
-  hgt as toDetailPhaseSchema,
-  vgt as toDetailPhasePayload,
+  Byt as toInitialPhaseSchema,
+  Uyt as toDetailPhaseSchema,
+  Xyt as toDetailPhasePayload,
   buildV5AnalyzerMessages as coreBuildV5AnalyzerMessages,
   toV5AnalyzerWirePayload,
   resolveV5UserDirections as coreResolveV5UserDirections,
@@ -31,7 +31,7 @@ import {
   renderV5SplitPhaseSystemInstruction as coreRenderV5SplitPhaseSystemInstruction,
   renderV5AnalyzerSystemInstruction as coreRenderV5AnalyzerSystemInstruction,
   buildV5InstructionModules as coreBuildV5InstructionModules,
-  Dgt as planSplitBatchSizes,
+  pbt as planSplitBatchSizes,
 } from "../core/asset-maid-core";
 import { getSharedV5RuleRuntime, type V5AnalyzerRequest, type V5ContinuitySnapshot, type V5RecoveryMode, type V5RuleRuntime } from "./runtime";
 import type { V5RecoveredResponse } from "./types";
@@ -69,7 +69,7 @@ export interface V5DirectionSettings {
   readonly imageRatio: V5DirectionList;
 }
 
-/** Resolved user directions handed to the analyzer request (`qgt` 118641). */
+/** Resolved user directions handed to the analyzer request (`xbt` 0.9.89.5; 0.9.88 `qgt` 118641). */
 export interface V5UserDirections {
   readonly customInstruction?: string;
   readonly scenePresetId?: string;
@@ -77,6 +77,9 @@ export interface V5UserDirections {
   readonly sceneDirection?: string;
   readonly sceneDirectionSource?: "preset" | "supplemental";
   readonly imageRatioDirection?: unknown;
+  /** Size ids the analyzer may choose (presets 1..5, custom sizes >= 1e9). Not set for the comic preset. */
+  readonly imageRatioAllowedSizeIds?: readonly number[];
+  readonly imageRatioCustomSizes?: readonly { readonly id: number; readonly sizeId: number; readonly width: number; readonly height: number }[];
 }
 
 /** Built-in analysis presets (`bPe` @3459 = `dg.analysisPresets`): scene default/pov/ensemble/comic, image ratio default/unspecified. */
@@ -95,10 +98,17 @@ export function selectV5DirectionPreset(list: Partial<V5DirectionList>, presetId
 }
 
 /**
- * Resolve the analyzer user directions from `{novelAIConfig: {v5UserDirections}}`.
- * Original: `qgt` (resolveV5UserDirections) @118641.
+ * Resolve the analyzer user directions from the run input. Outside the comic preset it also sets
+ * `imageRatioAllowedSizeIds` (the fixed `requestedSize` id, else the selected ratio preset's `allowedSizeIds`) and
+ * `imageRatioCustomSizes` (allowed custom sizes from `customImageSizes` + a custom `requestedSize`).
+ * Original: `xbt` (0.9.89.5 @120954; 0.9.88 `qgt`).
  */
-export function resolveV5UserDirections(input: { readonly novelAIConfig: { readonly v5UserDirections?: V5DirectionSettings | unknown } }): V5UserDirections {
+export function resolveV5UserDirections(input: {
+  readonly novelAIConfig: { readonly v5UserDirections?: V5DirectionSettings | unknown };
+  readonly requestedSizeId?: number;
+  readonly requestedSize?: { readonly id: number; readonly width: number; readonly height: number };
+  readonly customImageSizes?: readonly unknown[];
+}): V5UserDirections {
   return coreResolveV5UserDirections(input) as V5UserDirections;
 }
 

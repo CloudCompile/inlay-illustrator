@@ -1,4 +1,10 @@
 {
+ "scenario": {
+  "response": "generatedActor",
+  "provider": "novelai",
+  "seed": 49,
+  "freechar": true
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -85,6 +91,12 @@
         "id": "scene.environment",
         "options": [
          "indoors"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -371,11 +383,16 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-32ae1f244ea22776",
+  "requestPayload": "fnv1a64-5607995f3c67def4",
   "localProjection": {
+   "allowedSizeIds": [
+    1,
+    2,
+    5
+   ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -404,13 +421,16 @@
       "old_man",
       "grey_hair",
       "blue_overalls",
+      "old man",
+      "grey hair",
+      "blue overalls",
       "target#arm around shoulder",
       "exhausted"
      ],
      "instructions": [
       "Stooped posture, holding a broom."
      ],
-     "serializedPrompt": "old_man, grey_hair, blue_overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
+     "serializedPrompt": "old_man, grey_hair, blue_overalls, old man, grey hair, blue overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "free_1",
@@ -427,11 +447,10 @@
       "grey suit jacket",
       "white shirt",
       "blue necktie",
-      "grey suit pants",
-      "black dress shoes"
+      "grey suit pants"
      ],
      "instructions": [],
-     "serializedPrompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes",
+     "serializedPrompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants",
      "actorId": "actor_2",
      "placementIndex": 1,
      "candidateKey": "actor.m0ais.6ynrym",
@@ -553,6 +572,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:bob:hair.color:0",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00014",
      "semanticKey": "black hair",
@@ -570,12 +590,12 @@
      "order": 10100,
      "sourceKind": "external-identity",
      "sourceId": "free_1:marks.distinctive:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00011",
      "semanticKey": "old man",
      "inputIndex": 11,
-     "status": "suppressed",
-     "suppressionReason": "semantic_duplicate"
+     "status": "applied"
     },
     {
      "lane": "tag",
@@ -588,12 +608,12 @@
      "order": 10101,
      "sourceKind": "external-identity",
      "sourceId": "free_1:marks.distinctive:1",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00012",
      "semanticKey": "grey hair",
      "inputIndex": 12,
-     "status": "suppressed",
-     "suppressionReason": "semantic_duplicate"
+     "status": "applied"
     },
     {
      "lane": "tag",
@@ -606,12 +626,12 @@
      "order": 10102,
      "sourceKind": "external-identity",
      "sourceId": "free_1:marks.distinctive:2",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00013",
      "semanticKey": "blue overalls",
      "inputIndex": 13,
-     "status": "suppressed",
-     "suppressionReason": "semantic_duplicate"
+     "status": "applied"
     },
     {
      "lane": "tag",
@@ -772,6 +792,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00015",
      "semanticKey": "grey suit jacket",
@@ -789,6 +810,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00016",
      "semanticKey": "white shirt",
@@ -806,6 +828,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00017",
      "semanticKey": "blue necktie",
@@ -823,6 +846,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:bottom",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00018",
      "semanticKey": "grey suit pants",
@@ -840,11 +864,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:bob:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 1,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00019",
      "semanticKey": "black dress shoes",
      "inputIndex": 19,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -893,7 +919,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "old_man, grey_hair, blue_overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
+      "prompt": "old_man, grey_hair, blue_overalls, old man, grey hair, blue overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
       "uc": "",
       "centerX": 0.3,
       "centerY": 0.5,
@@ -901,7 +927,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes",
+      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "uc": "",
       "centerX": 0.7,
       "centerY": 0.5,
@@ -935,7 +961,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_default",
      "identitySuppressed": false,
-     "prompt": "old_man, grey_hair, blue_overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
+     "prompt": "old_man, grey_hair, blue_overalls, old man, grey hair, blue overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
      "negativePrompt": ""
     },
     {
@@ -948,7 +974,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes",
+     "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants",
      "negativePrompt": ""
     }
    ],
@@ -964,15 +990,15 @@
     "outfits": {
      "actor_2": {
       "start": 46,
-      "end": 125
+      "end": 106
      }
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-cd0f65e1e6bf2022"
+    "hash": "fnv1a64-58de16e43a0ad16a"
    },
    "decision": {
-    "hash": "fnv1a64-1995f368e65fcfbe"
+    "hash": "fnv1a64-2312f4e45ca6d206"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1011,7 +1037,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_default",
-      "prompt": "old_man, grey_hair, blue_overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
+      "prompt": "old_man, grey_hair, blue_overalls, old man, grey hair, blue overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
       "uc": ""
      },
      {
@@ -1019,7 +1045,7 @@
       "actorIndex": 1,
       "placementIndex": 1,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes",
+      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "uc": "",
       "identityKey": "lore:bob",
       "identity": {
@@ -1072,7 +1098,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "old_man, grey_hair, blue_overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
+      "prompt": "old_man, grey_hair, blue_overalls, old man, grey hair, blue overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
       "uc": "",
       "centerX": 0.3,
       "centerY": 0.5,
@@ -1080,7 +1106,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes",
+      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "uc": "",
       "centerX": 0.7,
       "centerY": 0.5,
@@ -1105,7 +1131,7 @@
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "old_man, grey_hair, blue_overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
+      "prompt": "old_man, grey_hair, blue_overalls, old man, grey hair, blue overalls, target#arm around shoulder, exhausted\nStooped posture, holding a broom.",
       "negativePrompt": "",
       "centerX": 0.3,
       "centerY": 0.5
@@ -1113,7 +1139,7 @@
      {
       "actorId": "actor_2",
       "actorIndex": 1,
-      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants, black dress shoes",
+      "prompt": "male, black hair, source#arm around shoulder, grey suit jacket, white shirt, blue necktie, grey suit pants",
       "negativePrompt": "",
       "centerX": 0.7,
       "centerY": 0.5
@@ -1139,7 +1165,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-8aeeca88ec6446a6"
+    "hash": "fnv1a64-17a331b7e187a39a"
    }
   }
  ],

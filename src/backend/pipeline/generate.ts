@@ -24,6 +24,7 @@ import {
   type IllustrationPlanAssetHint,
   type IllustrationPlanEntry,
   type InlayConfig,
+  type GenerationRetryError,
   type JevSelectionProgress,
 } from "../../shared/contract/index.js";
 import {
@@ -47,9 +48,9 @@ import { BUNDLED_COMFY_WORKFLOW_PROFILE, resolveImageCountConstraint, resolveIma
 import {
   computeDeferredVisualContinuity,
   createEmptyContinuityState,
-  createMemoryContinuityController,
   getLatestContinuityCheckpointSnapshot,
   mergeLocalLoreActorState,
+  pushContinuityCheckpoint,
   readContinuityFromChat,
   readLocalLoreActorState,
   rebuildContinuityAtMessage,
@@ -172,6 +173,8 @@ export interface GenerateMessageRequest {
   onPhase?: (phase: string, detail: { imageIndex?: number; imageCount?: number; providerStage?: string }) => void;
   onResolvedCount?: (count: number) => void;
   onJevSelection?: (selection: JevSelectionProgress) => void;
+  /** Engine retry state: image request retry counter + retry errors (AM session `imageRetry` / `retryErrors`). */
+  onRetryErrors?: (errors: GenerationRetryError[], imageRetry: { attempt: number; total: number } | undefined) => void;
 }
 
 /** AM session `progress.jevSelection` -> job snapshot shape. */
@@ -496,15 +499,28 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
   const continuityMessageId = `id:${req.historyId}`;
   const messageIndex = targetMessage?.index ?? req.target;
 
-  const commitWith = (apply: (controller: ReturnType<typeof createMemoryContinuityController>, info: { historyRevisionId: string; historyRevisionOrder: number }) => Promise<void>): ContinuityCommit =>
+  const commitWith = (apply: (info: { historyRevisionId: string; historyRevisionOrder: number }) => ContinuityState): ContinuityCommit =>
     async (doc, info) => {
       if (!persistContinuity) return;
       const chatObj = continuityChat(req.messages, { index: req.target, historyId: req.historyId }, doc.actorState);
       const current = readContinuityFromChat(doc.store as unknown as ContinuityChatStore, chatObj, chatKey) ?? createEmptyContinuityState();
-      const controller = createMemoryContinuityController(current);
-      await apply(controller, info);
+      // AM 0.9.89 computes the next state from the basis (`_Ye` / `rYe`); the port stores only its checkpoint.
+      const next = apply(info);
+      const checkpoint = next.recentCheckpoints[chatKey]?.find((c) => c.messageId === continuityMessageId && (c.historyRevisionId ?? "") === info.historyRevisionId);
+      if (checkpoint) {
+        pushContinuityCheckpoint(current, {
+          chatKey,
+          messageId: continuityMessageId,
+          messageIndex: checkpoint.messageIndex,
+          historyRevisionId: info.historyRevisionId,
+          historyRevisionOrder: info.historyRevisionOrder,
+          capturedAt: checkpoint.capturedAt,
+          sourceState: next,
+          participants: checkpoint.participants,
+        });
+      }
       // The storage adapter takes the serialized document (AM pKe persists `Ete(state)`; `gDe` reads the string form).
-      writeContinuityToChat(doc.store as unknown as ContinuityChatStore, chatObj, serializeContinuityState(controller.state), chatKey);
+      writeContinuityToChat(doc.store as unknown as ContinuityChatStore, chatObj, serializeContinuityState(current), chatKey);
       const actorState = readLocalLoreActorState(chatObj);
       doc.actorState = { revision: actorState.revision, actors: actorState.actors } as unknown as CurrentActorState;
     };
@@ -582,6 +598,8 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     ...(ne.fixedResolution.enabled
       ? { requestedSizeId: ne.fixedResolution.sizeId, requestedSize: resolveImageSize(ne.fixedResolution.sizeId, (config.runtime.customImageSizes ?? []) as never) }
       : {}),
+    // AM 0.9.89.3+: custom sizes are image-ratio candidates (resolveV5UserDirections `xbt`).
+    customImageSizes: config.runtime.customImageSizes ?? [],
     forceAiChoiceCoordinates: ne.forceAiChoiceCoordinates,
     forceNsfwPrefix: ne.nsfwAlwaysEnabled,
     stateAccumulationEnabled: ne.stateAccumulationEnabled,
@@ -623,9 +641,8 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     applyContinuity: async (result: VisualContinuityResult) => {
       await req.assertTarget();
       const outfitReferences = ft.outfitContinuityReferences(result.plan.images);
-      commitContinuity = commitWith(async (controller, info) => {
-        await computeDeferredVisualContinuity({
-          controller,
+      commitContinuity = commitWith((info) =>
+        computeDeferredVisualContinuity({
           basisState: hr,
           continuity: result,
           chatKey,
@@ -635,14 +652,13 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
           historyRevisionId: info.historyRevisionId,
           historyRevisionOrder: info.historyRevisionOrder,
           outfitReferences,
-        });
-      });
+        }),
+      );
     },
     applyV5Continuity: async (state: unknown) => {
       await req.assertTarget();
-      commitContinuity = commitWith(async (controller, info) => {
-        await persistV5ContinuityState({
-          controller,
+      commitContinuity = commitWith((info) =>
+        persistV5ContinuityState({
           basisState: hr,
           continuity: state,
           chatKey,
@@ -651,8 +667,8 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
           messageId: continuityMessageId,
           historyRevisionId: info.historyRevisionId,
           historyRevisionOrder: info.historyRevisionOrder,
-        });
-      });
+        }) as ContinuityState,
+      );
     },
     persistGeneratedImage: async (image: Rec) => {
       await req.assertTarget();
@@ -741,6 +757,12 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     onEvent(e: Rec) {
       if (e.type === "jev-selection") {
         req.onJevSelection?.(jevSelectionProgress(rec(e.jevSelection)));
+        return;
+      }
+      if (e.type === "retry-errors") {
+        const retry = rec(e.imageRetry);
+        const imageRetry = Number(retry.attempt) > 0 ? { attempt: Number(retry.attempt), total: Number(retry.total) || 0 } : undefined;
+        req.onRetryErrors?.((Array.isArray(e.retryErrors) ? e.retryErrors : []) as GenerationRetryError[], imageRetry);
         return;
       }
       const imageCount = Number.isFinite(Number(e.imageCount)) ? Number(e.imageCount) + skipSlotIndexes.length : undefined;

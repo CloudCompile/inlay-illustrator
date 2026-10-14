@@ -1,4 +1,4 @@
-# src/engine — Asset Maid 0.9.88 core (pure, deterministic, parity-tested)
+# src/engine — Asset Maid 0.9.89.5 core (pure, deterministic, parity-tested)
 
 The engine is a faithful port of Asset Maid's pure core: NovelAI V5 and V4.5 catalogs and rule runtimes,
 analyzer request building and response recovery, prompt composition and provider prompt codecs, visual
@@ -7,7 +7,8 @@ image generation, storage, clock, randomness) is injected.
 
 ## How the port is built (read this first)
 
-- `core/asset-maid-core.ts` is **generated**. It is a verbatim slice of `AssetMaid.pretty.js`, made by
+- `core/asset-maid-core.ts` is **generated**. It is a verbatim slice of the AM 0.9.89.5 bundle
+  (`E:/Asset-Maid-upstream/pretty-versions/0.9.89.5.pretty.js`, prettier width 120), made by
   `core/tooling/slice.mjs` (acorn + eslint-scope). The slicer takes the root declarations listed in
   `core/tooling/slice-config.json` and emits their full top-level dependency closure in original order.
   The current slice has about 2450 declarations and about 54k lines, including the data literals (`vW`, `dg`, prompt texts).
@@ -20,9 +21,16 @@ image generation, storage, clock, randomness) is injected.
 - The area folders (`context/ v5/ v45/ compose/ continuity/ text/`) are **typed facades** over the core. They mirror
   Asset Maid's runtime shapes and field names (snake_case analyzer fields stay snake_case). They do not
   re-implement algorithms.
-- Regenerate the core: `cd C:/Users/eme4/asset-maid-port/scratch/engine && bun slice.mjs`. This reads
-  `slice-config.json` there (a copy is in `core/tooling/`). Add roots or renames, regenerate, then run the tests.
-  Do not edit `asset-maid-core.ts` by hand.
+- Regenerate the core: `cd C:/Users/eme4/asset-maid-port/scratch/engine && bun slice95.mjs <config>` with
+  `core/tooling/slice-config.json` (the `out` path points at this file). The roots and renames were mapped from the 0.9.88
+  names by matching identical top-level units (`asset-maid-port/scratch/port-0.9.89.5/`). Do not edit `asset-maid-core.ts` by hand.
+- `continuity/storage-core.ts` is a second generated slice, from the **0.9.88** bundle (`core/tooling/slice-config.storage-core.json`).
+  AM 0.9.89 moved continuity persistence into its own chat lore document; the port keeps the 0.9.88 storage format
+  (chat-store checkpoints + local-lore actor state) in userStorage. Helpers that are identical in 0.9.89.5 are imported from the main core.
+- Golden fixtures are recorded from the original 0.9.89.5 bundle (`scratch/port-0.9.89.5/reslice/am_harness95.js`, generators in
+  `scratch/port-0.9.89.5/reslice/gen/engine/**`; they translate the 0.9.88 names they use to 0.9.89.5 names).
+- The `// AM <name> @<line>` tags in the core now refer to 0.9.89.5 names and lines. Most facade doc comments and `spec/*.md`
+  still cite the 0.9.88 names and lines (`core/names.json` has the current mapping).
 
 ## Module map
 
@@ -31,6 +39,7 @@ image generation, storage, clock, randomness) is injected.
 | `index.ts` | Public API: `createAssetMaidEngine`, env injection, area namespaces, convenience re-exports |
 | `engine.ts` | `createAssetMaidEngine(options)`: the original boot object graph (LOt 180714-180783) with injected transports |
 | `core/` | generated slice, `env.ts`, `names.json`, `data/v5-raw-config.json` (shipped built-in V5 raw config), `tooling/` |
+| `continuity/storage-core.ts` | generated 0.9.88 continuity storage bridge (see above) |
 | `context/` | analyzer context building `MAt` (+ `y_e`, `NAt`, `Sat`, `Ky`, `ki`, `UAt`, `rI`, `g1t`), `analyzerInput` assembly. **Field-read list: `context/README.md`** |
 | `v5/` | V5 raw config validate/compile/hashes, rule runtime + scene compiler + prompt projection, analyzer request/messages/recovery/split, composition (`Ygt`) |
 | `v45/` | V4.5 catalog (`vW`/`LLe`), staged analyzer (`Ttt`/`VQe`, `KQe`/`BQe`/`$et`), checkpoints, composition (`Tht`) |

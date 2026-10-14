@@ -2195,6 +2195,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "classroom"
+      ],
       "locationTags": [
        "classroom"
       ]
@@ -2203,12 +2206,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "classroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "sunset"
@@ -2270,7 +2267,9 @@
      "version": 1,
      "scenes": {
       "chat-3": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "classroom"
+       ],
        "locationTags": [
         "classroom"
        ],
@@ -2283,6 +2282,7 @@
      "characters": {
       "chat-3": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -2304,21 +2304,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "characterName": "Alice",
         "updatedAt": 1760000000000,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 1,
         "updatedAtMessageId": "id:m1"
        },
        "lore:bob": {
+        "characterName": "Bob",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -2340,18 +2340,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Bob",
         "updatedAt": 1760000000000,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 1,
@@ -2364,12 +2360,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "classroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "sunset"
@@ -2404,7 +2394,6 @@
           "scene.location": [
            "classroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "sunset"
          },
          "updatedAt": 1760000000000,
@@ -2572,12 +2561,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "classroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "sunset"
        ]
@@ -2605,7 +2588,9 @@
      "previous_scene_tags": [
       "classroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "classroom"
+     ],
      "previous_scene_location_tags": [
       "classroom"
      ],
@@ -3394,6 +3379,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "classroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -3402,12 +3390,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "sunset"
@@ -3517,7 +3499,9 @@
      "version": 1,
      "scenes": {
       "chat-3": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "classroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -3530,6 +3514,7 @@
      "characters": {
       "chat-3": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -3555,7 +3540,6 @@
         "state.fluid.cum.location": [
          "cum_on_stomach"
         ],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "drooling"
         ],
@@ -3564,6 +3548,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
         "_continuity_expires": {
          "state.after_activity": {
@@ -3573,13 +3558,13 @@
           "drooling": 4
          }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
         "updatedAtMessageId": "id:m2"
        },
        "lore:bob": {
+        "characterName": "Bob",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -3601,24 +3586,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Bob",
         "updatedAt": 1760000000000,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 1,
         "updatedAtMessageId": "id:m1"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -3638,18 +3620,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
@@ -3662,12 +3640,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "sunset"
@@ -3712,8 +3684,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000001,
          "updatedAtChatIndex": 0,
@@ -3731,7 +3702,7 @@
         "capturedAt": 1760000000001,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"
@@ -4081,12 +4052,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "sunset"
        ]
@@ -4122,9 +4087,12 @@
       }
      },
      "previous_scene_tags": [
+      "classroom",
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "classroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -4959,6 +4927,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "classroom"
+      ],
       "locationTags": [
        "staff room"
       ]
@@ -4967,12 +4938,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "staff room"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "morning"
@@ -5077,7 +5042,9 @@
      "version": 1,
      "scenes": {
       "chat-3": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "classroom"
+       ],
        "locationTags": [
         "staff room"
        ],
@@ -5090,6 +5057,7 @@
      "characters": {
       "chat-3": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "outdoors"
@@ -5115,7 +5083,6 @@
         "state.fluid.cum.location": [
          "cum_on_stomach"
         ],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "drooling"
         ],
@@ -5124,6 +5091,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 3,
         "_continuity_expires": {
          "state.after_activity": {
@@ -5133,13 +5101,13 @@
           "drooling": 4
          }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000002,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 3,
         "updatedAtMessageId": "id:m3"
        },
        "lore:bob": {
+        "characterName": "Bob",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -5161,24 +5129,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Bob",
         "updatedAt": 1760000000002,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 3,
         "updatedAtMessageId": "id:m3"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -5198,18 +5163,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
@@ -5222,12 +5183,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "staff room"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "morning"
@@ -5269,8 +5224,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000001,
          "updatedAtChatIndex": 0,
@@ -5288,7 +5242,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -5485,7 +5439,7 @@
         "capturedAt": 1760000000001,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"
@@ -5835,12 +5789,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "staff room"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "morning"
        ]
@@ -5866,9 +5814,12 @@
       }
      },
      "previous_scene_tags": [
+      "classroom",
       "staff room"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "classroom"
+     ],
      "previous_scene_location_tags": [
       "staff room"
      ],
@@ -6354,6 +6305,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "classroom"
+      ],
       "locationTags": [
        "staff room"
       ]
@@ -6362,12 +6316,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "staff room"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "morning"
@@ -6471,7 +6419,9 @@
      "version": 1,
      "scenes": {
       "chat-3": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "classroom"
+       ],
        "locationTags": [
         "staff room"
        ],
@@ -6484,6 +6434,7 @@
      "characters": {
       "chat-3": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "outdoors"
@@ -6509,7 +6460,6 @@
         "state.fluid.cum.location": [
          "cum_on_stomach"
         ],
-        "cum_count": 0,
         "state.fluid.saliva": [
          "drooling"
         ],
@@ -6518,6 +6468,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 3,
         "_continuity_expires": {
          "state.after_activity": {
@@ -6527,13 +6478,13 @@
           "drooling": 4
          }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000002,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 3,
         "updatedAtMessageId": "id:m3"
        },
        "lore:bob": {
+        "characterName": "Bob",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -6555,24 +6506,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 3,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Bob",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
         "updatedAtMessageId": "id:m4"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -6592,18 +6540,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 1,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000001,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 2,
@@ -6616,12 +6560,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "staff room"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "morning"
@@ -6663,8 +6601,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000001,
          "updatedAtChatIndex": 0,
@@ -6682,7 +6619,7 @@
         "capturedAt": 1760000000003,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -6878,7 +6815,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -7075,7 +7012,7 @@
         "capturedAt": 1760000000001,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"
@@ -7425,12 +7362,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "staff room"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "morning"
        ]
@@ -7463,9 +7394,12 @@
       }
      },
      "previous_scene_tags": [
+      "classroom",
       "staff room"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "classroom"
+     ],
      "previous_scene_location_tags": [
       "staff room"
      ],
@@ -8327,6 +8261,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "classroom"
+      ],
       "locationTags": [
        "bedroom"
       ]
@@ -8335,12 +8272,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "morning"
@@ -8452,7 +8383,9 @@
      "version": 1,
      "scenes": {
       "chat-3": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "classroom"
+       ],
        "locationTags": [
         "bedroom"
        ],
@@ -8465,6 +8398,7 @@
      "characters": {
       "chat-3": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -8490,7 +8424,6 @@
         "state.fluid.cum.location": [
          "cum_on_stomach"
         ],
-        "cum_count": 3,
         "state.fluid.saliva": [
          "drooling"
         ],
@@ -8499,6 +8432,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 3,
         "_continuity_turn": 4,
         "_continuity_expires": {
          "state.fluid.saliva": {
@@ -8508,13 +8442,13 @@
           "after_sex": 5
          }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000004,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 5,
         "updatedAtMessageId": "id:m5"
        },
        "lore:bob": {
+        "characterName": "Bob",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -8536,24 +8470,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 3,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Bob",
         "updatedAt": 1760000000003,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 4,
         "updatedAtMessageId": "id:m4"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -8573,18 +8504,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000004,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 5,
@@ -8597,12 +8524,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "bedroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "morning"
@@ -8647,8 +8568,7 @@
           "scene.environment": "indoors",
           "scene.location": [
            "bedroom"
-          ],
-          "scene.location.anchor": "default"
+          ]
          },
          "updatedAt": 1760000000004,
          "updatedAtChatIndex": 0,
@@ -8666,7 +8586,7 @@
         "capturedAt": 1760000000004,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"
@@ -8867,7 +8787,7 @@
         "capturedAt": 1760000000003,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -9063,7 +8983,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -9260,7 +9180,7 @@
         "capturedAt": 1760000000001,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"
@@ -9610,12 +9530,6 @@
        "scene.environment": [
         "indoors"
        ],
-       "scene.location": [
-        "bedroom"
-       ],
-       "scene.location.anchor": [
-        "default"
-       ],
        "scene.time": [
         "morning"
        ]
@@ -9651,9 +9565,12 @@
       }
      },
      "previous_scene_tags": [
+      "classroom",
       "bedroom"
      ],
-     "previous_background_tags": [],
+     "previous_background_tags": [
+      "classroom"
+     ],
      "previous_scene_location_tags": [
       "bedroom"
      ],
@@ -10550,6 +10467,9 @@
       }
      },
      "scene": {
+      "backgroundTags": [
+       "classroom"
+      ],
       "locationTags": [
        "classroom"
       ]
@@ -10558,12 +10478,6 @@
       "global": {
        "scene.environment": [
         "indoors"
-       ],
-       "scene.location": [
-        "classroom"
-       ],
-       "scene.location.anchor": [
-        "default"
        ],
        "scene.time": [
         "sunset"
@@ -10670,7 +10584,9 @@
      "version": 1,
      "scenes": {
       "chat-3": {
-       "backgroundTags": [],
+       "backgroundTags": [
+        "classroom"
+       ],
        "locationTags": [
         "classroom"
        ],
@@ -10683,6 +10599,7 @@
      "characters": {
       "chat-3": {
        "lore:alice": {
+        "characterName": "Alice",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -10708,7 +10625,6 @@
         "state.fluid.cum.location": [
          "cum_on_stomach"
         ],
-        "cum_count": 3,
         "state.fluid.saliva": [
          "drooling"
         ],
@@ -10717,6 +10633,7 @@
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 3,
         "_continuity_turn": 5,
         "_continuity_expires": {
          "state.fluid.saliva": {
@@ -10726,13 +10643,13 @@
           "after_sex": 5
          }
         },
-        "characterName": "Alice",
         "updatedAt": 1760000000005,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 6,
         "updatedAtMessageId": "id:m6"
        },
        "lore:bob": {
+        "characterName": "Bob",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -10754,24 +10671,21 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 4,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Bob",
         "updatedAt": 1760000000005,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 6,
         "updatedAtMessageId": "id:m6"
        },
        "__persona__": {
+        "characterName": "Shouta",
         "scene.background": [],
         "scene.environment": [
          "indoors"
@@ -10791,18 +10705,14 @@
         "state.clothing.coverage.upper": [],
         "state.clothing.surface": [],
         "state.fluid.cum.location": [],
-        "cum_count": 0,
         "state.fluid.saliva": [],
         "state.penis.condom": [],
         "state.penis.exposure": [],
         "state.restraint.body": [],
         "state.restraint.gag": [],
         "state.sex_toy.placement": [],
+        "cum_count": 0,
         "_continuity_turn": 2,
-        "_continuity_expires": {
-         "state.fluid.cum.location": {}
-        },
-        "characterName": "Shouta",
         "updatedAt": 1760000000004,
         "updatedAtChatIndex": 0,
         "updatedAtMessageIndex": 5,
@@ -10815,12 +10725,6 @@
        "global": {
         "scene.environment": [
          "indoors"
-        ],
-        "scene.location": [
-         "classroom"
-        ],
-        "scene.location.anchor": [
-         "default"
         ],
         "scene.time": [
          "sunset"
@@ -10864,7 +10768,6 @@
           "scene.location": [
            "classroom"
           ],
-          "scene.location.anchor": "default",
           "scene.time": "sunset"
          },
          "updatedAt": 1760000000005,
@@ -11082,7 +10985,7 @@
         "capturedAt": 1760000000004,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"
@@ -11283,7 +11186,7 @@
         "capturedAt": 1760000000003,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -11479,7 +11382,7 @@
         "capturedAt": 1760000000002,
         "scene": {
          "backgroundTags": [
-          "staff room"
+          "classroom"
          ],
          "locationTags": [
           "staff room"
@@ -11676,7 +11579,7 @@
         "capturedAt": 1760000000001,
         "scene": {
          "backgroundTags": [
-          "bedroom"
+          "classroom"
          ],
          "locationTags": [
           "bedroom"

@@ -2,7 +2,7 @@
  * State of the chat-side runtime surfaces (toast stack, error dialog) that does not live in the app store:
  * finished generations, notices, dismissed / expanded toasts, the error-dialog queue, visibility flags.
  */
-import type { AttemptKind, GenerationJobSnapshot, JevSelectionProgress, RpcError, RpcEvents } from "../../shared/contract/rpc.js";
+import type { AttemptKind, GenerationJobSnapshot, GenerationPhase, GenerationRetryError, JevSelectionProgress, RpcError, RpcEvents } from "../../shared/contract/rpc.js";
 import type { FinishedGeneration, NoticeEntry } from "./toast-model.js";
 
 export interface ErrorDialogItem { id: string; title: string; message: string; jobId?: string }
@@ -16,6 +16,10 @@ export class ChatRuntimeStore {
   notices: NoticeEntry[] = [];
   dismissed = new Set<string>();
   expanded = new Set<string>();
+  /** Toasts with the previous-errors list open (AM `historyExpanded`). */
+  historyExpanded = new Set<string>();
+  /** Result of the last "copy error log" per toast; shown while the copied text is unchanged (AM `copyStatus`). */
+  copyStatus = new Map<string, { text: string; status: string }>();
   errors: ErrorDialogItem[] = [];
   readonly displayIndex = new Map<string, number>();
   readonly seenAt = new Map<string, number>();
@@ -25,7 +29,7 @@ export class ChatRuntimeStore {
   zoomOpen = false;
   /** A chat is active (count panel only on the chat screen). */
   chatActive = false;
-  private readonly jobs = new Map<string, { attemptKind: AttemptKind; requestedCount: number; completedSlots: number; canRetry: boolean; canRestart: boolean; jevSelection?: JevSelectionProgress }>();
+  private readonly jobs = new Map<string, { attemptKind: AttemptKind; requestedCount: number; completedSlots: number; canRetry: boolean; canRestart: boolean; jevSelection?: JevSelectionProgress; phase: GenerationPhase; retryErrors?: GenerationRetryError[] }>();
   private readonly seenErrorIds: string[] = [];
   private readonly listeners = new Set<() => void>();
   private noticeCounter = 0;
@@ -59,7 +63,7 @@ export class ChatRuntimeStore {
 
   /** Remembers job facts so a finished event can still name the attempt kind and counts. */
   trackJob(job: GenerationJobSnapshot): void {
-    this.jobs.set(job.jobId, { attemptKind: job.attemptKind, requestedCount: job.requestedCount, completedSlots: job.completedSlots, canRetry: job.canRetry, canRestart: job.canRestart, jevSelection: job.jevSelection });
+    this.jobs.set(job.jobId, { attemptKind: job.attemptKind, requestedCount: job.requestedCount, completedSlots: job.completedSlots, canRetry: job.canRetry, canRestart: job.canRestart, jevSelection: job.jevSelection, phase: job.phase, retryErrors: job.retryErrors });
   }
 
   finish(payload: RpcEvents["generation.finished"], fallbackKind: AttemptKind = "initial"): FinishedGeneration {
@@ -77,6 +81,8 @@ export class ChatRuntimeStore {
       canRestart: payload.result === "failed" && (known?.canRestart ?? false),
       ...(payload.error ? { error: payload.error } : {}),
       ...(known?.jevSelection ? { jevSelection: known.jevSelection } : {}),
+      ...(known ? { phase: known.phase } : {}),
+      ...(known?.retryErrors?.length ? { retryErrors: known.retryErrors } : {}),
       finishedAt: Date.now()
     };
     this.finished = [...this.finished.filter((f) => f.jobId !== entry.jobId), entry].slice(-MAX_FINISHED);
@@ -99,12 +105,25 @@ export class ChatRuntimeStore {
     if (toastKey.startsWith("notice:")) this.notices = this.notices.filter((n) => `notice:${n.key}` !== toastKey);
     if (toastKey.startsWith("generation:")) this.finished = this.finished.filter((f) => `generation:${f.jobId}` !== toastKey);
     this.expanded.delete(toastKey);
+    this.historyExpanded.delete(toastKey);
+    this.copyStatus.delete(toastKey);
     this.emit();
   }
 
   toggleExpanded(toastKey: string): void {
     if (this.expanded.has(toastKey)) this.expanded.delete(toastKey);
     else this.expanded.add(toastKey);
+    this.emit();
+  }
+
+  toggleHistory(toastKey: string): void {
+    if (this.historyExpanded.has(toastKey)) this.historyExpanded.delete(toastKey);
+    else this.historyExpanded.add(toastKey);
+    this.emit();
+  }
+
+  setCopyStatus(toastKey: string, text: string, status: string): void {
+    this.copyStatus.set(toastKey, { text, status });
     this.emit();
   }
 

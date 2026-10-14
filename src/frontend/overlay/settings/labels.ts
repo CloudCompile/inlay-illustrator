@@ -78,8 +78,10 @@ export const ANALYSIS_LABELS = {
   decrease: (label: string) => `${label} decrease`, // ${label} 감소
   increase: (label: string) => `${label} increase`, // ${label} 증가
   sizeCandidates: "Analyzer image size candidates", // Analyzer 이미지 크기 후보
-  sizeHelpBefore: "Only checked sizes are used as image ratio candidates. Write instructions in the form", // 체크한 크기만 이미지 비율 선택 후보로 사용합니다. 지침은
-  sizeHelpAfter: ".", // 형태로 작성하세요.
+  sizeHelpBefore: "Only checked sizes are used as image ratio candidates. Instructions can use", // 체크한 크기만 이미지 비율 선택 후보로 사용합니다. 지침은
+  sizeHelpStrong: "sizeId or resolution", // sizeId 또는 해상도
+  sizeHelpAfter: ".", // 를 사용할 수 있습니다.
+  noUsableSize: "No usable size. Please select sizes again.", // 사용 가능한 크기가 없습니다. 크기를 다시 선택해주세요.
   /** Built-in preset button labels (`N0t` + data names). */
   builtInNames: {
     "scene-default": "Illustration", // 삽화

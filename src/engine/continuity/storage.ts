@@ -1,23 +1,27 @@
 /**
  * Continuity persistence in the chat (spec/pipeline.md §3.7a): checkpoints live in the chat store
  * (`messages[id].generations[*].continuity`), the current cum/injury actor state in a chat local-lore entry.
- * `readContinuityFromChat` / `writeContinuityToChat` reproduce the storage adapter of the original boot
+ * `readContinuityFromChat` / `writeContinuityToChat` reproduce the storage adapter of the 0.9.88 boot
  * (`U().getItem` / `setItem`, 180461-180536) by composing verbatim core functions.
+ * AM 0.9.89 moved this storage into its own chat lore document (messages/jobs/currentActorState). The port keeps the
+ * 0.9.88 format in userStorage, so the storage-only functions come from `storage-core.ts` (a 0.9.88 slice).
  */
 import {
-  writeContinuityCheckpointsToChatStore as coreWriteStore,
-  readContinuityCheckpointsFromChatStore as coreReadStore,
   rebuildContinuityFromChatStore as coreRebuild,
   rebuildContinuityAtMessage as coreRebuildAt,
-  readLocalLoreActorState as coreReadLore,
-  writeLocalLoreActorState as coreWriteLore,
   mergeLocalLoreActorState as coreMergeLore,
   toLocalLoreActorEntry as coreToEntry,
   applyActorStateEdit as coreApplyEdit,
-  hasContinuityData as coreHasData,
-  Rs as messageIdOf,
-  gR as LOCAL_LORE_ID,
+  hi as messageIdOf,
 } from "../core/asset-maid-core";
+import {
+  writeContinuityCheckpointsToChatStore as coreWriteStore,
+  readContinuityCheckpointsFromChatStore as coreReadStore,
+  readLocalLoreActorState as coreReadLore,
+  writeLocalLoreActorState as coreWriteLore,
+  hasContinuityData as coreHasData,
+  gR as LOCAL_LORE_ID,
+} from "./storage-core";
 import type {
   ActorContinuityState,
   ContinuityChat,

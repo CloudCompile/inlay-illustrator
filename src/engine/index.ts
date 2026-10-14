@@ -65,10 +65,8 @@ export {
 /** Visual continuity. */
 export {
   applyVisualContinuityToPlan,
-  updateVisualContinuity,
   computeDeferredVisualContinuity,
   createEmptyContinuityState,
-  reconcileContinuityCheckpoints,
   readContinuityFromChat,
   writeContinuityToChat,
 } from "./continuity";

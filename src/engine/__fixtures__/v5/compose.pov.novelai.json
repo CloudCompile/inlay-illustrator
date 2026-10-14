@@ -1,4 +1,11 @@
 {
+ "scenario": {
+  "response": "pov",
+  "directions": "pov",
+  "provider": "novelai",
+  "seed": 42,
+  "forceAiChoiceCoordinates": false
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
@@ -54,6 +61,12 @@
         "id": "scene.time",
         "options": [
          "morning"
+        ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
         ]
        }
       ],
@@ -170,7 +183,7 @@
        "code": "placement-item-fallback",
        "impact": "degraded",
        "path": "$.illustrations[0].frame_placement.items",
-       "message": "Added deterministic fallback placement for 'actor_2'."
+       "message": "Added a deterministic fallback occurrence for 'actor_2'."
       },
       {
        "code": "actor-occurrence-detail-defaulted-empty",
@@ -292,11 +305,16 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+  "requestPayload": "fnv1a64-064e26890e3120df",
   "localProjection": {
+   "allowedSizeIds": [
+    1,
+    2,
+    5
+   ],
    "characterCoordinates": "persona-automatic"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -330,20 +348,19 @@
       "female",
       "silver hair",
       "blue eyes",
+      "looking at viewer",
+      "light smile",
+      "light blush",
       "white sailor shirt",
       "navy sailor collar",
       "red neckerchief",
       "navy pleated skirt",
-      "black thighhighs",
-      "brown loafers",
-      "looking at viewer",
-      "light smile",
-      "light blush"
+      "0.8::black thighhighs::"
      ],
      "instructions": [
       "reaching toward the viewer."
      ],
-     "serializedPrompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+     "serializedPrompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -447,6 +464,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00015",
      "semanticKey": "silver hair",
@@ -464,6 +482,7 @@
      "order": 9500,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:eyes.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00016",
      "semanticKey": "blue eyes",
@@ -481,6 +500,7 @@
      "order": 10300,
      "sourceKind": "external-identity",
      "sourceId": "persona::p1:custom:0",
+     "placementIndex": 2,
      "suppressionReason": "local_rule",
      "id": "ledger:00023",
      "semanticKey": "kazehaya shouta",
@@ -748,6 +768,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00017",
      "semanticKey": "white sailor shirt",
@@ -765,6 +786,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:top",
+     "placementIndex": 2,
      "suppressionReason": "local_rule",
      "id": "ledger:00024",
      "semanticKey": "black hoodie",
@@ -782,6 +804,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00018",
      "semanticKey": "navy sailor collar",
@@ -799,6 +822,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00019",
      "semanticKey": "red neckerchief",
@@ -816,6 +840,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:bottom",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00020",
      "semanticKey": "navy pleated skirt",
@@ -833,6 +858,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:bottom",
+     "placementIndex": 2,
      "suppressionReason": "local_rule",
      "id": "ledger:00025",
      "semanticKey": "jeans",
@@ -850,7 +876,8 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:legs",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0.8,
      "id": "ledger:00021",
      "semanticKey": "black thighhighs",
      "inputIndex": 21,
@@ -867,7 +894,9 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:feet",
-     "suppressionReason": "local_rule",
+     "placementIndex": 2,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00026",
      "semanticKey": "sneakers",
      "inputIndex": 26,
@@ -884,11 +913,13 @@
      "order": 9400,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00022",
      "semanticKey": "brown loafers",
      "inputIndex": 22,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -997,7 +1028,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+      "prompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
       "uc": "bad hands",
       "centerX": 0.5,
       "centerY": 0.55
@@ -1038,7 +1069,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+     "prompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
      "negativePrompt": "bad hands"
     },
     {
@@ -1066,16 +1097,16 @@
     },
     "outfits": {
      "actor_1": {
-      "start": 32,
-      "end": 140
+      "start": 77,
+      "end": 177
      }
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-9403ac24e81b8583"
+    "hash": "fnv1a64-511229b6be5d705b"
    },
    "decision": {
-    "hash": "fnv1a64-82838a96359e6bbc"
+    "hash": "fnv1a64-fff07dff97873296"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1114,7 +1145,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_1",
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+      "prompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
       "uc": "bad hands",
       "identityKey": "lore:alice",
       "identity": {
@@ -1247,7 +1278,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+      "prompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
       "uc": "bad hands",
       "centerX": 0.5,
       "centerY": 0.55
@@ -1279,7 +1310,7 @@
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "female, silver hair, blue eyes, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at viewer, light smile, light blush\nreaching toward the viewer.",
+      "prompt": "female, silver hair, blue eyes, looking at viewer, light smile, light blush, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nreaching toward the viewer.",
       "negativePrompt": "bad hands",
       "centerX": 0.5,
       "centerY": 0.55
@@ -1313,7 +1344,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-fb8f5b4733105497"
+    "hash": "fnv1a64-42364b79a0043b9d"
    }
   }
  ],

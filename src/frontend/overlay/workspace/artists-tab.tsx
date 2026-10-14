@@ -10,7 +10,7 @@ import type { AppController } from "../../state/app-state.js";
 import { useAppState } from "../../state/app-state.js";
 import { Store, useSelector } from "../../state/store.js";
 import { DockLayout } from "../shell/dock.js";
-import { Button, ChevronDownIcon, ChevronUpIcon, IconButton, PencilIcon, PlusIcon, SaveIcon, Slider, TrashIcon, XIcon, cn, SettingsIcon } from "../ui/index.js";
+import { Button, CheckIcon, ChevronDownIcon, ChevronUpIcon, IconButton, PencilIcon, PlusIcon, SaveIcon, Slider, TrashIcon, XIcon, cn } from "../ui/index.js";
 import { useWorkspaceCtx, type WorkspaceCtx } from "./context.js";
 import { ImageIcon, MinusIcon, SparklesIcon, TypeIcon } from "./icons.js";
 import { ARTISTS_LABELS } from "./labels/artists.js";
@@ -146,7 +146,6 @@ function useArtistActions(ctx: WorkspaceCtx) {
 function NovelAIList({ ctx }: { ctx: WorkspaceCtx }) {
   const { state } = useArtists(ctx);
   const { run, startEdit } = useArtistActions(ctx);
-  const global = useAppState((s) => s.config?.novelai);
   const select = (id: string) => run(() => ctx.app.call("artists.select", { list: "novelai", artistId: id, ...(ctx.characterId ? { characterId: ctx.characterId } : {}) }));
   return (
     <div class="grid gap-2 md:grid-cols-2" data-artist-list="novelai">
@@ -154,37 +153,33 @@ function NovelAIList({ ctx }: { ctx: WorkspaceCtx }) {
         const selected = artist.id === state.selectedNovelAIId;
         const title = displayTitle(artist);
         const preview = artist.userDefined ? (artist.description || artist.prompt) : (ARTISTS_LABELS.presetDescriptions[artist.id] ?? artist.description);
-        const o = artist.novelAIOverrides;
+        // AM 0.9.89.3 card: the whole card selects; edit / delete sit in a bordered side column.
         return (
-          <article key={artist.id} class={cn("grid gap-2 rounded-lg bg-card p-3 transition-colors", selected && "bg-selected")} data-artist-card={artist.id} data-selected={selected ? "true" : "false"}>
-            <div class="flex min-w-0 items-start gap-2">
-              <button type="button" aria-pressed={selected} aria-label={ARTISTS_LABELS.selectOf(title)} onClick={() => void select(artist.id)} class="flex min-w-0 flex-1 items-start gap-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/55 rounded-md">
-                <span class="mt-0.5"><Radio on={selected} /></span>
-                <span class="grid min-w-0 gap-1">
-                  <strong class="truncate text-xs">{title}</strong>
-                  <span class="line-clamp-2 text-2xs leading-relaxed text-muted-foreground" title={artist.description || artist.prompt}>{preview || ARTISTS_LABELS.emptyPrompt}</span>
+          <article key={artist.id} class={cn("group grid min-w-0 grid-cols-[minmax(0,1fr)_auto] rounded-lg border border-transparent bg-card", selected && "border-primary bg-selected")} data-artist-card={artist.id} data-selected={selected ? "true" : "false"}>
+            <button type="button" aria-pressed={selected} aria-label={ARTISTS_LABELS.selectOf(title)} onClick={() => void select(artist.id)}
+              class="grid min-h-23 w-full min-w-0 content-start gap-2 rounded-lg p-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span class="flex h-8 min-w-0 items-start gap-1.5">
+                <span aria-hidden="true" class={cn("mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-full border border-border bg-secondary", selected && "border-primary bg-primary text-primary-foreground")}>
+                  {selected ? <CheckIcon className="size-2.5" /> : null}
                 </span>
-              </button>
-              <div class="flex shrink-0 gap-0.5">
-                {artist.id !== NO_ARTIST_ID ? (
-                  artist.userDefined
-                    ? <IconButton size="workbenchIcon" label={ARTISTS_LABELS.editOf(title)} title={ARTISTS_LABELS.edit} onClick={() => startEdit(artist.id)}><PencilIcon /></IconButton>
-                    : <IconButton size="workbenchIcon" label={ARTISTS_LABELS.settingsOf(title)} title={ARTISTS_LABELS.settings} onClick={() => startEdit(artist.id)}><SettingsIcon /></IconButton>
-                ) : null}
-                {artist.userDefined ? (
-                  <IconButton size="workbenchIcon" label={ARTISTS_LABELS.deleteOf(title)} title={ARTISTS_LABELS.delete} onClick={() => void run(async () => {
+                <strong class="line-clamp-2 min-w-0 text-xs leading-4 font-medium wrap-anywhere" title={title}>{title}</strong>
+              </span>
+              <span class="line-clamp-2 text-xs leading-4 text-muted-foreground" title={artist.description || artist.prompt}>{preview || ARTISTS_LABELS.emptyPrompt}</span>
+            </button>
+            <div class="flex flex-col items-center justify-start gap-1 border-l border-border/60 px-1.5 py-2 opacity-65 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+              {artist.userDefined ? (
+                <>
+                  <IconButton size="iconCompact" className="hover:text-destructive" label={ARTISTS_LABELS.deleteOf(title)} title={ARTISTS_LABELS.delete} onClick={() => void run(async () => {
                     await ctx.app.call("artists.deleteNovelAI", { id: artist.id });
                     if (selected && ctx.characterId) await ctx.app.call("artists.select", { list: "novelai", artistId: NO_ARTIST_ID, characterId: ctx.characterId });
                     if (ctx.session.artists.editingId === artist.id) ctx.sessions.update(ctx.characterId, (s) => ({ artists: { ...s.artists, editingId: "" } }));
                   })}><TrashIcon /></IconButton>
-                ) : null}
-              </div>
+                  <IconButton size="iconCompact" label={ARTISTS_LABELS.editOf(title)} title={ARTISTS_LABELS.edit} onClick={() => startEdit(artist.id)}><PencilIcon /></IconButton>
+                </>
+              ) : artist.id !== NO_ARTIST_ID ? (
+                <IconButton size="iconCompact" label={ARTISTS_LABELS.settingsOf(title)} title={ARTISTS_LABELS.settings} onClick={() => startEdit(artist.id)}><PencilIcon /></IconButton>
+              ) : null}
             </div>
-            <dl class="grid grid-cols-3 gap-1 text-center">
-              {([["STEPS", String(o?.steps ?? global?.steps ?? 28)], ["SCALE", (o?.scale ?? global?.scale ?? 5).toFixed(1)], ["RESCALE", (o?.cfgRescale ?? global?.cfgRescale ?? 0).toFixed(2)]] as const).map(([k, v]) => (
-                <div key={k} class="rounded-md bg-surface-control px-1.5 py-1"><dt class="text-3xs font-black text-muted-foreground">{k}</dt><dd class="text-2xs font-bold tabular-nums">{v}</dd></div>
-              ))}
-            </dl>
           </article>
         );
       })}

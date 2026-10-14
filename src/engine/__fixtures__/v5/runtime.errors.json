@@ -81,6 +81,12 @@
       "options": [
        "morning"
       ]
+     },
+     {
+      "id": "framing.crop",
+      "options": [
+       "cowboy_shot"
+      ]
      }
     ],
     "freeTags": [
@@ -278,6 +284,12 @@
       "options": [
        "morning"
       ]
+     },
+     {
+      "id": "framing.crop",
+      "options": [
+       "cowboy_shot"
+      ]
      }
     ],
     "freeTags": [
@@ -388,6 +400,84 @@
    "matchedRules": [
     {
      "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
+    {
+     "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
+    {
+     "rule": {
       "id": "rule:fnv1a64-32e6fe4743f5a7e4",
       "source": {
        "kind": "option",
@@ -429,6 +519,84 @@
     }
    ],
    "ruleCandidates": [
+    {
+     "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
+    {
+     "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
     {
      "rule": {
       "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -739,6 +907,9 @@
     "global:scene.time": [
      "morning"
     ],
+    "global:framing.crop": [
+     "cowboy_shot"
+    ],
     "global:camera.view": [
      "from_side"
     ],
@@ -920,6 +1091,12 @@
       "id": "scene.time",
       "options": [
        "morning"
+      ]
+     },
+     {
+      "id": "framing.crop",
+      "options": [
+       "cowboy_shot"
       ]
      }
     ],
@@ -1140,6 +1317,12 @@
       "options": [
        "morning"
       ]
+     },
+     {
+      "id": "framing.crop",
+      "options": [
+       "cowboy_shot"
+      ]
      }
     ],
     "freeTags": [
@@ -1271,6 +1454,84 @@
    "matchedRules": [
     {
      "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
+    {
+     "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
+    {
+     "rule": {
       "id": "rule:fnv1a64-32e6fe4743f5a7e4",
       "source": {
        "kind": "option",
@@ -1312,6 +1573,84 @@
     }
    ],
    "ruleCandidates": [
+    {
+     "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_1"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
+    {
+     "rule": {
+      "id": "rule:fnv1a64-22d73b179b7bc3e3",
+      "source": {
+       "kind": "definition",
+       "definitionId": "framing.crop",
+       "sourcePath": "raw.modifierLibrary.closed[47].rules[0]"
+      },
+      "phases": [
+       "weight"
+      ],
+      "rule": {
+       "weight": {
+        "prompt": "body_part"
+       },
+       "when": {
+        "actor": "cast"
+       }
+      },
+      "effects": {},
+      "condition": {
+       "actor": "cast"
+      },
+      "weight": {
+       "prompt": "body_part"
+      }
+     },
+     "owner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "chanceOwner": {
+      "kind": "global",
+      "bindingActorId": "actor_2"
+     },
+     "sourceOptions": [
+      "cowboy_shot"
+     ]
+    },
     {
      "rule": {
       "id": "rule:fnv1a64-32e6fe4743f5a7e4",
@@ -1622,6 +1961,9 @@
     ],
     "global:scene.time": [
      "morning"
+    ],
+    "global:framing.crop": [
+     "cowboy_shot"
     ],
     "global:camera.view": [
      "from_side"

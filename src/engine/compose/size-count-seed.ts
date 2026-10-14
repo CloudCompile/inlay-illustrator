@@ -8,8 +8,8 @@ import {
   resolveImageCountConstraint as coreResolveCount,
   createSeedResolver as coreSeedResolver,
   randomSeed as coreRandomSeed,
-  sht as coreBuiltInSize,
-  Ii as coreNormalizeSeed,
+  Tgt as coreBuiltInSize,
+  Vi as coreNormalizeSeed,
   NOVELAI_DEFAULTS,
 } from "../core/asset-maid-core";
 import type { ImageCountConstraint, ImageCountPolicy, ImageSize } from "./types";

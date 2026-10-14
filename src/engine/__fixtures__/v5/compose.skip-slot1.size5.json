@@ -1,11 +1,20 @@
 {
+ "scenario": {
+  "response": "default",
+  "provider": "novelai",
+  "seed": 48,
+  "skipSlotNumbers": [
+   1
+  ],
+  "requestedSizeId": 5
+ },
  "analysis": {
   "profile": "v5-hybrid",
   "response": {
    "illustrations": [
     {
      "slotNumber": 0,
-     "status": "recovered",
+     "status": "degraded",
      "presentationMode": "single-frame",
      "actors": [
       {
@@ -83,6 +92,12 @@
         "options": [
          "morning"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "cowboy_shot"
+        ]
        }
       ],
       "freeTags": [
@@ -95,7 +110,6 @@
       "comicPanels": [],
       "comicCrossPanelActors": []
      },
-     "analyzerSizeId": 2,
      "framePlacement": [
       {
        "actorId": "actor_1",
@@ -197,6 +211,12 @@
      },
      "diagnostics": [
       {
+       "code": "size-id-invalid-local-fallback",
+       "impact": "degraded",
+       "path": "$.illustrations[0].frame_placement.sizeId",
+       "message": "Omitted an unavailable Analyzer sizeId; the Free Scene compiler will use its local size resolver."
+      },
+      {
        "code": "tag-canonicalized",
        "impact": "recovered",
        "path": "$.illustrations[0].frame_placement.freeTags[0]",
@@ -243,6 +263,12 @@
         "options": [
          "indoors"
         ]
+       },
+       {
+        "id": "framing.crop",
+        "options": [
+         "upper_body"
+        ]
        }
       ],
       "freeTags": [
@@ -255,7 +281,6 @@
       "comicPanels": [],
       "comicCrossPanelActors": []
      },
-     "analyzerSizeId": 1,
      "framePlacement": [
       {
        "actorId": "actor_1",
@@ -307,10 +332,10 @@
      },
      "diagnostics": [
       {
-       "code": "frame-scene-modifier-omitted",
+       "code": "size-id-invalid-local-fallback",
        "impact": "degraded",
-       "path": "$.illustrations[1].frame_placement.modifiers",
-       "message": "Omitted an Actor-facing modifier from the Frame Placement scene modifier list."
+       "path": "$.illustrations[1].frame_placement.sizeId",
+       "message": "Omitted an unavailable Analyzer sizeId; the Free Scene compiler will use its local size resolver."
       },
       {
        "code": "tag-canonicalized",
@@ -432,11 +457,14 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-8a90e20f1c717e1d",
+  "requestPayload": "fnv1a64-74b222d181a5c0df",
   "localProjection": {
+   "allowedSizeIds": [
+    5
+   ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-c368130800610ca6"
+  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
  },
  "plans": [
   {
@@ -473,25 +501,24 @@
       "silver hair",
       "blue eyes",
       "source#arm hug",
+      "looking at another",
+      "light smile",
+      "open mouth",
+      "standing",
       "source#sleeve grab",
       "white sailor shirt",
       "navy sailor collar",
       "red neckerchief",
       "navy pleated skirt",
-      "black thighhighs",
-      "brown loafers",
-      "looking at another",
-      "light smile",
-      "open mouth",
-      "standing"
+      "0.8::black thighhighs::"
      ],
      "instructions": [
-      "fingers pinching the hoodie sleeve.",
       "left of the gate pillar.",
+      "fingers pinching the hoodie sleeve.",
       "leaning forward slightly.",
       "waving one hand high."
      ],
-     "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+     "serializedPrompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
      "actorId": "actor_1",
      "placementIndex": 0,
      "candidateKey": "actor.g00nx3.1d3zc2v",
@@ -505,17 +532,16 @@
       "male",
       "1::kazehaya shouta::",
       "target#arm hug",
+      "surprised",
+      "standing",
       "target#sleeve grab",
       "black hoodie",
-      "jeans",
-      "sneakers",
-      "surprised",
-      "standing"
+      "jeans"
      ],
      "instructions": [
       "running toward the gate."
      ],
-     "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+     "serializedPrompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
      "actorId": "actor_2",
      "placementIndex": 1,
      "candidateKey": "actor.1fmv888.fk4pvw",
@@ -603,6 +629,7 @@
      "order": 9100,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:hair.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00026",
      "semanticKey": "silver hair",
@@ -620,6 +647,7 @@
      "order": 9500,
      "sourceKind": "external-identity",
      "sourceId": "lore:alice:eyes.color:0",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00027",
      "semanticKey": "blue eyes",
@@ -637,6 +665,7 @@
      "order": 10300,
      "sourceKind": "external-identity",
      "sourceId": "persona::p1:custom:0",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00034",
      "semanticKey": "kazehaya shouta",
@@ -1088,6 +1117,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00028",
      "semanticKey": "white sailor shirt",
@@ -1105,6 +1135,7 @@
      "order": 9100,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:top",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00035",
      "semanticKey": "black hoodie",
@@ -1122,6 +1153,7 @@
      "order": 9101,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00029",
      "semanticKey": "navy sailor collar",
@@ -1139,6 +1171,7 @@
      "order": 9102,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:top",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00030",
      "semanticKey": "red neckerchief",
@@ -1156,6 +1189,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:bottom",
+     "placementIndex": 0,
      "weight": 1,
      "id": "ledger:00031",
      "semanticKey": "navy pleated skirt",
@@ -1173,6 +1207,7 @@
      "order": 9200,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:bottom",
+     "placementIndex": 1,
      "weight": 1,
      "id": "ledger:00036",
      "semanticKey": "jeans",
@@ -1190,7 +1225,8 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:legs",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0.8,
      "id": "ledger:00032",
      "semanticKey": "black thighhighs",
      "inputIndex": 32,
@@ -1207,11 +1243,13 @@
      "order": 9300,
      "sourceKind": "external",
      "sourceId": "outfit:persona::p1:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 1,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00037",
      "semanticKey": "sneakers",
      "inputIndex": 37,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1224,11 +1262,13 @@
      "order": 9400,
      "sourceKind": "external",
      "sourceId": "outfit:lore:alice:outfit_1:feet",
-     "weight": 1,
+     "placementIndex": 0,
+     "weight": 0,
+     "suppressionReason": "visibility",
      "id": "ledger:00033",
      "semanticKey": "brown loafers",
      "inputIndex": 33,
-     "status": "applied"
+     "status": "suppressed"
     },
     {
      "lane": "tag",
@@ -1277,7 +1317,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "uc": "bad hands",
       "centerX": 0.35,
       "centerY": 0.5,
@@ -1285,7 +1325,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "uc": "",
       "centerX": 0.68,
       "centerY": 0.52,
@@ -1319,7 +1359,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+     "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
      "negativePrompt": "bad hands"
     },
     {
@@ -1332,7 +1372,7 @@
      "selectedFormId": "form_default",
      "selectedOutfitId": "outfit_1",
      "identitySuppressed": false,
-     "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+     "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
      "negativePrompt": ""
     }
    ],
@@ -1347,20 +1387,20 @@
     },
     "outfits": {
      "actor_1": {
-      "start": 68,
-      "end": 176
+      "start": 123,
+      "end": 223
      },
      "actor_2": {
-      "start": 64,
-      "end": 93
+      "start": 85,
+      "end": 104
      }
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-c5dca58fae803359"
+    "hash": "fnv1a64-58f42590c5640676"
    },
    "decision": {
-    "hash": "fnv1a64-83d1cfb437d23c7a"
+    "hash": "fnv1a64-a395b51bc150d8b4"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1399,7 +1439,7 @@
       "actorIndex": 0,
       "placementIndex": 0,
       "selectedOutfitId": "outfit_1",
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "uc": "bad hands",
       "identityKey": "lore:alice",
       "identity": {
@@ -1413,7 +1453,7 @@
       "actorIndex": 1,
       "placementIndex": 1,
       "selectedOutfitId": "outfit_1",
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "uc": "",
       "identityKey": "persona::p1",
       "identity": {
@@ -1472,7 +1512,7 @@
     "characterPrompts": [
      {
       "actorSlot": "actor_1",
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "uc": "bad hands",
       "centerX": 0.35,
       "centerY": 0.5,
@@ -1480,7 +1520,7 @@
      },
      {
       "actorSlot": "actor_2",
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "uc": "",
       "centerX": 0.68,
       "centerY": 0.52,
@@ -1505,7 +1545,7 @@
      {
       "actorId": "actor_1",
       "actorIndex": 0,
-      "prompt": "female, silver hair, blue eyes, source#arm hug, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, black thighhighs, brown loafers, looking at another, light smile, open mouth, standing\nfingers pinching the hoodie sleeve. left of the gate pillar. leaning forward slightly. waving one hand high.",
+      "prompt": "female, silver hair, blue eyes, source#arm hug, looking at another, light smile, open mouth, standing, source#sleeve grab, white sailor shirt, navy sailor collar, red neckerchief, navy pleated skirt, 0.8::black thighhighs::\nleft of the gate pillar. fingers pinching the hoodie sleeve. leaning forward slightly. waving one hand high.",
       "negativePrompt": "bad hands",
       "centerX": 0.35,
       "centerY": 0.5
@@ -1513,7 +1553,7 @@
      {
       "actorId": "actor_2",
       "actorIndex": 1,
-      "prompt": "male, 1::kazehaya shouta::, target#arm hug, target#sleeve grab, black hoodie, jeans, sneakers, surprised, standing\nrunning toward the gate.",
+      "prompt": "male, 1::kazehaya shouta::, target#arm hug, surprised, standing, target#sleeve grab, black hoodie, jeans\nrunning toward the gate.",
       "negativePrompt": "",
       "centerX": 0.68,
       "centerY": 0.52
@@ -1539,7 +1579,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-6a373427c11c5030"
+    "hash": "fnv1a64-a4ef9db217749d6e"
    }
   }
  ],

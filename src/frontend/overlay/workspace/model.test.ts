@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createDefaultConfig } from "../../../shared/contract/config.js";
-import { normalizeFormCollection } from "../../../shared/contract/character.js";
+import { addOutfit, deleteOutfit, normalizeFormCollection, patchOutfit } from "../../../shared/contract/character.js";
 import {
   FILTER_GROUPS,
   evidenceStatusText,
@@ -193,6 +193,25 @@ describe("form drafts", () => {
     expect(analysisStates(e.value).every((v) => !v)).toBe(true);
     expect(analysisStates(e.base).every((v) => !v)).toBe(true);
     expect(e.base.defaultFormId).toBe("form_default");
+  });
+  test("structural changes save at once unless the form has unsaved outfit edits (AM QC)", async () => {
+    const store = new FormDraftStore();
+    const saved: string[][] = [];
+    const saver = async (_k: string, c: typeof collection) => { saved.push(c.forms[1]!.outfits.map((o) => o.id)); return { collection: c, revision: "r" }; };
+    store.edit("k", collection, (c) => patchOutfit(c, "form_cat", "o1", { description: "typed" }));
+    store.structural("k", collection, "form_cat", (c) => addOutfit(c, "form_cat", { id: "outfit_new" }).collection, saver);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saved).toEqual([["o1", "outfit_new"]]);
+    expect(store.entry("k")!.base.forms[1]!.outfits.map((o) => o.id)).toEqual(["o1", "outfit_new"]);
+    expect(store.entry("k")!.value.forms[1]!.outfits[0]!.description).toBe("typed");
+    store.edit("k", store.entry("k")!.base, (c) => addOutfit(c, "form_cat", { id: "outfit_draft" }).collection);
+    store.structural("k", store.entry("k")!.base, "form_cat", (c) => deleteOutfit(c, "form_cat", "outfit_new"), saver);
+    expect(saved.length).toBe(1);
+    expect(store.entry("k")!.value.forms[1]!.outfits.map((o) => o.id)).toEqual(["o1", "outfit_draft"]);
+    // null = every form: the pending outfit in form_cat also keeps an Active toggle of another form in the draft.
+    store.structural("k", store.entry("k")!.base, null, (c) => patchOutfit(c, "form_default", "outfit_default", { candidateEnabled: false }), saver);
+    expect(saved.length).toBe(1);
+    expect(store.entry("k")!.value.forms[0]!.outfits[0]!.candidateEnabled).toBe(false);
   });
 });
 

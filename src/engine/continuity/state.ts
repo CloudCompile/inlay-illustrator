@@ -4,13 +4,11 @@
 import {
   createEmptyContinuityState as coreEmpty,
   pushContinuityCheckpoint as corePush,
-  reconcileContinuityCheckpoints as coreReconcile,
-  hasContinuityData as coreHasData,
-  serializeContinuityState as coreSerialize,
   getLatestContinuityCheckpointSnapshot as coreLatest,
   createV5ContinuityBasis as coreV5Basis,
-  Kg as isStableMessageIdCore,
+  tI as isStableMessageIdCore,
 } from "../core/asset-maid-core";
+import { hasContinuityData as coreHasData, serializeContinuityState as coreSerialize } from "./storage-core";
 import type { ContinuityParticipants, ContinuityState, V5ContinuityBasis } from "./types";
 
 /** Empty continuity document. Original: `$g` @42944. */
@@ -41,21 +39,12 @@ export function pushContinuityCheckpoint(
   return corePush(state, input) as boolean;
 }
 
-/**
- * Check checkpoints against the live chat message ids (by id; indexes re-mapped; gone messages dropped) and
- * restore the current state from the newest one. Mutates `state`. Returns "unchanged" | "restored" | "cleared".
- * Original: `Pte` @42905 (called in beforeRequest 169172-169193).
- */
-export function reconcileContinuityCheckpoints(state: ContinuityState, chatKey: string, liveMessageIds: string[]): "unchanged" | "restored" | "cleared" {
-  return coreReconcile(state, chatKey, liveMessageIds) as "unchanged" | "restored" | "cleared";
-}
-
-/** True when any per-chat record exists. Original: `hDe` @42968. */
+/** True when any per-chat record exists. Original: `hDe` @42968 (0.9.88 storage bridge, `storage-core.ts`). */
 export function hasContinuityData(state: ContinuityState): boolean {
   return coreHasData(state) as boolean;
 }
 
-/** Canonical JSON string of the document (`JSON.stringify(SDe(state))`). Original: `Ete` @43321. */
+/** Canonical JSON string of the document (`JSON.stringify(SDe(state))`). Original: `Ete` @43321 (0.9.88 storage bridge, `storage-core.ts`). */
 export function serializeContinuityState(state: ContinuityState): string {
   return coreSerialize(state) as string;
 }

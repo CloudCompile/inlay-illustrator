@@ -156,6 +156,49 @@ describe("chat side (DOM, dev mock)", () => {
     (dialog.querySelector(".ii-am-chat-error__close") as HTMLElement).click();
     await until(() => !q(".ii-am-chat-error"));
   });
+
+  test("retry errors: error details, previous errors and copy error log (AM 0.9.89.5)", async () => {
+    const r = rig();
+    await until(() => q(".ii-am-chat-footer"));
+    const retryErrors = [
+      { attempt: 1, stage: "이미지 생성", occurredAt: 1, message: "HTTP 429" },
+      { attempt: 2, stage: "이미지 생성", occurredAt: 2, message: "HTTP 500" }
+    ];
+    r.mock.emit("generation.progress", { jobId: "job-r", chatId: "chat-1", messageKey: "illustration:msg-4@0", attemptKind: "initial", status: "running", phase: "generating", progress: { label: "Image 1/2", retry: { attempt: 2, total: 5 } }, requestedCount: 2, completedSlots: 0, failedSlots: 0, canRetry: false, canRestart: false, retryErrors });
+    const toast = '[data-ii-toast-key="generation:job-r"]';
+    (await until(() => q(`${toast} .ii-am-chat-toast__error-toggle`))).click();
+    const details = await until(() => q(`${toast} .ii-am-chat-toast__error-details`));
+    expect(details.querySelector("p")?.textContent).toBe("Image 1\nImage generation · Request attempt 2 failed\nHTTP 500");
+    const history = details.querySelector('[data-ii-toast-action="history"]') as HTMLElement;
+    expect(history.textContent).toBe("Show previous errors (1)");
+    history.click();
+    await until(() => q(`${toast} .ii-am-chat-toast__previous-errors p`));
+    expect(q(`${toast} .ii-am-chat-toast__previous-errors p`)!.textContent).toBe("Image 1\nImage generation · Request attempt 1 failed\nHTTP 429");
+
+    const nav = win.navigator as unknown as { clipboard?: unknown };
+    const saved = Object.getOwnPropertyDescriptor(nav, "clipboard");
+    const copied: string[] = [];
+    let fail = false;
+    Object.defineProperty(nav, "clipboard", { configurable: true, value: { writeText: async (text: string) => { if (fail) throw new Error("denied"); copied.push(text); } } });
+    const execCommand = doc.execCommand;
+    doc.execCommand = () => false;
+    try {
+      q(`${toast} [data-ii-toast-action="copy-error"]`)!.click();
+      await until(() => q(`${toast} .ii-am-chat-toast__copy-status`)?.textContent === "Copied");
+      expect(copied).toEqual(["Image 1\nImage generation · Request attempt 2 failed\nHTTP 500\n\nImage 1\nImage generation · Request attempt 1 failed\nHTTP 429"]);
+      fail = true;
+      q(`${toast} [data-ii-toast-action="copy-error"]`)!.click();
+      await until(() => q(`${toast} .ii-am-chat-toast__copy-status`)?.textContent === "Copy failed · Select the error text manually.");
+    } finally {
+      doc.execCommand = execCommand;
+      if (saved) Object.defineProperty(nav, "clipboard", saved);
+      else delete nav.clipboard;
+    }
+    // A running toast closes its details instead of dismissing itself.
+    q(`${toast} [data-ii-toast-action="details"]`)!.click();
+    await until(() => !q(`${toast} .ii-am-chat-toast__error-details`));
+    expect(q(toast)).not.toBeNull();
+  });
 });
 
 describe("zoom viewer (DOM, dev mock)", () => {

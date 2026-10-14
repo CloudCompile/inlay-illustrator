@@ -1,7 +1,7 @@
 // Fixture generator: bun C:/Users/eme4/asset-maid-port/scratch/engine/v45/gen-catalog.mjs
 import { describe, expect, test } from "bun:test";
 import fixture from "../__fixtures__/v45/catalog.json";
-import { Lp as shortHash, nd as stableStringify } from "../core/asset-maid-core";
+import { ah as shortHash, ud as stableStringify } from "../core/asset-maid-core";
 import {
   NOVELAI_V45_RAW_CATALOG,
   compileV45Catalog,

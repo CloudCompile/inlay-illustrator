@@ -47,6 +47,7 @@ import {
   type CountPolicy,
   type CurrentActorState,
   type GenerationJobSnapshot,
+  type GenerationRetryError,
   type GenerationPhase,
   type GenerationResultKind,
   type HistoryEntry,
@@ -63,6 +64,8 @@ import {
   type ZoomPromptSection,
 } from "../../shared/contract/index.js";
 import { resolveImageSize } from "../../engine/compose/index.js";
+// AM 0.9.89.5 retry error record (`FC`, sanitized by `c0`) and the 20-entry append (`LH`).
+import { FC as retryErrorRecord, LH as appendRetryError } from "../../engine/core/asset-maid-core";
 import { fail, isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendModules } from "../rpc/types.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
@@ -173,6 +176,8 @@ interface JobRecord {
   /** Re-run inputs (retry / restart). */
   regenerate?: { entryId?: string; overrides?: RegenerationOverrides };
   revision?: RevisionInput;
+  /** Failed attempts: whole-run auto retries (AM `fail` 115606, stage "분석·생성") and the current engine run. */
+  retryErrors?: { run: readonly GenerationRetryError[]; engine: readonly GenerationRetryError[] };
   done: Promise<void>;
   dismissed?: boolean;
 }
@@ -289,6 +294,14 @@ export function createChatPipelineController(services: BackendServices, engine: 
     job.snapshot.phase = phase;
     job.snapshot.progress = phaseProgress(phase, { ...detail, regenerate: job.kind !== "message" });
     emitProgress(job);
+  };
+
+  const setRetryErrors = (job: JobRecord, patch: Partial<NonNullable<JobRecord["retryErrors"]>>) => {
+    const next = { run: [], engine: [], ...job.retryErrors, ...patch };
+    job.retryErrors = next;
+    const list = [...next.run, ...next.engine].slice(-20);
+    if (list.length) job.snapshot.retryErrors = list;
+    else delete job.snapshot.retryErrors;
   };
 
   const finishJob = (job: JobRecord, result: GenerationResultKind, status: JobStatus, error?: RpcError) => {
@@ -439,6 +452,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const planKey = job.planKey;
     const skey = k(chatId, planKey);
     const signal = job.controller.signal;
+    setRetryErrors(job, { engine: [] });
     const config = await services.storage.loadConfig();
     const chat = await getChat(chatId);
     const messages = await loadMessages(services.host, chatId);
@@ -546,6 +560,11 @@ export function createChatPipelineController(services: BackendServices, engine: 
           },
           onJevSelection: (selection) => {
             job.snapshot.jevSelection = selection;
+            emitProgress(job);
+          },
+          onRetryErrors: (errors, imageRetry) => {
+            setRetryErrors(job, { engine: errors });
+            if (imageRetry) job.snapshot.progress = { ...job.snapshot.progress, retry: imageRetry, retryCount: `${imageRetry.attempt}/${imageRetry.total}` };
             emitProgress(job);
           },
         },
@@ -660,6 +679,9 @@ export function createChatPipelineController(services: BackendServices, engine: 
         if (outcome.kind === "completed") return finishJob(job, "completed", "success");
         if (outcome.kind === "cancelled") return finishJob(job, "cancelled", "cancelled");
         if (outcome.kind === "blocked") return finishJob(job, "blocked", "error", outcome.error);
+        // AM `fail` (115606): every failed run adds an "분석·생성" record to the job's retry errors.
+        const run = job.retryErrors?.run ?? [];
+        setRetryErrors(job, { run: appendRetryError(run as never, retryErrorRecord({ ...outcome.error, code: outcome.error.detailCode ?? outcome.error.code }, (run.at(-1)?.attempt ?? 0) + 1, "분석·생성")) as GenerationRetryError[] });
         if (!outcome.autoRetryable || attempt >= retries) return finishJob(job, "failed", outcome.partial ? "partial" : "error", outcome.error);
         job.snapshot.progress = phaseProgress("planned", { retry: { attempt: attempt + 1, total: retries } });
         emitProgress(job);
@@ -795,7 +817,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     return out;
   };
 
-  const regenerationRequest = (record: GenerationRecord, overrides: RegenerationOverrides | undefined, keepSeed: boolean, config: InlayConfig, slotId: string, rebuilt?: Awaited<ReturnType<typeof applyArtistAndOutfits>>) => {
+  const regenerationRequest = (record: GenerationRecord, overrides: RegenerationOverrides | undefined, keepSeed: boolean, config: InlayConfig, slotId: string, rebuilt?: Awaited<ReturnType<typeof applyArtistAndOutfits>>, fromZoom = false) => {
     const o = overrides ?? {};
     const sections = new Map((o.sections ?? []).map((s) => [s.id, s] as const));
     const main = sections.get("main") ?? sections.get("provider");
@@ -806,16 +828,26 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const negative = o.negativePrompt ?? main?.negativeValue ?? rebuilt?.negative ?? record.negativePrompt;
     const excluded = new Set(o.excludedCharacterIndexes ?? []);
     let anyCenter = false;
+    // AM 0.9.89.5 `Oht` (114363): a chat regenerate re-sends the coordinates of the original NovelAI request
+    // (missing or 0,0 centers become automatic). Zoom coordinate drafts (`o.centers`) still win.
+    const keepCoords = !fromZoom && !o.centers && record.engineProvider === "novelai";
+    const sentCenter = (i: number) => {
+      const x = record.characters[i]?.centerX;
+      const y = record.characters[i]?.centerY;
+      return typeof x === "number" && Number.isFinite(x) && typeof y === "number" && Number.isFinite(y) && !(x === 0 && y === 0) ? { x, y } : null;
+    };
     const characters = (rebuilt?.characters ?? charactersOf(record))
       .map((c, i) => {
         const s = sections.get(`actor:${i}`);
         const center = o.centers?.[i];
         if (center) anyCenter = true;
+        const kept = keepCoords ? sentCenter(i) : null;
         return {
           ...c,
           prompt: s?.value ?? c.prompt,
           uc: s?.negativeValue ?? c.uc,
           ...(center ? { centerX: center.x, centerY: center.y, coordinateMode: "fixed" } : o.centers && o.centers[i] === null ? { coordinateMode: "automatic" } : {}),
+          ...(keepCoords ? (kept ? { centerX: kept.x, centerY: kept.y, coordinateMode: "fixed" } : { coordinateMode: "automatic" }) : {}),
         };
       })
       .filter((_c, i) => !excluded.has(i));
@@ -834,14 +866,16 @@ export function createChatPipelineController(services: BackendServices, engine: 
       seed,
       width,
       height,
-      forceNsfwPrefix: false,
+      // AM 0.9.89.3 (123136/123242): zoom regenerate never forces the NSFW prefix; chat regenerate follows
+      // nsfwAlwaysEnabled (the adapter's fallback), except without character prompts.
+      ...(fromZoom || characters.length === 0 ? { forceNsfwPrefix: false } : {}),
       config: {
         ...cfg,
         ...(rebuilt?.configPatch ?? {}),
         width,
         height,
         characterPrompts: characters,
-        ...(anyCenter ? { useCoords: true, forceCharacterCoordinates: true } : {}),
+        ...(anyCenter || keepCoords ? { useCoords: true, forceCharacterCoordinates: true } : {}),
       },
       references: [],
       queueMeta: { kind: "generation", source: "regenerate", sourceImageToken: `slot:${slotId}` },
@@ -870,7 +904,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
       const overrides = draft || explicit ? { ...(draft ?? {}), ...(explicit ?? {}) } : undefined;
       const keepSeed = !!overrides?.seedFixed;
       const rebuilt = await applyArtistAndOutfits(chatId, record, overrides);
-      const request = regenerationRequest(record, overrides, keepSeed, config, slotId, rebuilt);
+      const request = regenerationRequest(record, overrides, keepSeed, config, slotId, rebuilt, !!explicit);
       const chat = await getChat(chatId);
       const messages = await loadMessages(services.host, chatId);
       const characterId = await speakingCharacterId(services, chat, findMessage(messages, job.target.messageId).view);
@@ -889,7 +923,15 @@ export function createChatPipelineController(services: BackendServices, engine: 
           job.snapshot.progress = { ...phaseProgress("generating", { regenerate: true, imageIndex: 0, imageCount: 1 }), ...(p.queue ? { queue: p.queue } : {}) };
           emitProgress(job);
         },
-      }, config, { signal });
+      }, config, {
+        signal,
+        // AM regeneration (123276): image request retries update the job (retry counter + retry errors).
+        onRetry: (retry, errors) => {
+          setRetryErrors(job, { engine: errors as GenerationRetryError[] });
+          if (retry) job.snapshot.progress = { ...job.snapshot.progress, retry: { attempt: retry.attempt, total: retry.total }, retryCount: `${retry.attempt}/${retry.total}` };
+          emitProgress(job);
+        },
+      });
       if (signal.aborted) throw new DOMException("Regeneration was cancelled.", "AbortError");
       await targetGuard(job.target)();
       const meta = rec(result.providerMetadata);

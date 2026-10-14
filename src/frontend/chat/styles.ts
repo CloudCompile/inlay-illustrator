@@ -386,9 +386,11 @@ export const CHAT_SIDE_CSS = String.raw`
   white-space: pre-wrap;
 }
 .ii-am-root .ii-am-chat-toast__error-details p { margin: 0 0 8px; white-space: pre-wrap; }
-.ii-am-root .ii-am-chat-toast__error-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
-.ii-am-root .ii-am-chat-toast__error-buttons button { padding: 4px 8px; border: 0; border-radius: 6px; background: rgba(255, 255, 255, .08); color: inherit; font: inherit; cursor: pointer; }
-.ii-am-root .ii-am-chat-toast__error-buttons button:hover { background: rgba(255, 255, 255, .14); }
+.ii-am-root .ii-am-chat-toast__error-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ii-am-root .ii-am-chat-toast__error-details button { padding: 4px 8px; border: 0; border-radius: 6px; background: rgba(255, 255, 255, .08); color: inherit; font: inherit; cursor: pointer; }
+.ii-am-root .ii-am-chat-toast__error-details button:hover { background: rgba(255, 255, 255, .14); }
+.ii-am-root .ii-am-chat-toast__previous-errors > button { margin: 0 0 8px; }
+.ii-am-root .ii-am-chat-toast__copy-status { color: rgba(241, 229, 207, .68); }
 
 /* generation-count panel */
 .ii-am-root .ii-am-chat-count {

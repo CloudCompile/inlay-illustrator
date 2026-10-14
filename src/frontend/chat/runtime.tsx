@@ -10,7 +10,7 @@ import { useSelector } from "../state/store.js";
 import { applyCountAction, countLimits, countToggleText, countView, floatingStyle, normalizeFloatingPoint, type CountAction, type CountView } from "./count-model.js";
 import { COUNT_LABELS, ERROR_DIALOG_LABELS, fill, TOAST_LABELS } from "./labels.js";
 import type { ChatRuntimeStore } from "./runtime-store.js";
-import { buildToastStack, type RuntimeToastModel } from "./toast-model.js";
+import { buildToastStack, errorDetailText, errorLogText, hasErrorDetails, type RuntimeToastModel } from "./toast-model.js";
 import { RetryIcon } from "./widgets.js";
 import { directionPatch, selectPreset } from "../overlay/settings/directions.js";
 
@@ -58,15 +58,28 @@ export function ChatRuntime({ app, store, onToastCommand }: ChatRuntimeProps) {
 
 function ToastStack({ app, store, onCommand }: { app: AppController; store: ChatRuntimeStore; onCommand: ChatRuntimeProps["onToastCommand"] }) {
   const jobs = useSelector(app.store, (s) => s.generationJobs);
+  const developerMode = useSelector(app.store, (s) => s.config?.ui.developerModeEnabled === true);
   const toasts = useMemo(
-    () => buildToastStack({ running: Object.values(jobs), finished: store.finished, notices: store.notices, dismissed: store.dismissed, displayIndex: store.displayIndex, seenAt: store.seenAt, now: Date.now() }),
-    [jobs, store.revision]
+    () => buildToastStack({ running: Object.values(jobs), finished: store.finished, notices: store.notices, dismissed: store.dismissed, displayIndex: store.displayIndex, seenAt: store.seenAt, now: Date.now(), developerMode }),
+    [jobs, store.revision, developerMode]
   );
   if (store.overlayOpen || toasts.length === 0) return null;
   return (
     <div class="ii-am-chat-toast-stack" role="region" aria-label={TOAST_LABELS.notificationsRegion}>
       {toasts.map((toast) => {
-        const row = <RuntimeToast key={toast.key} toast={toast} expanded={store.expanded.has(toast.key)} onToggle={() => store.toggleExpanded(toast.key)} onCommand={(command) => onCommand(toast, command)} />;
+        const row = (
+          <RuntimeToast
+            key={toast.key}
+            toast={toast}
+            expanded={store.expanded.has(toast.key)}
+            historyExpanded={store.historyExpanded.has(toast.key)}
+            lastCopy={store.copyStatus.get(toast.key)}
+            onToggle={() => store.toggleExpanded(toast.key)}
+            onToggleHistory={() => store.toggleHistory(toast.key)}
+            onCopied={(text, status) => store.setCopyStatus(toast.key, text, status)}
+            onCommand={(command) => onCommand(toast, command)}
+          />
+        );
         return toast.parentKey ? (
           <div key={toast.key} class="ii-am-chat-toast-child">
             <span class="ii-am-chat-toast-child__branch" aria-hidden="true">ㄴ</span>
@@ -78,7 +91,41 @@ function ToastStack({ app, store, onCommand }: { app: AppController; store: Chat
   );
 }
 
-function RuntimeToast({ toast, expanded, onToggle, onCommand }: { toast: RuntimeToastModel; expanded: boolean; onToggle: () => void; onCommand: (command: ToastCommand) => void }) {
+/** AM `J0` 662: clipboard API, else a hidden textarea and `execCommand("copy")`. */
+async function copyText(doc: Document, text: string): Promise<void> {
+  try {
+    const clipboard = doc.defaultView?.navigator.clipboard;
+    if (clipboard?.writeText) {
+      await clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    // fall through to execCommand
+  }
+  const area = doc.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.inset = "0 auto auto -9999px";
+  doc.body.append(area);
+  area.select();
+  const copied = doc.execCommand("copy");
+  area.remove();
+  if (!copied) throw new Error("Clipboard copy failed.");
+}
+
+interface RuntimeToastProps {
+  toast: RuntimeToastModel;
+  expanded: boolean;
+  historyExpanded: boolean;
+  lastCopy: { text: string; status: string } | undefined;
+  onToggle: () => void;
+  onToggleHistory: () => void;
+  onCopied: (text: string, status: string) => void;
+  onCommand: (command: ToastCommand) => void;
+}
+
+function RuntimeToast({ toast, expanded, historyExpanded, lastCopy, onToggle, onToggleHistory, onCopied, onCommand }: RuntimeToastProps) {
   useEffect(() => {
     if (toast.autoDismissMs <= 0) return undefined;
     const remaining = Math.max(500, toast.autoDismissMs - (Date.now() - toast.createdAt));
@@ -86,7 +133,19 @@ function RuntimeToast({ toast, expanded, onToggle, onCommand }: { toast: Runtime
     return () => clearTimeout(timer);
   }, [toast.key, toast.autoDismissMs, toast.createdAt]);
   const danger = toast.tone === "danger";
-  const hasDetails = danger && !!(toast.errorText || toast.detail);
+  const hasDetails = hasErrorDetails(toast);
+  const log = errorLogText(toast);
+  const copyStatus = lastCopy?.text === log ? lastCopy.status : undefined;
+  const copyLog = async (event: MouseEvent) => {
+    let status: string = TOAST_LABELS.copied;
+    try {
+      await copyText((event.currentTarget as HTMLElement).ownerDocument, log);
+    } catch {
+      status = TOAST_LABELS.copyFailed;
+    }
+    onCopied(log, status);
+  };
+  const previousCount = toast.previousErrors?.length ?? 0;
   const displayMessage = toast.retryCount && toast.message.endsWith(` · ${toast.retryCount}`)
     ? toast.message.slice(0, -(` · ${toast.retryCount}`.length))
     : toast.message;
@@ -145,10 +204,24 @@ function RuntimeToast({ toast, expanded, onToggle, onCommand }: { toast: Runtime
       </div>
       {hasDetails && expanded ? (
         <div class="ii-am-chat-toast__error-details">
-          <p>{toast.errorText || toast.detail}</p>
+          <p>{errorDetailText(toast)}</p>
+          {previousCount ? (
+            <div class="ii-am-chat-toast__previous-errors">
+              <button type="button" data-ii-toast-action="history" aria-expanded={historyExpanded} onClick={onToggleHistory}>
+                {fill(historyExpanded ? TOAST_LABELS.hidePreviousErrors : TOAST_LABELS.showPreviousErrors, { n: previousCount })}
+              </button>
+              {historyExpanded ? toast.previousErrors!.map((text, index) => <p key={index}>{text}</p>) : null}
+            </div>
+          ) : null}
           <div class="ii-am-chat-toast__error-buttons">
             {toast.canRestart ? <button type="button" onClick={() => onCommand("restart")}>{TOAST_LABELS.restart}</button> : null}
-            <button type="button" onClick={() => onCommand("dismiss")}>{TOAST_LABELS.dismiss}</button>
+            <button type="button" data-ii-toast-action="copy-error" onClick={(event) => void copyLog(event)}>{TOAST_LABELS.copyErrorLog}</button>
+            {copyStatus ? <span class="ii-am-chat-toast__copy-status" role="status">{copyStatus}</span> : null}
+            {toast.tone === "running" ? (
+              <button type="button" data-ii-toast-action="details" onClick={onToggle}>{TOAST_LABELS.hideDetails}</button>
+            ) : (
+              <button type="button" onClick={() => onCommand("dismiss")}>{TOAST_LABELS.dismiss}</button>
+            )}
           </div>
         </div>
       ) : null}

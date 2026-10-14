@@ -39,6 +39,21 @@ const RAW_SCENES: Record<string, PreviewScene> = {
   "analysis-new-preset": async ({ doc }) => {
     await clickWhenReady(doc, '[data-v5-direction="imageRatio"] [data-v5-preset-action="add"] button');
   },
+  /** Saved custom resolutions listed as image ratio candidates; the selected preset only keeps a removed size. Use with settings=analysis-profile. */
+  "analysis-custom-sizes": async ({ frontend, params, doc }) => {
+    await waitFor(doc, '[data-v5-direction="imageRatio"]');
+    const imageRatio = frontend.app.state.config!.novelai.v5UserDirections.imageRatio;
+    const presets = [...imageRatio.presets, { id: "imageRatio-wide", name: "Wide custom", instruction: "Use sizeId 7 for wide shots.", allowedSizeIds: [2, 1_000_000_002] }, { id: "imageRatio-removed", name: "Removed size", instruction: "", allowedSizeIds: [1_000_000_099] }];
+    await frontend.app.updateConfig({
+      runtime: { customImageSizes: [{ id: 1_000_000_001, width: 768, height: 1344 }, { id: 1_000_000_002, width: 1536, height: 640 }, { id: 1_000_000_003, width: 1280, height: 1280 }] },
+      novelai: { v5UserDirections: { imageRatio: { ...imageRatio, presets, selectedPresetId: params.get("preset") ?? "imageRatio-wide" } } }
+    });
+    await sleep(300);
+    await clickWhenReady(doc, '[data-v5-direction="imageRatio"] [data-v5-preset-action="edit"] button');
+    doc.querySelector('[data-v5-direction="imageRatio"]')?.scrollIntoView({ block: "end" });
+    const sizes = doc.querySelector<HTMLElement>("[data-v5-image-ratio-reference]");
+    if (sizes && params.get("sizes") === "end") sizes.scrollTop = sizes.scrollHeight;
+  },
   /** Model page message test answered. Use with settings=model. */
   "model-test": async ({ doc }) => {
     await clickWhenReady(doc, '[data-model-message-test] button[aria-label="Send message"]');
