@@ -4672,7 +4672,6 @@ var CHAT_FOOTER_LABELS = Object.freeze({
 // src/shared/contract/bridge.ts
 var FETCH_BRIDGE_REQUEST = "inlay-illustrator:fetch-request";
 var FETCH_BRIDGE_RESPONSE = "inlay-illustrator:fetch-response";
-var FETCH_BRIDGE_MAX_BASE64 = 28000000;
 function isAllowedBridgeUrl(url) {
   return typeof url === "string" && url.startsWith("/api/") && !url.startsWith("//") && !/\.\.(?:\/|$)/u.test(url) && !/[\s\\]/u.test(url);
 }
@@ -66605,7 +66604,7 @@ function createEventBus(host, userId) {
 // src/backend/services/image-bytes.ts
 var FETCH_BRIDGE_TIMEOUT_MS = 15000;
 var STORAGE_KEY_PREFIX = "storage:";
-var IMAGE_MIME = /^image\/(?:png|jpe?g|webp|gif|avif)$/;
+var PERMISSION_DENIED_PREFIX = "PERMISSION_DENIED:";
 function bytesToBase643(bytes) {
   let binary = "";
   const chunk = 32768;
@@ -66625,6 +66624,30 @@ function mimeTypeForExtension(extension) {
     return "image/avif";
   return "image/png";
 }
+function sniffImageMime(bytes) {
+  const ascii = (start, end) => String.fromCharCode(...bytes.subarray(start, end));
+  if (bytes[0] === 137 && ascii(1, 4) === "PNG")
+    return "image/png";
+  if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255)
+    return "image/jpeg";
+  if (ascii(0, 4) === "GIF8")
+    return "image/gif";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP")
+    return "image/webp";
+  if (ascii(4, 8) === "ftyp" && /avi[fs]/u.test(ascii(8, 32)))
+    return "image/avif";
+  return null;
+}
+function imageIdFromUrl(url) {
+  const match = /^\/api\/v1\/images\/([^/?#]+)(?:[?#]|$)/u.exec(url);
+  if (!match)
+    return imageIdFromResultUrl(url);
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
+}
 function createImageBytesService(deps) {
   const { host, userId } = deps;
   const pending = new Map;
@@ -66639,7 +66662,7 @@ function createImageBytesService(deps) {
       entry.signal.removeEventListener("abort", entry.onAbort);
     return entry;
   }
-  function request(url, as, options = {}) {
+  function requestJson(url, options = {}) {
     if (!isAllowedBridgeUrl(url))
       fail2("bad-request", `Only same-origin /api/ URLs can be fetched (got "${String(url).slice(0, 120)}").`, { detailCode: "FETCH_BRIDGE_URL" });
     if (options.signal?.aborted)
@@ -66648,12 +66671,11 @@ function createImageBytesService(deps) {
     const timeoutMs = options.timeoutMs ?? deps.timeoutMs ?? FETCH_BRIDGE_TIMEOUT_MS;
     const promise = new Promise((resolve, reject) => {
       const entry = {
-        as,
         resolve,
         reject,
         signal: options.signal,
         timer: setTimeout(() => {
-          finish(requestId)?.reject(new RpcFailure({ code: "timeout", message: "The overlay did not answer the image request in time. Keep Lumiverse open in a browser tab and try again.", detailCode: "FETCH_BRIDGE_TIMEOUT", retryable: true }));
+          finish(requestId)?.reject(new RpcFailure({ code: "timeout", message: "The overlay did not answer in time. Keep Lumiverse open in a browser tab and try again.", detailCode: "FETCH_BRIDGE_TIMEOUT", retryable: true }));
         }, timeoutMs)
       };
       if (options.signal) {
@@ -66662,7 +66684,7 @@ function createImageBytesService(deps) {
       }
       pending.set(requestId, entry);
     });
-    const message = { type: FETCH_BRIDGE_REQUEST, requestId, url, as };
+    const message = { type: FETCH_BRIDGE_REQUEST, requestId, url };
     try {
       host.sendToFrontend(message, userId);
     } catch (error) {
@@ -66670,21 +66692,24 @@ function createImageBytesService(deps) {
     }
     return promise;
   }
-  async function base64Of(url, options = {}) {
-    const reply = await request(url, "base64", options);
-    return { data: reply.data, mimeType: reply.mimeType };
-  }
-  async function imageUrl(imageId) {
-    let dto;
+  async function readImage(imageId, signal) {
+    throwIfAborted(signal);
+    let bytes;
     try {
-      dto = await host.images.get(imageId, { specificity: "full", ...userId ? { userId } : {} });
+      bytes = await host.images.readBinary(imageId, userId);
     } catch (error) {
-      throw new RpcFailure({ code: "provider-error", message: `Could not read image ${imageId}: ${errorMessage(error)}`, retryable: true });
+      const message = errorMessage(error);
+      if (message === "Image not found")
+        fail2("not-found", `Image not found: ${imageId}`, { detailCode: "IMAGE_NOT_FOUND" });
+      if (message.startsWith(PERMISSION_DENIED_PREFIX))
+        fail2("permission-denied", `Could not read image ${imageId}: ${message}`);
+      throw new RpcFailure({ code: "provider-error", message: `Could not read image ${imageId}: ${message}` });
     }
-    const url = str5(asRecord3(dto).url);
-    if (!url)
-      fail2("not-found", `Image not found: ${imageId}`, { detailCode: "IMAGE_NOT_FOUND" });
-    return url;
+    throwIfAborted(signal);
+    const mimeType = sniffImageMime(bytes);
+    if (!mimeType)
+      fail2("provider-error", `Image ${imageId} is not a PNG, JPEG, WebP, GIF or AVIF image.`, { detailCode: "IMAGE_UNSUPPORTED" });
+    return { data: bytesToBase643(bytes), mimeType };
   }
   async function fromStorage(path, extension) {
     const bytes = await deps.storage.readBinary(path);
@@ -66702,10 +66727,11 @@ function createImageBytesService(deps) {
   const service = {
     pendingCount: () => pending.size,
     async getImage(ref, options = {}) {
-      const url = str5(ref.url) || (str5(ref.imageId) ? await imageUrl(str5(ref.imageId)) : "");
-      if (!url)
-        fail2("bad-request", "No image id or URL given.");
-      return base64Of(url, options);
+      const url = str5(ref.url);
+      const imageId = url ? imageIdFromUrl(url) : str5(ref.imageId);
+      if (!imageId)
+        fail2("bad-request", url ? `Not a Lumiverse image URL: "${url.slice(0, 120)}".` : "No image id or URL given.", { detailCode: "IMAGE_REF_INVALID" });
+      return readImage(imageId, options.signal);
     },
     async getAsset(raw, options = {}) {
       const asset = normalizeAssetRef(raw);
@@ -66734,8 +66760,7 @@ function createImageBytesService(deps) {
       return service.getImage(asset.key.startsWith("/api/") ? { url: asset.key } : { imageId: asset.key }, options);
     },
     async getJson(url, options = {}) {
-      const reply = await request(url, "json", options);
-      return reply.json;
+      return await requestJson(url, options);
     },
     acceptFrontendMessage(message) {
       const type = message?.type;
@@ -66750,17 +66775,7 @@ function createImageBytesService(deps) {
         entry.reject(new RpcFailure({ code: status === 404 ? "not-found" : status === 401 || status === 403 ? "permission-denied" : "provider-error", message: error, detailCode: "FETCH_BRIDGE_ERROR", ...Number.isFinite(status) && status ? { details: { status } } : {} }));
         return true;
       }
-      if (entry.as === "json") {
-        entry.resolve({ json: message.json });
-        return true;
-      }
-      const data = str5(message.data).replace(/^data:[^;,]+;base64,/, "");
-      const mimeType = str5(message.mimeType).toLowerCase();
-      if (!data || data.length > FETCH_BRIDGE_MAX_BASE64 || !IMAGE_MIME.test(mimeType)) {
-        entry.reject(new RpcFailure({ code: "provider-error", message: "The frontend returned an invalid image.", detailCode: "FETCH_BRIDGE_INVALID_IMAGE" }));
-        return true;
-      }
-      entry.resolve({ data, mimeType: mimeType === "image/jpg" ? "image/jpeg" : mimeType });
+      entry.resolve(message.json);
       return true;
     }
   };

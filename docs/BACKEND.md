@@ -7,7 +7,7 @@ Entry: `src/backend.ts` builds one runtime (`src/backend/runtime.ts`) and wires 
 - `GENERATION_ENDED` -> `pipeline.handleGenerationEnded` (automatic illustration of normal / swipe / regenerate replies when
   `autoGenerationEnabled`). `GENERATION_STARTED/STOPPED`, `MESSAGE_SWIPED/DELETED/EDITED`, `SWIPE_EDITED`, `CHAT_CHANGED/SWITCHED`,
   `CHARACTER_EDITED/DELETED` -> `pipeline.handleHostEvent` (+ sources cache invalidation).
-- `onFrontendMessage`: fetch-bridge answers (`services/image-bytes.ts`), then RPC envelopes (`rpc/router.ts`). Other messages
+- `onFrontendMessage`: JSON fetch-bridge answers (`services/image-bytes.ts`), then RPC envelopes (`rpc/router.ts`). Other messages
   (0.9.x gallery / image details) are ignored.
 
 ## Runtime (per user)
@@ -24,7 +24,7 @@ RPC handlers get an `RpcContext` = services + `modules`.
 | StorageService | `storage.ts` | userStorage with the contract layout: split config diffs, character documents (revision guard -> `conflict`), chat data, chat image settings, ui state, migrations + too-new guard, per-path FIFO writes, factory / character reset. Emits `config.changed`, `chatImageGeneration.changed`, `document.changed`. |
 | LlmService | `llm.ts` | Connection profiles over `generate.raw` (explicit model), reasoning DTO, JSON mode + remembered 400 fallback, lenient JSON (engine `parseLenientJson`), vision detection + text-only fallback, retries = `generationAutoRetryCount` with fixed 100 ms delay, own timeout + AbortSignal. `analyzerClient()` = engine `AnalyzerClient` (retries 0: the engine retries). |
 | ImageService | `images.ts` | `imageGen.generate`: NovelAI host parameters + `rawRequestOverride` (coords, per-character negatives, img2img), V4.5 director references (`resolvedReferenceImages`), ComfyUI workflow mapping (`workflow_id`, `resolvedSourceImages`, denoise), generic providers; serial queue with `novelaiParallelIntervalSec`; retries; abort. |
-| ImageBytesService | `image-bytes.ts` | Contract fetch bridge (`src/shared/contract/bridge.ts`): image bytes and same-origin REST JSON via the frontend; uploads / crops from userStorage (`storage:` keys); legacy avatar responses. |
+| ImageBytesService | `image-bytes.ts` | Image bytes: Lumiverse images (id or `/api/v1/images/<id>` / `/api/v1/image-gen/results/<id>` URL) via `spindle.images.readBinary`, mime type sniffed from the bytes; uploads / crops from userStorage (`storage:` keys). Same-origin REST JSON without a Spindle API (character gallery, LLM model lists) via the contract fetch bridge (`src/shared/contract/bridge.ts`). |
 | SourcesService | `sources.ts` | Characters, chats (group members), personas, world books by scope; Asset Maid `Source/Member/LoreRecord` build; character images (avatar, gallery via bridge, expressions, risu asset map, generated). |
 | EventBus / RunLog | `events.ts`, `run-log.ts` | RPC events with a monotonic seq; run log ring (250) + `log.appended`. |
 

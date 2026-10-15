@@ -1,60 +1,59 @@
 import { describe, expect, test } from "bun:test";
 import { FETCH_BRIDGE_RESPONSE, STORAGE_PATHS } from "../../shared/contract/index.js";
 import { answerFetchBridge, createFakeHost, TINY_PNG_BASE64 } from "../testing/fake-host.js";
-import { bytesToBase64, createImageBytesService } from "./image-bytes.js";
+import { bytesToBase64, createImageBytesService, imageIdFromUrl, sniffImageMime } from "./image-bytes.js";
 import { createStorageService } from "./storage.js";
 
-function setup(timeoutMs = 50) {
-  const fake = createFakeHost();
+const ascii = (text: string) => Uint8Array.from(text, (c) => c.charCodeAt(0));
+
+function setup(options: { timeoutMs?: number; granted?: string[] } = {}) {
+  const fake = createFakeHost(options.granted ? { granted: options.granted } : {});
   const storage = createStorageService(fake.host, fake.userId);
   let n = 0;
-  const bytes = createImageBytesService({ host: fake.host, userId: fake.userId, storage, timeoutMs, createRequestId: () => `r${++n}` });
+  const bytes = createImageBytesService({ host: fake.host, userId: fake.userId, storage, timeoutMs: options.timeoutMs ?? 50, createRequestId: () => `r${++n}` });
   fake.host.onFrontendMessage((payload) => void bytes.acceptFrontendMessage(payload as Record<string, unknown>));
   return { fake, storage, bytes };
 }
 
-describe("image bytes bridge", () => {
-  test("image id -> url -> bridge base64; JSON endpoints", async () => {
+describe("image bytes", () => {
+  test("reads Lumiverse images by id or URL without the frontend", async () => {
     const { fake, bytes } = setup();
-    fake.addImage({ id: "img1", url: "/api/v1/images/img1" });
-    answerFetchBridge(fake, { "/api/v1/images/img1": { data: TINY_PNG_BASE64, mimeType: "image/png" }, "/api/v1/characters/c1/gallery": { json: [{ id: "g" }] } });
+    fake.addImage({ id: "img1" });
+    fake.addImage({ id: "img 2" }, ascii("RIFF\0\0\0\0WEBPVP8 "));
     expect(await bytes.getImage({ imageId: "img1" })).toEqual({ data: TINY_PNG_BASE64, mimeType: "image/png" });
-    expect(await bytes.getJson<unknown>("/api/v1/characters/c1/gallery")).toEqual([{ id: "g" }]);
-    expect(fake.sentOfType("inlay-illustrator:fetch-request")).toEqual([
-      { type: "inlay-illustrator:fetch-request", requestId: "r1", url: "/api/v1/images/img1", as: "base64" },
-      { type: "inlay-illustrator:fetch-request", requestId: "r2", url: "/api/v1/characters/c1/gallery", as: "json" },
-    ]);
-    expect(bytes.pendingCount()).toBe(0);
+    expect(await bytes.getImage({ url: "/api/v1/images/img1?size=sm" })).toEqual({ data: TINY_PNG_BASE64, mimeType: "image/png" });
+    expect((await bytes.getImage({ url: "/api/v1/image-gen/results/img%202" })).mimeType).toBe("image/webp");
+    expect(fake.sent).toEqual([]);
   });
 
-  test("rejects foreign URLs, errors, invalid images, timeouts and aborts", async () => {
+  test("errors: missing, unsupported, bad refs, permission, abort", async () => {
     const { fake, bytes } = setup();
-    await expect(bytes.getJson("https://evil.example/x")).rejects.toMatchObject({ error: { code: "bad-request" } });
-    answerFetchBridge(fake, { "/api/a": { error: "Not found", status: 404 }, "/api/b": { data: "QQ==", mimeType: "text/html" } });
-    await expect(bytes.getImage({ url: "/api/a" })).rejects.toMatchObject({ error: { code: "not-found" } });
-    await expect(bytes.getImage({ url: "/api/b" })).rejects.toMatchObject({ error: { detailCode: "FETCH_BRIDGE_INVALID_IMAGE" } });
-    fake.onSend = null;
-    await expect(bytes.getImage({ url: "/api/slow" })).rejects.toMatchObject({ error: { code: "timeout" } });
+    fake.addImage({ id: "html" }, ascii("<html>"));
+    await expect(bytes.getImage({ imageId: "missing" })).rejects.toMatchObject({ error: { code: "not-found", detailCode: "IMAGE_NOT_FOUND" } });
+    await expect(bytes.getImage({ imageId: "html" })).rejects.toMatchObject({ error: { code: "provider-error", detailCode: "IMAGE_UNSUPPORTED" } });
+    await expect(bytes.getImage({ url: "/api/v1/characters/c1" })).rejects.toMatchObject({ error: { code: "bad-request" } });
+    await expect(bytes.getImage({})).rejects.toMatchObject({ error: { code: "bad-request" } });
+    const denied = setup({ granted: [] });
+    denied.fake.addImage({ id: "img1" });
+    await expect(denied.bytes.getImage({ imageId: "img1" })).rejects.toMatchObject({ error: { code: "permission-denied" } });
+    fake.addImage({ id: "img1" });
     const controller = new AbortController();
-    const p = bytes.getImage({ url: "/api/slow" }, { signal: controller.signal });
     controller.abort();
+    await expect(bytes.getImage({ imageId: "img1" }, { signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+    const late = new AbortController();
+    const p = bytes.getImage({ imageId: "img1" }, { signal: late.signal });
+    late.abort();
     await expect(p).rejects.toMatchObject({ name: "AbortError" });
-    expect(bytes.pendingCount()).toBe(0);
-    await expect(bytes.getImage({ imageId: "missing" })).rejects.toMatchObject({ error: { code: "not-found" } });
   });
 
-  test("duplicate answers are consumed; other message types are not", async () => {
-    const { fake, bytes } = setup();
-    fake.onSend = (payload) => {
-      const id = (payload as { requestId: string }).requestId;
-      queueMicrotask(() => {
-        fake.sendFromFrontend({ type: FETCH_BRIDGE_RESPONSE, requestId: id, data: TINY_PNG_BASE64, mimeType: "image/png" });
-        fake.sendFromFrontend({ type: FETCH_BRIDGE_RESPONSE, requestId: id, data: TINY_PNG_BASE64, mimeType: "image/png" });
-      });
-    };
-    expect((await bytes.getImage({ url: "/api/x" })).mimeType).toBe("image/png");
-    expect(bytes.acceptFrontendMessage({ type: "other" })).toBe(false);
-    expect(bytes.acceptFrontendMessage({ type: "avatar_image_response", requestId: "x" })).toBe(false);
+  test("sniffs image signatures and parses image URLs", () => {
+    expect(sniffImageMime(ascii("\xff\xd8\xff\xe0"))).toBe("image/jpeg");
+    expect(sniffImageMime(ascii("GIF89a"))).toBe("image/gif");
+    expect(sniffImageMime(ascii("\0\0\0\x1cftypmif1\0\0\0\0mif1avif"))).toBe("image/avif");
+    expect(sniffImageMime(ascii("\0\0\0\x1cftypisom"))).toBeNull();
+    expect(imageIdFromUrl("/api/v1/images/a%20b?size=lg")).toBe("a b");
+    expect(imageIdFromUrl("/api/v1/image-gen/results/r1")).toBe("r1");
+    expect(imageIdFromUrl("/api/v1/images/a/thumb")).toBeNull();
   });
 
   test("assets: crops and uploads from userStorage, others by image id", async () => {
@@ -67,8 +66,46 @@ describe("image bytes bridge", () => {
     expect(await bytes.getAsset({ name: "up.webp", key: "storage:uploads/u1.jpg", extension: "webp", sourceType: "upload", moduleId: "", moduleName: "" })).toEqual({ data: "BA==", mimeType: "image/jpeg" });
     await expect(bytes.getAsset({ name: "x", key: "storage:uploads/none.png", extension: "png", sourceType: "upload", moduleId: "", moduleName: "" })).rejects.toMatchObject({ error: { code: "not-found" } });
     await expect(bytes.getAsset({ name: "x", key: "storage:../secret.png", extension: "png", sourceType: "upload", moduleId: "", moduleName: "" })).rejects.toMatchObject({ error: { code: "bad-request" } });
-    fake.addImage({ id: "g1", url: "/api/v1/images/g1" });
-    answerFetchBridge(fake, { "/api/v1/images/g1": { data: TINY_PNG_BASE64, mimeType: "image/webp" } });
-    expect((await bytes.getAsset({ name: "smile.webp", key: "g1", extension: "webp", sourceType: "character", moduleId: "", moduleName: "" })).mimeType).toBe("image/webp");
+    fake.addImage({ id: "g1" }, ascii("GIF89a"));
+    expect((await bytes.getAsset({ name: "smile.webp", key: "g1", extension: "webp", sourceType: "character", moduleId: "", moduleName: "" })).mimeType).toBe("image/gif");
+    expect((await bytes.getAsset({ name: "gen", key: "/api/v1/image-gen/results/g1", extension: "png", sourceType: "generated", moduleId: "", moduleName: "" })).mimeType).toBe("image/gif");
+  });
+});
+
+describe("JSON fetch bridge", () => {
+  test("requests JSON through the frontend", async () => {
+    const { fake, bytes } = setup();
+    answerFetchBridge(fake, { "/api/v1/characters/c1/gallery": { json: [{ id: "g" }] } });
+    expect(await bytes.getJson<unknown>("/api/v1/characters/c1/gallery")).toEqual([{ id: "g" }]);
+    expect(fake.sentOfType("inlay-illustrator:fetch-request")).toEqual([{ type: "inlay-illustrator:fetch-request", requestId: "r1", url: "/api/v1/characters/c1/gallery" }]);
+    expect(bytes.pendingCount()).toBe(0);
+  });
+
+  test("rejects foreign URLs, errors, timeouts and aborts", async () => {
+    const { fake, bytes } = setup();
+    await expect(bytes.getJson("https://evil.example/x")).rejects.toMatchObject({ error: { code: "bad-request" } });
+    answerFetchBridge(fake, { "/api/a": { error: "Not found", status: 404 }, "/api/b": { error: "HTTP 403", status: 403 } });
+    await expect(bytes.getJson("/api/a")).rejects.toMatchObject({ error: { code: "not-found" } });
+    await expect(bytes.getJson("/api/b")).rejects.toMatchObject({ error: { code: "permission-denied" } });
+    fake.onSend = null;
+    await expect(bytes.getJson("/api/slow")).rejects.toMatchObject({ error: { code: "timeout" } });
+    const controller = new AbortController();
+    const p = bytes.getJson("/api/slow", { signal: controller.signal });
+    controller.abort();
+    await expect(p).rejects.toMatchObject({ name: "AbortError" });
+    expect(bytes.pendingCount()).toBe(0);
+  });
+
+  test("duplicate answers are consumed; other message types are not", async () => {
+    const { fake, bytes } = setup();
+    fake.onSend = (payload) => {
+      const id = (payload as { requestId: string }).requestId;
+      queueMicrotask(() => {
+        fake.sendFromFrontend({ type: FETCH_BRIDGE_RESPONSE, requestId: id, json: 1 });
+        fake.sendFromFrontend({ type: FETCH_BRIDGE_RESPONSE, requestId: id, json: 2 });
+      });
+    };
+    expect(await bytes.getJson<unknown>("/api/x")).toBe(1);
+    expect(bytes.acceptFrontendMessage({ type: "other" })).toBe(false);
   });
 });

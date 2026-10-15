@@ -33,7 +33,7 @@ describe("fake host", () => {
     const got: unknown[] = [];
     fake.host.onFrontendMessage((p) => got.push(p));
     answerFetchBridge(fake, { "/api/x": { json: [1] } });
-    fake.host.sendToFrontend({ type: "inlay-illustrator:fetch-request", requestId: "r1", url: "/api/x", as: "json" });
+    fake.host.sendToFrontend({ type: "inlay-illustrator:fetch-request", requestId: "r1", url: "/api/x" });
     await Promise.resolve();
     expect(got).toEqual([{ type: "inlay-illustrator:fetch-response", requestId: "r1", json: [1] }]);
   });

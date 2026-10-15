@@ -86,8 +86,11 @@ export interface FakeHost {
 
   /* images */
   images: Map<string, ImageDTO>;
+  /** Bytes returned by images.readBinary, per image id. */
+  imageBytes: Map<string, Uint8Array>;
   deletedImageIds: string[];
-  addImage(image: Partial<ImageDTO> & { id: string }): ImageDTO;
+  /** Adds an image; its bytes default to {@link TINY_PNG_BASE64}. */
+  addImage(image: Partial<ImageDTO> & { id: string }, bytes?: Uint8Array): ImageDTO;
 
   /* content */
   characters: Map<string, CharacterDTO>;
@@ -160,6 +163,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   fake.imageGenQueue = [];
   fake.scriptImageGen = (...replies) => { fake.imageGenQueue.push(...replies); };
   fake.images = new Map();
+  fake.imageBytes = new Map();
   fake.deletedImageIds = [];
   fake.characters = new Map();
   fake.worldBooks = new Map();
@@ -179,7 +183,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   fake.granted = new Set(options.granted ?? ["generation", "interceptor", "image_gen", "chat_mutation", "images", "chats", "characters", "personas", "world_books", "app_manipulation"]);
   fake.logs = [];
 
-  fake.addImage = (image) => {
+  fake.addImage = (image, bytes) => {
     const dto: ImageDTO = {
       original_filename: `${image.id}.png`,
       mime_type: "image/png",
@@ -195,6 +199,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
       ...image,
     };
     fake.images.set(dto.id, dto);
+    fake.imageBytes.set(dto.id, bytes ?? Uint8Array.from(atob(TINY_PNG_BASE64), (c) => c.charCodeAt(0)));
     return dto;
   };
   fake.addCharacter = (character) => {
@@ -463,6 +468,12 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
         return { data: data.slice(offset, offset + (opts.limit ?? 100)), total };
       },
       async get(id: string) { const i = fake.images.get(id); return i ? { ...i } : null; },
+      async readBinary(id: string) {
+        if (!fake.granted.has("images")) throw new Error("PERMISSION_DENIED: images - Images permission not granted");
+        const bytes = fake.images.has(id) ? fake.imageBytes.get(id) : undefined;
+        if (!bytes) throw new Error("Image not found");
+        return bytes.slice();
+      },
       async delete(id: string) {
         if (!fake.images.has(id)) return false;
         fake.images.delete(id);
@@ -594,11 +605,8 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   return fake;
 }
 
-/** Auto-answer fetch-bridge requests from a URL -> response table (base64 image or JSON). */
-export function answerFetchBridge(
-  fake: FakeHost,
-  table: Record<string, { data?: string; mimeType?: string; json?: unknown; error?: string; status?: number }>,
-): void {
+/** Auto-answer JSON fetch-bridge requests from a URL -> response table. */
+export function answerFetchBridge(fake: FakeHost, table: Record<string, { json?: unknown; error?: string; status?: number }>): void {
   fake.onSend = (payload) => {
     const p = payload as { type?: string; requestId?: string; url?: string };
     if (!p || p.type !== "inlay-illustrator:fetch-request" || !p.requestId || !p.url) return;

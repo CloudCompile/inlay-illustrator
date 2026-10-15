@@ -36,7 +36,7 @@ export async function buildRuntimeSource(services: BackendServices, characterId:
 /** userStorage-backed assets (uploads / reference crops) use keys `storage:<path>`. */
 export const STORAGE_ASSET_PREFIX = "storage:";
 
-/** Bytes of an asset: `storage:` keys from userStorage, everything else through the image-bytes bridge. */
+/** Bytes of an asset: `storage:` keys from userStorage, everything else through ImageBytesService. */
 export async function readAssetBytes(services: BackendServices, asset: AssetRef): Promise<{ data: Uint8Array; mimeType: string }> {
   if (asset.key?.startsWith(STORAGE_ASSET_PREFIX)) {
     const data = await services.storage.readBinary(asset.key.slice(STORAGE_ASSET_PREFIX.length));

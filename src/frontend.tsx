@@ -155,7 +155,7 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
     }
   });
 
-  // Non-RPC backend messages: the fetch bridge (image bytes, gallery and model lists depend on it).
+  // Non-RPC backend messages: the JSON fetch bridge (character gallery and LLM model lists depend on it).
   const unsubForeign = client.onForeign((payload: unknown) => {
     if (isFetchBridgeRequest(payload)) void answerFetchBridge(payload).then((response) => ctx.sendToBackend(response));
   });

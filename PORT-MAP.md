@@ -90,7 +90,7 @@ Below is the definitive cross-reference between original Asset Maid concepts, bu
 | **Storage Paths & Migrations** | 20800–20900 | `asset_maid:*`, `local:*` | `src/shared/contract/storage.ts` | **Manually Ported** | Maps RisuAI storage keys to Spindle `userStorage` filesystem paths; schema migration hooks. |
 | **RPC Protocol Definitions** | Communication layer | Plugin messaging | `src/shared/contract/rpc.ts` | **Manually Designed** | Request/response/event discriminated unions and type guards for Spindle RPC protocol v1. |
 | **Chat DOM Markup Contract** | 165000+ | Chat DOM injection | `src/shared/contract/chat-dom.ts` | **Manually Ported** | Specifications for baked illustration blocks, attributes, suppression markers, and interceptor stripping. |
-| **Fetch Bridge Contract** | Electron / web bridge | Host image fetch | `src/shared/contract/bridge.ts` | **Manually Designed** | Bridge allowing backend to fetch local host images and REST data via frontend context. |
+| **Fetch Bridge Contract** | Electron / web bridge | Host image fetch | `src/shared/contract/bridge.ts` | **Manually Designed** | Bridge allowing backend to fetch REST JSON without a Spindle API via frontend context. |
 
 ---
 
@@ -102,7 +102,7 @@ Below is the definitive cross-reference between original Asset Maid concepts, bu
 | **Storage Service** | Local storage / IndexedDB | `saveData`, `loadData` | `src/backend/services/storage.ts` | **Manually Ported** | Spindle `userStorage` client: FIFO queue writes, split config diffs, character docs, migrations. |
 | **LLM Service** | 28900–29400 | Analyzer transport | `src/backend/services/llm.ts` | **Manually Ported** | Connects to Lumiverse LLM connection profiles; handles reasoning DTO, retries, JSON mode fallback. |
 | **Image Generation Service** | 120220+ | Provider dispatch | `src/backend/services/images.ts` | **Manually Ported** | Dispatches to NovelAI/ComfyUI/generic providers; coordinates serialization and retry queues. |
-| **Image Bytes Bridge** | Web/blob URL bridge | Image bytes retrieval | `src/backend/services/image-bytes.ts` | **Manually Ported** | Serves reference and gallery image bytes using the frontend fetch bridge and `userStorage`. |
+| **Image Bytes Bridge** | Web/blob URL bridge | Image bytes retrieval | `src/backend/services/image-bytes.ts` | **Manually Ported** | Serves reference and gallery image bytes from `spindle.images.readBinary` and `userStorage`. |
 | **Sources & Roster Service** | Risu character roster | Character / lore queries | `src/backend/services/sources.ts` | **Manually Ported** | Queries Lumiverse characters, personas, worldbooks, and image galleries to build AM source models. |
 | **Chat Illustration Controller** | Chat pipeline loop | Pipeline trigger / locks | `src/backend/pipeline/controller.ts` | **Manually Ported** | Manages generation locks, job queues, automatic triggers, host event handlers (`GENERATION_ENDED`). |
 | **Turn Generation Orchestrator** | 114878, 118896 | Orchestrator runs | `src/backend/pipeline/generate.ts` | **Manually Ported** | Prepares slots, builds analyzer context, runs engine orchestrator, commits history revisions. |
@@ -150,7 +150,7 @@ Below is the definitive cross-reference between original Asset Maid concepts, bu
 | **Zoom Image Viewer** | ~150000–156000 | Zoom dialog | `src/frontend/zoom/*` | **Manually Ported** (Preact) | Full-screen image inspector, prompt inspector, seed copying, AI prompt editing, reroll controls. |
 | **Floating Action Button (FAB)** | Launcher button | Overlay launcher | `src/frontend/fab.ts` | **Manually Ported** | Floating action launcher button positioned above the chat composer; auto-hides during drawer open. |
 | **Composer Inset Tracking** | Layout positioning | Composer tracker | `src/frontend/composer-inset.ts` | **Manually Designed** | Measures Lumiverse input composer height to dynamically offset the FAB and mobile controls. |
-| **Fetch Bridge Client** | Host bridge | Fetch client | `src/frontend/fetch-bridge.ts` | **Manually Designed** | Responds to backend image byte requests using same-origin browser fetches. |
+| **Fetch Bridge Client** | Host bridge | Fetch client | `src/frontend/fetch-bridge.ts` | **Manually Designed** | Responds to backend JSON requests (gallery, model lists) using same-origin browser fetches. |
 
 ---
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { isRpcEvent } from "../../shared/contract/index.js";
-import { createFakeHost, TINY_PNG_BASE64 } from "../testing/fake-host.js";
+import { createFakeHost } from "../testing/fake-host.js";
 import { createServices, createServicesRegistry } from "./index.js";
 
 describe("createServices", () => {
@@ -23,9 +23,9 @@ describe("createServices", () => {
     const services = registry.get("u1");
     fake.onSend = (payload) => {
       const p = payload as { type: string; requestId: string };
-      if (p.type === "inlay-illustrator:fetch-request") queueMicrotask(() => registry.acceptFrontendMessage({ type: "inlay-illustrator:fetch-response", requestId: p.requestId, data: TINY_PNG_BASE64, mimeType: "image/png" }, "u1"));
+      if (p.type === "inlay-illustrator:fetch-request") queueMicrotask(() => registry.acceptFrontendMessage({ type: "inlay-illustrator:fetch-response", requestId: p.requestId, json: { ok: true } }, "u1"));
     };
-    expect((await services.imageBytes.getImage({ url: "/api/v1/images/x" })).data).toBe(TINY_PNG_BASE64);
+    expect(await services.imageBytes.getJson<unknown>("/api/v1/characters/c1/gallery")).toEqual({ ok: true });
     expect(registry.acceptFrontendMessage({ type: "unrelated" }, "u1")).toBe(false);
     expect(registry.all()).toHaveLength(2);
   });

@@ -13,7 +13,7 @@ Import everything from `src/shared/contract/index.ts`.
 | `storage.ts` | userStorage paths, file versions, migration hooks, AM key mapping. |
 | `rpc.ts` | Frontend<->backend protocol: methods (request/response pairs), events, envelopes, guards. |
 | `chat-dom.ts` | Baked illustration blocks in message content, chat actions, per-message UI state (§10). |
-| `bridge.ts` | Backend -> frontend fetch bridge for image bytes and same-origin REST JSON (§11). |
+| `bridge.ts` | Backend -> frontend fetch bridge for same-origin REST JSON (§11). |
 
 Source references: `spec/data.md` (Part A, Part C §2-§4), `spec/pipeline.md` §4-§5, `spec/novelai.md` §7/§9, `spec/llm.md` §1,
 `spec/ui.md` (action lists). Line numbers in code comments refer to `AssetMaid.pretty.js`.
@@ -338,7 +338,7 @@ interface ChatDataDocument {
 
 ## 11. Fetch bridge (`bridge.ts`)
 
-Backend -> frontend `{type:"inlay-illustrator:fetch-request", requestId, url, as:"base64"|"json"}`; the frontend fetches the
-same-origin `/api/...` URL (`isAllowedBridgeUrl`) and answers once with `{type:"inlay-illustrator:fetch-response", requestId,
-data+mimeType | json | error, status?}`. Used for image bytes (vision, references) and REST-only data (character gallery,
-LLM model lists). The legacy `avatar_image_request/response` pair is still accepted.
+Backend -> frontend `{type:"inlay-illustrator:fetch-request", requestId, url}`; the frontend fetches the same-origin
+`/api/...` URL (`isAllowedBridgeUrl`) as JSON and answers once with `{type:"inlay-illustrator:fetch-response", requestId,
+json | error, status?}`. Used only for REST data without a Spindle API (character gallery, LLM model lists). Image bytes are
+read in the backend with `spindle.images.readBinary`.

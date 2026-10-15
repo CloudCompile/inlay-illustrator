@@ -10,9 +10,9 @@ how the overlay UI is mounted and styled, file ownership during the port, and ho
 |---|---|
 | `src/engine/**` | Pure, deterministic port of Asset Maid core (no host calls): V5 config/compiler/rule runtime/prompt projection/analyzer request and recovery; V4.5 catalog/analyzer/parsing; compose (rule-IR compile, provider prompt codecs, weights, NSFW prefix, coordinates); continuity; paragraph slots; count policy; lenient JSON parser. Parity-tested against the original bundle. |
 | `src/shared/contract/**` | Shared types, defaults and normalizers: config, character document, chat data / Image History, RPC protocol, storage layout. |
-| `src/backend.ts` | Backend entry: per-user runtime (services + pipeline + analysis + RPC router), interceptor, host events, fetch bridge. See docs/BACKEND.md. |
+| `src/backend.ts` | Backend entry: per-user runtime (services + pipeline + analysis + RPC router), interceptor, host events, JSON fetch bridge. See docs/BACKEND.md. |
 | `src/backend/**` | `services/` (storage, LLM, images, image bytes, sources, events, run log), `pipeline/` (chat illustration jobs over the engine), `analysis/` (asset analysis and character features), `rpc/` (router + handler groups), `testing/` (fake host / services). See docs/BACKEND.md. |
-| `src/frontend.tsx` | Frontend entry: injects styles, fetch bridge, chat side (footer, history edge controls, zoom), FAB, launchers, overlay controller. |
+| `src/frontend.tsx` | Frontend entry: injects styles, JSON fetch bridge, chat side (footer, history edge controls, zoom), FAB, launchers, overlay controller. |
 | `src/frontend/overlay/**` | The Preact overlay app: `controller.tsx` (mount, open/close, Escape), `host.ts` (mount fallbacks), `App.tsx` (shell), `settings/`, `workspace/`, `roster/`, `launcher.tsx`, `labels.ts` (English labels per screen), `ui/` (component kit), `styles/` (Tailwind input + generated CSS). |
 | `src/frontend/{rpc,state,chat,zoom}/**` | RPC client, app state layer, chat-side controls, zoom workspace. |
 | `src/build/**` | Build-time tools: `build-css.ts` (Tailwind CLI + scoping), `css-scope.ts` (scoper and scope checker). Never bundled. |

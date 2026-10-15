@@ -254,12 +254,12 @@ export interface ImageService {
 }
 
 /* ------------------------------------------------------------------------------------------------
- * Image bytes / frontend fetch bridge (src/shared/contract/bridge.ts)
+ * Image bytes (spindle.images.readBinary) / JSON fetch bridge (src/shared/contract/bridge.ts)
  * ---------------------------------------------------------------------------------------------- */
 
 export interface ImageBytesService {
-  /** Bytes of a Lumiverse image id (spindle.images.get -> url) or an `/api/` URL, fetched by the frontend. */
-  getImage(ref: { imageId?: string; url?: string }, options?: { signal?: AbortSignal; timeoutMs?: number }): Promise<ImageBytes>;
+  /** Original bytes of a Lumiverse image, by id or by its `/api/v1/images/<id>` / `/api/v1/image-gen/results/<id>` URL. */
+  getImage(ref: { imageId?: string; url?: string }, options?: { signal?: AbortSignal }): Promise<ImageBytes>;
   /** Bytes for an asset reference (gallery / expressions / risu asset / avatar / generated / upload / crop). */
   getAsset(asset: AssetRef, options?: { signal?: AbortSignal }): Promise<ImageBytes>;
   /** JSON of a same-origin REST endpoint through the frontend (e.g. `/api/v1/characters/<id>/gallery`). */

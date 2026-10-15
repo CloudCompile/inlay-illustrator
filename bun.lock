@@ -13,7 +13,7 @@
         "@tailwindcss/cli": "4.3.3",
         "bun-types": "1.3.14",
         "happy-dom": "^20.14.5",
-        "lumiverse-spindle-types": "0.6.45",
+        "lumiverse-spindle-types": "0.6.46",
         "postcss": "^8.5.28",
         "postcss-selector-parser": "^7.1.6",
         "tailwindcss": "4.3.3",
@@ -291,7 +291,7 @@
 
     "lightningcss-win32-x64-msvc": ["lightningcss-win32-x64-msvc@1.32.0", "", { "os": "win32", "cpu": "x64" }, "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q=="],
 
-    "lumiverse-spindle-types": ["lumiverse-spindle-types@0.6.45", "", {}, "sha512-ao2Adjyl3eEcBmoXEQvUYaeWQQmk0BgOCRLtsxSninY0pGC2V0hji3CWbNsXSBbUpEVL338DYhiH+BsIJJPJXA=="],
+    "lumiverse-spindle-types": ["lumiverse-spindle-types@0.6.46", "", {}, "sha512-7p2I8M6L24U5bgcScWp/CCC4x7vE/MOOTw0eQ2tnp7ayQb43yQ9dsGtwWKEb+fBsQjZoLorenifp8DXyeaCB3g=="],
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 

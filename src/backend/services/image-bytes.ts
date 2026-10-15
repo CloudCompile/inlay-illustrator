@@ -1,19 +1,23 @@
 /**
- * ImageBytesService: the backend -> frontend fetch bridge (src/shared/contract/bridge.ts). The backend cannot read bytes of stored Lumiverse
- * images (spindle.images returns authenticated URLs only, spec/lumiverse-host.md §3) nor call REST endpoints without a Spindle
- * API (character gallery), so the frontend fetches same-origin `/api/` URLs and answers with base64 or JSON.
+ * ImageBytesService: image bytes for vision / references / img2img, plus same-origin REST JSON.
+ *
+ * - Lumiverse images: original bytes via `spindle.images.readBinary(imageId, userId)` (permission "images"; the host rejects
+ *   missing images with "Image not found" and caps reads at 100 MiB). The mime type is sniffed from the bytes.
+ * - JSON: REST endpoints without a Spindle API (character gallery, LLM connection model lists) go through the
+ *   backend -> frontend fetch bridge (src/shared/contract/bridge.ts); the frontend fetches same-origin `/api/` URLs.
  *
  * Assets (AssetRef by sourceType, docs/CONTRACT.md §2):
  * - crop (`cropReference` / `__asset_maid_crop_*` names): userStorage `characters/<chaId>/reference-crops/<name>.png`
  * - key `storage:<userStorage path>` (analysis uploads / crops stored by the extension): bytes from userStorage
  * - upload: userStorage `uploads/<key>.<ext>` when present, else the key is a Lumiverse image id
- * - character / generated / persona / gallery / expression / risu asset / avatar: `key` = Lumiverse image id
+ * - character / generated / persona / gallery / expression / risu asset / avatar: `key` = Lumiverse image id or image URL
  */
+import type { PERMISSION_DENIED_PREFIX as HostPermissionDeniedPrefix } from "lumiverse-spindle-types";
 import {
   CROP_ASSET_NAME_PREFIX,
-  FETCH_BRIDGE_MAX_BASE64,
   FETCH_BRIDGE_REQUEST,
   FETCH_BRIDGE_RESPONSE,
+  imageIdFromResultUrl,
   isAllowedBridgeUrl,
   normalizeAssetRef,
   STORAGE_PATHS,
@@ -22,12 +26,13 @@ import {
 } from "../../shared/contract/index.js";
 import { fail, RpcFailure } from "../rpc/errors.js";
 import type { ImageBytes, ImageBytesService, RunLog, SpindleHost, StorageService } from "./types.js";
-import { abortError, asRecord, errorMessage, str } from "./util.js";
+import { abortError, asRecord, errorMessage, str, throwIfAborted } from "./util.js";
 
 export const FETCH_BRIDGE_TIMEOUT_MS = 15_000;
 /** AssetRef key prefix for images kept in the extension's userStorage (`storage:<path>`). */
 export const STORAGE_KEY_PREFIX = "storage:";
-const IMAGE_MIME = /^image\/(?:png|jpe?g|webp|gif|avif)$/;
+/** Host error prefix for missing permissions (a type-only import keeps the spindle-types runtime out of the bundle). */
+const PERMISSION_DENIED_PREFIX: typeof HostPermissionDeniedPrefix = "PERMISSION_DENIED:";
 
 export interface ImageBytesServiceDeps {
   host: SpindleHost;
@@ -39,8 +44,7 @@ export interface ImageBytesServiceDeps {
 }
 
 interface Pending {
-  as: "base64" | "json";
-  resolve(value: { data?: string; mimeType?: string; json?: unknown }): void;
+  resolve(json: unknown): void;
   reject(error: unknown): void;
   timer: ReturnType<typeof setTimeout>;
   signal?: AbortSignal;
@@ -64,6 +68,28 @@ export function mimeTypeForExtension(extension: string): string {
   return "image/png";
 }
 
+/** Mime type from the file signature; null unless png, jpeg, webp, gif or avif. */
+export function sniffImageMime(bytes: Uint8Array): string | null {
+  const ascii = (start: number, end: number) => String.fromCharCode(...bytes.subarray(start, end));
+  if (bytes[0] === 0x89 && ascii(1, 4) === "PNG") return "image/png";
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (ascii(0, 4) === "GIF8") return "image/gif";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  if (ascii(4, 8) === "ftyp" && /avi[fs]/u.test(ascii(8, 32))) return "image/avif";
+  return null;
+}
+
+/** Lumiverse image id of `/api/v1/images/<id>[?size=..]` or `/api/v1/image-gen/results/<id>`. */
+export function imageIdFromUrl(url: string): string | null {
+  const match = /^\/api\/v1\/images\/([^/?#]+)(?:[?#]|$)/u.exec(url);
+  if (!match) return imageIdFromResultUrl(url);
+  try {
+    return decodeURIComponent(match[1]!);
+  } catch {
+    return null;
+  }
+}
+
 export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytesService & { pendingCount(): number } {
   const { host, userId } = deps;
   const pending = new Map<string, Pending>();
@@ -78,19 +104,18 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
     return entry;
   }
 
-  function request(url: string, as: "base64" | "json", options: { signal?: AbortSignal; timeoutMs?: number } = {}): Promise<{ data?: string; mimeType?: string; json?: unknown }> {
+  function requestJson(url: string, options: { signal?: AbortSignal; timeoutMs?: number } = {}): Promise<unknown> {
     if (!isAllowedBridgeUrl(url)) fail("bad-request", `Only same-origin /api/ URLs can be fetched (got "${String(url).slice(0, 120)}").`, { detailCode: "FETCH_BRIDGE_URL" });
     if (options.signal?.aborted) return Promise.reject(abortError(options.signal.reason));
     const requestId = newId();
     const timeoutMs = options.timeoutMs ?? deps.timeoutMs ?? FETCH_BRIDGE_TIMEOUT_MS;
-    const promise = new Promise<{ data?: string; mimeType?: string; json?: unknown }>((resolve, reject) => {
+    const promise = new Promise<unknown>((resolve, reject) => {
       const entry: Pending = {
-        as,
         resolve,
         reject,
         signal: options.signal,
         timer: setTimeout(() => {
-          finish(requestId)?.reject(new RpcFailure({ code: "timeout", message: "The overlay did not answer the image request in time. Keep Lumiverse open in a browser tab and try again.", detailCode: "FETCH_BRIDGE_TIMEOUT", retryable: true }));
+          finish(requestId)?.reject(new RpcFailure({ code: "timeout", message: "The overlay did not answer in time. Keep Lumiverse open in a browser tab and try again.", detailCode: "FETCH_BRIDGE_TIMEOUT", retryable: true }));
         }, timeoutMs),
       };
       if (options.signal) {
@@ -99,7 +124,7 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
       }
       pending.set(requestId, entry);
     });
-    const message: FetchBridgeRequest = { type: FETCH_BRIDGE_REQUEST, requestId, url, as };
+    const message: FetchBridgeRequest = { type: FETCH_BRIDGE_REQUEST, requestId, url };
     try {
       host.sendToFrontend(message, userId);
     } catch (error) {
@@ -108,21 +133,21 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
     return promise;
   }
 
-  async function base64Of(url: string, options: { signal?: AbortSignal; timeoutMs?: number } = {}): Promise<ImageBytes> {
-    const reply = await request(url, "base64", options);
-    return { data: reply.data!, mimeType: reply.mimeType! };
-  }
-
-  async function imageUrl(imageId: string): Promise<string> {
-    let dto: unknown;
+  async function readImage(imageId: string, signal?: AbortSignal): Promise<ImageBytes> {
+    throwIfAborted(signal);
+    let bytes: Uint8Array;
     try {
-      dto = await host.images.get(imageId, { specificity: "full", ...(userId ? { userId } : {}) });
+      bytes = await host.images.readBinary(imageId, userId);
     } catch (error) {
-      throw new RpcFailure({ code: "provider-error", message: `Could not read image ${imageId}: ${errorMessage(error)}`, retryable: true });
+      const message = errorMessage(error);
+      if (message === "Image not found") fail("not-found", `Image not found: ${imageId}`, { detailCode: "IMAGE_NOT_FOUND" });
+      if (message.startsWith(PERMISSION_DENIED_PREFIX)) fail("permission-denied", `Could not read image ${imageId}: ${message}`);
+      throw new RpcFailure({ code: "provider-error", message: `Could not read image ${imageId}: ${message}` });
     }
-    const url = str(asRecord(dto).url);
-    if (!url) fail("not-found", `Image not found: ${imageId}`, { detailCode: "IMAGE_NOT_FOUND" });
-    return url;
+    throwIfAborted(signal);
+    const mimeType = sniffImageMime(bytes);
+    if (!mimeType) fail("provider-error", `Image ${imageId} is not a PNG, JPEG, WebP, GIF or AVIF image.`, { detailCode: "IMAGE_UNSUPPORTED" });
+    return { data: bytesToBase64(bytes), mimeType };
   }
 
   async function fromStorage(path: string, extension: string): Promise<ImageBytes | null> {
@@ -141,10 +166,11 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
   const service = {
     pendingCount: () => pending.size,
 
-    async getImage(ref: { imageId?: string; url?: string }, options: { signal?: AbortSignal; timeoutMs?: number } = {}) {
-      const url = str(ref.url) || (str(ref.imageId) ? await imageUrl(str(ref.imageId)) : "");
-      if (!url) fail("bad-request", "No image id or URL given.");
-      return base64Of(url, options);
+    async getImage(ref: { imageId?: string; url?: string }, options: { signal?: AbortSignal } = {}) {
+      const url = str(ref.url);
+      const imageId = url ? imageIdFromUrl(url) : str(ref.imageId);
+      if (!imageId) fail("bad-request", url ? `Not a Lumiverse image URL: "${url.slice(0, 120)}".` : "No image id or URL given.", { detailCode: "IMAGE_REF_INVALID" });
+      return readImage(imageId, options.signal);
     },
 
     async getAsset(raw: AssetRef, options: { signal?: AbortSignal } = {}) {
@@ -170,8 +196,7 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
     },
 
     async getJson<T = unknown>(url: string, options: { signal?: AbortSignal; timeoutMs?: number } = {}): Promise<T> {
-      const reply = await request(url, "json", options);
-      return reply.json as T;
+      return (await requestJson(url, options)) as T;
     },
 
     acceptFrontendMessage(message: Record<string, unknown>): boolean {
@@ -185,17 +210,7 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
         entry.reject(new RpcFailure({ code: status === 404 ? "not-found" : status === 401 || status === 403 ? "permission-denied" : "provider-error", message: error, detailCode: "FETCH_BRIDGE_ERROR", ...(Number.isFinite(status) && status ? { details: { status } } : {}) }));
         return true;
       }
-      if (entry.as === "json") {
-        entry.resolve({ json: message.json });
-        return true;
-      }
-      const data = str(message.data).replace(/^data:[^;,]+;base64,/, "");
-      const mimeType = str(message.mimeType).toLowerCase();
-      if (!data || data.length > FETCH_BRIDGE_MAX_BASE64 || !IMAGE_MIME.test(mimeType)) {
-        entry.reject(new RpcFailure({ code: "provider-error", message: "The frontend returned an invalid image.", detailCode: "FETCH_BRIDGE_INVALID_IMAGE" }));
-        return true;
-      }
-      entry.resolve({ data, mimeType: mimeType === "image/jpg" ? "image/jpeg" : mimeType });
+      entry.resolve(message.json);
       return true;
     },
   };
