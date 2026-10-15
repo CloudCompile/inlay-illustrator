@@ -105,12 +105,14 @@ describe("character-prompts analysis (AM iwt)", () => {
     expect(fx.documents.get(CHAR)!.characterPrompt.characterForms[ALICE]!.forms[0]!.basePromptGroups["eyes.color"]).toEqual(["green eyes"]);
   });
 
-  test("nothing selected -> no-evidence; busy guard; cancel", async () => {
+  test("nothing selected -> error (AM 0.9.89.5 throws); busy guard; cancel", async () => {
     const fx = createAnalysisFixture();
     const jobs = new AnalysisJobs(fx.services);
     const a = jobs.start("character-prompts", CHAR, (ctx) => runAnalysis(ctx, { kind: "character-prompts", characterId: CHAR }));
     expect(() => jobs.start("character-prompts", CHAR, async () => ({ status: "success", message: "" }))).toThrow();
-    expect((await a.done).status).toBe("no-evidence");
+    const nothing = await a.done;
+    expect(nothing.status).toBe("error");
+    expect(nothing.error?.messageKo ?? nothing.error?.message).toBe("분석할 이미지가 선택되지 않았습니다.");
     const fx2 = await setup({
       llm: {
         complete: (_req, opts) =>

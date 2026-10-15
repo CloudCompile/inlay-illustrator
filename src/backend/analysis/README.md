@@ -1,17 +1,21 @@
-# src/backend/analysis — asset analysis, workspace and outfit images (Asset Maid 0.9.88 port)
+# src/backend/analysis — asset analysis, workspace and outfit images (Asset Maid port; analysis slice from 0.9.89.5)
 
 Owner: `analysis` (sub-agent of the backend lead). Specs: `spec/data.md` Part A + "Asset analysis", `spec/ui.md` §1-§3,
 `spec/novelai.md` §9 F. RPC handlers: `src/backend/rpc/handlers/workspace.ts`.
 
 ## How it is built
 
-- `core/analysis-core.ts` is a **generated verbatim slice** of `AssetMaid.pretty.js` (same slicer as `src/engine/core`,
-  copy in `core/tooling/`; it also follows top-level `for (var ...)` declarations). Roots: the analysis controllers
-  `iwt` (character prompts), `Awt` (references), `bwt` (persona), `Uwt` (asset matching), `$vt` (metadata check),
-  `Mvt` (artist extraction), `ope` (reclassification), `sve`/`cve` (representative pick), the metadata reader `Int`,
-  the image loader `aat`, the asset index `Hnt` + matching `unt`, and helpers (`Hy`, `Ife`, `rI`, `Ky`, `ki`, `g2`, `C7`,
-  `uOt`, `xj`, ...). Prompts, schemas and algorithms are therefore byte-identical. `vW` is imported from the engine core.
-  Regenerate: `cd asset-maid-port/scratch/engine && node slice-analysis.mjs ../analysis-backend/slice-config.json`.
+- `core/analysis-core.ts` is a **generated verbatim slice** of AM 0.9.89.5 (`E:/Asset-Maid-upstream/pretty-versions/0.9.89.5.pretty.js`;
+  same slicer as `src/engine/core`, copy in `core/tooling/`; it also follows top-level `for (var ...)` declarations and
+  rewrites `const x = globalThis` to `Object(globalThis)` for Lumiverse's backend fetch scan). Roots: the analysis
+  controllers `Gwt` (character prompts), `f0t` (references), `o0t` (persona), `C0t` (asset matching), `Pwt` (metadata
+  check), `wwt` (artist extraction), `dhe` (reclassification, prompts collection `R8e`), `Fve`/`Kve` (representative
+  pick), the metadata reader `s3e`, the image loader `Qit`, the asset index `X$e` + matching `G2e`, and helpers (`ib`,
+  `Loe`, `y_`, `nb`, `Ci`, `J2`, `PH`, `XOt`, `uN`, ...). Prompts, schemas and algorithms are therefore byte-identical.
+  `FQ` is imported from the engine core. 0.9.88 names: see `git log` (the 0.9.88 config is in history).
+  Regenerate: copy `core/tooling/slice-analysis.mjs` to `asset-maid-port/scratch/engine/slice-analysis95.mjs` (it needs
+  that folder's `acorn`/`eslint-scope`), fill `<worktree>`/`<scratch>` in `core/tooling/slice-config.json`
+  (`slice-config.auto-core.json` for `pipeline/core/auto-core.ts`) and run `node slice-analysis95.mjs <config>`.
   Never edit the generated file.
 - `data/` holds unchanged copies of `extract/data/analysis-*` and `extract/llm/*` (prefixed `llm-`). `data.test.ts`
   checks them against the extracts and against the slice output (`lat`, `cat`, prompt constants, contracts).
@@ -41,15 +45,15 @@ Owner: `analysis` (sub-agent of the backend lead). Specs: `spec/data.md` Part A 
 
 | kind | AM | notes |
 |---|---|---|
-| character-prompts | `iwt.analyzePrompts` | `promptKeys` = UI order only (AM Assets tab); targets = registered + checked rows |
-| references | `Awt.analyzeReferences`; text mode -> `iwt` with explicit keys | Prompts tab |
-| persona | `bwt.analyze` (`assetSelection: "analysis"`) | `personaIds` |
-| asset-matching | `Uwt.analyzeMatching` | `force`, `promptKeys` -> `onlyPromptKeys` |
-| metadata-check | `$vt.analyzeMetadata` | stealth (alpha LSB) metadata is not read in the worker (no `createImageBitmap`) |
-| artist-extraction | `Mvt.extractArtistPrompt` | `asset` sets `artistExtractionAssetBySourceId` first |
-| representative-pick | `sve` + toast `hvt` | no LLM |
-| reclassification | `ope` + `Hct`/`v_t` adapters | `promptKeys` or `personaIds`; checked areas = reference analysis checks |
-| charx-regex | `Owt.analyzeRegex` (`Lyt`/`Fyt`, system `mPe`) | scripts: host `regex_scripts` (character scope) else card `extensions.regex_scripts`; none -> no-evidence. Manual edit: `charxRegex.setDetectors` |
+| character-prompts | `Gwt.analyzePrompts` | `promptKeys` = UI order only (AM Assets tab); targets = registered + checked rows; nothing selected -> error (AM 0.9.89.5 throws) |
+| references | `f0t.analyzeReferences`; text mode -> `Gwt` with explicit keys | Prompts tab |
+| persona | `o0t.analyze` (`assetSelection: "analysis"`) | `personaIds` |
+| asset-matching | `C0t.analyzeMatching` | `force`, `promptKeys` -> `onlyPromptKeys`; progress = phase units while running |
+| metadata-check | `Pwt.analyzeMetadata` | stealth (alpha LSB) metadata is not read in the worker (no `createImageBitmap`) |
+| artist-extraction | `wwt.extractArtistPrompt` | `asset` sets `artistExtractionAssetBySourceId` first |
+| representative-pick | `Fve` + toast `ewt` | no LLM |
+| reclassification | `dhe` + `Ddt`/`oIt` adapters (0.9.89.5 L107990 / L149087) | `promptKeys` or `personaIds`; checked areas = reference analysis checks |
+| charx-regex | `h0t.analyzeRegex` | scripts: host `regex_scripts` (character scope) else card `extensions.regex_scripts`; none -> no-evidence. Manual edit: `charxRegex.setDetectors` |
 | unique-tag-search | dropped | `unsupported` |
 
 ## Gaps / TODO

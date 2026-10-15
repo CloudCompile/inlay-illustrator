@@ -1,13 +1,10 @@
 # pipeline/core — generated verbatim slice (free character / outfit generation)
 
-`auto-core.ts` is GENERATED from `AssetMaid.pretty.js` with the engine slicer (do not edit by hand).
-Roots: `a1t` (autoOutfit 168426), `gOt` (autoCharacter 179282), `yOt` (initial outfit image 179498) and their helpers
-(`ZAt`, `jE`, `Xf`, `Hgt`, `D2`, `Xgt`, `ki`, `Si`, `go`, `BY`, `Jf`, `Pg`, `MJ`, `YNe`). `vW` comes from the engine core.
+`auto-core.ts` is GENERATED from AM 0.9.89.5 (`0.9.89.5.pretty.js`) with the analysis slicer (do not edit by hand).
+Roots: `N1t` (autoOutfit 169112), `QOt` (autoCharacter 180391), `ejt` (initial outfit image 180598) and their helpers
+(`S1t`, `mR`, `tf`, `vbt`, `h5`, `Sbt`, `Ci`, `Yi`, `po`, `Hre`, `ly`, `Gv`, `wre`, `mtt`). `FQ` comes from the engine core.
 
-Regenerate:
-
-```sh
-cd C:/Users/eme4/asset-maid-port/scratch/engine && node slice-analysis.mjs ../pipeline-backend/slice-config.json
-```
+Regenerate with `src/backend/analysis/core/tooling/slice-analysis.mjs` and `slice-config.auto-core.json` in the same
+folder (see `src/backend/analysis/README.md`).
 
 The stores these functions expect are built in `../auto.ts`.

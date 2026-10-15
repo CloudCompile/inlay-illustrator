@@ -97,6 +97,7 @@ const RULES: Array<[RegExp, string | ((...m: string[]) => string)]> = [
   [/에셋 분류 로컬 규칙 적용 중/gu, "Applying local asset classification rules"],
   [/파일명 기반 에셋 분류 보강 중/gu, "Refining asset classification from file names"],
   [/에셋 분류 준비 중/gu, "Preparing asset classification"],
+  [/에셋 분류 저장 중/gu, "Saving asset classification"],
   [/에셋 분류 완료/gu, "Asset classification complete"],
   [/에셋 분류 실패/gu, "Asset classification failed"],
   [/에셋 분류 취소됨/gu, "Asset classification cancelled"],

@@ -30,7 +30,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
 export async function buildRuntimeSource(services: BackendServices, characterId: string, store: AmConfigStore | null, options: { chatId?: string } = {}): Promise<AmSource> {
   const document = await services.storage.loadCharacterDocument(characterId);
   const source = await services.sources.buildSource(characterId, document, options);
-  return (amFn("rI")(source, document.customCharacters, "all") ?? source) as AmSource;
+  return (amFn("y_")(source, document.customCharacters, "all") ?? source) as AmSource;
 }
 
 /** userStorage-backed assets (uploads / reference crops) use keys `storage:<path>`. */
@@ -156,8 +156,8 @@ export async function openAnalysisSession(services: BackendServices, characterId
   };
   // AM Int L87689 with a binary cache that reads through the image-bytes bridge (no createImageBitmap in the worker:
   // stealth alpha metadata is skipped there, PNG/JPEG/WebP text chunks still work).
-  const metadata = amFn("Int")({ readAsset }, store, { binaryCache: { read: (asset: Any) => readAsset(asset) } });
-  const images = amFn("aat")({ readAsset }, { readAsset });
+  const metadata = amFn("s3e")({ readAsset }, store, { binaryCache: { read: (asset: Any) => readAsset(asset) } });
+  const images = amFn("Qit")({ readAsset }, { readAsset });
   return {
     characterId,
     store,
@@ -184,5 +184,5 @@ export async function openAnalysisSession(services: BackendServices, characterId
 /** AM `ym` (L81545): remember whether the analysis model reads images (AM `F_` consults it before image batches). */
 export function rememberVisionSupport(analysisConfig: unknown, supported: boolean | null): void {
   if (supported === null) return;
-  AM.ym(analysisConfig, supported ? "supported" : "unsupported");
+  AM.Cm(analysisConfig, supported ? "supported" : "unsupported");
 }

@@ -559,10 +559,11 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
         })
     : undefined;
   // Free character generation (AM E1t 169768-169782): generated forms join the live config (`jt`).
+  // AM 0.9.89.5 (170958-170963) keys the allocations by the request object (`requestOwner`); here that is `req`.
   const knownIdentities = freeCharacters ? buildKnownIdentities(withCustomCharacterMembers(source, customCharacters as unknown[], "all"), personaRecords) : [];
   const prepareCharacters = freeCharacters
     ? async (input: Rec) => {
-        const prepared = await auto!.autoCharacter.prepare({ ...input, sourceId, operationKey, knownIdentities });
+        const prepared = await auto!.autoCharacter.prepare({ ...input, sourceId, owner: req, knownIdentities });
         generatedForms = Object.fromEntries(prepared.flatMap((p) => (p.forms ? [[p.identityKey, p.forms]] : [])));
         return prepared;
       }

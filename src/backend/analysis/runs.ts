@@ -1,18 +1,19 @@
 /**
  * Analysis runs: each kind drives the VERBATIM Asset Maid controller from the slice with port adapters
  * (bridge/session.ts) and maps its snapshot onto `analysis.progress` / `analysis.finished`.
+ * Controller names/lines are AM 0.9.89.5 (`0.9.89.5.pretty.js`); the UI origin lines are still 0.9.88 lines.
  *
- * | kind                | AM controller / entry                                   | UI origin (pretty line)       |
+ * | kind                | AM controller / entry                                   | UI origin (0.9.88 line)       |
  * |---------------------|---------------------------------------------------------|-------------------------------|
- * | character-prompts   | `iwt.analyzePrompts` L135422 (promptOrder only)          | Assets tab L154025            |
- * | references          | `Awt.analyzeReferences` L136832; text mode -> `iwt` with explicit promptKeys | Prompts tab L154250 |
- * | persona             | `bwt.analyze` L136244 (`assetSelection:"analysis"`)       | Assets tab persona view L154036 |
- * | asset-matching      | `Uwt.analyzeMatching` L137835 (force / onlyPromptKeys)   | L154336, L155673              |
- * | metadata-check      | `$vt.analyzeMetadata` L134787                             | L145272, L154345              |
- * | artist-extraction   | `Mvt.extractArtistPrompt` L134487                         | Artists tab L150269           |
- * | representative-pick | `sve` L133089 (no LLM) + toast `hvt` L133864              | L155676                       |
- * | reclassification    | `ope` L96048 with the prompts adapter `Hct` L105177 (personas: `v_t` L148051) | Prompts tab L154235 |
- * | charx-regex         | `Owt.analyzeRegex` L137192 (`Lyt`/`Fyt`), scripts = Lumiverse regex scripts | settings |
+ * | character-prompts   | `Gwt.analyzePrompts` L136363 (promptOrder only)          | Assets tab L154025            |
+ * | references          | `f0t.analyzeReferences` L137819; text mode -> `Gwt` with explicit promptKeys | Prompts tab L154250 |
+ * | persona             | `o0t.analyze` L137235 (`assetSelection:"analysis"`)       | Assets tab persona view L154036 |
+ * | asset-matching      | `C0t.analyzeMatching` L138757 (force / onlyPromptKeys)   | L154336, L155673              |
+ * | metadata-check      | `Pwt.analyzeMetadata` L135775                             | L145272, L154345              |
+ * | artist-extraction   | `wwt.extractArtistPrompt` L135474                         | Artists tab L150269           |
+ * | representative-pick | `Fve` L134052 (no LLM) + toast `ewt` L134836              | L155676                       |
+ * | reclassification    | `dhe` L98781 with the prompts adapter `Ddt` L107990 (personas: `oIt` L149087) | Prompts tab L154235 |
+ * | charx-regex         | `h0t.analyzeRegex` L138174, scripts = Lumiverse regex scripts | settings                  |
  * | unique-tag-search   | dropped (Danbooru HF space, PORT-PLAN) -> unsupported     |                               |
  */
 import { rpcError, type AnalysisStartParams, type JobStatus, type ProgressInfo, type RowNotice } from "../../shared/contract/index.js";
@@ -38,7 +39,11 @@ const NOTHING_LABELS = new Set([
 ]);
 
 export function snapshotProgress(snap: Any): ProgressInfo {
-  const pairs: Array<[string, string]> = [["completedAnalysisUnits", "totalAnalysisUnits"], ["completed", "total"], ["completedMetadata", "totalMetadata"], ["completedBatches", "totalBatches"]];
+  // Asset matching (AM `C0t`) reports phase units while running; its activity row shows those (AM 0.9.89.5 L138579).
+  const phase = snap?.status === "running" && Number(snap?.totalPhaseUnits) > 0;
+  const pairs: Array<[string, string]> = phase
+    ? [["completedPhaseUnits", "totalPhaseUnits"]]
+    : [["completedAnalysisUnits", "totalAnalysisUnits"], ["completed", "total"], ["completedMetadata", "totalMetadata"], ["completedBatches", "totalBatches"]];
   const progress: ProgressInfo = { ...amLabel(String(snap?.label ?? "")) };
   for (const [d, t] of pairs) {
     if (Number(snap?.[t]) > 0) {
@@ -47,7 +52,8 @@ export function snapshotProgress(snap: Any): ProgressInfo {
       break;
     }
   }
-  if (Number.isFinite(snap?.progress)) progress.fraction = Math.max(0, Math.min(1, Number(snap.progress)));
+  if (phase) progress.fraction = Math.min(1, progress.done! / progress.total!);
+  else if (Number.isFinite(snap?.progress)) progress.fraction = Math.max(0, Math.min(1, Number(snap.progress)));
   if (snap?.retry && Number(snap.retry.total) > 0) progress.retry = { attempt: Number(snap.retry.attempt) || 0, total: Number(snap.retry.total) };
   return progress;
 }
@@ -130,11 +136,11 @@ function analyzer(ctx: JobContext, purpose: string) {
   });
 }
 
-const promptKeysOf = (session: AnalysisSession): string[] => session.source.members.flatMap((m) => m.lorebooks.map((l) => amFn("Fs")(m, l) as string));
+const promptKeysOf = (session: AnalysisSession): string[] => session.source.members.flatMap((m) => m.lorebooks.map((l) => amFn("Hs")(m, l) as string));
 
 export async function runCharacterPrompts(ctx: JobContext, params: AnalysisStartParams, explicit = false): Promise<JobOutcome> {
   const session = await open(ctx, "asset-analysis");
-  const controller = AM.iwt({
+  const controller = AM.Gwt({
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     images: session.images,
@@ -165,7 +171,7 @@ export async function runCharacterPrompts(ctx: JobContext, params: AnalysisStart
 export async function runReferences(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   if ((params.evidenceMode ?? "image") === "text") return runCharacterPrompts(ctx, params, true);
   const session = await open(ctx, "reference-analysis");
-  const controller = AM.Awt({
+  const controller = AM.f0t({
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     images: session.images,
@@ -188,7 +194,7 @@ export async function runReferences(ctx: JobContext, params: AnalysisStartParams
 export async function runPersona(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   const session = await open(ctx, "persona-analysis");
   await session.sourceCatalog.refreshPersonas();
-  const controller = AM.bwt({
+  const controller = AM.o0t({
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     images: session.images,
@@ -203,7 +209,7 @@ export async function runPersona(ctx: JobContext, params: AnalysisStartParams): 
 
 export async function runAssetMatching(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   const session = await open(ctx, "asset-matching");
-  const controller = AM.Uwt({ sourceCatalog: session.sourceCatalog, analyzer: analyzer(ctx, "asset-matching"), config: session.store, priorityAssets: session.priorityAssets });
+  const controller = AM.C0t({ sourceCatalog: session.sourceCatalog, analyzer: analyzer(ctx, "asset-matching"), config: session.store, priorityAssets: session.priorityAssets });
   return driveAmController(ctx, session, controller, () =>
     controller.analyzeMatching({
       scope: "current-source",
@@ -217,7 +223,7 @@ export async function runAssetMatching(ctx: JobContext, params: AnalysisStartPar
 
 export async function runMetadataCheck(ctx: JobContext): Promise<JobOutcome> {
   const session = await open(ctx, "metadata-check");
-  const controller = AM.$vt({ config: session.store, sourceCatalog: session.sourceCatalog, metadata: session.metadata, priorityAssets: session.priorityAssets });
+  const controller = AM.Pwt({ config: session.store, sourceCatalog: session.sourceCatalog, metadata: session.metadata, priorityAssets: session.priorityAssets });
   return driveAmController(ctx, session, controller, () => controller.analyzeMetadata({ scope: "current-source", sourceId: ctx.characterId }));
 }
 
@@ -225,13 +231,13 @@ export async function runArtistExtraction(ctx: JobContext, params: AnalysisStart
   const session = await open(ctx, "artist-extraction");
   if (params.asset) {
     // Same write as the picker target `artist-reference` (AM `artistExtractionAssetBySourceId[sourceId]`).
-    const stored = amFn("pn")(params.asset);
+    const stored = amFn("sn")(params.asset);
     session.store.update(
       (c) => ({ ...c, characterPrompt: { ...c.characterPrompt, artistExtractionAssetBySourceId: { ...c.characterPrompt.artistExtractionAssetBySourceId, [ctx.characterId]: { ...stored, ext: stored.extension } } } }),
       { domains: ["asset-analysis"] },
     );
   }
-  const controller = AM.Mvt({
+  const controller = AM.wwt({
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     analyzer: analyzer(ctx, "artist-extraction"),
@@ -242,16 +248,16 @@ export async function runArtistExtraction(ctx: JobContext, params: AnalysisStart
   return driveAmController(ctx, session, controller, () => controller.extractArtistPrompt({ sourceId: ctx.characterId }));
 }
 
-/** AM `sve` L133089 (no LLM): one default-outfit image per character; toast text `hvt` L133864. */
+/** AM `Fve` L134052 (no LLM): one default-outfit image per character; toast text `ewt` L134836. */
 export async function runRepresentativePick(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   const session = await open(ctx, "representative-pick");
   try {
     const wanted = params.promptKeys?.length ? new Set(params.promptKeys) : null;
-    const items = (amFn("EB")(session.source, session.store.getCurrentSnapshot().characterPrompt) as Any[]).filter((item) => !wanted || wanted.has(item.promptKey));
+    const items = (amFn("SK")(session.source, session.store.getCurrentSnapshot().characterPrompt) as Any[]).filter((item) => !wanted || wanted.has(item.promptKey));
     ctx.progress({ label: "Selecting representative images", labelKo: "캐릭터별 기본 의상 이미지 자동 선택", done: 0, total: items.length });
-    const result = AM.sve({ priorityAssets: session.priorityAssets, config: session.store, sourceId: ctx.characterId, items });
+    const result = AM.Fve({ priorityAssets: session.priorityAssets, config: session.store, sourceId: ctx.characterId, items });
     await session.store.flushSave();
-    const toast = String(AM.hvt(result));
+    const toast = String(AM.ewt(result));
     const { message, messageKo } = amMessage(toast);
     ctx.progress({ label: message, ...(messageKo ? { labelKo: messageKo } : {}), done: items.length, total: items.length, fraction: 1 });
     return { status: result.addedImages ? "success" : "no-evidence", message, ...(messageKo ? { messageKo } : {}) };
@@ -261,9 +267,10 @@ export async function runRepresentativePick(ctx: JobContext, params: AnalysisSta
 }
 
 /**
- * AI reclassification of checked areas (AM `ope` L96048). The checked areas are the reference "analysis" checks stored
- * on forms/outfits (AM `Pme` L93900 via `MP`), so the port passes the prompt keys (or persona ids) as the editor targets.
- * The draft session is the store itself (no separate drafts in the backend).
+ * AI reclassification of checked areas (AM `dhe` L98781, adapters `Ddt` L107990 / `oIt` L149087). The checked areas are
+ * the reference "analysis" checks stored on forms/outfits (AM `Zre` L34273), so the port passes the prompt keys (or
+ * persona ids) as the editor targets. The draft session is the store itself (no separate drafts in the backend, so
+ * `projectPending` is the identity).
  */
 export async function runReclassification(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   const session = await open(ctx, "reclassification");
@@ -277,28 +284,28 @@ export async function runReclassification(ctx: JobContext, params: AnalysisStart
           [...new Set(r.targets.map((n: Any) => n.promptKey))].flatMap((key) => {
             const persona = personas.find((p: Any) => p.key === key);
             if (!persona) throw new Error("재분류할 페르소나를 찾지 못했습니다.");
-            const collection = AM.bd(t, persona.key);
-            const enabled = (AM.sI(t, r.sourceId, persona, "reclassification") as Any[]).filter((x) => x.enabled);
-            const raw = AM.QH(AM.QH(t.characterPrompt.personaSettings.profiles[persona.key]).forms).forms;
+            const collection = AM.Pl(t, persona.key);
+            const enabled = (AM.RI(t, r.sourceId, persona, "reclassification") as Any[]).filter((x) => x.enabled);
+            const raw = AM.sO(AM.sO(t.characterPrompt.personaSettings.profiles[persona.key]).forms).forms;
             return collection.forms
               .map((form: Any) =>
-                AM.Pme(collection, raw, persona.key, form.id, {
+                AM.Zre(collection, raw, persona.key, form.id, {
                   base: enabled.some((x) => x.formId === form.id && x.outfitId === null),
                   outfits: new Set(enabled.filter((x) => x.formId === form.id && x.outfitId !== null).map((x) => x.outfitId)),
                 }),
               )
               .filter((x: Any) => x.targets.length > 0);
           }),
-        collection: AM.bd,
-        store: (t: Any, r: string, n: Any) => AM.Cf(t, r, AM.kme(AM.QH(t.characterPrompt.personaSettings.profiles[r]).forms, AM.bd(t, r), n)),
+        collection: (t: Any, r: string) => AM.mF(AM.Pl(t, r), AM.sO(AM.sO(t.characterPrompt.personaSettings.profiles[r]).forms).forms),
+        store: (t: Any, r: string, n: Any) => AM.Df(t, r, AM.DA(AM.sO(t.characterPrompt.personaSettings.profiles[r]).forms, AM.Pl(t, r), n)),
         topics: () => ["reclassification"],
       }
-    : { domain: "prompts", capture: (t: Any, r: Any) => AM.Zot(t, r.targets), collection: AM.vn, store: AM.Jot, topics: () => ["reclassification"] };
-  const controller = AM.ope({
+    : { domain: "prompts", capture: (t: Any, r: Any) => AM.E8e(t, r.targets), collection: AM.R8e, store: AM.fF, topics: () => ["reclassification"] };
+  const controller = AM.dhe({
     config: session.store,
     analyzer: analyzer(ctx, "prompt-reclassification"),
     blocked: () => false,
-    drafts: { flush() {}, getEditRevision: () => 0 },
+    drafts: { flush() {}, projectPending: (config: Any) => config },
     adapter,
     context: () => ({ sourceId: ctx.characterId, targets: keys.map((promptKey) => ({ promptKey })), generation: 0, available: keys.length > 0 }),
   });

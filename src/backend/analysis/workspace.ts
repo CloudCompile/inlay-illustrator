@@ -60,14 +60,14 @@ export function imageUrlIndex(images: CharacterImageAsset[]): (asset: Pick<Asset
 
 /** Roster rows (AM `FT` + `R6`) of a runtime source (custom characters already projected by `rI`). */
 export function projectRoster(source: AmSource, document: CharacterDocument, options: { thumbnail?: (promptKey: string, row: Omit<RosterItem, "thumbnailUrl">) => string | null } = {}): RosterItem[] {
-  const Fs = amFn("Fs");
+  const Hs = amFn("Hs");
   const cp = document.characterPrompt;
   const customs = new Map(document.customCharacters.map((c) => [c.id, c]));
   const rows: RosterItem[] = [];
   const seen = new Set<string>();
   for (const member of source.members) {
     for (const lore of member.lorebooks) {
-      const promptKey: string = Fs(member, lore);
+      const promptKey: string = Hs(member, lore);
       if (!promptKey || seen.has(promptKey)) continue;
       seen.add(promptKey);
       const custom = lore.runtimeOrigin?.kind === "custom-character" ? customs.get(lore.runtimeOrigin.id) : undefined;
@@ -143,7 +143,7 @@ export async function loadWorkspaceSnapshot(services: BackendServices, character
   ]);
   const document = parts.document;
   const rawSource = await services.sources.buildSource(characterId, document, options.chatId ? { chatId: options.chatId } : {});
-  const source = (amFn("rI")(rawSource, document.customCharacters, "all") ?? rawSource) as AmSource;
+  const source = (amFn("y_")(rawSource, document.customCharacters, "all") ?? rawSource) as AmSource;
   const sources = await services.sources.rosterSources(characterId, document, options.chatId ? { chatId: options.chatId } : {});
   const store = new AmConfigStore(services, characterId, parts, "workspace");
   const assets = createAmPriorityAssets(store, (id) => (id === source.id ? source : null));
@@ -257,7 +257,7 @@ export async function setRecognitionKeys(services: BackendServices, characterId:
     await updateCustomCharacterEntry(services, characterId, custom.id, { title: custom.title, recognitionKeys: keys, appearanceDescription: custom.appearanceDescription });
     return;
   }
-  await mutateAmConfig(services, characterId, (config) => amFn("Ife")(config, { id: characterId }, promptKey, keys), { reason: "recognition-keys" });
+  await mutateAmConfig(services, characterId, (config) => amFn("Loe")(config, { id: characterId }, promptKey, keys), { reason: "recognition-keys" });
 }
 
 /* ------------------------------------------------------------------------------------------------

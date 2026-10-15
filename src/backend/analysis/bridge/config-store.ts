@@ -170,7 +170,7 @@ type UpdateOptions = { domains?: string[]; persistence?: "debounced" | "manual" 
 
 /**
  * Long-lived store with AM's `config` API for the verbatim controllers: `getCurrentSnapshot`, `update(mutator, {domains})`,
- * `flushSave`, `getDomainRevision`, `getPersistenceSnapshot`, `subscribePersistence`. Updates apply synchronously in memory
+ * `flushSave`, `getDomainRevision`, `getSourceOwner`, `getPersistenceSnapshot`, `subscribePersistence`. Updates apply synchronously in memory
  * (like AM) and are persisted in order; `flushSave()` waits for them and rethrows the first persistence error.
  */
 export class AmConfigStore {
@@ -196,6 +196,11 @@ export class AmConfigStore {
 
   getCurrentSnapshot(): AmConfig {
     return this.current;
+  }
+
+  /** AM `getSourceOwner` (the active charx id); one store serves one character. */
+  getSourceOwner(): string {
+    return this.characterId;
   }
 
   update(mutate: (config: AmConfig) => AmConfig, options: UpdateOptions = {}): AmConfig {

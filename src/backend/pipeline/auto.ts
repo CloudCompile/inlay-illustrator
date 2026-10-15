@@ -1,9 +1,10 @@
 /**
- * Free character / free outfit generation for the chat pipeline (AM autoCharacter `gOt` 179282 + `prepare` 179298,
- * autoOutfit `a1t` 168426, initial outfit image `yOt` 179498; spec/data.md §1.6). The algorithms are the verbatim slice
+ * Free character / free outfit generation for the chat pipeline (AM 0.9.89.5 autoCharacter `QOt` 180391,
+ * autoOutfit `N1t` 169112, initial outfit image `ejt` 180598; spec/data.md §1.6). The algorithms are the verbatim slice
  * in ./core/auto-core.ts; this file supplies the stores they expect:
  * - config store (AM `N`): the analysis module's `AmConfigStore` (merged runtime config of the primary character; writes
- *   go back to the character document / global config) + `getSavedSnapshot`, `commitExternalUpdate`, `commitUpdate`;
+ *   go back to the character document / global config) + `getSavedSnapshot`, `commitExternalUpdate`, `commitUpdate`,
+ *   `subscribeDomain`;
  * - custom character store (AM `A5e`, `createProfiles` 37691): entries in `CharacterDocument.customCharacters`,
  *   clash rule (NFKC title / recognition keys), forms in `characterPrompt.characterForms[id]`;
  * - outfit image generator (AM boot `Ee`): from the analysis module when it exposes one, else creation mode
@@ -13,7 +14,7 @@ import { normalizeFormCollection, type CharacterDocument, type CustomCharacter }
 import { AmConfigStore, type AmConfig } from "../analysis/bridge/config-store.js";
 import type { BackendModules } from "../rpc/types.js";
 import type { BackendServices } from "../services/types.js";
-import { a1t as createAutoOutfit, gOt as createAutoCharacter, yOt as createInitialOutfit } from "./core/auto-core";
+import { N1t as createAutoOutfit, QOt as createAutoCharacter, ejt as createInitialOutfit } from "./core/auto-core";
 
 type Rec = Record<string, unknown>;
 
@@ -50,7 +51,8 @@ function amConfigStoreAdapter(store: AmConfigStore) {
   const adapter = Object.create(store) as AmConfigStore & {
     getSavedSnapshot(): AmConfig;
     commitExternalUpdate(fn: () => Promise<Mutator | void> | Mutator | void, options?: { domains?: string[] }): Promise<void>;
-    commitUpdate(fn: (current: AmConfig, saved: AmConfig) => { persisted: AmConfig }, options?: { domains?: string[] }): Promise<void>;
+    commitUpdate(fn: (current: AmConfig, saved: AmConfig) => { persisted: AmConfig } | null, options?: { domains?: string[] }): Promise<void>;
+    subscribeDomain(domain: string, listener: () => void): () => void;
   };
   adapter.getSavedSnapshot = () => store.getCurrentSnapshot();
   adapter.commitExternalUpdate = async (fn, options = {}) => {
@@ -58,12 +60,16 @@ function amConfigStoreAdapter(store: AmConfigStore) {
     if (typeof mutate === "function") store.update(mutate, options);
     await store.flushSave();
   };
+  // The port keeps one snapshot (current = saved), so AM's `rebase` of the current snapshot is the persisted value itself.
   adapter.commitUpdate = async (fn, options = {}) => {
     const snapshot = store.getCurrentSnapshot();
     const result = fn(snapshot, snapshot);
+    if (!result) return;
     store.update(() => result.persisted, options);
     await store.flushSave();
   };
+  // AM re-checks running outfit tasks on "workspace" changes (source switch); a run's store never switches source.
+  adapter.subscribeDomain = () => () => {};
   // Methods of the prototype must run with the real store as `this`.
   for (const name of ["getCurrentSnapshot", "update", "flushSave", "settle", "getDomainRevision", "getPersistenceSnapshot", "subscribePersistence"] as const)
     (adapter as unknown as Rec)[name] = (store[name] as (...a: unknown[]) => unknown).bind(store);
