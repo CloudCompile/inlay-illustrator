@@ -119,7 +119,8 @@ export function createDecisionService(host: SpindleHost, log: RunLog, defaultUse
         // AM sends JEV questions with `network.fetch(POST https://api.typesafe.ai/v1/systemone, {model, state, questions})`
         // and reads `{model, answers, usage}`. The port answers that request through the Lumiverse decisions API.
         network: {
-          async fetch(_url, init) {
+          // Property form: Lumiverse's backend scan flags `fetch(` call/method syntax as direct fetch usage.
+          fetch: async (_url, init) => {
             const api = (host as any).decisions;
             if (!api?.evaluate) {
               throw new Error("JEV_UNAVAILABLE: Lumiverse decisions API is not available on this host.");

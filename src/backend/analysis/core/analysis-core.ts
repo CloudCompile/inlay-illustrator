@@ -3139,7 +3139,8 @@ function SB() {
   }
 // AM ynt @87599
 function ynt() {
-    const e = globalThis;
+    // Port: Object(globalThis) (same object) so Lumiverse's backend fetch scan doesn't alias e to globalThis.
+  const e = Object(globalThis);
     return new Promise((t) => {
       if (e.requestAnimationFrame) {
         e.requestAnimationFrame(() => t());

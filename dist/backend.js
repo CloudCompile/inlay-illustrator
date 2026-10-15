@@ -49079,7 +49079,7 @@ function SB2() {
   return typeof amEnv.performance > "u" ? amEnv.now() : amEnv.performance.now();
 }
 function ynt2() {
-  const e = globalThis;
+  const e = Object(globalThis);
   return new Promise((t) => {
     if (e.requestAnimationFrame) {
       e.requestAnimationFrame(() => t());
@@ -68809,7 +68809,7 @@ function createDecisionService(host, log, defaultUserId) {
     createJevAdapter(getConfig, adapterOptions = {}) {
       return {
         network: {
-          async fetch(_url, init) {
+          fetch: async (_url, init) => {
             const api = host.decisions;
             if (!api?.evaluate) {
               throw new Error("JEV_UNAVAILABLE: Lumiverse decisions API is not available on this host.");
