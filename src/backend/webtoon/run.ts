@@ -319,7 +319,7 @@ async function visionRun(deps: WebtoonDeps, config: InlayConfig, run: Omit<Visio
  */
 async function checkTake(v: VisionRun, panel: ImagePanel, take: WebtoonPanelTake, redrawOf?: { imageId: string; score: number }): Promise<WebtoonPanelCheck | null> {
   const { services } = v.deps;
-  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal, mono: v.mono });
+  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, width: take.width, height: take.height, panel, cast: v.cast, signal: v.signal, mono: v.mono });
   if (!check) return null;
   const id = String(panel.id);
   const chosen = !!redrawOf && check.score > redrawOf.score;

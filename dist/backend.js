@@ -67233,6 +67233,7 @@ var ID_THRESHOLD_DEFAULT = 0.3;
 var ID_BOOST = 0.25;
 var NO_FACE = new Set(["hands only", "lower body"]);
 var ASSET = "panel";
+var JEV_MAX_SIDE = 1568;
 async function visionConnection(services, config) {
   if (!((services.host.host?.capabilities?.[VISION_CAPABILITY] ?? 0) >= 1))
     return null;
@@ -67312,12 +67313,42 @@ function readPanelCheck(q, model, answers) {
     failed: identity.filter((d) => d.noul < threshold(d.check)).map((d) => `${d.name}: ${d.check} (${d.noul.toFixed(2)})`)
   };
 }
+function jevScale(width, height) {
+  return Math.min(1, JEV_MAX_SIDE / Math.max(width, height), JEV_MAX_SIDE / Math.sqrt(width * height));
+}
+function downscale(image, width, height) {
+  const data = new Uint8Array(width * height * 4);
+  const sx = image.width / width, sy = image.height / height;
+  for (let y = 0;y < height; y += 1) {
+    const y0 = Math.floor(y * sy), y1 = Math.max(y0 + 1, Math.floor((y + 1) * sy));
+    for (let x = 0;x < width; x += 1) {
+      const x0 = Math.floor(x * sx), x1 = Math.max(x0 + 1, Math.floor((x + 1) * sx));
+      const sum = [0, 0, 0, 0];
+      for (let yy = y0;yy < y1; yy += 1)
+        for (let xx = x0;xx < x1; xx += 1)
+          for (let c = 0;c < 4; c += 1)
+            sum[c] += image.data[(yy * image.width + xx) * 4 + c];
+      const n = (y1 - y0) * (x1 - x0);
+      for (let c = 0;c < 4; c += 1)
+        data[(y * width + x) * 4 + c] = Math.round(sum[c] / n);
+    }
+  }
+  return { width, height, data };
+}
+async function panelAsset(services, input) {
+  const scale = input.width && input.height ? jevScale(input.width, input.height) : 1;
+  if (scale >= 1)
+    return { image_id: input.imageId };
+  const image = await decodePng(base64ToBytes2((await services.imageBytes.getImage({ imageId: input.imageId }, { signal: input.signal })).data));
+  const s = jevScale(image.width, image.height);
+  return { format: "png", data_base64: bytesToBase642(await encodePng(downscale(image, Math.floor(image.width * s), Math.floor(image.height * s)))) };
+}
 async function checkPanel(services, input) {
   const q = panelQuestions(input.panel, input.cast, input.mono);
   if (!Object.keys(q.questions).length)
     return null;
   try {
-    const res = await services.decisions.evaluateImages({ connection_id: input.connectionId, model: VISION_MODEL, state: { image: ASSET }, questions: q.questions, assets: { [ASSET]: { image_id: input.imageId } } }, { signal: input.signal });
+    const res = await services.decisions.evaluateImages({ connection_id: input.connectionId, model: VISION_MODEL, state: { image: ASSET }, questions: q.questions, assets: { [ASSET]: await panelAsset(services, input) } }, { signal: input.signal });
     return readPanelCheck(q, res.model, res.answers);
   } catch (error) {
     if (!input.signal.aborted && !isAbortLike(error))
@@ -67530,7 +67561,7 @@ async function visionRun(deps, config, run) {
 }
 async function checkTake(v, panel, take, redrawOf) {
   const { services } = v.deps;
-  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal, mono: v.mono });
+  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, width: take.width, height: take.height, panel, cast: v.cast, signal: v.signal, mono: v.mono });
   if (!check)
     return null;
   const id = String(panel.id);

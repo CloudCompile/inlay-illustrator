@@ -1,7 +1,7 @@
 /**
  * Vision check of a stored webtoon panel (Jev 1.14 through the user's TypeSafe Decision connection; webtoon bench round 2,
  * `webtoon-bench2/scripts/images.py jev_check` / `identity_questions` / `drift` / `score`, without the outfit checks).
- * One request per panel image, sent by `image_id`: a presence noul and a face Box per visible character, plus the identity
+ * One request per panel image, sent by `image_id` (a downscaled copy when the panel is over TypeSafe's size limit): a presence noul and a face Box per visible character, plus the identity
  * nouls (anthro species; a single hair colour and glasses for humans). Face boxes go into the layout (balloons keep off them);
  * a failed identity check asks for one redraw with a new seed and boosted identity tags (`boostedRequest`).
  * Runs only when the host has `decision-images-v1` and a TypeSafe Decision connection is available; otherwise the strip keeps
@@ -9,7 +9,9 @@
  */
 import type { CutoutBox, InlayConfig, WebtoonPanelCheck } from "../../shared/contract/index.js";
 import { isAbortLike, toRpcError } from "../rpc/errors.js";
-import type { BackendServices, DecisionImageAnswer, DecisionImageQuestion } from "../services/types.js";
+import type { BackendServices, DecisionImageAnswer, DecisionImageAsset, DecisionImageQuestion } from "../services/types.js";
+import { base64ToBytes, bytesToBase64 } from "../pipeline/providers.js";
+import { decodePng, encodePng, type RgbaImage } from "./cutout.js";
 import { furryBaseTag, HAIR_COLOR, identityPrompt, isFurry, speciesName, type PanelRequest } from "./panel-request.js";
 import type { ImagePanel, StoryCharacter } from "./storyboard-schema.js";
 
@@ -27,6 +29,8 @@ export const ID_BOOST = 0.25;
 /** No face for these framings (the layout has no head estimate for them either), and no identity check. */
 const NO_FACE = new Set(["hands only", "lower body"]);
 const ASSET = "panel";
+/** TypeSafe image limits: each side 280-1568 px and at most 1568 x 1568 px in total; larger images are rejected ("Invalid image dimensions"), never resized. */
+export const JEV_MAX_SIDE = 1568;
 
 /** Cast member as the strip document stores it (older documents have no gender / identity). */
 export interface CastIdentity { name: string; gender?: string; identity?: string }
@@ -125,16 +129,50 @@ export function readPanelCheck(q: PanelQuestions, model: string, answers: Record
   };
 }
 
+/** Factor that brings an image inside TypeSafe's size limits (1 when it already fits). Manga's wide cells draw 1600 x 640. */
+export function jevScale(width: number, height: number): number {
+  return Math.min(1, JEV_MAX_SIDE / Math.max(width, height), JEV_MAX_SIDE / Math.sqrt(width * height));
+}
+
+/** Area-average downscale (each target pixel is the mean of the source pixels it covers). */
+export function downscale(image: RgbaImage, width: number, height: number): RgbaImage {
+  const data = new Uint8Array(width * height * 4);
+  const sx = image.width / width, sy = image.height / height;
+  for (let y = 0; y < height; y += 1) {
+    const y0 = Math.floor(y * sy), y1 = Math.max(y0 + 1, Math.floor((y + 1) * sy));
+    for (let x = 0; x < width; x += 1) {
+      const x0 = Math.floor(x * sx), x1 = Math.max(x0 + 1, Math.floor((x + 1) * sx));
+      const sum = [0, 0, 0, 0];
+      for (let yy = y0; yy < y1; yy += 1) for (let xx = x0; xx < x1; xx += 1) for (let c = 0; c < 4; c += 1) sum[c]! += image.data[(yy * image.width + xx) * 4 + c]!;
+      const n = (y1 - y0) * (x1 - x0);
+      for (let c = 0; c < 4; c += 1) data[(y * width + x) * 4 + c] = Math.round(sum[c]! / n);
+    }
+  }
+  return { width, height, data };
+}
+
+/**
+ * The panel as a Decision asset: by image id when it fits TypeSafe's limits, else a downscaled PNG copy (same aspect ratio, so the
+ * Box answers, which are fractions of the image, apply to the panel unchanged).
+ */
+async function panelAsset(services: BackendServices, input: { imageId: string; width?: number; height?: number; signal: AbortSignal }): Promise<DecisionImageAsset> {
+  const scale = input.width && input.height ? jevScale(input.width, input.height) : 1;
+  if (scale >= 1) return { image_id: input.imageId };
+  const image = await decodePng(base64ToBytes((await services.imageBytes.getImage({ imageId: input.imageId }, { signal: input.signal })).data));
+  const s = jevScale(image.width, image.height);
+  return { format: "png", data_base64: bytesToBase64(await encodePng(downscale(image, Math.floor(image.width * s), Math.floor(image.height * s)))) };
+}
+
 /** One check of a stored panel image. Null when there is nothing to ask or on any error (logged; the layout uses coordinates). */
 export async function checkPanel(
   services: BackendServices,
-  input: { connectionId: string; imageId: string; panel: ImagePanel; cast: readonly CastIdentity[]; signal: AbortSignal; mono?: boolean },
+  input: { connectionId: string; imageId: string; width?: number; height?: number; panel: ImagePanel; cast: readonly CastIdentity[]; signal: AbortSignal; mono?: boolean },
 ): Promise<WebtoonPanelCheck | null> {
   const q = panelQuestions(input.panel, input.cast, input.mono);
   if (!Object.keys(q.questions).length) return null;
   try {
     const res = await services.decisions.evaluateImages(
-      { connection_id: input.connectionId, model: VISION_MODEL, state: { image: ASSET }, questions: q.questions, assets: { [ASSET]: { image_id: input.imageId } } },
+      { connection_id: input.connectionId, model: VISION_MODEL, state: { image: ASSET }, questions: q.questions, assets: { [ASSET]: await panelAsset(services, input) } },
       { signal: input.signal },
     );
     return readPanelCheck(q, res.model, res.answers);

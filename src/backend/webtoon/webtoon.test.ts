@@ -6,7 +6,11 @@ import { encodePng } from "./cutout.js";
 import { cutoutPose } from "./panel-request.js";
 import { rerollWebtoonPanel } from "./run.js";
 import { readStrip, relayout, webtoonPath } from "./store.js";
-import { visionConnection } from "./vision.js";
+import { checkPanel, visionConnection } from "./vision.js";
+import { createFakeServices } from "../testing/fake-services.js";
+import { base64ToBytes } from "../pipeline/providers.js";
+import { decodePng } from "./cutout.js";
+import type { ImagePanel } from "./storyboard-schema.js";
 
 const shot = (id: number, extra: Record<string, unknown> = {}) => ({
   id,
@@ -263,6 +267,26 @@ describe("webtoon vision check (Jev 1.14 face boxes + identity redraw)", () => {
     const coords = relayout({ ...strip, panels: { ...strip.panels, "2": { ...strip.panels["2"]!, takes: [{ ...strip.panels["2"]!.takes[0]!, check: undefined }] } } })!.panels.find((p) => p.id === 2)!.faces.Shouta!;
     expect(withFaces).not.toEqual(coords);
     pipeline.dispose();
+  });
+
+  test("a panel over TypeSafe's size limit (manga 1600x640) is sent as a downscaled PNG; boxes are fractions, so they apply unchanged", async () => {
+    const fx = createFakeServices({});
+    const wide = { width: 1600, height: 640, data: new Uint8Array(1600 * 640 * 4).fill(200) };
+    fx.services.imageBytes.getImage = async () => ({ data: bytesToBase64(await encodePng(wide)), mimeType: "image/png" });
+    const assets: Array<Record<string, any>> = [];
+    fx.services.decisions.evaluateImages = async (input) => {
+      assets.push(input.assets!.panel as Record<string, any>);
+      return { model: "jev-1.14.0", answers: { present0: { type: "noul", noul: 0.9 }, face0: { type: "box", box: { left: 0.4, top: 0.1, right: 0.6, bottom: 0.3 }, confidence: 0.8 } } as never };
+    };
+    const panel = shot(1, { size: "1600x640" }) as unknown as ImagePanel;
+    const check = (width: number, height: number) =>
+      checkPanel(fx.services, { connectionId: "ts-1", imageId: "img-1", width, height, panel, cast: [{ name: "Shouta", gender: "male" }], signal: new AbortController().signal });
+    expect((await check(1600, 640))!.faces).toEqual({ Shouta: { left: 0.4, top: 0.1, right: 0.6, bottom: 0.3 } });
+    expect(assets[0]!.format).toBe("png");
+    const sent = await decodePng(base64ToBytes(assets[0]!.data_base64));
+    expect([sent.width, sent.height, sent.data[0]]).toEqual([1568, 627, 200]);
+    await check(1216, 832);
+    expect(assets[1]).toEqual({ image_id: "img-1" });
   });
 
   test("a Decision error leaves the strip on coordinates", async () => {
