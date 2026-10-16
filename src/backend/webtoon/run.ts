@@ -428,7 +428,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         if (auto && resolved.strangers.length) await createStrangers(deps, auto, context, resolved, req);
         const roster = resolved.roster;
         const outfitLog: string[] = [...resolved.log];
-        const outfits = { ...chosenOutfits(planned.raw, roster, outfitLog), ...resolved.outfits };
+        const outfits = { ...chosenOutfits(planned.raw, roster.filter((r) => !resolved.outfits[r.name]), outfitLog), ...resolved.outfits };
         const validate = manga ? validateMangaStoryboard : validateStoryboard;
         const validated = validate(structuredClone(planned.raw), validationRoster(roster, outfits), req.source);
         validated.log.unshift(...outfitLog);

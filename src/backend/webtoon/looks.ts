@@ -107,7 +107,7 @@ const hasOutfit = (o: PlannerLook["outfit"]) => PARTS.some((p) => o[p]);
 export interface ResolvedLooks {
   /** Roster with the planner's looks applied (characters left without a look are dropped). */
   roster: RosterCharacter[];
-  /** Name -> outfit id that replaces the planner's wardrobe pick (a new outfit written in "looks"). */
+  /** Name -> outfit written in "looks" (replaces the planner's wardrobe pick). */
   outfits: Record<string, string>;
   /** Story characters in no roster (free character generation on): drawn in this strip and persisted by the run. */
   strangers: Array<RosterCharacter & { identityTags: string[] }>;
@@ -147,6 +147,7 @@ export function resolveLooks(raw: unknown, roster: readonly RosterCharacter[], k
       const designed: RosterCharacter = { ...r, gender, identity: identityOf(gender, look.identity), outfits: outfit, currentOutfitId: outfit[0]?.id ?? "" };
       delete designed.appearance;
       out.push(designed);
+      if (designed.currentOutfitId) outfits[r.name] = designed.currentOutfitId;
       looks.set(r.key, { identity: designed.identity, outfitLabel: outfit[0]?.label ?? "", outfit: outfit[0]?.outfit ?? {} });
       continue;
     }
@@ -227,7 +228,7 @@ export function looksNote(roster: readonly PlannerRosterEntry[], freeCharacters:
   if (undesigned || freeCharacters)
     parts.push(
       `Looks (field "looks", next to "outfits"): ${undesigned ? 'for each character marked "no design yet" that you draw' : ""}${undesigned && freeCharacters ? ", and " : ""}${freeCharacters ? "for each person the reply shows who is NOT listed above (a shop manager, a stranger on the train; give them their name from the reply, or a short role name like \"Store Manager\", and use that name everywhere)" : ""}, write their look ONCE: {"name", "gender": "female"|"male"|"other", "identity": "...", "outfit": {"label", "head", "top", "bottom", "legs", "feet"}}.`,
-      `- "identity": 5-12 NovelAI/danbooru tags for what never changes: hair colour, hair length and style, bangs, eye colour, skin, height/build (e.g. "slim", "tall"), species traits (animal ears, tail, horns) when they have them. Follow the card's appearance text exactly where it has one. No names, no count tags (1girl), no clothes, no expressions, no body-size or sexual tags.`,
+      `- "identity": 5-12 NovelAI/danbooru tags for what never changes, one feature per tag ("long hair, black hair", not "long black hair"): hair colour, hair length and style, bangs, eye colour, skin, height/build (e.g. "slim", "tall"), species traits (animal ears, tail, horns) when they have them. Follow the card's appearance text exactly where it has one. No names, no count tags (1girl), no clothes, no expressions, no body-size or sexual tags.`,
       `- "outfit": the clothes for THIS scene as tags per part (head = hat / glasses / hair accessory, top, bottom, legs = socks / legwear, feet = shoes; "" when nothing), fitting the card and the story. Write colours even for black-and-white art (code removes them there).`,
       `- Code adds these tags to every panel of that character, so the character looks the same in every panel. ${undesigned ? "Leave out a card that describes a story, a setting or a narrator instead of one person." : ""}`.trimEnd(),
     );

@@ -65451,6 +65451,8 @@ function resolveLooks(raw, roster, known) {
       const designed = { ...r, gender, identity: identityOf(gender, look.identity), outfits: outfit, currentOutfitId: outfit[0]?.id ?? "" };
       delete designed.appearance;
       out.push(designed);
+      if (designed.currentOutfitId)
+        outfits[r.name] = designed.currentOutfitId;
       looks.set(r.key, { identity: designed.identity, outfitLabel: outfit[0]?.label ?? "", outfit: outfit[0]?.outfit ?? {} });
       continue;
     }
@@ -65537,7 +65539,7 @@ function looksNote(roster, freeCharacters) {
   const designed = roster.some((r) => r.designed);
   const parts = [];
   if (undesigned || freeCharacters)
-    parts.push(`Looks (field "looks", next to "outfits"): ${undesigned ? 'for each character marked "no design yet" that you draw' : ""}${undesigned && freeCharacters ? ", and " : ""}${freeCharacters ? 'for each person the reply shows who is NOT listed above (a shop manager, a stranger on the train; give them their name from the reply, or a short role name like "Store Manager", and use that name everywhere)' : ""}, write their look ONCE: {"name", "gender": "female"|"male"|"other", "identity": "...", "outfit": {"label", "head", "top", "bottom", "legs", "feet"}}.`, `- "identity": 5-12 NovelAI/danbooru tags for what never changes: hair colour, hair length and style, bangs, eye colour, skin, height/build (e.g. "slim", "tall"), species traits (animal ears, tail, horns) when they have them. Follow the card's appearance text exactly where it has one. No names, no count tags (1girl), no clothes, no expressions, no body-size or sexual tags.`, `- "outfit": the clothes for THIS scene as tags per part (head = hat / glasses / hair accessory, top, bottom, legs = socks / legwear, feet = shoes; "" when nothing), fitting the card and the story. Write colours even for black-and-white art (code removes them there).`, `- Code adds these tags to every panel of that character, so the character looks the same in every panel. ${undesigned ? "Leave out a card that describes a story, a setting or a narrator instead of one person." : ""}`.trimEnd());
+    parts.push(`Looks (field "looks", next to "outfits"): ${undesigned ? 'for each character marked "no design yet" that you draw' : ""}${undesigned && freeCharacters ? ", and " : ""}${freeCharacters ? 'for each person the reply shows who is NOT listed above (a shop manager, a stranger on the train; give them their name from the reply, or a short role name like "Store Manager", and use that name everywhere)' : ""}, write their look ONCE: {"name", "gender": "female"|"male"|"other", "identity": "...", "outfit": {"label", "head", "top", "bottom", "legs", "feet"}}.`, `- "identity": 5-12 NovelAI/danbooru tags for what never changes, one feature per tag ("long hair, black hair", not "long black hair"): hair colour, hair length and style, bangs, eye colour, skin, height/build (e.g. "slim", "tall"), species traits (animal ears, tail, horns) when they have them. Follow the card's appearance text exactly where it has one. No names, no count tags (1girl), no clothes, no expressions, no body-size or sexual tags.`, `- "outfit": the clothes for THIS scene as tags per part (head = hat / glasses / hair accessory, top, bottom, legs = socks / legwear, feet = shoes; "" when nothing), fitting the card and the story. Write colours even for black-and-white art (code removes them there).`, `- Code adds these tags to every panel of that character, so the character looks the same in every panel. ${undesigned ? "Leave out a card that describes a story, a setting or a narrator instead of one person." : ""}`.trimEnd());
   if (designed)
     parts.push(`Characters marked "designed earlier" keep their look; pick their outfit from the wardrobe like the others. Only when the story clearly puts them in clothes that match no wardrobe outfit, add {"name", "outfit": {...}} for them to "looks" (no identity).`);
   if (!freeCharacters)
@@ -67638,7 +67640,7 @@ async function runWebtoonStrip(deps, req) {
           await createStrangers(deps, auto, context, resolved, req);
         const roster = resolved.roster;
         const outfitLog = [...resolved.log];
-        const outfits = { ...chosenOutfits(planned.raw, roster, outfitLog), ...resolved.outfits };
+        const outfits = { ...chosenOutfits(planned.raw, roster.filter((r) => !resolved.outfits[r.name]), outfitLog), ...resolved.outfits };
         const validate = manga ? validateMangaStoryboard : validateStoryboard;
         const validated = validate(structuredClone(planned.raw), validationRoster(roster, outfits), req.source);
         validated.log.unshift(...outfitLog);
