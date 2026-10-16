@@ -11,7 +11,6 @@ import {
   charxScopeFor,
   clearCharxOverrides,
   createDefaultConfig,
-  DEFAULT_SELECTED_ARTIST_ID,
   DEFAULT_ARTIST_PRESETS,
   formCollectionRevision,
   listNovelAIArtists,
@@ -22,6 +21,7 @@ import {
   prefixedId,
   recomputeCharxDirtyFields,
   resetAllCharxOverrides,
+  resolveNovelAIArtistSelection,
   refreshCharxDirtyFields,
   resolveAllCharxSettings,
   resolveEffectiveCharxSettings,
@@ -270,12 +270,13 @@ export const coreHandlers: HandlerGroup = {
     const doc = characterId ? await ctx.storage.loadCharacterDocument(characterId) : null;
     const anima = normalizeAnimaArtists(config.animaArtists);
     if (characterId && doc?.animaArtistId) anima.selection.bySourceId[characterId] = doc.animaArtistId;
-    const novelai = listNovelAIArtists(config.characterPrompt.artistPrompts);
-    const selectedNovelAIId = doc?.characterPrompt.selectedArtistId || DEFAULT_SELECTED_ARTIST_ID;
+    const novelai = resolveNovelAIArtistSelection(config.characterPrompt, doc?.characterPrompt.selectedArtistId);
     return {
-      novelai,
+      novelai: listNovelAIArtists(config.characterPrompt.artistPrompts),
       anima,
-      selectedNovelAIId: novelai.some((a) => a.id === selectedNovelAIId) ? selectedNovelAIId : DEFAULT_SELECTED_ARTIST_ID,
+      selectedNovelAIId: novelai.id,
+      globalNovelAIId: novelai.globalId,
+      followsGlobalNovelAI: novelai.followsGlobal,
       selectedAnimaId: (doc?.animaArtistId ?? anima.selection.defaultId) || NO_ARTIST_ID,
     };
   },
@@ -305,7 +306,11 @@ export const coreHandlers: HandlerGroup = {
   },
   async "artists.deleteNovelAI"(params, ctx) {
     const id = requireId(params.id, "id");
-    await ctx.storage.updateConfig((config) => ({ ...config, characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str(e.id) !== id) } }));
+    // Like AM deleting the selected artist (`Vw(e, "none")`): a deleted global preset becomes "none". Characters that chose it follow the global preset.
+    await ctx.storage.updateConfig((config) => ({
+      ...config,
+      characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str(e.id) !== id), defaultArtistId: config.characterPrompt.defaultArtistId === id ? NO_ARTIST_ID : config.characterPrompt.defaultArtistId },
+    }));
     return { ok: true };
   },
   async "artists.upsertAnima"(params, ctx) {
@@ -335,9 +340,10 @@ export const coreHandlers: HandlerGroup = {
     const characterId = str(params.characterId);
     const config = await ctx.storage.loadConfig();
     if (params.list === "novelai") {
-      if (!characterId) fail("bad-request", "Select a NovelAI artist for a character (characterId is required).");
-      if (!listNovelAIArtists(config.characterPrompt.artistPrompts).some((a) => a.id === artistId)) fail("not-found", `Unknown artist: ${artistId}`);
-      await ctx.storage.updateCharacterDocument(characterId, (d) => ({ ...d, characterPrompt: { ...d.characterPrompt, selectedArtistId: artistId } }), { reason: "artists" });
+      const followGlobal = !artistId && !!characterId;
+      if (!followGlobal && !listNovelAIArtists(config.characterPrompt.artistPrompts).some((a) => a.id === artistId)) fail("not-found", `Unknown artist: ${artistId}`);
+      if (characterId) await ctx.storage.updateCharacterDocument(characterId, (d) => ({ ...d, characterPrompt: { ...d.characterPrompt, selectedArtistId: artistId } }), { reason: "artists" });
+      else await ctx.storage.updateConfig((c) => ({ ...c, characterPrompt: { ...c.characterPrompt, defaultArtistId: artistId } }));
       return { ok: true };
     }
     if (params.list !== "anima") fail("bad-request", `Unknown artist list: ${String(params.list)}`);

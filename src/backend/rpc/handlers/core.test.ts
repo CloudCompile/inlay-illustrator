@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createEmptyCharacterDocument, formCollectionRevision, isRpcEvent, type RpcMethod, type RpcParams, type RpcResult } from "../../../shared/contract/index.js";
+import { createEmptyCharacterDocument, formCollectionRevision, isRpcEvent, STORAGE_PATHS, type RpcMethod, type RpcParams, type RpcResult } from "../../../shared/contract/index.js";
 import { createServices } from "../../services/index.js";
 import { createFakeHost } from "../../testing/fake-host.js";
 import type { RpcContext } from "../types.js";
@@ -161,6 +161,28 @@ describe("core handlers: charx settings, reset, artists, personas", () => {
     expect((await call("artists.list", {})).selectedAnimaId).toBe(anima.entry.id);
     await call("artists.deleteAnima", { id: anima.entry.id });
     expect((await services.storage.loadConfig()).animaArtists.selection.defaultId).toBe("none");
+  });
+
+  test("artists: global NovelAI preset, followed by characters without an own artist", async () => {
+    const { fake, call, services } = setup();
+    // v1 documents stored the built-in default even when nobody picked it: those follow the global preset.
+    const legacy = { ...createEmptyCharacterDocument("old"), version: 1 };
+    fake.files.set(STORAGE_PATHS.characterDocument("old"), JSON.stringify({ ...legacy, characterPrompt: { ...legacy.characterPrompt, selectedArtistId: "detail_anime_illustration_style" } }));
+    expect(await call("artists.list", { characterId: "c1" })).toMatchObject({ selectedNovelAIId: "detail_anime_illustration_style", globalNovelAIId: "detail_anime_illustration_style", followsGlobalNovelAI: true });
+
+    const { entry } = await call("artists.upsertNovelAI", { entry: { id: "", title: "Mine", prompt: "artist:me" } });
+    await call("artists.select", { list: "novelai", artistId: entry.id });
+    expect(JSON.parse(fake.files.get(STORAGE_PATHS.artistsGlobal) as string).characterPrompt.defaultArtistId).toBe(entry.id);
+    for (const id of ["c1", "old"]) expect(await call("artists.list", { characterId: id })).toMatchObject({ selectedNovelAIId: entry.id, followsGlobalNovelAI: true });
+
+    await call("artists.select", { list: "novelai", artistId: "detail_anime_illustration_style", characterId: "c1" });
+    expect(await call("artists.list", { characterId: "c1" })).toMatchObject({ selectedNovelAIId: "detail_anime_illustration_style", globalNovelAIId: entry.id, followsGlobalNovelAI: false });
+    await call("artists.select", { list: "novelai", artistId: "", characterId: "old" });
+    expect((await services.storage.loadCharacterDocument("old")).characterPrompt.selectedArtistId).toBe("");
+
+    await call("artists.deleteNovelAI", { id: entry.id });
+    expect(await call("artists.list", { characterId: "old" })).toMatchObject({ selectedNovelAIId: "none", globalNovelAIId: "none" });
+    expect((await call("artists.list", { characterId: "c1" })).selectedNovelAIId).toBe("detail_anime_illustration_style");
   });
 
   test("personas: list with forms, saveForms with base revision guard, settings", async () => {

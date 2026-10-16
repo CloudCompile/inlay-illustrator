@@ -41,7 +41,7 @@ describe("config defaults", () => {
     expect(normalizeConfigWithIssues("x").issues[0]?.code).toBe("not-an-object");
   });
   test("storage split/merge round-trips", () => {
-    const c = normalizeConfig({ ui: { language: "ko" }, analysis: { connectionId: "conn", model: "m", temperature: 1 }, image: { connectionId: "img", provider: "NovelAI", model: "nai-diffusion-4-5-full" }, novelai: { negativePrompt: "neg", steps: 30 }, characterPrompt: { artistPrompts: [{ id: "artist_1", title: "A", prompt: "p" }], fixedPositivePrompt: "fp" }, animaArtists: { entries: [{ id: "x", title: "X", text: "t" }], selection: { defaultId: "x" } } });
+    const c = normalizeConfig({ ui: { language: "ko" }, analysis: { connectionId: "conn", model: "m", temperature: 1 }, image: { connectionId: "img", provider: "NovelAI", model: "nai-diffusion-4-5-full" }, novelai: { negativePrompt: "neg", steps: 30 }, characterPrompt: { artistPrompts: [{ id: "artist_1", title: "A", prompt: "p" }], defaultArtistId: "artist_1", fixedPositivePrompt: "fp" }, animaArtists: { entries: [{ id: "x", title: "X", text: "t" }], selection: { defaultId: "x" } } });
     const parts = splitConfigForStorage(c);
     expect(parts.model).not.toHaveProperty("novelai.negativePrompt");
     expect(JSON.stringify(splitConfigForStorage(createDefaultConfig()).model)).toBe("{}");
@@ -87,6 +87,15 @@ describe("Lumiverse mapping", () => {
     expect(rc.characterPrompt.malePersonaPrompt).toBe("kazehaya shouta");
     expect(rc.animaArtists.selection.bySourceId.char1).toBe("a1");
     expect(buildRuntimeConfig(g, doc).novelai.characterReferenceEnabled).toBe(false);
+  });
+  test("buildRuntimeConfig resolves the NovelAI artist: own artist if it exists, else the global preset", () => {
+    expect(normalizeConfig({}).characterPrompt.defaultArtistId).toBe("detail_anime_illustration_style");
+    const g = normalizeConfig({ characterPrompt: { artistPrompts: [{ id: "artist_1", title: "A", prompt: "p" }], defaultArtistId: "artist_1" } });
+    const doc = createEmptyCharacterDocument("char1");
+    const artist = (ownId: string) => buildRuntimeConfig(g, { ...doc, characterPrompt: { ...doc.characterPrompt, selectedArtistId: ownId } }).characterPrompt.selectedArtistId;
+    expect([artist(""), artist("none"), artist("deleted")]).toEqual(["artist_1", "none", "artist_1"]);
+    expect(buildRuntimeConfig(g, null).characterPrompt.selectedArtistId).toBe("artist_1");
+    expect(buildRuntimeConfig(normalizeConfig({ characterPrompt: { defaultArtistId: "deleted" } }), doc).characterPrompt.selectedArtistId).toBe("none");
   });
 });
 

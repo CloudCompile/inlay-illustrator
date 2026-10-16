@@ -14,6 +14,7 @@ import {
   patchOutfit,
   personaPromptKey,
   resolveCharacterForms,
+  resolveNovelAIArtistSelection,
   resolvePersonaForms,
   toStoredAssetRef,
   type AssetRef,
@@ -405,10 +406,13 @@ export function workspaceMockHandlers(): MockHandlers {
     "artists.list": ({ characterId }, { db }) => {
       const doc = characterId ? documentFor(db, characterId) : null;
       const anima = db.config.animaArtists;
+      const novelai = resolveNovelAIArtistSelection(db.config.characterPrompt, doc?.characterPrompt.selectedArtistId);
       return {
         novelai: listNovelAIArtists(db.config.characterPrompt.artistPrompts),
         anima,
-        selectedNovelAIId: doc?.characterPrompt.selectedArtistId || "detail_anime_illustration_style",
+        selectedNovelAIId: novelai.id,
+        globalNovelAIId: novelai.globalId,
+        followsGlobalNovelAI: novelai.followsGlobal,
         selectedAnimaId: (characterId && (doc?.animaArtistId ?? anima.selection.bySourceId[characterId])) || anima.selection.defaultId
       };
     },
@@ -422,8 +426,9 @@ export function workspaceMockHandlers(): MockHandlers {
       return { entry: next };
     },
     "artists.deleteNovelAI": ({ id }, { db }) => {
-      const cp = db.config.characterPrompt as unknown as { artistPrompts: { id: string }[] };
+      const cp = db.config.characterPrompt;
       cp.artistPrompts = cp.artistPrompts.filter((e) => e.id !== id);
+      if (cp.defaultArtistId === id) cp.defaultArtistId = "none";
       return { ok: true };
     },
     "artists.upsertAnima": ({ entry }, { db }) => {
@@ -446,6 +451,7 @@ export function workspaceMockHandlers(): MockHandlers {
     "artists.select": ({ list, artistId, characterId }, ctx) => {
       if (list === "novelai") {
         if (characterId) documentFor(ctx.db, characterId).characterPrompt.selectedArtistId = artistId;
+        else ctx.db.config.characterPrompt.defaultArtistId = artistId;
       } else if (characterId) {
         documentFor(ctx.db, characterId).animaArtistId = artistId;
         ctx.db.config.animaArtists.selection.bySourceId[characterId] = artistId;

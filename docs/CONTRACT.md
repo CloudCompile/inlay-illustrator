@@ -143,8 +143,11 @@ Values are stored normalized (not as diffs). `normalizeCharacterDocument(raw, ch
 when a writer wants AM's compact form (`BW`/`Jje`/`$W`).
 
 Persona appearance lives in the global `personaSettings` (AM "settings" domain), resolved by `resolvePersonaForms`.
-NovelAI artist list is global (`characterPrompt.artistPrompts` in `config/artists-global.json`); selection is per character
-(`selectedArtistId`). Built-in presets can only store overrides (`listNovelAIArtists`).
+NovelAI artist list is global (`characterPrompt.artistPrompts` in `config/artists-global.json`), with a global preset
+(`characterPrompt.defaultArtistId`, default `detail_anime_illustration_style`; a port addition). A character may choose its own
+artist (`selectedArtistId`); `""` follows the global preset. `resolveNovelAIArtistSelection` gives the effective artist (own artist
+if it still exists, else the global preset, else `none`); `buildRuntimeConfig` writes it into `characterPrompt.selectedArtistId`.
+Built-in presets can only store overrides (`listNovelAIArtists`).
 
 ## 5. Storage layout (`storage.ts`)
 
@@ -155,7 +158,7 @@ Root: Spindle `userStorage` of the extension (`{DATA_DIR}/users/{userId}/extensi
 | `storage-schema.json` | `{schema:"inlay-illustrator.storage", version:1, createdAt}` | `asset_maid:v1:schema` |
 | `config/model.json` | diff vs defaults: analysis, jevConnection, novelai (minus negativePrompt/characterPrompts), image | `config:model` |
 | `config/settings.json` | diff vs defaults: version, enabled, ui, presetCatalog.rawJson, runtime, novelai.negativePrompt, characterPrompt (global, minus artistPrompts) | `config:settings` |
-| `config/artists-global.json` | `{characterPrompt:{artistPrompts}}` | `config:artists-global` |
+| `config/artists-global.json` | `{characterPrompt:{artistPrompts, defaultArtistId}}` | `config:artists-global` (`defaultArtistId` is new) |
 | `config/anima-artists.json` | entries + `selection.defaultId` | `config:anima-artists` (global part) |
 | `config/chat-image-generation-settings.json` | chat image settings | `config:chat-image-generation-settings` |
 | `config/ui-state.json` | overlay UI state | `ui-state` |
@@ -316,7 +319,9 @@ interface ChatDataDocument {
 
 ## 9. Versioning
 
-- `CONFIG_VERSION`, `CHARACTER_DOCUMENT_VERSION`, `CHAT_DATA_VERSION`, `STORAGE_LAYOUT_VERSION`, `RPC_PROTOCOL_VERSION` are all 1.
+- `CONFIG_VERSION`, `CHAT_DATA_VERSION`, `STORAGE_LAYOUT_VERSION`, `RPC_PROTOCOL_VERSION` are 1. `CHARACTER_DOCUMENT_VERSION` is 2:
+  the v1 -> v2 migration turns a stored `selectedArtistId` of `detail_anime_illustration_style` into `""` (follow the global preset),
+  because v1 wrote that default into every document whether or not the user chose it.
 - A breaking shape change bumps the file version and adds a `StorageMigration` hook (`from` -> `to`); normalizers keep accepting
   older shapes. Files newer than the build are reported `tooNew` and must not be overwritten.
 - The RPC handshake (`session.hello`) exchanges `protocol`; mismatches answer `protocol-mismatch`.

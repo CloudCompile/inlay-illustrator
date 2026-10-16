@@ -1245,6 +1245,23 @@ export function listNovelAIArtists(artistPrompts: unknown): ResolvedNovelAIArtis
   return [...out.values()];
 }
 
+export interface NovelAIArtistSelection {
+  /** Artist used for generation. */
+  id: string;
+  /** Global preset (a deleted global preset reads as "none"). */
+  globalId: string;
+  /** No own artist, or the own artist was deleted. */
+  followsGlobal: boolean;
+}
+
+/** Effective NovelAI artist of a character: its own artist if it still exists, else the global preset. */
+export function resolveNovelAIArtistSelection(global: { artistPrompts: unknown; defaultArtistId: string }, ownId: string | null | undefined): NovelAIArtistSelection {
+  const ids = new Set(listNovelAIArtists(global.artistPrompts).map((a) => a.id));
+  const globalId = ids.has(global.defaultArtistId) ? global.defaultArtistId : NO_ARTIST_ID;
+  const own = trimString(ownId);
+  return ids.has(own) ? { id: own, globalId, followsGlobal: false } : { id: globalId, globalId, followsGlobal: true };
+}
+
 export interface AnimaArtistEntry { id: string; title: string; text: string; portableOrigin?: string }
 export interface AnimaArtistList {
   version: 1;
@@ -1466,6 +1483,7 @@ export interface CharacterScopedPrompt {
   seedSettings: Record<string, SeedSetting>;
   customLorebookKeys: Record<string, CustomLorebookKeys>;
   /* artists (the list itself is global) */
+  /** Own NovelAI artist; "" = follow the global preset (`config.characterPrompt.defaultArtistId`). */
   selectedArtistId: string;
   /* asset-selection */
   assetSelections: Record<string, AssetSelection>;
@@ -1479,7 +1497,8 @@ export interface CharacterScopedPrompt {
 }
 
 export const CHARACTER_DOCUMENT_SCHEMA = "inlay-illustrator.character";
-export const CHARACTER_DOCUMENT_VERSION = 1;
+/** v2: `selectedArtistId` "" follows the global preset (v1 stored the built-in default when nothing was chosen). */
+export const CHARACTER_DOCUMENT_VERSION = 2;
 
 export interface CharacterDocument {
   schema: typeof CHARACTER_DOCUMENT_SCHEMA;
@@ -1512,7 +1531,7 @@ export function createDefaultCharacterPrompt(characterId = ""): CharacterScopedP
     characterReferences: {},
     seedSettings: {},
     customLorebookKeys: {},
-    selectedArtistId: DEFAULT_SELECTED_ARTIST_ID,
+    selectedArtistId: "",
     assetSelections: {},
     assetMetadata: {},
     artistExtractionAssetBySourceId: {},
@@ -1604,7 +1623,7 @@ export function normalizeCharacterPrompt(value: unknown, characterId = ""): Char
     characterReferences: objectMap<CharacterReferenceSetting>(r.characterReferences),
     seedSettings: seeds,
     customLorebookKeys: customKeys,
-    selectedArtistId: trimString(r.selectedArtistId) || base.selectedArtistId,
+    selectedArtistId: trimString(r.selectedArtistId),
     assetSelections: objectMap<AssetSelection>(r.assetSelections),
     assetMetadata: objectMap<AssetMetadataRecord>(r.assetMetadata),
     artistExtractionAssetBySourceId: objectMap<StoredAssetRef & { memberKey?: string }>(r.artistExtractionAssetBySourceId),

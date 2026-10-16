@@ -1038,6 +1038,12 @@ function listNovelAIArtists(artistPrompts) {
   });
   return [...out.values()];
 }
+function resolveNovelAIArtistSelection(global, ownId) {
+  const ids = new Set(listNovelAIArtists(global.artistPrompts).map((a) => a.id));
+  const globalId = ids.has(global.defaultArtistId) ? global.defaultArtistId : NO_ARTIST_ID;
+  const own = trimString(ownId);
+  return ids.has(own) ? { id: own, globalId, followsGlobal: false } : { id: globalId, globalId, followsGlobal: true };
+}
 var NO_ARTIST_ID = "none";
 function createDefaultAnimaArtists() {
   return { version: 1, entries: [], selection: { defaultId: NO_ARTIST_ID, bySourceId: {} } };
@@ -1118,7 +1124,7 @@ var CHARX_SETTING_FIELDS = [
   "animaNegativePrompt"
 ];
 var CHARACTER_DOCUMENT_SCHEMA = "inlay-illustrator.character";
-var CHARACTER_DOCUMENT_VERSION = 1;
+var CHARACTER_DOCUMENT_VERSION = 2;
 function createDefaultCharacterPrompt(characterId = "") {
   return {
     selectedSourceId: trimString(characterId),
@@ -1138,7 +1144,7 @@ function createDefaultCharacterPrompt(characterId = "") {
     characterReferences: {},
     seedSettings: {},
     customLorebookKeys: {},
-    selectedArtistId: DEFAULT_SELECTED_ARTIST_ID,
+    selectedArtistId: "",
     assetSelections: {},
     assetMetadata: {},
     artistExtractionAssetBySourceId: {},
@@ -1239,7 +1245,7 @@ function normalizeCharacterPrompt(value, characterId = "") {
     characterReferences: objectMap(r.characterReferences),
     seedSettings: seeds,
     customLorebookKeys: customKeys,
-    selectedArtistId: trimString(r.selectedArtistId) || base.selectedArtistId,
+    selectedArtistId: trimString(r.selectedArtistId),
     assetSelections: objectMap(r.assetSelections),
     assetMetadata: objectMap(r.assetMetadata),
     artistExtractionAssetBySourceId: objectMap(r.artistExtractionAssetBySourceId),
@@ -3741,7 +3747,8 @@ function createDefaultConfig() {
       personaSettings: createDefaultPersonaSettings(),
       fixedPositivePrompt: "",
       charxGenerationDefaults: createDefaultCharxGenerationDefaults(),
-      artistPrompts: []
+      artistPrompts: [],
+      defaultArtistId: DEFAULT_SELECTED_ARTIST_ID
     },
     runtime: {
       customImageSizes: [],
@@ -3917,7 +3924,8 @@ function normalizeConfigWithIssues(raw) {
     fixedPositivePrompt: typeof cp.fixedPositivePrompt === "string" ? cp.fixedPositivePrompt : "",
     charxGenerationDefaults: normalizeCharxGenerationDefaults(asRecord(input.characterPrompt).charxGenerationDefaults),
     ...Array.isArray(cp.assetRegexEntries) ? { assetRegexEntries: jsonClone(cp.assetRegexEntries) } : {},
-    artistPrompts: asArray(cp.artistPrompts).filter(isPlainObject).map((e) => jsonClone(e))
+    artistPrompts: asArray(cp.artistPrompts).filter(isPlainObject).map((e) => jsonClone(e)),
+    defaultArtistId: trimString(cp.defaultArtistId) || DEFAULT_SELECTED_ARTIST_ID
   };
   const rt = asRecord(merged.runtime);
   const runtime = {
@@ -3961,14 +3969,14 @@ function splitConfigForStorage(config) {
   const { negativePrompt: _n, characterPrompts: _c, ...novelaiModel } = config.novelai;
   const { negativePrompt: _dn, characterPrompts: _dc, ...novelaiModelDefaults } = defaults.novelai;
   const model = asRecord(diffAgainstDefaults({ analysis: config.analysis, jevConnection: config.jevConnection, novelai: novelaiModel, image: config.image }, { analysis: defaults.analysis, jevConnection: defaults.jevConnection, novelai: novelaiModelDefaults, image: defaults.image }));
-  const { artistPrompts, ...cpSettings } = config.characterPrompt;
-  const { artistPrompts: _a, ...cpDefaults } = defaults.characterPrompt;
+  const { artistPrompts, defaultArtistId, ...cpSettings } = config.characterPrompt;
+  const { artistPrompts: _a, defaultArtistId: _d, ...cpDefaults } = defaults.characterPrompt;
   const settings = asRecord(diffAgainstDefaults({ version: config.version, enabled: config.enabled, ui: config.ui, presetCatalog: { rawJson: config.presetCatalog.rawJson }, runtime: config.runtime, novelai: { negativePrompt: config.novelai.negativePrompt }, characterPrompt: cpSettings }, { version: defaults.version, enabled: defaults.enabled, ui: defaults.ui, presetCatalog: { rawJson: defaults.presetCatalog.rawJson }, runtime: defaults.runtime, novelai: { negativePrompt: defaults.novelai.negativePrompt }, characterPrompt: cpDefaults }));
   settings.ui = { ...asRecord(settings.ui), popupClickThroughProtectionEnabled: config.ui.popupClickThroughProtectionEnabled };
   return {
     model,
     settings,
-    artistsGlobal: { characterPrompt: { artistPrompts: jsonClone(artistPrompts) } },
+    artistsGlobal: { characterPrompt: { artistPrompts: jsonClone(artistPrompts), defaultArtistId } },
     animaArtists: { version: 1, entries: jsonClone(config.animaArtists.entries), selection: { defaultId: config.animaArtists.selection.defaultId, bySourceId: {} } }
   };
 }
@@ -3976,7 +3984,8 @@ function mergeStoredConfig(parts) {
   const model = asRecord(parts.model);
   const settings = asRecord(parts.settings);
   const novelai = { ...asRecord(model.novelai), ...asRecord(settings.novelai) };
-  const characterPrompt = { ...asRecord(settings.characterPrompt), ...parts.artistsGlobal ? { artistPrompts: asArray(asRecord(asRecord(parts.artistsGlobal).characterPrompt).artistPrompts) } : {} };
+  const artists = asRecord(asRecord(parts.artistsGlobal).characterPrompt);
+  const characterPrompt = { ...asRecord(settings.characterPrompt), ...parts.artistsGlobal ? { artistPrompts: asArray(artists.artistPrompts), defaultArtistId: artists.defaultArtistId } : {} };
   return normalizeConfig({
     ...settings,
     ...model,
@@ -4241,6 +4250,7 @@ function buildRuntimeConfig(global, document2, options = {}) {
     animaArtists: { ...g.animaArtists, selection: { ...g.animaArtists.selection, bySourceId: animaSelection } },
     characterPrompt: { ...g.characterPrompt, ...document2 ? cp : {} }
   };
+  runtime.characterPrompt.selectedArtistId = resolveNovelAIArtistSelection(g.characterPrompt, document2?.characterPrompt.selectedArtistId).id;
   return runtime;
 }
 function createDefaultChatImageGenerationSettings() {
@@ -4387,6 +4397,15 @@ var STORAGE_MIGRATIONS = [
     migrate: (raw) => {
       const list = normalizeAnimaArtists(isPlainObject(raw.animaArtists) ? raw.animaArtists : raw);
       return { ...list, selection: { ...list.selection, bySourceId: {} } };
+    }
+  },
+  {
+    kind: "character-document",
+    from: 1,
+    to: 2,
+    migrate: (raw) => {
+      const cp = asRecord(raw.characterPrompt);
+      return trimString(cp.selectedArtistId) === DEFAULT_SELECTED_ARTIST_ID ? { ...raw, characterPrompt: { ...cp, selectedArtistId: "" } } : raw;
     }
   }
 ];
@@ -66277,12 +66296,13 @@ var coreHandlers = {
     const anima = normalizeAnimaArtists(config.animaArtists);
     if (characterId && doc?.animaArtistId)
       anima.selection.bySourceId[characterId] = doc.animaArtistId;
-    const novelai = listNovelAIArtists(config.characterPrompt.artistPrompts);
-    const selectedNovelAIId = doc?.characterPrompt.selectedArtistId || DEFAULT_SELECTED_ARTIST_ID;
+    const novelai = resolveNovelAIArtistSelection(config.characterPrompt, doc?.characterPrompt.selectedArtistId);
     return {
-      novelai,
+      novelai: listNovelAIArtists(config.characterPrompt.artistPrompts),
       anima,
-      selectedNovelAIId: novelai.some((a) => a.id === selectedNovelAIId) ? selectedNovelAIId : DEFAULT_SELECTED_ARTIST_ID,
+      selectedNovelAIId: novelai.id,
+      globalNovelAIId: novelai.globalId,
+      followsGlobalNovelAI: novelai.followsGlobal,
       selectedAnimaId: (doc?.animaArtistId ?? anima.selection.defaultId) || NO_ARTIST_ID
     };
   },
@@ -66315,7 +66335,10 @@ var coreHandlers = {
   },
   async "artists.deleteNovelAI"(params, ctx) {
     const id = requireId(params.id, "id");
-    await ctx.storage.updateConfig((config) => ({ ...config, characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str5(e.id) !== id) } }));
+    await ctx.storage.updateConfig((config) => ({
+      ...config,
+      characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str5(e.id) !== id), defaultArtistId: config.characterPrompt.defaultArtistId === id ? NO_ARTIST_ID : config.characterPrompt.defaultArtistId }
+    }));
     return { ok: true };
   },
   async "artists.upsertAnima"(params, ctx) {
@@ -66347,11 +66370,13 @@ var coreHandlers = {
     const characterId = str5(params.characterId);
     const config = await ctx.storage.loadConfig();
     if (params.list === "novelai") {
-      if (!characterId)
-        fail2("bad-request", "Select a NovelAI artist for a character (characterId is required).");
-      if (!listNovelAIArtists(config.characterPrompt.artistPrompts).some((a) => a.id === artistId))
+      const followGlobal = !artistId && !!characterId;
+      if (!followGlobal && !listNovelAIArtists(config.characterPrompt.artistPrompts).some((a) => a.id === artistId))
         fail2("not-found", `Unknown artist: ${artistId}`);
-      await ctx.storage.updateCharacterDocument(characterId, (d) => ({ ...d, characterPrompt: { ...d.characterPrompt, selectedArtistId: artistId } }), { reason: "artists" });
+      if (characterId)
+        await ctx.storage.updateCharacterDocument(characterId, (d) => ({ ...d, characterPrompt: { ...d.characterPrompt, selectedArtistId: artistId } }), { reason: "artists" });
+      else
+        await ctx.storage.updateConfig((c) => ({ ...c, characterPrompt: { ...c.characterPrompt, defaultArtistId: artistId } }));
       return { ok: true };
     }
     if (params.list !== "anima")

@@ -446,12 +446,13 @@ export interface RpcMethods {
   "uniqueTags.apply": { params: { characterId: string; choices: { promptKey: string; formId: string; tag: string }[] }; result: Ok };
 
   /* artists tab */
-  "artists.list": { params: { characterId?: string }; result: { novelai: ResolvedNovelAIArtist[]; anima: AnimaArtistList; selectedNovelAIId: string; selectedAnimaId: string } };
+  /** `selectedNovelAIId` is the effective artist (own artist, else `globalNovelAIId`); without `characterId` it is the global preset. */
+  "artists.list": { params: { characterId?: string }; result: { novelai: ResolvedNovelAIArtist[]; anima: AnimaArtistList; selectedNovelAIId: string; globalNovelAIId: string; followsGlobalNovelAI: boolean; selectedAnimaId: string } };
   "artists.upsertNovelAI": { params: { entry: ArtistEntry }; result: { entry: ArtistEntry } };
   "artists.deleteNovelAI": { params: { id: string }; result: Ok };
   "artists.upsertAnima": { params: { entry: AnimaArtistEntry }; result: { entry: AnimaArtistEntry } };
   "artists.deleteAnima": { params: { id: string }; result: Ok };
-  /** Select for a character (`characterId`) or the global default (Anima only). */
+  /** Select for a character (`characterId`) or the global default. NovelAI `artistId` "" with `characterId` = follow the global preset. */
   "artists.select": { params: { list: "novelai" | "anima"; artistId: string; characterId?: string }; result: Ok };
 
   /* persona tab */

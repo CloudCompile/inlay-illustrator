@@ -1,7 +1,8 @@
 /**
  * Artists tab (spec/ui.md §3.2): NovelAI list `H_t` (149766) + dock `q_t` (149907), or the Comfy UI (Anima)
  * list `D_t` (149430) + dock `F_t` (149539), chosen by the image provider codec (anima-flat -> Anima).
- * NovelAI selection is per character (`selectedArtistId`); Anima selection is per character with a global default.
+ * Both lists have a global default and an optional per-character selection (NovelAI `selectedArtistId` "" = global preset).
+ * Without a character in context the list edits the global default.
  */
 import { useEffect } from "preact/hooks";
 import { ARTIST_OVERRIDE_RANGES, NO_ARTIST_ID, type AnimaArtistEntry, type ArtistEntry, type ResolvedNovelAIArtist } from "../../../shared/contract/character.js";
@@ -12,11 +13,11 @@ import { Store, useSelector } from "../../state/store.js";
 import { DockLayout } from "../shell/dock.js";
 import { Button, CheckIcon, ChevronDownIcon, ChevronUpIcon, IconButton, PencilIcon, PlusIcon, SaveIcon, Slider, TrashIcon, XIcon, cn } from "../ui/index.js";
 import { useWorkspaceCtx, type WorkspaceCtx } from "./context.js";
-import { ImageIcon, MinusIcon, SparklesIcon, TypeIcon } from "./icons.js";
+import { ImageIcon, MinusIcon, SparklesIcon, StarIcon, TypeIcon } from "./icons.js";
 import { ARTISTS_LABELS } from "./labels/artists.js";
 import { toAssetRef } from "./model.js";
 import { useRunningJob } from "./notices.js";
-import { AssetImage, Checkbox, EmptyCard, Spinner } from "./parts.js";
+import { AssetImage, Badge, Checkbox, EmptyCard, Segmented, Spinner } from "./parts.js";
 import { openPicker } from "./picker.js";
 
 /* ------------------------------------------------------------------------------------------------
@@ -40,6 +41,8 @@ interface ArtistsState {
   novelai: ResolvedNovelAIArtist[];
   anima: AnimaArtistList | null;
   selectedNovelAIId: string;
+  globalNovelAIId: string;
+  followsGlobalNovelAI: boolean;
   selectedAnimaId: string;
   loading: boolean;
   error: string | null;
@@ -80,7 +83,7 @@ export function formToEntry(id: string, form: ArtistForm, builtIn: boolean): Art
 const stores = new WeakMap<object, Store<ArtistsState>>();
 function artistsStore(app: AppController): Store<ArtistsState> {
   let s = stores.get(app);
-  if (!s) stores.set(app, (s = new Store<ArtistsState>({ characterId: null, novelai: [], anima: null, selectedNovelAIId: "", selectedAnimaId: "", loading: false, error: null, pending: false, saveError: null, form: emptyArtistForm(), revision: -1 })));
+  if (!s) stores.set(app, (s = new Store<ArtistsState>({ characterId: null, novelai: [], anima: null, selectedNovelAIId: "", globalNovelAIId: "", followsGlobalNovelAI: true, selectedAnimaId: "", loading: false, error: null, pending: false, saveError: null, form: emptyArtistForm(), revision: -1 })));
   return s;
 }
 
@@ -89,7 +92,7 @@ async function reloadArtists(app: AppController, characterId: string | null, rev
   store.patch({ loading: true, error: null, characterId, revision });
   try {
     const r = await app.call("artists.list", characterId ? { characterId } : {});
-    store.patch({ novelai: r.novelai, anima: r.anima, selectedNovelAIId: r.selectedNovelAIId, selectedAnimaId: r.selectedAnimaId, loading: false });
+    store.patch({ novelai: r.novelai, anima: r.anima, selectedNovelAIId: r.selectedNovelAIId, globalNovelAIId: r.globalNovelAIId, followsGlobalNovelAI: r.followsGlobalNovelAI, selectedAnimaId: r.selectedAnimaId, loading: false });
   } catch (error) {
     store.patch({ loading: false, error: error instanceof Error ? error.message : ARTISTS_LABELS.loadFailed });
   }
@@ -147,10 +150,12 @@ function NovelAIList({ ctx }: { ctx: WorkspaceCtx }) {
   const { state } = useArtists(ctx);
   const { run, startEdit } = useArtistActions(ctx);
   const select = (id: string) => run(() => ctx.app.call("artists.select", { list: "novelai", artistId: id, ...(ctx.characterId ? { characterId: ctx.characterId } : {}) }));
+  const setGlobal = (id: string) => run(() => ctx.app.call("artists.select", { list: "novelai", artistId: id }));
   return (
     <div class="grid gap-2 md:grid-cols-2" data-artist-list="novelai">
       {state.novelai.map((artist) => {
         const selected = artist.id === state.selectedNovelAIId;
+        const isGlobal = artist.id === state.globalNovelAIId;
         const title = displayTitle(artist);
         const preview = artist.userDefined ? (artist.description || artist.prompt) : (ARTISTS_LABELS.presetDescriptions[artist.id] ?? artist.description);
         // AM 0.9.89.3 card: the whole card selects; edit / delete sit in a bordered side column.
@@ -163,15 +168,19 @@ function NovelAIList({ ctx }: { ctx: WorkspaceCtx }) {
                   {selected ? <CheckIcon className="size-2.5" /> : null}
                 </span>
                 <strong class="line-clamp-2 min-w-0 text-xs leading-4 font-medium wrap-anywhere" title={title}>{title}</strong>
+                {isGlobal ? <Badge tone="primary" className="ml-auto" data-artist-global="">{ARTISTS_LABELS.globalBadge}</Badge> : null}
               </span>
               <span class="line-clamp-2 text-xs leading-4 text-muted-foreground" title={artist.description || artist.prompt}>{preview || ARTISTS_LABELS.emptyPrompt}</span>
             </button>
             <div class="flex flex-col items-center justify-start gap-1 border-l border-border/60 px-1.5 py-2 opacity-65 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+              {ctx.characterId && !isGlobal ? (
+                <IconButton size="iconCompact" label={ARTISTS_LABELS.setGlobalOf(title)} title={ARTISTS_LABELS.setGlobal} onClick={() => void setGlobal(artist.id)}><StarIcon /></IconButton>
+              ) : null}
               {artist.userDefined ? (
                 <>
                   <IconButton size="iconCompact" className="hover:text-destructive" label={ARTISTS_LABELS.deleteOf(title)} title={ARTISTS_LABELS.delete} onClick={() => void run(async () => {
                     await ctx.app.call("artists.deleteNovelAI", { id: artist.id });
-                    if (selected && ctx.characterId) await ctx.app.call("artists.select", { list: "novelai", artistId: NO_ARTIST_ID, characterId: ctx.characterId });
+                    if (selected && !state.followsGlobalNovelAI && ctx.characterId) await ctx.app.call("artists.select", { list: "novelai", artistId: "", characterId: ctx.characterId });
                     if (ctx.session.artists.editingId === artist.id) ctx.sessions.update(ctx.characterId, (s) => ({ artists: { ...s.artists, editingId: "" } }));
                   })}><TrashIcon /></IconButton>
                   <IconButton size="iconCompact" label={ARTISTS_LABELS.editOf(title)} title={ARTISTS_LABELS.edit} onClick={() => startEdit(artist.id)}><PencilIcon /></IconButton>
@@ -215,6 +224,20 @@ function AnimaList({ ctx }: { ctx: WorkspaceCtx }) {
         );
       })}
     </div>
+  );
+}
+
+/** NovelAI artist of the current character: the global preset or its own artist. */
+export function ArtistsHeaderEnd() {
+  const ctx = useWorkspaceCtx();
+  const { state } = useArtists(ctx);
+  const { run } = useArtistActions(ctx);
+  if (!ctx.characterId || ctx.provider.anima) return null;
+  const characterId = ctx.characterId;
+  return (
+    <Segmented label={ARTISTS_LABELS.source} className="mobile:w-36" value={state.followsGlobalNovelAI ? "global" : "own"} disabled={state.loading}
+      options={[{ value: "global", label: ARTISTS_LABELS.sourceGlobal }, { value: "own", label: ARTISTS_LABELS.sourceOwn }]}
+      onChange={(value) => void run(() => ctx.app.call("artists.select", { list: "novelai", artistId: value === "global" ? "" : state.selectedNovelAIId, characterId }))} />
   );
 }
 
