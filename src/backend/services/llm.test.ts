@@ -124,4 +124,31 @@ describe("llm service", () => {
     const missing = setup({ analysis: { connectionId: "zz" } });
     await expect(missing.llm.complete({ purpose: "t", messages: [], responseMode: "text" })).rejects.toMatchObject({ error: { code: "bad-request", detailCode: "ANALYZER_CONNECTION_MISSING" } });
   });
+
+  test("model list comes from connections.getModels without the fetch bridge; errors keep the connection model", async () => {
+    const { fake } = setup();
+    fake.llmModels.oa = [{ id: "gpt-x", label: "GPT X" }, { id: "gpt-y", label: "GPT Y" }];
+    const bridged: string[] = [];
+    const llm = createLlmService({ host: fake.host, userId: fake.userId, loadConfig: async () => normalizeConfig({}), getJson: async (url) => {
+      bridged.push(url);
+      throw new Error("bridge used");
+    } });
+    expect(await llm.listModels("oa")).toEqual([{ id: "gpt-x", label: "gpt-x" }, { id: "gpt-y", label: "GPT Y" }]);
+    fake.llmModels.oa = new Error("Connection not found");
+    expect(await llm.listModels("oa")).toEqual([{ id: "gpt-x", label: "gpt-x" }]);
+    expect(bridged).toEqual([]);
+  });
+
+  test("model list falls back to the fetch bridge on hosts without connections.getModels", async () => {
+    const { fake } = setup();
+    delete fake.host.connections.getModels;
+    const bridged: string[] = [];
+    const getJson = async <T,>(url: string) => {
+      bridged.push(url);
+      return { models: ["gpt-x", "gpt-y"], model_labels: { "gpt-y": "GPT Y" } } as T;
+    };
+    const llm = createLlmService({ host: fake.host, userId: fake.userId, loadConfig: async () => normalizeConfig({}), getJson });
+    expect(await llm.listModels("oa")).toEqual([{ id: "gpt-x", label: "gpt-x" }, { id: "gpt-y", label: "GPT Y" }]);
+    expect(bridged).toEqual(["/api/v1/connections/oa/models"]);
+  });
 });

@@ -1,8 +1,8 @@
 /**
  * In-memory fake of the Spindle backend API (`SpindleHost`) for unit tests. No real Lumiverse needed.
  *
- * Covers what the backend services use: userStorage, generate.raw/quiet (scripted), imageGen, connections, images,
- * characters, world_books (+entries, getGlobal), personas, chats, chat.getMessages/updateMessage, sendToFrontend capture,
+ * Covers what the backend services use: userStorage, generate.raw/quiet (scripted), imageGen, connections (+getModels), images,
+ * characters (+getGallery), world_books (+entries, getGlobal), personas, chats, chat.getMessages/updateMessage, sendToFrontend capture,
  * onFrontendMessage, on(event) registry with emit, registerInterceptor capture, permissions, log capture.
  *
  * Usage:
@@ -28,7 +28,7 @@ import type {
   WorldBookDTO,
   WorldBookEntryDTO,
 } from "lumiverse-spindle-types";
-import type { SpindleHost } from "../services/types.js";
+import type { CharacterGalleryItem, SpindleHost } from "../services/types.js";
 
 /** One scripted reply: a value (returned), an Error (thrown) or a function of the request. */
 export type Scripted<TReq, TRes> = TRes | Error | ((request: TReq, call: number) => TRes | Promise<TRes>);
@@ -67,6 +67,8 @@ export interface FakeHost {
 
   /* LLM */
   llmConnections: ConnectionProfileDTO[];
+  /** Served by connections.getModels, per connection id (an Error is thrown). */
+  llmModels: Record<string, Array<{ id: string; label: string }> | Error>;
   generateCalls: FakeGenerateCall[];
   /** FIFO of scripted replies; when empty, `defaultLlmReply` is used. */
   llmQueue: Array<Scripted<Record<string, unknown>, unknown>>;
@@ -94,6 +96,8 @@ export interface FakeHost {
 
   /* content */
   characters: Map<string, CharacterDTO>;
+  /** Served by characters.getGallery, per character id. */
+  galleries: Map<string, CharacterGalleryItem[]>;
   worldBooks: Map<string, WorldBookDTO>;
   worldBookEntries: Map<string, WorldBookEntryDTO>;
   globalWorldBookIds: string[];
@@ -151,6 +155,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   fake.failingPaths = new Set();
   fake.storageOps = [];
   fake.llmConnections = [];
+  fake.llmModels = {};
   fake.generateCalls = [];
   fake.llmQueue = [];
   fake.defaultLlmReply = { content: "{}", finish_reason: "stop", usage: {} };
@@ -166,6 +171,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   fake.imageBytes = new Map();
   fake.deletedImageIds = [];
   fake.characters = new Map();
+  fake.galleries = new Map();
   fake.worldBooks = new Map();
   fake.worldBookEntries = new Map();
   fake.globalWorldBookIds = [];
@@ -416,6 +422,11 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
     connections: {
       async list() { return fake.llmConnections.map((c) => ({ ...c })); },
       async get(id: string) { const c = fake.llmConnections.find((x) => x.id === id); return c ? { ...c } : null; },
+      async getModels(id: string) {
+        const models = fake.llmModels[id] ?? [];
+        if (models instanceof Error) throw models;
+        return models.map((m) => ({ ...m }));
+      },
     },
     decisions: {
       async listConnections() { return fake.decisionConnections.map((c) => ({ ...c })); },
@@ -501,6 +512,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
         return { data: all.slice(offset, offset + (opts.limit ?? 50)), total: all.length };
       },
       async get(id: string) { const c = fake.characters.get(id); return c ? JSON.parse(JSON.stringify(c)) : null; },
+      async getGallery(id: string) { return (fake.galleries.get(id) ?? []).map((g) => ({ ...g })); },
       async update(id: string, input: Record<string, unknown>) {
         const c = fake.characters.get(id);
         if (!c) throw new Error("Character not found");

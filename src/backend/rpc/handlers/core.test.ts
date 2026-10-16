@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createEmptyCharacterDocument, formCollectionRevision, isRpcEvent, type RpcMethod, type RpcParams, type RpcResult } from "../../../shared/contract/index.js";
 import { createServices } from "../../services/index.js";
-import { answerFetchBridge, createFakeHost } from "../../testing/fake-host.js";
+import { createFakeHost } from "../../testing/fake-host.js";
 import type { RpcContext } from "../types.js";
 import { coreHandlers } from "./core.js";
 
@@ -60,7 +60,7 @@ describe("core handlers: session, config, connections", () => {
     expect((await call("config.get", {})).uiState.global.navigationLayout).toBe("list");
     fake.llmConnections.push({ id: "l1", name: "L", provider: "openai", api_url: "", model: "m", preset_id: null, is_default: true, has_api_key: true, metadata: {}, reasoning_bindings: null, created_at: 0, updated_at: 0 });
     expect((await call("connections.listLlm", {})).connections).toEqual([{ id: "l1", name: "L", provider: "openai", model: "m", isDefault: true, hasApiKey: true }]);
-    answerFetchBridge(fake, { "/api/v1/connections/l1/models": { json: { models: ["m", "m2"], model_labels: { m2: "Model 2" } } } });
+    fake.llmModels.l1 = [{ id: "m", label: "m" }, { id: "m2", label: "Model 2" }];
     expect((await call("connections.listLlmModels", { connectionId: "l1" })).models).toEqual([{ id: "m", label: "m" }, { id: "m2", label: "Model 2" }]);
     fake.scriptLlm({ content: "Hi" });
     expect(await call("analyzer.testMessage", {})).toMatchObject({ ok: true, reply: "Hi" });

@@ -10,7 +10,7 @@
  *   AM's " · 모듈: <name>" (the roster row shows the book name separately).
  * - Lore record id = selection id = `<worldBookId>:<entryId>` (`loreSelectionId`). Disabled, empty and AM-owned entries are skipped.
  * - The character description becomes the pseudo lore `asset-maid:charx-description:v1` (AM `xrt` 86177).
- * - Character images: gallery (REST via the fetch bridge) + `extensions.expressions.mappings` + `extensions.risu_asset_map` +
+ * - Character images: gallery (`characters.getGallery`, or REST via the fetch bridge on older hosts) + `extensions.expressions.mappings` + `extensions.risu_asset_map` +
  *   avatar (+ generated images owned by the character). AssetRef `key` = Lumiverse image id.
  */
 import {
@@ -603,15 +603,19 @@ export function createSourcesService(deps: SourcesServiceDeps): SourcesService {
         };
 
         if (character.avatarImageId) add("avatar", character.avatarImageId, `${character.name || "avatar"}.png`);
-        if (deps.imageBytes) {
+        // Older hosts lack characters.getGallery: read the REST list through the frontend fetch bridge instead.
+        const viaBridge = !host.characters.getGallery;
+        if (!viaBridge || deps.imageBytes) {
           try {
-            const gallery = asArray(await deps.imageBytes.getJson(`/api/v1/characters/${encodeURIComponent(characterId)}/gallery`, { timeoutMs: 15000 }));
+            const gallery = viaBridge
+              ? asArray(await deps.imageBytes!.getJson(`/api/v1/characters/${encodeURIComponent(characterId)}/gallery`, { timeoutMs: 15000 }))
+              : await host.characters.getGallery!(characterId, userId);
             for (const raw of gallery) {
               const g = asRecord(raw);
               add("gallery", str(g.image_id), str(g.caption) || str(g.reference) || `gallery-${str(g.id)}`, { mime: str(g.mime_type), width: Number(g.width) || null, height: Number(g.height) || null });
             }
           } catch (error) {
-            log("warn", `Gallery of ${characterId} unavailable (the overlay must be open to read it).`, errorMessage(error));
+            log("warn", `Gallery of ${characterId} unavailable${viaBridge ? " (the overlay must be open to read it)" : ""}.`, errorMessage(error));
           }
         }
         const expressions = asRecord(asRecord(character.extensions.expressions).mappings);

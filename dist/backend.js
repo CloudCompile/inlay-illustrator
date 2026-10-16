@@ -67915,16 +67915,19 @@ function createLlmService(deps) {
         }
       };
       add(connection.model);
-      if (deps.getJson) {
-        try {
+      try {
+        if (host.connections.getModels) {
+          for (const model of await host.connections.getModels(connection.id, userId))
+            add(model.id, model.label || model.id);
+        } else if (deps.getJson) {
           const result = asRecord3(await deps.getJson(`/api/v1/connections/${encodeURIComponent(connection.id)}/models`, { timeoutMs: 20000 }));
           const labels = asRecord3(result.model_labels);
           for (const id of asArray2(result.models))
             if (typeof id === "string")
               add(id, str5(labels[id]) || id);
-        } catch (error) {
-          log("warn", `Model list of ${connection.name || connection.id} unavailable.`, errorMessage(error));
         }
+      } catch (error) {
+        log("warn", `Model list of ${connection.name || connection.id} unavailable.`, errorMessage(error));
       }
       return out;
     },
@@ -68542,15 +68545,16 @@ function createSourcesService(deps) {
         };
         if (character.avatarImageId)
           add("avatar", character.avatarImageId, `${character.name || "avatar"}.png`);
-        if (deps.imageBytes) {
+        const viaBridge = !host.characters.getGallery;
+        if (!viaBridge || deps.imageBytes) {
           try {
-            const gallery = asArray2(await deps.imageBytes.getJson(`/api/v1/characters/${encodeURIComponent(characterId)}/gallery`, { timeoutMs: 15000 }));
+            const gallery = viaBridge ? asArray2(await deps.imageBytes.getJson(`/api/v1/characters/${encodeURIComponent(characterId)}/gallery`, { timeoutMs: 15000 })) : await host.characters.getGallery(characterId, userId);
             for (const raw of gallery) {
               const g = asRecord3(raw);
               add("gallery", str5(g.image_id), str5(g.caption) || str5(g.reference) || `gallery-${str5(g.id)}`, { mime: str5(g.mime_type), width: Number(g.width) || null, height: Number(g.height) || null });
             }
           } catch (error) {
-            log("warn", `Gallery of ${characterId} unavailable (the overlay must be open to read it).`, errorMessage(error));
+            log("warn", `Gallery of ${characterId} unavailable${viaBridge ? " (the overlay must be open to read it)" : ""}.`, errorMessage(error));
           }
         }
         const expressions = asRecord3(asRecord3(character.extensions.expressions).mappings);

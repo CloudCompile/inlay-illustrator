@@ -58,7 +58,7 @@ export interface LlmServiceDeps {
   userId: string | undefined;
   loadConfig: () => Promise<InlayConfig>;
   log?: RunLog;
-  /** Same-origin REST JSON through the frontend bridge (model lists). Optional. */
+  /** Same-origin REST JSON through the frontend bridge (model lists on hosts without `connections.getModels`). Optional. */
   getJson?: <T>(url: string, options?: { signal?: AbortSignal; timeoutMs?: number }) => Promise<T>;
   /** Test hook for the retry delay. */
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
@@ -536,14 +536,17 @@ export function createLlmService(deps: LlmServiceDeps): LlmService {
         }
       };
       add(connection.model);
-      if (deps.getJson) {
-        try {
+      try {
+        if (host.connections.getModels) {
+          for (const model of await host.connections.getModels(connection.id, userId)) add(model.id, model.label || model.id);
+        } else if (deps.getJson) {
+          // Older hosts lack connections.getModels: read the REST list through the frontend fetch bridge instead.
           const result = asRecord(await deps.getJson(`/api/v1/connections/${encodeURIComponent(connection.id)}/models`, { timeoutMs: 20000 }));
           const labels = asRecord(result.model_labels);
           for (const id of asArray(result.models)) if (typeof id === "string") add(id, str(labels[id]) || id);
-        } catch (error) {
-          log("warn", `Model list of ${connection.name || connection.id} unavailable.`, errorMessage(error));
         }
+      } catch (error) {
+        log("warn", `Model list of ${connection.name || connection.id} unavailable.`, errorMessage(error));
       }
       return out;
     },

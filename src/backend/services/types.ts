@@ -33,8 +33,28 @@ import type {
   UiState,
 } from "../../shared/contract/index.js";
 
-/** The Spindle backend API (global `spindle` in production, a fake in tests). */
-export type SpindleHost = SpindleAPI;
+/** One item of `spindle.characters.getGallery` (same fields as `GET /api/v1/characters/:id/gallery`). */
+export interface CharacterGalleryItem {
+  id: string;
+  image_id: string;
+  reference: string;
+  caption: string;
+  sort_order: number;
+  created_at: number;
+  width: number | null;
+  height: number | null;
+  mime_type: string;
+}
+
+/**
+ * The Spindle backend API (global `spindle` in production, a fake in tests).
+ * `characters.getGallery` / `connections.getModels` are pending in lumiverse-spindle-types (Lumiverse PR #465, types
+ * PR #62). They are optional because older hosts lack them; callers fall back to the frontend fetch bridge.
+ */
+export type SpindleHost = SpindleAPI & {
+  characters: SpindleAPI["characters"] & { getGallery?(characterId: string, userId?: string): Promise<CharacterGalleryItem[]> };
+  connections: SpindleAPI["connections"] & { getModels?(connectionId: string, userId?: string): Promise<Array<{ id: string; label: string }>> };
+};
 
 /* ------------------------------------------------------------------------------------------------
  * Storage (userStorage, contract layout: src/shared/contract/storage.ts)

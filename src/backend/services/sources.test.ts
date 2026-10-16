@@ -5,6 +5,8 @@ import { createImageBytesService } from "./image-bytes.js";
 import { createSourcesService, loreRecordsOf, loreScore, memberAliases, splitLoreKeys } from "./sources.js";
 import { createStorageService } from "./storage.js";
 
+const GALLERY_ITEM = { id: "g", image_id: "gal1", caption: "", reference: "beach.webp", sort_order: 0, created_at: 0, mime_type: "image/webp", width: 10, height: 20 };
+
 function setup() {
   const fake = createFakeHost();
   const storage = createStorageService(fake.host, fake.userId);
@@ -35,7 +37,7 @@ function setup() {
   fake.addPersona({ id: "p1", name: "Me", is_default: true });
   fake.addImage({ id: "gen1", original_filename: "x.png", owner_character_id: "c1", owner_extension_identifier: "inlay_illustrator", owner_chat_id: "chat1" });
   fake.addImage({ id: "gen2", original_filename: "Alice.__am__.outfit.12345678-1234-1234-1234-123456789abc", owner_character_id: "c1", owner_extension_identifier: "inlay_illustrator" });
-  answerFetchBridge(fake, { "/api/v1/characters/c1/gallery": { json: [{ id: "g", image_id: "gal1", caption: "", reference: "beach.webp", mime_type: "image/webp", width: 10, height: 20 }] } });
+  fake.galleries.set("c1", [GALLERY_ITEM]);
   return { fake, sources };
 }
 
@@ -117,5 +119,21 @@ describe("sources service", () => {
     expect((await sources.getActivePersona())?.personaId).toBe("p1");
     expect(await sources.getChat("chat2")).toMatchObject({ characterId: "c1", groupCharacterIds: ["c1", "c2"] });
     expect(await sources.getActiveChat()).toBeNull();
+  });
+
+  test("gallery comes from characters.getGallery without the fetch bridge", async () => {
+    const { fake, sources } = setup();
+    const images = await sources.listCharacterImages("c1");
+    expect(images.filter((i) => i.origin === "gallery").map((i) => i.imageId)).toEqual(["gal1"]);
+    expect(fake.sentOfType("inlay-illustrator:fetch-request")).toEqual([]);
+  });
+
+  test("gallery falls back to the fetch bridge on hosts without characters.getGallery", async () => {
+    const { fake, sources } = setup();
+    delete fake.host.characters.getGallery;
+    answerFetchBridge(fake, { "/api/v1/characters/c1/gallery": { json: [GALLERY_ITEM] } });
+    const images = await sources.listCharacterImages("c1");
+    expect(images.filter((i) => i.origin === "gallery").map((i) => i.imageId)).toEqual(["gal1"]);
+    expect(fake.sentOfType("inlay-illustrator:fetch-request")).toHaveLength(1);
   });
 });
