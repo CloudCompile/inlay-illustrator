@@ -12,7 +12,6 @@ import { ConfirmProvider, LayerStack, OverlayEnvironmentContext } from "../overl
 import { trackKeyboardInset } from "../overlay/viewport.js";
 import { AppContext, type AppController } from "../state/app-state.js";
 import { ZOOM_LABELS } from "./labels.js";
-import { buildImageGroups, flattenItems } from "./model.js";
 import type { ZoomTarget } from "./session.js";
 import { zoomVisibility } from "./signal.js";
 import { ZoomApp } from "./ZoomApp.js";
@@ -21,8 +20,6 @@ export type { ZoomTarget } from "./session.js";
 
 export interface ZoomViewer {
   open(target: ZoomTarget): void;
-  /** Opens the viewer on the newest image of a chat (gallery entry point). Resolves false when the chat has no image. */
-  openChat(chatId: string): Promise<boolean>;
   close(): void;
   isOpen(): boolean;
   destroy(): void;
@@ -108,20 +105,6 @@ export function createZoomViewer(ctx: SpindleFrontendContext, app: AppController
       }
       renderApp();
       root!.focus({ preventScroll: true });
-    },
-    async openChat(chatId) {
-      if (!chatId) return false;
-      try {
-        const { messages } = await app.call("chatDom.getMessageStates", { chatId });
-        const items = flattenItems(buildImageGroups(messages));
-        const last = items[items.length - 1];
-        if (!last) return false;
-        viewer.open({ chatId, slotId: last.slotId, entryId: last.entryId, messageKey: last.messageKey });
-        return true;
-      } catch (error) {
-        app.notifyError(error);
-        return false;
-      }
     },
     close() {
       if (!open) return;

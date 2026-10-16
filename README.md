@@ -34,8 +34,11 @@ replaces the old Lightboard pipeline of 0.9.x.
 
 - Drawer tab **Inlay Illustrator** → **Open Inlay Illustrator**.
 - Input-bar action **Inlay Illustrator**.
-- Floating button → **Open Inlay Illustrator**. The floating button also generates or rerolls the latest reply and
-  opens the image gallery (zoom viewer).
+- Click an illustration in a message to open the image viewer (zoom) on that chat's images.
+
+The count toggle above the composer sets how many images a message gets. Its expanded panel also has a button that
+illustrates the latest reply (or rerolls it when it has images). The drawer tab sets the screen corner of the toggle and
+its toast stack.
 
 ## Known gaps
 

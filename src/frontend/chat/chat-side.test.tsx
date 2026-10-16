@@ -6,7 +6,8 @@ import { createFakeSpindleContext } from "../dev/fake-context.js";
 import { createFullMockBackend } from "../dev/mock/index.js";
 import { mockChat } from "../dev/mock/chat.js";
 import { renderChatFixture } from "../dev/chat-fixture.js";
-import { createChatSide, type ChatSideController } from "./controller.js";
+import { createChatSide, type ChatSideController, type ChatSideOptions } from "./controller.js";
+import { runtimeCornerPreference } from "./corner.js";
 import { createZoomViewer, type ZoomViewer } from "../zoom/index.js";
 
 // Private happy-dom window (other test files install DOM fakes on globalThis).
@@ -38,7 +39,7 @@ async function until<T>(read: () => T | null | undefined | false, timeoutMs = 30
 interface Rig { mock: ReturnType<typeof createFullMockBackend>; app: AppController; chat: ChatSideController; zoom: ZoomViewer; opened: Array<{ slotId: string; entryId?: string }>; destroy(): void }
 
 const rigs: Rig[] = [];
-function rig(): Rig {
+function rig(extra: Partial<ChatSideOptions> = {}): Rig {
   doc.body.innerHTML = '<div id="ii-preview-chat"></div>';
   const mock = createFullMockBackend({ latencyMs: 0, timeScale: 0 });
   const fake = createFakeSpindleContext(doc, mock);
@@ -46,7 +47,7 @@ function rig(): Rig {
   const fixture = renderChatFixture(doc, mock);
   const opened: Rig["opened"] = [];
   const zoom = createZoomViewer(fake.ctx, app, { doc });
-  const chat = createChatSide(fake.ctx, app, { doc, debounceMs: 0, getActiveChatId: () => "chat-1", openZoom: (target) => { opened.push(target); zoom.open(target); } });
+  const chat = createChatSide(fake.ctx, app, { doc, debounceMs: 0, getActiveChatId: () => "chat-1", openZoom: (target) => { opened.push(target); zoom.open(target); }, ...extra });
   const r: Rig = { mock, app, chat, zoom, opened, destroy: () => { chat.destroy(); zoom.destroy(); app.destroy(); fixture.destroy(); } };
   rigs.push(r);
   return r;
@@ -145,6 +146,29 @@ describe("chat side (DOM, dev mock)", () => {
     await until(() => calls(r, "chatImageGeneration.set").length === 1);
     expect((calls(r, "chatImageGeneration.set")[0]!.params as { settings: { countPolicy: { max: number } } }).settings.countPolicy.max).toBe(2);
     await until(() => q(".ii-am-chat-count__toggle")?.textContent?.includes("2"));
+  });
+
+  test("the runtime host follows the corner preference live (saved under the old floating-button key)", async () => {
+    const saved = new Map([["inlay-illustrator:fab-corner", "top-left"]]);
+    const corner = runtimeCornerPreference({ getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => void saved.set(key, value) });
+    rig({ corner });
+    const host = q(".ii-am-chat-runtime-host")!;
+    expect(host.getAttribute("data-ii-corner")).toBe("top-left");
+    corner.set("bottom-left");
+    expect(host.getAttribute("data-ii-corner")).toBe("bottom-left");
+    expect(saved.get("inlay-illustrator:fab-corner")).toBe("bottom-left");
+  });
+
+  test("count panel generate button runs the latest-message action and waits for the chat's jobs", async () => {
+    let started = 0;
+    const r = rig({ generateLatest: async () => void (started += 1) });
+    await r.app.init();
+    (await until(() => q(".ii-am-chat-count__toggle"))).click();
+    const button = await until(() => q('.ii-am-chat-count__generate[aria-label="Generate images for the latest message"]') as HTMLButtonElement | null);
+    button.click();
+    expect(started).toBe(1);
+    r.mock.emit("generation.progress", { jobId: "job-g", chatId: "chat-1", messageKey: "illustration:msg-4@0", attemptKind: "initial", status: "running", phase: "generating", progress: { label: "Image 1/2" }, requestedCount: 2, completedSlots: 0, failedSlots: 0, canRetry: false, canRestart: false });
+    await until(() => (q(".ii-am-chat-count__generate") as HTMLButtonElement | null)?.disabled);
   });
 
   test("backend error events open the runtime error dialog", async () => {

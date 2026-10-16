@@ -76,8 +76,6 @@ export const DEFAULT_SETTINGS_SECTION: SettingsSection = "charx";
 /** @deprecated interim labels (settings sub-agent replaces them). */
 export const SYSTEM_SETTINGS_LABELS = {
   displaySection: "In-chat display",
-  fabCorner: "Floating button corner",
-  fabCornerDescription: "Corner of the chat-side Inlay button.",
   imageAspect: "Image frame",
   imageAspectDescription: "Frame ratio of illustrations inside messages.",
   imageHeight: "Maximum image height",
@@ -113,7 +111,7 @@ export const LAUNCHER_LABELS = {
   idle: "Idle",
   autoGeneration: "Automatic chat images", // 자동 생성
   autoGenerationHint: "Illustrate new assistant messages automatically.",
-  fabCorner: "Floating button",
+  runtimeCorner: "Count button corner",
   inputBarLabel: "Inlay Illustrator",
   inputBarSubtitle: "Open the Inlay Illustrator workspace"
 } as const;

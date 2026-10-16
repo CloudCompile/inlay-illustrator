@@ -11,7 +11,7 @@ import { applyCountAction, countLimits, countToggleText, countView, floatingStyl
 import { COUNT_LABELS, ERROR_DIALOG_LABELS, fill, TOAST_LABELS } from "./labels.js";
 import type { ChatRuntimeStore } from "./runtime-store.js";
 import { buildToastStack, errorDetailText, errorLogText, hasErrorDetails, type RuntimeToastModel } from "./toast-model.js";
-import { RetryIcon } from "./widgets.js";
+import { GenerateIcon, RetryIcon } from "./widgets.js";
 import { directionPatch, selectPreset } from "../overlay/settings/directions.js";
 
 export type ToastCommand = "cancel" | "retry" | "restart" | "dismiss";
@@ -19,6 +19,9 @@ export type ToastCommand = "cancel" | "retry" | "restart" | "dismiss";
 export interface ChatRuntimeProps {
   app: AppController;
   store: ChatRuntimeStore;
+  getActiveChatId: () => string;
+  /** Count panel action (illustrate or reroll the latest assistant message); no button without it. */
+  generateLatest?: () => Promise<void>;
   onToastCommand: (toast: RuntimeToastModel, command: ToastCommand) => void;
 }
 
@@ -32,7 +35,7 @@ function useRuntimeRevision(store: ChatRuntimeStore): number {
 }
 
 /** Root of the body-level runtime host. */
-export function ChatRuntime({ app, store, onToastCommand }: ChatRuntimeProps) {
+export function ChatRuntime({ app, store, getActiveChatId, generateLatest, onToastCommand }: ChatRuntimeProps) {
   useRuntimeRevision(store);
   const settings = useSelector(app.store, (s) => s.chatImageGeneration);
   const config = useSelector(app.store, (s) => s.config);
@@ -45,7 +48,7 @@ export function ChatRuntime({ app, store, onToastCommand }: ChatRuntimeProps) {
       data-ii-zoom={store.zoomOpen ? "true" : undefined}
       data-ii-count={showCount && !floating ? "true" : undefined}
     >
-      {showCount ? <CountPanel app={app} settings={settings!} config={config!} /> : null}
+      {showCount ? <CountPanel app={app} settings={settings!} config={config!} chatId={getActiveChatId()} generateLatest={generateLatest} /> : null}
       <ToastStack app={app} store={store} onCommand={onToastCommand} />
       <ErrorDialog store={store} onDismiss={(item) => { if (item?.jobId) onToastCommand({ key: `generation:${item.jobId}`, jobId: item.jobId } as RuntimeToastModel, "dismiss"); }} />
     </div>
@@ -267,8 +270,18 @@ function Stepper({ value, bounds, label, decLabel, incLabel, onStep }: { value: 
   );
 }
 
-function CountPanel({ app, settings, config }: { app: AppController; settings: ChatImageGenerationSettings; config: InlayConfig }) {
+interface CountPanelProps {
+  app: AppController;
+  settings: ChatImageGenerationSettings;
+  config: InlayConfig;
+  chatId: string;
+  generateLatest?: () => Promise<void>;
+}
+
+function CountPanel({ app, settings, config, chatId, generateLatest }: CountPanelProps) {
   const [expanded, setExpanded] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const chatBusy = useSelector(app.store, (s) => Object.values(s.generationJobs).some((job) => job.chatId === chatId));
   const [menu, setMenu] = useState<"none" | "count" | "scene">("none");
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "failed">("saved");
   const [sceneSaving, setSceneSaving] = useState(false);
@@ -360,6 +373,21 @@ function CountPanel({ app, settings, config }: { app: AppController; settings: C
       }}
     >
       <div class="ii-am-chat-count__panel" aria-hidden={expanded ? undefined : "true"} {...(expanded ? {} : { inert: true })}>
+        {generateLatest ? (
+          <button
+            type="button"
+            class="ii-am-chat-count__option ii-am-chat-count__generate"
+            aria-label={COUNT_LABELS.generateLatest}
+            title={COUNT_LABELS.generateLatest}
+            disabled={chatBusy || starting}
+            onClick={() => {
+              setStarting(true);
+              void generateLatest().finally(() => setStarting(false));
+            }}
+          >
+            <GenerateIcon />
+          </button>
+        ) : null}
         {sceneAvailable ? (
           <span class="ii-am-chat-count__scene">
             <button

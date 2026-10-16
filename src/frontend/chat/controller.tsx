@@ -17,6 +17,7 @@ import { ChatRuntime, type ToastCommand } from "./runtime.js";
 import { ChatRuntimeStore, errorDialogTitle } from "./runtime-store.js";
 import { CHAT_SIDE_CSS } from "./styles.js";
 import type { RuntimeToastModel } from "./toast-model.js";
+import type { RuntimeCornerPreference } from "./corner.js";
 import { ChatFooter, EdgeControls, revisionPosition, type EdgeAction, type FooterAction } from "./widgets.js";
 
 export interface ZoomOpenTarget { chatId: string; slotId: string; entryId?: string; messageKey?: string }
@@ -28,6 +29,10 @@ export interface ChatSideOptions {
   getActiveChatId(): string;
   /** Overlay open/close notifications (hide the count toggle / toasts at once, not on the next reconcile). */
   subscribeOverlay?: (listener: (open: boolean) => void) => () => void;
+  /** Screen corner of the runtime host (drawer launcher setting). Default: bottom right. */
+  corner?: Pick<RuntimeCornerPreference, "get" | "subscribe">;
+  /** Count panel action: illustrate (or reroll) the latest eligible assistant message. */
+  generateLatest?: () => Promise<void>;
 }
 
 export interface ChatSideInternalOptions extends ChatSideOptions {
@@ -103,6 +108,11 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
   hostRoot.className = "ii-am-root ii-am-chat-runtime-host";
   hostRoot.setAttribute(WRAPPER_ATTR, "runtime");
   doc.body.appendChild(hostRoot);
+  if (options.corner) {
+    const corner = options.corner;
+    hostRoot.setAttribute("data-ii-corner", corner.get());
+    disposers.push(corner.subscribe((next) => hostRoot.setAttribute("data-ii-corner", next)));
+  }
   const syncHostFlags = () => {
     hostRoot.toggleAttribute("data-ii-zoom", runtime.zoomOpen);
     if (runtime.zoomOpen) hostRoot.setAttribute("data-ii-zoom", "true");
@@ -110,7 +120,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     else hostRoot.removeAttribute("data-ii-overlay");
   };
   disposers.push(runtime.subscribe(syncHostFlags));
-  render(<ChatRuntime app={app} store={runtime} onToastCommand={(toast, command) => void onToastCommand(toast, command)} />, hostRoot);
+  render(<ChatRuntime app={app} store={runtime} getActiveChatId={options.getActiveChatId} generateLatest={options.generateLatest} onToastCommand={(toast, command) => void onToastCommand(toast, command)} />, hostRoot);
   runtime.setFlags({ zoomOpen: zoom.isOpen() });
   disposers.push(zoom.subscribe((open) => runtime.setFlags({ zoomOpen: open })));
   if (options.subscribeOverlay) disposers.push(options.subscribeOverlay((open) => runtime.setFlags({ overlayOpen: open })));

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
-import { COMPOSER_INSET_VAR, composerInsetPx, rectToCssPx, startComposerInset, viewportCssSize } from "./composer-inset.js";
+import { COMPOSER_INSET_VAR, composerInsetPx, startComposerInset } from "./composer-inset.js";
 
 describe("composer inset math", () => {
   test("scale 1: inset = viewport bottom - composer top + gap", () => {
@@ -25,13 +25,6 @@ describe("composer inset math", () => {
     expect(composerInsetPx({ viewportBottom: 900, unitPx: 0, composerTop: 700 })).toBe(66);
     expect(composerInsetPx({ viewportBottom: 900, unitPx: 1, composerTop: 950 })).toBe(12);
   });
-
-  test("rect -> css px and viewport size", () => {
-    expect(rectToCssPx(125, 1.25)).toBe(100);
-    expect(rectToCssPx(125, 0)).toBe(125);
-    expect(viewportCssSize({ innerWidth: 1440, innerHeight: 900, viewportBottom: 900, unitPx: 1.25 })).toEqual({ width: 1152, height: 720 });
-    expect(viewportCssSize({ innerWidth: 1440, innerHeight: 900, viewportBottom: 720, unitPx: 1 })).toEqual({ width: 1152, height: 720 });
-  });
 });
 
 describe("composer inset tracker (DOM)", () => {
@@ -53,11 +46,8 @@ describe("composer inset tracker (DOM)", () => {
     composer.setAttribute("data-component", "InputArea");
     doc.body.appendChild(composer);
     rects.set("InputArea", { top: 742, bottom: 844, height: 102, width: 390 });
-    const seen: number[] = [];
-    tracker.subscribe((inset) => seen.push(inset));
     tracker.update();
     expect(tracker.current()).toBe(114);
-    expect(seen).toEqual([114]);
     expect(doc.documentElement.style.getPropertyValue(COMPOSER_INSET_VAR)).toBe("114px");
     tracker.stop();
     expect(doc.documentElement.style.getPropertyValue(COMPOSER_INSET_VAR)).toBe("");

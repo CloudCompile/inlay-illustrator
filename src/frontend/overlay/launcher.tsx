@@ -1,7 +1,7 @@
 /** Drawer-tab launcher + status panel: backend status, running jobs, quick settings, open buttons. */
 import { useState } from "preact/hooks";
 import { AppContext, useAppState, type AppController } from "../state/app-state.js";
-import { FAB_CORNER_OPTIONS, type FabCorner } from "../fab.js";
+import { RUNTIME_CORNER_OPTIONS, type RuntimeCorner, type RuntimeCornerPreference } from "../chat/corner.js";
 import { LAUNCHER_LABELS as L } from "./labels.js";
 import { useStore, type FrontendStore } from "./store.js";
 import { Button, Select, SettingsIcon, Switch, cn } from "./ui/index.js";
@@ -11,7 +11,7 @@ export type LauncherPanelProps = {
   store: FrontendStore;
   onOpen: () => void;
   onOpenSettings: () => void;
-  fabCorner: { get: () => FabCorner; set: (corner: FabCorner) => void };
+  corner: Pick<RuntimeCornerPreference, "get" | "set">;
 };
 
 export function LauncherPanel(props: LauncherPanelProps) {
@@ -31,7 +31,7 @@ function StatusRow({ label, value, tone }: { label: string; value: string; tone?
   );
 }
 
-function LauncherBody({ app, store, onOpen, onOpenSettings, fabCorner }: LauncherPanelProps) {
+function LauncherBody({ app, store, onOpen, onOpenSettings, corner: cornerPreference }: LauncherPanelProps) {
   const snapshot = useStore(store);
   const connection = useAppState((s) => s.connection);
   const connectionError = useAppState((s) => s.connectionError);
@@ -41,7 +41,7 @@ function LauncherBody({ app, store, onOpen, onOpenSettings, fabCorner }: Launche
   const analysisJobs = useAppState((s) => Object.values(s.analysisJobs).filter((job) => !job.finishedAt));
   const chatSettings = useAppState((s) => s.chatImageGeneration);
   const imageConnected = useAppState((s) => !!s.config?.image.connectionId);
-  const [corner, setCorner] = useState<FabCorner>(fabCorner.get());
+  const [corner, setCorner] = useState<RuntimeCorner>(cornerPreference.get());
 
   const connectionText = connection === "ready" ? L.ready : connection === "error" ? `${L.error}: ${connectionError?.message ?? ""}` : L.connecting;
   const jobs = [...generationJobs.map((job) => job.progress.label), ...analysisJobs.map((job) => job.progress.label)];
@@ -72,9 +72,9 @@ function LauncherBody({ app, store, onOpen, onOpenSettings, fabCorner }: Launche
         </label>
       ) : null}
       <div class="flex items-center justify-between gap-3 rounded-md bg-card px-3 py-2">
-        <span class="text-xs font-bold" id="ii-launcher-fab-corner">{L.fabCorner}</span>
+        <span class="text-xs font-bold" id="ii-launcher-runtime-corner">{L.runtimeCorner}</span>
         <div class="w-36">
-          <Select<FabCorner> native aria-labelledby="ii-launcher-fab-corner" value={corner} options={FAB_CORNER_OPTIONS} onValueChange={(value) => { setCorner(value); fabCorner.set(value); }} />
+          <Select<RuntimeCorner> native aria-labelledby="ii-launcher-runtime-corner" value={corner} options={RUNTIME_CORNER_OPTIONS} onValueChange={(value) => { setCorner(value); cornerPreference.set(value); }} />
         </div>
       </div>
     </div>

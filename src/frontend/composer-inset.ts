@@ -1,5 +1,5 @@
 /**
- * Composer inset: keeps our body-level layers (FAB, chat runtime host with the count panel and toasts) above the host
+ * Composer inset: keeps our body-level layer (chat runtime host with the count panel and toasts) above the host
  * composer ([data-component="InputArea"]), whose height differs per layout (desktop ~110px, mobile ~100px + toolbar).
  *
  * Publishes `--ii-am-composer-inset` (CSS px in the body's coordinate space) on <html>. The host zooms <body> by
@@ -33,29 +33,11 @@ export function composerInsetPx(m: ComposerMeasure, gap = COMPOSER_GAP_PX, fallb
   return Math.max(gap, Math.round(inset));
 }
 
-/** Converts a rect-unit length to CSS px inside <body> (FAB menu placement). Pure. */
-export function rectToCssPx(value: number, unitPx: number): number {
-  return unitPx > 0 ? value / unitPx : value;
-}
-
-/** Viewport in CSS px inside <body>: the probe gives the height; the width uses the same rect/viewport ratio. Pure. */
-export function viewportCssSize(v: { innerWidth: number; innerHeight: number; viewportBottom: number; unitPx: number }): { width: number; height: number } {
-  const unit = v.unitPx > 0 ? v.unitPx : 1;
-  const bottom = v.viewportBottom > 0 ? v.viewportBottom : v.innerHeight;
-  const ratio = v.innerHeight > 0 ? bottom / v.innerHeight : 1;
-  return { width: (v.innerWidth * ratio) / unit, height: bottom / unit };
-}
-
 export interface ComposerInsetTracker {
   /** Current inset in CSS px. */
   current(): number;
-  /** Rect units per CSS px (1 without zoom / when unknown). */
-  unitPx(): number;
-  /** Viewport size in CSS px inside <body> (FAB menu clamping). */
-  viewportCss(): { width: number; height: number };
   /** Re-measures now. */
   update(): void;
-  subscribe(listener: (inset: number) => void): () => void;
   stop(): void;
 }
 
@@ -66,10 +48,7 @@ export function startComposerInset(doc: Document = document, win: Window & typeo
   probe.style.cssText = `position:fixed;left:0;bottom:0;width:0;height:${PROBE_CSS_PX}px;visibility:hidden;pointer-events:none;`;
   doc.body.appendChild(probe);
   let inset = COMPOSER_FALLBACK_INSET_PX;
-  let unit = 1;
-  let viewportBottom = win.innerHeight;
   let observed: Element | null = null;
-  const listeners = new Set<(inset: number) => void>();
   const resize = typeof win.ResizeObserver === "function" ? new win.ResizeObserver(() => update()) : null;
 
   function measure(): ComposerMeasure {
@@ -86,14 +65,10 @@ export function startComposerInset(doc: Document = document, win: Window & typeo
   }
 
   function update(): void {
-    const m = measure();
-    unit = m.unitPx;
-    if (m.viewportBottom > 0) viewportBottom = m.viewportBottom;
-    const next = composerInsetPx(m);
+    const next = composerInsetPx(measure());
     if (next === inset && doc.documentElement.style.getPropertyValue(COMPOSER_INSET_VAR)) return;
     inset = next;
     doc.documentElement.style.setProperty(COMPOSER_INSET_VAR, `${inset}px`);
-    for (const listener of [...listeners]) listener(inset);
   }
 
   const onResize = () => update();
@@ -106,13 +81,7 @@ export function startComposerInset(doc: Document = document, win: Window & typeo
 
   return {
     current: () => inset,
-    unitPx: () => unit,
-    viewportCss: () => viewportCssSize({ innerWidth: win.innerWidth, innerHeight: win.innerHeight, viewportBottom, unitPx: unit }),
     update,
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
     stop() {
       win.clearInterval(timer);
       win.removeEventListener("resize", onResize);
@@ -121,7 +90,6 @@ export function startComposerInset(doc: Document = document, win: Window & typeo
       resize?.disconnect();
       probe.remove();
       doc.documentElement.style.removeProperty(COMPOSER_INSET_VAR);
-      listeners.clear();
     },
   };
 }

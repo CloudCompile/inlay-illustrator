@@ -403,20 +403,20 @@ export const CHAT_SIDE_CSS = String.raw`
   font: 600 12px/1.2 ui-sans-serif, system-ui, sans-serif;
   pointer-events: none;
 }
-/* Panel widths per mode; the floating panel uses them to stay right-aligned with its toggle (AM 0.9.89). */
-.ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"] { --ii-am-floating-panel-width: 172px; }
+/* Panel widths per mode (incl. the generate button); the floating panel uses them to stay right-aligned with its toggle (AM 0.9.89). */
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"] { --ii-am-floating-panel-width: 208px; }
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"],
-.ii-am-root .ii-am-chat-count[data-ii-count-mode="split"] { --ii-am-floating-panel-width: 258px; }
-.ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 242px; }
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="split"] { --ii-am-floating-panel-width: 294px; }
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 278px; }
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"][data-ii-scene-available="true"],
-.ii-am-root .ii-am-chat-count[data-ii-count-mode="split"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 328px; }
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="split"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 364px; }
 @media (max-width: 640px) {
-  .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"] { --ii-am-floating-panel-width: 208px; }
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"] { --ii-am-floating-panel-width: 252px; }
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"],
-  .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"] { --ii-am-floating-panel-width: 324px; }
-  .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 278px; }
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"] { --ii-am-floating-panel-width: 368px; }
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 322px; }
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"][data-ii-scene-available="true"],
-  .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 394px; }
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 438px; }
 }
 .ii-am-root .ii-am-chat-count__panel {
   position: absolute;
@@ -531,6 +531,19 @@ export const CHAT_SIDE_CSS = String.raw`
   height: 48px;
 }
 .ii-am-root .ii-am-chat-count[data-ii-floating-below="true"] .ii-am-chat-count__menu { top: calc(100% + 6px); bottom: auto; }
+.ii-am-root .ii-am-chat-count__generate { width: 32px; }
+.ii-am-root .ii-am-chat-count__generate svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+.ii-am-root .ii-am-chat-count__generate:disabled { color: rgba(241, 229, 207, .32); cursor: default; }
+
+/* Runtime host corner (drawer launcher setting, data-ii-corner; none = bottom right). Top corners keep the toast stack
+   below the toggle; left corners mirror it. The floating count toggle keeps its own position. */
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] { top: 18px; bottom: auto; }
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner$="-left"] { left: 18px; right: auto; }
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-toast-stack { max-height: calc(100vh - var(--ii-am-composer-inset, 66px) - 86px); }
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner$="-left"] .ii-am-chat-count:not([data-ii-floating="true"]) { justify-content: flex-start; }
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner$="-left"] .ii-am-chat-count:not([data-ii-floating="true"]) .ii-am-chat-count__panel { right: auto; left: 50px; }
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-count:not([data-ii-floating="true"]) { z-index: 1; }
+.ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-count:not([data-ii-floating="true"]) .ii-am-chat-count__menu { top: calc(100% + 6px); bottom: auto; }
 
 /* error dialog */
 .ii-am-root .ii-am-chat-error-backdrop {
@@ -601,6 +614,15 @@ export const CHAT_SIDE_CSS = String.raw`
   .ii-am-root .ii-am-chat-count__toggle { grid-auto-flow: column; width: auto; min-width: 44px; height: 44px; padding: 0 10px; gap: 5px; }
   .ii-am-root .ii-am-chat-count__toggle-icon { display: grid; width: 16px; height: 16px; place-items: center; color: var(--ii-am-chat-muted); }
   .ii-am-root .ii-am-chat-count__toggle-icon svg { display: block; width: 16px; height: 16px; }
+  .ii-am-root .ii-am-chat-count__generate { width: 40px; }
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner] { inset: auto 0 0 0; }
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner$="-left"] .ii-am-chat-count:not([data-ii-floating="true"]) { right: auto; left: max(12px, env(safe-area-inset-left, 0px)); justify-items: start; }
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner$="-left"] .ii-am-chat-count:not([data-ii-floating="true"]) .ii-am-chat-count__panel { right: auto; left: 0; }
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-count:not([data-ii-floating="true"]) { top: calc(env(safe-area-inset-top, 0px) + 56px); bottom: auto; }
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-count:not([data-ii-floating="true"]) .ii-am-chat-count__panel { top: calc(100% + 8px); bottom: auto; }
+  /* Top corners: toasts below the toggle (and below the open panel). */
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-runtime[data-ii-count="true"] .ii-am-chat-toast-stack { top: calc(env(safe-area-inset-top, 0px) + 108px); max-height: min(216px, calc(100dvh - 184px)); }
+  .ii-am-root.ii-am-chat-runtime-host[data-ii-corner^="top-"] .ii-am-chat-runtime[data-ii-count="true"]:has(.ii-am-chat-count[data-ii-expanded="true"]) .ii-am-chat-toast-stack { top: calc(env(safe-area-inset-top, 0px) + 164px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .ii-am-root .ii-am-chat-spinner,
@@ -609,6 +631,21 @@ export const CHAT_SIDE_CSS = String.raw`
   .ii-am-root .ii-am-chat-toast__progress { transition: none; }
 }
 @keyframes ii-am-chat-spin { to { transform: rotate(360deg); } }
+`;
+
+/**
+ * Rules on host elements, kept apart from CHAT_SIDE_CSS. The host app root is isolated, so its drawer (wrapper z-index
+ * 9992) cannot cover body-level layers whatever their z-index: hide the chat runtime host (count toggle, toasts) while
+ * the viewport drawer is open. The open class is a CSS-module name with a build hash, so match its prefix.
+ * The drawer's edge handle stays above the app overlay (same isolation): hide it while our overlay is open.
+ */
+export const HOST_LAYERING_CSS = String.raw`
+body:has([class*="_wrapperOpen_"] > [data-lumiverse-surface="viewport-drawer"]) .ii-am-root.ii-am-chat-runtime-host:not([data-ii-zoom="true"]) {
+  visibility: hidden !important;
+}
+body:has(.ii-am-overlay[data-state="open"]) [data-app-root] button[class*="_drawerTab_"] {
+  visibility: hidden !important;
+}
 `;
 
 /** Selector prefixes every rule must start from (checked by tests). */

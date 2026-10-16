@@ -12,7 +12,7 @@ how the overlay UI is mounted and styled, file ownership during the port, and ho
 | `src/shared/contract/**` | Shared types, defaults and normalizers: config, character document, chat data / Image History, RPC protocol, storage layout. |
 | `src/backend.ts` | Backend entry: per-user runtime (services + pipeline + analysis + RPC router), interceptor, host events, JSON fetch bridge. See docs/BACKEND.md. |
 | `src/backend/**` | `services/` (storage, LLM, images, image bytes, sources, events, run log), `pipeline/` (chat illustration jobs over the engine), `analysis/` (asset analysis and character features), `rpc/` (router + handler groups), `testing/` (fake host / services). See docs/BACKEND.md. |
-| `src/frontend.tsx` | Frontend entry: injects styles, JSON fetch bridge, chat side (footer, history edge controls, zoom), FAB, launchers, overlay controller. |
+| `src/frontend.tsx` | Frontend entry: injects styles, JSON fetch bridge, chat side (footer, history edge controls, zoom, count toggle + toasts), launchers, overlay controller. |
 | `src/frontend/overlay/**` | The Preact overlay app: `controller.tsx` (mount, open/close, Escape), `host.ts` (mount fallbacks), `App.tsx` (shell), `settings/`, `workspace/`, `roster/`, `launcher.tsx`, `labels.ts` (English labels per screen), `ui/` (component kit), `styles/` (Tailwind input + generated CSS). |
 | `src/frontend/{rpc,state,chat,zoom}/**` | RPC client, app state layer, chat-side controls, zoom workspace. |
 | `src/build/**` | Build-time tools: `build-css.ts` (Tailwind CLI + scoping), `css-scope.ts` (scoper and scope checker). Never bundled. |
@@ -52,7 +52,7 @@ The root element is `div.ii-am-root.ii-am-overlay[data-state]`. It is `position:
 
 **Escape.** While the overlay is open, a capture-phase `keydown` listener on `window` handles Escape that comes from inside the root (or from the page body). It calls `preventDefault` and `stopPropagation` (the host uses Escape to stop generation) and closes only the top-most layer from the `LayerStack` (dialog, popover, select, mobile drawer). With no layer open it closes the overlay.
 
-**Launchers.** The drawer tab is a small status panel with an "Open Inlay Illustrator" button. An input-bar action opens the overlay. The FAB "settings" item opens the overlay on the settings area.
+**Launchers.** The drawer tab is a small status panel with an "Open Inlay Illustrator" button. An input-bar action opens the overlay. The drawer panel also sets the screen corner of the chat count toggle and toast stack.
 
 **Mobile.** `useIsMobile()` mirrors the host rule (`<=600px` or `pointer: coarse`). On mobile the rail is hidden, the sidebar becomes a drawer, and the tabs move below the header.
 
