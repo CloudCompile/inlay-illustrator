@@ -51,14 +51,29 @@ export interface StripLayout { width: number; height: number; panels: PanelLayou
 
 export type WebtoonStripStatus = "planning" | "generating" | "complete" | "error" | "cancelled";
 
+/** Normalized box in image coordinates (0..1). */
+export interface CutoutBox { left: number; top: number; right: number; bottom: number }
+
+/** Character cut-out of a frame-break take (drawn over the panel image, unclipped by the frame). */
+export interface WebtoonPanelCutout {
+  imageId: string;
+  url: string;
+  /** Box of the solid pixels. */
+  bbox: CutoutBox;
+  /** Character area: rows of "0" / "1" cells over the whole image (balloons keep off the "1" cells). */
+  mask: string[];
+}
+
 export interface WebtoonPanelTake {
   imageId: string;
-  /** `/api/v1/image-gen/results/<imageId>`. */
+  /** `/api/v1/image-gen/results/<imageId>`; a composed frame-break panel (an upload): `/api/v1/images/<imageId>`. */
   url: string;
   seed: string;
   width: number;
   height: number;
   createdAt: number;
+  /** Frame-break take: the panel image is the inpainted background with this cut-out drawn in. */
+  cutout?: WebtoonPanelCutout;
 }
 
 export interface WebtoonPanelState {

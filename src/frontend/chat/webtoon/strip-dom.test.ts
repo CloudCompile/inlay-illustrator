@@ -72,6 +72,19 @@ describe("webtoon strip DOM", () => {
     expect(canvas.querySelectorAll("[data-ii-wt-hover]").length).toBe(1);
   });
 
+  test("frame-break cut-out drawn over its panel; phone layout marks the canvas narrow (controls on the left edge)", () => {
+    const v = view();
+    const panel = v.layout!.panels[0]!;
+    v.layout = { ...v.layout!, width: 506, panels: [{ ...panel, frameBreak: "top", cutout: { src: "/api/v1/image-gen/results/cut-1" } }, ...v.layout!.panels.slice(1)] };
+    const canvas = renderStrip(doc, v, { onReroll() {}, onSelectTake() {}, onEditText() {} }, { busyPanels: new Set(), stripBusy: false, labels })!;
+    expect(canvas.getAttribute("data-ii-wt-narrow")).toBe("true");
+    const cut = canvas.querySelectorAll("[data-ii-wt-cutout]");
+    expect(cut.length).toBe(1);
+    expect(cut[0]!.querySelector("img")!.getAttribute("src")).toBe("/api/v1/image-gen/results/cut-1");
+    expect(parseFloat((cut[0] as HTMLElement).style.top)).toBeCloseTo(panel.rect[1], 1);
+    expect(renderStrip(doc, view(), { onReroll() {}, onSelectTake() {}, onEditText() {} }, { busyPanels: new Set(), stripBusy: false, labels })!.hasAttribute("data-ii-wt-narrow")).toBe(false);
+  });
+
   test("no layout yet -> nothing to draw", () => {
     expect(renderStrip(doc, { ...view(), layout: null }, { onReroll() {}, onSelectTake() {}, onEditText() {} }, { busyPanels: new Set(), stripBusy: true, labels })).toBeNull();
   });

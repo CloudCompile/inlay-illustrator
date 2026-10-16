@@ -191,6 +191,11 @@ export interface ResolvedImageTarget {
   model: string;
   isNovelAIV5: boolean;
   comfyuiWorkflowId: string;
+  /**
+   * The connection's saved parameters could be read (Lumiverse returns `default_parameters` with the connection), so its saved
+   * `rawRequestOverride` is merged under ours. False: a raw override we send would replace one the user saved unseen.
+   */
+  connectionDefaultsReadable?: boolean;
 }
 
 export interface ImageBytes { data: string; mimeType: string }

@@ -63865,6 +63865,333 @@ async function updateSidecar(storage, chatId, mutate, tree) {
   });
 }
 
+// src/backend/pipeline/providers.ts
+var SCOPE_PREFIX = "inlay-run:";
+
+class ProviderRunRegistry {
+  runs = new Map;
+  counter = 0;
+  register(context) {
+    this.counter += 1;
+    const runId = `${Date.now().toString(36)}-${this.counter.toString(36)}`;
+    this.runs.set(runId, context);
+    return runId;
+  }
+  release(runId) {
+    this.runs.delete(runId);
+  }
+  queueScopeKey(runId) {
+    return `${SCOPE_PREFIX}${runId}`;
+  }
+  resolve(request) {
+    const key = typeof request.providerRef?.queueScopeKey === "string" ? request.providerRef.queueScopeKey : "";
+    return key.startsWith(SCOPE_PREFIX) ? this.runs.get(key.slice(SCOPE_PREFIX.length)) ?? null : null;
+  }
+  get size() {
+    return this.runs.size;
+  }
+}
+var rec3 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str3 = (v) => v == null ? "" : String(v).trim();
+var num = (v, fallback, min, max) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+var dim = (v, fallback) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.min(2048, Math.max(64, Math.round(n))) : fallback;
+};
+function bytesToBase642(bytes) {
+  let binary = "";
+  const chunk = 32768;
+  for (let i = 0;i < bytes.length; i += chunk)
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  return btoa(binary);
+}
+function base64ToBytes2(data) {
+  const binary = atob(data);
+  const out = new Uint8Array(binary.length);
+  for (let i = 0;i < binary.length; i += 1)
+    out[i] = binary.charCodeAt(i);
+  return out;
+}
+function toImageBytes(value, fallbackMime = "image/png") {
+  if (!value)
+    return null;
+  if (typeof value === "string") {
+    const m = /^data:([^;,]+);base64,(.*)$/su.exec(value);
+    return m ? { data: m[2], mimeType: m[1] } : value.trim() ? { data: value.trim(), mimeType: fallbackMime } : null;
+  }
+  if (value instanceof Uint8Array)
+    return value.length ? { data: bytesToBase642(value), mimeType: fallbackMime } : null;
+  const r = rec3(value);
+  if (typeof r.data === "string" && r.data)
+    return { data: r.data, mimeType: str3(r.mimeType) || str3(r.mime_type) || fallbackMime };
+  if (r.bytes instanceof Uint8Array && r.bytes.length)
+    return { data: bytesToBase642(r.bytes), mimeType: str3(r.mimeType) || fallbackMime };
+  if (r.image !== undefined)
+    return toImageBytes(r.image, fallbackMime);
+  return null;
+}
+function toProviderError(error) {
+  if (isAbortLike(error) || !(error instanceof RpcFailure))
+    return error;
+  const e = error.error;
+  const details = rec3(e.details);
+  const status = Number(details.status ?? details.httpStatus);
+  return Object.assign(new Error(e.message, { cause: error }), {
+    code: e.detailCode || (e.code === "timeout" ? "REQUEST_TIMEOUT" : e.code === "cancelled" ? "REQUEST_ABORTED" : e.code),
+    ...e.retryable !== undefined ? { retryable: e.retryable } : e.code === "timeout" ? { retryable: true } : {},
+    ...Number.isFinite(status) && status > 0 ? { status } : {},
+    rpcError: e
+  });
+}
+async function generateImage(services, request, options) {
+  try {
+    return await services.images.generate(request, options);
+  } catch (error) {
+    throw toProviderError(error);
+  }
+}
+function extensionFor(mime) {
+  return mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
+}
+function emitProgress(provider, onEvent, ctx, progress) {
+  ctx?.onProgress?.(progress);
+  if (!onEvent)
+    return;
+  if (progress.queue)
+    onEvent({ type: "queue", provider, requestId: "", queuePosition: progress.queue.position, queueDepth: progress.queue.depth });
+  else if (progress.total)
+    onEvent({ type: "progress", provider, requestId: "", stage: "generating", value: progress.done ?? 0, max: progress.total, ratio: progress.fraction ?? 0 });
+}
+function engineResult(provider, result, extra = {}) {
+  const mimeType = result.mimeType || "image/png";
+  return {
+    provider,
+    bytes: result.dataBase64 ? base64ToBytes2(result.dataBase64) : new Uint8Array(0),
+    mimeType,
+    extension: extensionFor(mimeType),
+    seed: String(result.seed ?? ""),
+    width: result.width,
+    height: result.height,
+    requestedSize: { width: result.width, height: result.height },
+    actualSize: { width: result.width, height: result.height },
+    requestId: result.imageId,
+    ...extra,
+    providerMetadata: {
+      imageId: result.imageId,
+      url: result.url,
+      lumiverseProvider: result.lumiverseProvider,
+      generationProvider: result.provider,
+      model: result.model,
+      attempts: result.attempts,
+      sentParameters: result.sentParameters,
+      ...rec3(extra.providerMetadata)
+    }
+  };
+}
+function normalizeCharacterPrompts(value) {
+  return (Array.isArray(value) ? value : []).map((raw) => {
+    const r = rec3(raw);
+    return {
+      prompt: str3(r.prompt),
+      uc: str3(r.uc),
+      centerX: num(r.centerX, 0.5, 0, 1),
+      centerY: num(r.centerY, 0.5, 0, 1),
+      actorSlot: str3(r.actorSlot) || undefined,
+      coordinateMode: r.coordinateMode === "automatic" ? "automatic" : "fixed"
+    };
+  }).filter((c) => c.prompt || c.uc);
+}
+function buildNovelAIRequest(request, ctx, extras = {}) {
+  const rawPrompt = typeof request.prompt === "string" ? request.prompt : "";
+  const force = request.forceNsfwPrefix ?? ctx.forceNsfwPrefix();
+  const prompt = force && rawPrompt.trim() ? prependNsfwTag2(rawPrompt) : rawPrompt;
+  const config = { ...rec3(request.config), width: request.width, height: request.height, negativePrompt: request.negativePrompt, seed: request.seed };
+  const input = str3(prompt);
+  if (!input)
+    throw Object.assign(new Error("NovelAI prompt is empty."), { code: "NOVELAI_PROMPT_EMPTY", retryable: false });
+  const model = str3(ctx.model) || str3(config.naiModel) || "nai-diffusion-5-full";
+  const v4 = /^nai-diffusion-(?:4|5)(?:-|$)/u.test(model);
+  const v5Profile = config.analysisProfile === "v5-hybrid";
+  const forced = config.forceCharacterCoordinates === true;
+  const characters = normalizeCharacterPrompts(config.characterPrompts);
+  const anyFixed = characters.some((c) => c.coordinateMode !== "automatic");
+  const useCoords = forced ? characters.length > 0 && anyFixed : v5Profile ? !!config.useCoords && characters.length > 0 && anyFixed : !!config.useCoords && characters.length > 1 && anyFixed;
+  const negative = str3(config.negativePrompt);
+  const parameters = { negative_prompt: negative };
+  if (v4) {
+    parameters.v4_prompt = { caption: { base_caption: input, char_captions: toNovelAICharacterCaptions2(characters, "prompt", v5Profile || forced) }, use_coords: useCoords, use_order: config.useOrder !== false };
+    parameters.v4_negative_prompt = { caption: { base_caption: negative, char_captions: toNovelAICharacterCaptions2(characters, "uc", v5Profile || forced) }, legacy_uc: false };
+  }
+  const weighted = applyNonArtistWeightToRequest2({ input, model, action: "generate", parameters }, config);
+  const body = weighted.body;
+  const seedText = normalizeSeed(config.seed);
+  const seed = seedText ? Number(seedText) : randomSeed2();
+  const pos = body.parameters.v4_prompt?.caption.char_captions ?? [];
+  const neg = body.parameters.v4_negative_prompt?.caption.char_captions ?? [];
+  const novelai = {
+    sampler: str3(config.sampler) || "k_euler_ancestral",
+    noiseSchedule: str3(config.noiseSchedule) || "karras",
+    steps: Math.round(num(config.steps, 28, 1, 50)),
+    scale: Number(config.scale) || 6,
+    cfgRescale: Number.isFinite(Number(config.cfgRescale)) ? Number(config.cfgRescale) : 0.5,
+    qualityToggle: config.qualityToggle !== false,
+    useCoords,
+    useOrder: config.useOrder !== false,
+    characters: v4 ? pos.map((c, i) => ({
+      prompt: c.char_caption,
+      negativePrompt: neg[i]?.char_caption ?? "",
+      ...useCoords && c.centers[0] ? { center: { x: c.centers[0].x, y: c.centers[0].y } } : {}
+    })) : []
+  };
+  if (extras.characterReferences?.length && config.characterReferenceEnabled !== false && /^nai-diffusion-4-5/u.test(model))
+    novelai.characterReferences = extras.characterReferences;
+  if (extras.imageToImage)
+    novelai.imageToImage = extras.imageToImage;
+  const generateRequest = {
+    purpose: ctx.purpose,
+    prompt: body.input,
+    negativePrompt: body.parameters.negative_prompt,
+    width: dim(config.width, 832),
+    height: dim(config.height, 1216),
+    seed,
+    novelai,
+    ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
+    model,
+    ...ctx.ownerChatId ? { ownerChatId: ctx.ownerChatId } : {},
+    ...ctx.ownerCharacterId ? { ownerCharacterId: ctx.ownerCharacterId } : {},
+    retries: 0,
+    queue: true
+  };
+  return { request: generateRequest, body, effectivePrompt: body.input, finalizedPrompt: weighted.finalizedPrompt };
+}
+var DEFAULT_CONTEXT = { purpose: "chat", forceNsfwPrefix: () => false };
+async function prepareReferences(services, refs, signal) {
+  const references = [];
+  const failures = [];
+  for (const raw of refs) {
+    const r = rec3(raw);
+    const asset = rec3(r.asset);
+    try {
+      const prepared = toImageBytes(r.image) ?? await services.imageBytes.getAsset(asset, { signal });
+      const type = str3(r.type);
+      references.push({
+        ...prepared,
+        strength: num(r.strength, 0.6, 0, 1),
+        fidelity: num(r.fidelity, 1, 0, 1),
+        type: type === "style" || type === "character&style" ? type : "character"
+      });
+    } catch (error) {
+      if (signal?.aborted)
+        throw error;
+      failures.push({ asset: str3(asset.key) || str3(asset.name), error: error instanceof Error ? error.message : String(error) });
+    }
+  }
+  return { references, failures };
+}
+function createNovelAIAdapter(services, registry) {
+  return {
+    provider: "novelai",
+    serializesRequests: true,
+    async generate(request, options = {}) {
+      const ctx = registry.resolve(request) ?? DEFAULT_CONTEXT;
+      const onEvent = options.onEvent;
+      const signal = request.signal ?? options.signal;
+      onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "queued" });
+      const refs = Array.isArray(request.references) ? request.references : [];
+      const prepared = refs.length ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
+      const i2iRaw = rec3(request.imageToImage);
+      const i2iImage = request.imageToImage ? toImageBytes(i2iRaw.image) : null;
+      const build = buildNovelAIRequest(request, ctx, {
+        characterReferences: prepared.references,
+        ...i2iImage ? { imageToImage: { ...i2iImage, strength: num(i2iRaw.strength, 0.4, 0.4, 1), noise: num(i2iRaw.noise, 0, 0, 1) } } : {}
+      });
+      onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "generating" });
+      const result = await generateImage(services, build.request, { signal, onProgress: (p) => emitProgress("novelai", onEvent, ctx, p) });
+      onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "completed" });
+      return engineResult("novelai", result, {
+        effectivePrompt: build.effectivePrompt,
+        finalizedPrompt: build.finalizedPrompt,
+        providerMetadata: {
+          nonArtistPromptWeight: rec3(build.finalizedPrompt).weight,
+          referenceFailures: prepared.failures,
+          requestBody: build.body
+        }
+      });
+    }
+  };
+}
+function createComfyAdapter(services, registry) {
+  return {
+    provider: "comfy-ui",
+    async generate(request, options = {}) {
+      const ctx = registry.resolve(request) ?? DEFAULT_CONTEXT;
+      const signal = request.signal ?? options.signal;
+      options.onEvent?.({ type: "stage", provider: "comfy-ui", requestId: "", stage: "connecting" });
+      const source = toImageBytes(request.outfitReference) ?? toImageBytes(request.characterReference);
+      const seedText = normalizeSeed(request.seed);
+      const result = await generateImage(services, {
+        purpose: ctx.purpose,
+        prompt: str3(request.prompt),
+        negativePrompt: str3(request.negativePrompt),
+        width: Math.max(1, Math.round(Number(request.width) || 832)),
+        height: Math.max(1, Math.round(Number(request.height) || 1216)),
+        seed: seedText ? Number(seedText) : randomSeed2(),
+        comfy: { ...ctx.comfyuiWorkflowId ? { workflowId: ctx.comfyuiWorkflowId } : {}, ...source ? { sourceImage: source } : {} },
+        ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
+        ...ctx.model ? { model: ctx.model } : {},
+        ...ctx.ownerChatId ? { ownerChatId: ctx.ownerChatId } : {},
+        ...ctx.ownerCharacterId ? { ownerCharacterId: ctx.ownerCharacterId } : {},
+        retries: 0
+      }, { signal, onProgress: (p) => emitProgress("comfy-ui", options.onEvent, ctx, p) });
+      options.onEvent?.({ type: "stage", provider: "comfy-ui", requestId: "", stage: "completed" });
+      return engineResult("comfy-ui", result);
+    }
+  };
+}
+function createGenericAdapter(services, registry) {
+  return {
+    provider: "chan-server",
+    async generate(request, options = {}) {
+      const ctx = registry.resolve(request) ?? DEFAULT_CONTEXT;
+      const signal = request.signal ?? options.signal;
+      const seedText = normalizeSeed(request.seed);
+      const result = await generateImage(services, {
+        purpose: ctx.purpose,
+        prompt: str3(request.prompt),
+        negativePrompt: str3(request.negativePrompt),
+        width: Math.max(1, Math.round(Number(request.width) || 832)),
+        height: Math.max(1, Math.round(Number(request.height) || 1216)),
+        seed: seedText ? Number(seedText) : randomSeed2(),
+        ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
+        ...ctx.model ? { model: ctx.model } : {},
+        ...ctx.ownerChatId ? { ownerChatId: ctx.ownerChatId } : {},
+        ...ctx.ownerCharacterId ? { ownerCharacterId: ctx.ownerCharacterId } : {},
+        retries: 0
+      }, { signal, onProgress: (p) => emitProgress("chan-server", options.onEvent, ctx, p) });
+      return engineResult("chan-server", result);
+    }
+  };
+}
+function createImageProviderAdapters(services, registry) {
+  return {
+    novelai: createNovelAIAdapter(services, registry),
+    "comfy-ui": createComfyAdapter(services, registry),
+    "chan-server": createGenericAdapter(services, registry)
+  };
+}
+function createComfyReferencePreparer(services) {
+  return {
+    async prepare(reference, options = {}) {
+      const asset = rec3(reference.asset);
+      const bytes = await services.imageBytes.getAsset(asset, { signal: options.signal });
+      return { bytes: base64ToBytes2(bytes.data), mimeType: bytes.mimeType, extension: extensionFor(bytes.mimeType) };
+    }
+  };
+}
+
 // src/backend/webtoon/planner-prompt.ts
 var PLANNER_PROMPT_TEMPLATE = String.raw`You are the storyboard artist for a vertical-scroll Korean-style webtoon (one long strip, 690 px wide, read top to bottom). You adapt ONE chat reply (below) into a short webtoon episode. A code layout engine letters your text on top of the images using YOUR character positions and balloon anchors, so positions matter.
 
@@ -63893,6 +64220,7 @@ Layouts:
 - "fade_white": full width, fades into white at the bottom (quiet ending, transition).
 - "title": the first panel only (see rule 1).
 Use at least one inset per episode.
+Frame-break: set "frame_break": true on 1 or 2 "action" panels where ONE character makes a strong move (portrait 832x1216 or tall 704x1472, layout "full_width" or an inset, framing "portrait", "upper body" or "cowboy shot", character y 0.5 or 0.7 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Write the base tags as usual (place and light included). Leave "frame_break" false on every other panel.
 
 Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Use the positions to leave room for the balloons: if a balloon goes top-left, put the speaker at x 0.5-0.7 and y 0.5-0.7 so the top-left area stays empty, and describe what fills the empty area in the base tags (sky, ceiling, wall, window, empty street). Two characters must not share the same x.
 
@@ -63914,7 +64242,7 @@ Output: JSON only, this shape (example values):
  "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
  "panels": [
   {"id": 1, "kind": "image", "beat": "dialogue", "moment": "They argue on the bridge.", "shot": "low-angle two-shot, she is in front",
-   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left",
+   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left", "frame_break": false,
    "nai": {"base": "cowboy shot, from below, outdoors, bridge, sky, sunset\nTwo students on a bridge, open evening sky fills the upper left.",
            "characters": [{"name": "A", "x": 0.5, "y": 0.7, "framing": "cowboy shot", "shoes_off": false, "drop_outfit": [], "prompt": "standing, arms crossed, pout, looking at another\nShe glares at him."},
                           {"name": "B", "x": 0.9, "y": 0.5, "framing": "upper body", "shoes_off": false, "drop_outfit": ["indoor slippers"], "prompt": "hand in pocket, half-closed eyes\nHe shrugs."}]},
@@ -63989,6 +64317,9 @@ var PARTS2 = ["head", "top", "bottom", "legs", "feet"];
 var OUTER_TOP = /jacket|blazer|coat|hoodie|cardigan|gakuran|sweater|uniform|apron|undershirt/iu;
 var HANDS_ONLY = { head: 0, top: 0.5, bottom: 0, legs: 0, feet: 0 };
 var WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panels, border";
+var TRANSPARENT_TAGS = "transparent background, has alpha";
+var CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
+var CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
 var tags = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 var fmt = (n) => String(Math.round(n * 100) / 100);
 function outfitPrompt(outfit, framing, weights, shoesOff, drop = []) {
@@ -64067,7 +64398,8 @@ function buildPanelRequest(panel, cast, style) {
   const [baseTags, baseSentence] = splitPrompt(panel.nai.base);
   const furry = chars.map((c) => cast.get(c.name)).filter((m) => isFurry(m.identity));
   const species = furry.length && furry.length === chars.length ? `${fmt(ID_WEIGHT_FURRY)}::${[furryGenderTag(furry[0].gender) || "furry", "anthro", speciesName(furry[0].identity)].join(", ")}::` : "";
-  const prompt = [countTags(chars.map((c) => cast.get(c.name).gender)), species, style.style, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
+  const head = [countTags(chars.map((c) => cast.get(c.name).gender)), species, style.style];
+  const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
 ${baseSentence}` : "");
   const keyTags = {};
   const characters = chars.map((c) => {
@@ -64085,7 +64417,8 @@ ${sentence}` : ""),
     };
   });
   const [width, height] = panel.size.split("x").map(Number);
-  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags };
+  const cutoutPrompt = panel.frame_break ? [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", ") : undefined;
+  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...cutoutPrompt ? { cutoutPrompt } : {} };
 }
 function engineImageRequest(request, style, seed) {
   return {
@@ -64112,8 +64445,8 @@ function engineImageRequest(request, style, seed) {
 }
 
 // src/backend/webtoon/roster.ts
-var rec3 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str3 = (v) => v == null ? "" : String(v).trim();
+var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str4 = (v) => v == null ? "" : String(v).trim();
 var PARTS3 = ["head", "top", "bottom", "legs", "feet"];
 var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 function mentions(text, names) {
@@ -64124,17 +64457,17 @@ function rosterEntry(candidate, currentOutfitId) {
   const form = forms.find((f) => f.formId === candidate.defaultFormId) ?? forms[0];
   if (!form)
     return null;
-  const gender = str3(form.gender) || str3(candidate.gender);
-  const outfits = (form.outfits ?? []).map((o) => ({ ...rec3(o), id: str3(rec3(o).outfitId ?? rec3(o).id), label: str3(o.label) })).filter((o) => o.id && PARTS3.some((p) => str3(o[p])));
+  const gender = str4(form.gender) || str4(candidate.gender);
+  const outfits = (form.outfits ?? []).map((o) => ({ ...rec4(o), id: str4(rec4(o).outfitId ?? rec4(o).id), label: str4(o.label) })).filter((o) => o.id && PARTS3.some((p) => str4(o[p])));
   const ids = outfits.map((o) => o.id);
-  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str3(form.defaultOutfitId)) ? str3(form.defaultOutfitId) : ids[0] ?? "";
+  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str4(form.defaultOutfitId)) ? str4(form.defaultOutfitId) : ids[0] ?? "";
   const main = compileMainPrompt(form.basePromptGroups, gender);
   return {
     key: candidate.key,
     name: candidate.characterName.trim(),
     gender,
-    formLabel: str3(form.label),
-    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS3.flatMap((p) => str3(o[p]) ? [[p, str3(o[p])]] : [])) })),
+    formLabel: str4(form.label),
+    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS3.flatMap((p) => str4(o[p]) ? [[p, str4(o[p])]] : [])) })),
     currentOutfitId: current,
     identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", ")
   };
@@ -64170,10 +64503,10 @@ async function loadWebtoonContext(services, input) {
   const custom = [...docs.values()].flatMap((d) => d.customCharacters);
   const target = await services.images.resolveTarget();
   const runtime = buildRuntimeConfig(config, docs.get(primaryId) ?? null, { resolvedImageModel: target.model });
-  const cp = rec3(runtime.characterPrompt);
-  const forms = { ...rec3(cp.characterForms) };
+  const cp = rec4(runtime.characterPrompt);
+  const forms = { ...rec4(cp.characterForms) };
   for (const id of memberIds.slice(1))
-    for (const [k, v] of Object.entries(rec3(rec3(docs.get(id)?.characterPrompt).characterForms)))
+    for (const [k, v] of Object.entries(rec4(rec4(docs.get(id)?.characterPrompt).characterForms)))
       if (!(k in forms))
         forms[k] = v;
   runtime.characterPrompt = { ...cp, characterForms: forms };
@@ -64207,7 +64540,7 @@ async function loadWebtoonContext(services, input) {
       previous.set(ref.lorebook_prompt_key, ref.outfit_id);
   const candidates = [...ft.analyzerIdentityCandidates, ...ft.analyzerPersonaCandidates];
   const all = candidates.flatMap((c) => {
-    const entry = rosterEntry(c, previous.get(str3(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
+    const entry = rosterEntry(c, previous.get(str4(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
     return entry && entry.name ? [{ entry, names: [c.characterName, ...c.aliases ?? []] }] : [];
   });
   let roster = all.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
@@ -64225,12 +64558,342 @@ async function loadWebtoonContext(services, input) {
     characterId: primaryId,
     roster,
     style: {
-      style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str3).filter(Boolean).join(", "),
-      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, WEBTOON_NEGATIVE].map(str3).filter(Boolean).join(", ")),
+      style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str4).filter(Boolean).join(", "),
+      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, WEBTOON_NEGATIVE].map(str4).filter(Boolean).join(", ")),
       params,
-      framingWeights: rec3(cp.outfitPartFramingWeights)
+      framingWeights: rec4(cp.outfitPartFramingWeights)
     }
   };
+}
+
+// src/backend/webtoon/cutout.ts
+var FRAME_BREAK = {
+  solidAlpha: 128,
+  maskAlpha: 200,
+  maskBlock: 8,
+  minPart: 0.15,
+  minTransparent: 0.1,
+  headTop: 0.1,
+  maxShift: 0.12,
+  gridCols: 40,
+  gridFill: 0.3,
+  fillBlock: 8,
+  fillRadius: 4
+};
+var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+async function zlib(data, mode) {
+  const transform = mode === "compress" ? new CompressionStream("deflate") : new DecompressionStream("deflate");
+  const stream = new Blob([data]).stream().pipeThrough(transform);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+var CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0;n < 256; n += 1) {
+    let c = n;
+    for (let k = 0;k < 8; k += 1)
+      c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+function crc32(bytes) {
+  let c = 4294967295;
+  for (const b of bytes)
+    c = CRC_TABLE[(c ^ b) & 255] ^ c >>> 8;
+  return (c ^ 4294967295) >>> 0;
+}
+async function decodePng(bytes) {
+  if (SIGNATURE.some((b, i) => bytes[i] !== b))
+    throw new Error("Not a PNG image.");
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let width = 0, height = 0, colorType = -1;
+  const idat = [];
+  for (let at = 8;at + 8 <= bytes.length; ) {
+    const length = view.getUint32(at);
+    const type = String.fromCharCode(...bytes.subarray(at + 4, at + 8));
+    const body = bytes.subarray(at + 8, at + 8 + length);
+    if (type === "IHDR") {
+      width = view.getUint32(at + 8);
+      height = view.getUint32(at + 12);
+      colorType = body[9];
+      if (body[8] !== 8 || colorType !== 6 && colorType !== 2 || body[12] !== 0)
+        throw new Error(`Unsupported PNG (bit depth ${body[8]}, colour type ${colorType}, interlace ${body[12]}).`);
+    } else if (type === "IDAT")
+      idat.push(body);
+    else if (type === "IEND")
+      break;
+    at += 12 + length;
+  }
+  if (!width || !height || !idat.length)
+    throw new Error("The PNG has no image data.");
+  const joined = new Uint8Array(idat.reduce((n, c) => n + c.length, 0));
+  idat.reduce((at, c) => (joined.set(c, at), at + c.length), 0);
+  const raw = await zlib(joined, "decompress");
+  const channels = colorType === 6 ? 4 : 3;
+  const stride = width * channels;
+  if (raw.length < height * (stride + 1))
+    throw new Error("The PNG image data is truncated.");
+  const rows = new Uint8Array(height * stride);
+  for (let y = 0;y < height; y += 1) {
+    const filter = raw[y * (stride + 1)];
+    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    const out = y * stride;
+    for (let x = 0;x < stride; x += 1) {
+      const a = x >= channels ? rows[out + x - channels] : 0;
+      const b = y ? rows[out - stride + x] : 0;
+      const c = y && x >= channels ? rows[out - stride + x - channels] : 0;
+      let v = line[x];
+      if (filter === 1)
+        v += a;
+      else if (filter === 2)
+        v += b;
+      else if (filter === 3)
+        v += a + b >> 1;
+      else if (filter === 4) {
+        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      rows[out + x] = v & 255;
+    }
+  }
+  if (channels === 4)
+    return { width, height, data: rows };
+  const data = new Uint8Array(width * height * 4);
+  for (let i = 0, j = 0;i < rows.length; i += 3, j += 4) {
+    data[j] = rows[i];
+    data[j + 1] = rows[i + 1];
+    data[j + 2] = rows[i + 2];
+    data[j + 3] = 255;
+  }
+  return { width, height, data };
+}
+function chunk(type, body) {
+  const out = new Uint8Array(12 + body.length);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, body.length);
+  for (let i = 0;i < 4; i += 1)
+    out[4 + i] = type.charCodeAt(i);
+  out.set(body, 8);
+  view.setUint32(8 + body.length, crc32(out.subarray(4, 8 + body.length)));
+  return out;
+}
+async function encodePng(image) {
+  const { width, height, data } = image;
+  const stride = width * 4;
+  const raw = new Uint8Array(height * (stride + 1));
+  for (let y = 0;y < height; y += 1) {
+    const at = y * (stride + 1);
+    raw[at] = 2;
+    for (let x = 0;x < stride; x += 1)
+      raw[at + 1 + x] = data[y * stride + x] - (y ? data[(y - 1) * stride + x] : 0) & 255;
+  }
+  const header = new Uint8Array(13);
+  const hv = new DataView(header.buffer);
+  hv.setUint32(0, width);
+  hv.setUint32(4, height);
+  header.set([8, 6, 0, 0, 0], 8);
+  const parts = [Uint8Array.from(SIGNATURE), chunk("IHDR", header), chunk("IDAT", await zlib(raw, "compress")), chunk("IEND", new Uint8Array)];
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((at, p) => (out.set(p, at), at + p.length), 0);
+  return out;
+}
+function alphaInfo(image) {
+  const { width, height, data } = image;
+  let clear = 0, solid = 0, x0 = width, y0 = height, x1 = -1, y1 = -1;
+  for (let y = 0;y < height; y += 1) {
+    for (let x = 0;x < width; x += 1) {
+      const a = data[(y * width + x) * 4 + 3];
+      if (a === 0)
+        clear += 1;
+      if (a <= FRAME_BREAK.solidAlpha)
+        continue;
+      solid += 1;
+      if (x < x0)
+        x0 = x;
+      if (x > x1)
+        x1 = x;
+      if (y < y0)
+        y0 = y;
+      y1 = y;
+    }
+  }
+  const n = width * height;
+  return { transparent: clear / n, coverage: solid / n, bbox: x1 < 0 ? null : { left: x0 / width, top: y0 / height, right: (x1 + 1) / width, bottom: (y1 + 1) / height } };
+}
+function keepMainParts(image) {
+  const { width, height, data } = image;
+  const n = width * height;
+  const label = new Int32Array(n);
+  const sizes = [0];
+  const stack = new Int32Array(n);
+  for (let start = 0;start < n; start += 1) {
+    if (label[start] || data[start * 4 + 3] <= 32)
+      continue;
+    const id = sizes.length;
+    let top = 0, size = 0;
+    stack[top++] = start;
+    label[start] = id;
+    while (top) {
+      const i = stack[--top];
+      size += 1;
+      const x = i % width, y = (i - x) / width;
+      for (let dy = -1;dy <= 1; dy += 1) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= height)
+          continue;
+        for (let dx = -1;dx <= 1; dx += 1) {
+          const xx = x + dx, j = yy * width + xx;
+          if (xx < 0 || xx >= width || label[j] || data[j * 4 + 3] <= 32)
+            continue;
+          label[j] = id;
+          stack[top++] = j;
+        }
+      }
+    }
+    sizes.push(size);
+  }
+  const largest = Math.max(0, ...sizes);
+  if (sizes.every((s) => s === largest || s >= FRAME_BREAK.minPart * largest))
+    return image;
+  const out = new Uint8Array(data);
+  for (let i = 0;i < n; i += 1)
+    if (label[i] && sizes[label[i]] < FRAME_BREAK.minPart * largest)
+      out[i * 4 + 3] = 0;
+  return { width, height, data: out };
+}
+function shiftDown(image, dy) {
+  const stride = image.width * 4;
+  const data = new Uint8Array(image.data.length);
+  data.set(image.data.subarray(0, Math.max(0, image.height - dy) * stride), dy * stride);
+  return { ...image, data };
+}
+function headShift(info, height) {
+  if (!info.bbox)
+    return 0;
+  return Math.round(Math.min(FRAME_BREAK.maxShift, Math.max(0, FRAME_BREAK.headTop - info.bbox.top)) * height);
+}
+function backgroundMask(image, block = FRAME_BREAK.maskBlock) {
+  const { width, height, data } = image;
+  const mask = new Uint8Array(width * height);
+  for (let by = 0;by < height; by += block) {
+    for (let bx = 0;bx < width; bx += block) {
+      const ys = Math.min(height, by + block), xs = Math.min(width, bx + block);
+      let any = false;
+      for (let y = by;y < ys && !any; y += 1)
+        for (let x = bx;x < xs; x += 1)
+          if (data[(y * width + x) * 4 + 3] < FRAME_BREAK.maskAlpha) {
+            any = true;
+            break;
+          }
+      if (any)
+        for (let y = by;y < ys; y += 1)
+          mask.fill(1, y * width + bx, y * width + xs);
+    }
+  }
+  return mask;
+}
+function maskImage(mask, width, height) {
+  const data = new Uint8Array(width * height * 4);
+  for (let i = 0;i < mask.length; i += 1) {
+    const v = mask[i] ? 255 : 0;
+    data.set([v, v, v, 255], i * 4);
+  }
+  return { width, height, data };
+}
+function softFill(image) {
+  const { width, height, data } = image;
+  const b = FRAME_BREAK.fillBlock;
+  const bw = Math.ceil(width / b), bh = Math.ceil(height / b);
+  let sums = [new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh)];
+  const total = [0, 0, 0, 0];
+  for (let y = 0;y < height; y += 1) {
+    for (let x = 0;x < width; x += 1) {
+      const i = (y * width + x) * 4, cell = Math.floor(y / b) * bw + Math.floor(x / b), a = data[i + 3] / 255;
+      for (let c = 0;c < 3; c += 1) {
+        sums[c][cell] += data[i + c] * a;
+        total[c] += data[i + c] * a;
+      }
+      sums[3][cell] += a;
+      total[3] += a;
+    }
+  }
+  const r = FRAME_BREAK.fillRadius;
+  const blur = (src, horizontal) => {
+    const out = new Float64Array(src.length);
+    const [lines, len] = horizontal ? [bh, bw] : [bw, bh];
+    for (let l = 0;l < lines; l += 1) {
+      const at = (i) => horizontal ? l * bw + i : i * bw + l;
+      for (let i = 0;i < len; i += 1) {
+        let s = 0;
+        for (let k = Math.max(0, i - r);k <= Math.min(len - 1, i + r); k += 1)
+          s += src[at(k)];
+        out[at(i)] = s;
+      }
+    }
+    return out;
+  };
+  for (let pass = 0;pass < 3; pass += 1)
+    sums = sums.map((s) => blur(blur(s, true), false));
+  const mean = total[3] > 0 ? [0, 1, 2].map((c) => total[c] / total[3]) : [128, 128, 128];
+  const peak = Math.max(...sums[3]);
+  const colour = (cell, c) => sums[3][cell] > peak * 0.001 ? sums[c][cell] / sums[3][cell] : mean[c];
+  const out = new Uint8Array(data.length);
+  for (let y = 0;y < height; y += 1) {
+    const fy = Math.min(bh - 1, Math.max(0, (y + 0.5) / b - 0.5)), y0 = Math.floor(fy), y1 = Math.min(bh - 1, y0 + 1), ty = fy - y0;
+    for (let x = 0;x < width; x += 1) {
+      const fx = Math.min(bw - 1, Math.max(0, (x + 0.5) / b - 0.5)), x0 = Math.floor(fx), x1 = Math.min(bw - 1, x0 + 1), tx = fx - x0;
+      const i = (y * width + x) * 4, a = data[i + 3] / 255;
+      for (let c = 0;c < 3; c += 1) {
+        const top = colour(y0 * bw + x0, c) * (1 - tx) + colour(y0 * bw + x1, c) * tx;
+        const bottom = colour(y1 * bw + x0, c) * (1 - tx) + colour(y1 * bw + x1, c) * tx;
+        out[i + c] = Math.round(data[i + c] * a + (top * (1 - ty) + bottom * ty) * (1 - a));
+      }
+      out[i + 3] = 255;
+    }
+  }
+  return { width, height, data: out };
+}
+function flattenOver(base, top) {
+  if (base.width !== top.width || base.height !== top.height)
+    throw new Error(`Image sizes differ (${base.width}x${base.height} / ${top.width}x${top.height}).`);
+  const out = new Uint8Array(base.data.length);
+  for (let i = 0;i < out.length; i += 4) {
+    const a = top.data[i + 3] / 255;
+    for (let c = 0;c < 3; c += 1)
+      out[i + c] = Math.round(top.data[i + c] * a + base.data[i + c] * (1 - a));
+    out[i + 3] = 255;
+  }
+  return { width: base.width, height: base.height, data: out };
+}
+function characterGrid(image) {
+  const { width, height, data } = image;
+  const cols = FRAME_BREAK.gridCols, rows = Math.max(1, Math.round(cols * height / width));
+  const out = [];
+  for (let r = 0;r < rows; r += 1) {
+    let line = "";
+    const ya = Math.floor(r * height / rows), yb = Math.floor((r + 1) * height / rows);
+    for (let c = 0;c < cols; c += 1) {
+      const xa = Math.floor(c * width / cols), xb = Math.floor((c + 1) * width / cols);
+      let solid = 0;
+      for (let y = ya;y < yb; y += 1)
+        for (let x = xa;x < xb; x += 1)
+          if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
+            solid += 1;
+      line += solid >= FRAME_BREAK.gridFill * Math.max(1, (yb - ya) * (xb - xa)) ? "1" : "0";
+    }
+    out.push(line);
+  }
+  return out;
+}
+async function frameBreakInputs(generated) {
+  const transparent = keepMainParts(generated);
+  const first = alphaInfo(transparent);
+  if (first.transparent < FRAME_BREAK.minTransparent || !first.bbox)
+    throw new Error(`The cut-out has no transparent background (${Math.round(first.transparent * 100)}% clear).`);
+  const shift = headShift(first, transparent.height);
+  const cutout = shift ? shiftDown(transparent, shift) : transparent;
+  const mask = maskImage(backgroundMask(cutout), cutout.width, cutout.height);
+  return { cutout, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(cutout) };
 }
 
 // src/backend/webtoon/storyboard-schema.ts
@@ -64242,18 +64905,18 @@ var ANCHORS = ["top-left", "top-right", "top", "left", "right", "bottom-left", "
 var FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full body", "hands only"];
 var TEXT_TYPES = ["speech", "thought", "narration", "sfx"];
 var GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
-var str4 = { type: "string" };
-var num = { type: "number" };
+var str5 = { type: "string" };
+var num2 = { type: "number" };
 var textItem = {
   type: "object",
-  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str4, anchor: { type: "string", enum: [...ANCHORS] } },
+  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str5, anchor: { type: "string", enum: [...ANCHORS] } },
   required: ["type", "text", "anchor"]
 };
 var STORYBOARD_JSON_SCHEMA = {
   type: "object",
   properties: {
-    title: str4,
-    key_props: { type: "array", items: str4 },
+    title: str5,
+    key_props: { type: "array", items: str5 },
     panels: {
       type: "array",
       items: {
@@ -64262,29 +64925,30 @@ var STORYBOARD_JSON_SCHEMA = {
           id: { type: "integer" },
           kind: { type: "string", enum: ["image", "text_beat"] },
           beat: { type: "string", enum: [...BEATS] },
-          moment: str4,
-          shot: str4,
+          moment: str5,
+          shot: str5,
           size: { type: "string", enum: [...IMAGE_SIZES] },
           layout: { type: "string", enum: [...LAYOUTS] },
           scene_change: { type: "boolean" },
           pause: { type: "boolean" },
-          balloon_space: str4,
+          frame_break: { type: "boolean" },
+          balloon_space: str5,
           nai: {
             type: "object",
             properties: {
-              base: str4,
+              base: str5,
               characters: {
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
-                    name: str4,
-                    x: num,
-                    y: num,
+                    name: str5,
+                    x: num2,
+                    y: num2,
                     framing: { type: "string", enum: [...FRAMINGS] },
                     shoes_off: { type: "boolean" },
-                    drop_outfit: { type: "array", items: str4 },
-                    prompt: str4
+                    drop_outfit: { type: "array", items: str5 },
+                    prompt: str5
                   },
                   required: ["name", "x", "y", "framing", "prompt"]
                 }
@@ -64302,7 +64966,7 @@ var STORYBOARD_JSON_SCHEMA = {
 };
 
 // src/backend/webtoon/storyboard-validate.ts
-var LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
+var LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6, maxFrameBreaks: 2 };
 function normWords(s) {
   s = s.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
   return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
@@ -64635,12 +65299,43 @@ function validateStoryboard(raw, roster, source) {
       log.push(`p${cand.id}: full_width -> ${cand.layout} (inset quota)`);
     }
   }
+  const breakable = (p) => p.beat === "action" && p.nai.characters.length === 1 && PORTRAIT_SIZES.includes(p.size) && ["full_width", "inset_left", "inset_right"].includes(p.layout) && !["hands only", "lower body"].includes(p.nai.characters[0].framing);
+  let breaks = 0;
+  for (const p of imgs) {
+    const asked = p.frame_break === true;
+    delete p.frame_break;
+    if (!asked)
+      continue;
+    if (!breakable(p)) {
+      log.push(`p${p.id}: frame_break dropped (needs an action beat with one character in a portrait panel)`);
+      continue;
+    }
+    if (breaks >= LIMITS.maxFrameBreaks) {
+      log.push(`p${p.id}: frame_break dropped (at most ${LIMITS.maxFrameBreaks} per strip)`);
+      continue;
+    }
+    p.frame_break = true;
+    breaks++;
+  }
+  const auto = breaks ? undefined : imgs.find(breakable);
+  if (auto) {
+    auto.frame_break = true;
+    log.push(`p${auto.id}: frame_break added (the planner marked none)`);
+  }
+  for (const p of imgs) {
+    const c = p.frame_break ? p.nai.characters[0] : null;
+    if (c && c.y > 0.5) {
+      log.push(`p${p.id}: ${c.name} y ${c.y} -> 0.5 (frame-break)`);
+      c.y = 0.5;
+    }
+  }
   const props = sb.key_props ?? [];
   const inserts = imgs.filter((p) => p.beat === "insert").map((p) => `${p.moment ?? ""} ${p.shot ?? ""} ${p.nai.base}`.toLowerCase()).join(" ");
   Object.assign(stats, {
     props_without_insert: props.filter((pr) => !normWords(pr).some((w) => w.length > 3 && inserts.includes(w))).length,
     image_panels: imgs.length,
     text_beats: kept.length - imgs.length,
+    frame_breaks: imgs.filter((p) => p.frame_break).map((p) => p.id),
     layouts: imgs.map((p) => p.layout),
     sizes: imgs.map((p) => p.size),
     portrait_share: Number(share().toFixed(2)),
@@ -64676,6 +65371,7 @@ var RULES2 = {
   onArtMin: 0.45,
   tailMax: 48,
   breakDepth: [60, 140],
+  charMax: 0.08,
   breakMaxTop: 0.45
 };
 var HEAD = { portrait: [0.5, 0.38], "upper body": [0.35, 0.18], "cowboy shot": [0.32, 0.14], "full body": [0.32, 0.1] };
@@ -64818,6 +65514,22 @@ function layoutStrip(sb, images, opts = {}) {
       facePx.set(n, { head: toPx(...g.head), face: fb });
     }
     const faces = [...facePx.values()].map((v) => v.face).filter((f) => !!f);
+    const mask = img.cutout?.mask;
+    const onChar = (r) => {
+      if (!mask?.length)
+        return 0;
+      let hit = 0;
+      for (let i = 0;i < 7; i++)
+        for (let j = 0;j < 7; j++) {
+          const nx = (r[0] + (r[2] - r[0]) * (i + 0.5) / 7 - x0) / w, ny = crop[1] + (r[1] + (r[3] - r[1]) * (j + 0.5) / 7) / h * (crop[3] - crop[1]);
+          if (nx < 0 || nx >= 1 || ny < 0 || ny >= 1)
+            continue;
+          const row = mask[Math.floor(ny * mask.length)];
+          if (row[Math.floor(nx * row.length)] === "1")
+            hit++;
+        }
+      return hit / 49;
+    };
     const bodies = chars.filter((c) => c.framing !== "hands only").map((c) => {
       const g = facePx.get(c.name);
       const fwid = g.face ? g.face[2] - g.face[0] : 0.25 * w;
@@ -64891,6 +65603,8 @@ function layoutStrip(sb, images, opts = {}) {
         if (cy < prevCy + 30)
           return null;
         if (onArt(r) < minArt)
+          return null;
+        if (onChar(r) > RULES2.charMax)
           return null;
         let s = 0;
         if (target) {
@@ -64976,7 +65690,7 @@ function layoutStrip(sb, images, opts = {}) {
           continue;
         return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: r, fallback: null };
       }
-      const y0 = fb + 16;
+      const y0 = Math.max(fb + 16, ...placed.filter((q) => q[1] >= fb).map((q) => q[3] + 8));
       return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [fx0 + 14, y0, fx0 + 14 + bw, y0 + bh], fallback: "gutter" };
     };
     const placeSfx = (t) => {
@@ -64991,7 +65705,7 @@ function layoutStrip(sb, images, opts = {}) {
           return null;
         if (faces.some((f) => inter(r, pad(f, 0.3 * (f[2] - f[0]))) > 0) || placed.some((q) => inter(r, pad(q, 6)) > 0))
           return null;
-        return bodies.reduce((s, b) => s + inter(r, b), 0) / area(r) * 100;
+        return bodies.reduce((s, b) => s + inter(r, b), 0) / area(r) * 100 + onChar(r) * 100;
       };
       const a = t.anchor;
       const left = a.includes("left"), right = a.includes("right");
@@ -65234,6 +65948,8 @@ function relayout(doc, width = STRIP_WIDTH) {
     const take = panel?.takes[panel.selected];
     const [width, height] = p.size.split("x").map(Number);
     images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
+    if (take?.cutout)
+      images[String(p.id)].cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
   }
   return layoutStrip(storyboard, images, { width });
 }
@@ -65260,6 +65976,7 @@ var LOCK_WAIT_MS = 4000;
 var LOCK_RETRIES = 8;
 var CONCURRENT_LOCK = /\b429\b|concurrent generation/iu;
 var PLANNER_TIMEOUT_MS = 300000;
+var INPAINT_MODEL = "nai-diffusion-5-full-inpainting";
 var aborted = () => new DOMException("Webtoon generation was cancelled.", "AbortError");
 async function requireNovelAI(services) {
   const target = await services.images.resolveTarget();
@@ -65267,9 +65984,22 @@ async function requireNovelAI(services) {
     throw new RpcFailure(rpcError("unsupported", "Webtoon mode needs a NovelAI image connection.", { retryable: false }));
   return target;
 }
+async function waitOutLock(deps, signal, run) {
+  for (let attempt = 0;; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      if (signal.aborted || attempt >= LOCK_RETRIES || !CONCURRENT_LOCK.test(toRpcError(error).message))
+        throw error;
+      await new Promise((resolve) => setTimeout(resolve, deps.lockWaitMs ?? LOCK_WAIT_MS));
+      if (signal.aborted)
+        throw aborted();
+    }
+  }
+}
 async function generatePanel(deps, input) {
   const target = await requireNovelAI(deps.services);
-  const dispatch = () => deps.engine.dispatch(engineImageRequest(input.request, input.style, input.seed), {
+  const result = await waitOutLock(deps, input.signal, () => deps.engine.dispatch(engineImageRequest(input.request, input.style, input.seed), {
     engineProvider: "novelai",
     purpose: "chat",
     connectionId: target.connectionId,
@@ -65277,26 +66007,72 @@ async function generatePanel(deps, input) {
     ownerChatId: input.chatId,
     ownerCharacterId: input.characterId,
     forceNsfwPrefix: () => false
-  }, input.config, { signal: input.signal });
-  let result;
-  for (let attempt = 0;; attempt += 1) {
-    try {
-      result = await dispatch();
-      break;
-    } catch (error) {
-      if (input.signal.aborted || attempt >= LOCK_RETRIES || !CONCURRENT_LOCK.test(toRpcError(error).message))
-        throw error;
-      await new Promise((resolve) => setTimeout(resolve, deps.lockWaitMs ?? LOCK_WAIT_MS));
-      if (input.signal.aborted)
-        throw aborted();
-    }
-  }
+  }, input.config, { signal: input.signal }));
   const meta = result.providerMetadata ?? {};
   const imageId = String(meta.imageId ?? result.requestId ?? "").trim();
   if (!imageId)
     throw new Error("The image provider returned no image id.");
   const now = (deps.now ?? Date.now)();
   return takeOf(imageId, String(result.seed ?? ""), Math.round(Number(result.width) || input.request.width), Math.round(Number(result.height) || input.request.height), now);
+}
+async function drawDirect(deps, input) {
+  const build = buildNovelAIRequest(engineImageRequest({ ...input.request, prompt: input.prompt }, input.style, input.seed), {
+    purpose: "chat",
+    connectionId: input.connectionId,
+    model: input.model,
+    ownerChatId: input.chatId,
+    ownerCharacterId: input.characterId,
+    forceNsfwPrefix: () => false
+  });
+  const { retries: _engineRetries, ...request } = build.request;
+  const novelai = { ...request.novelai, ...input.rawOverride ? { rawOverride: input.rawOverride } : {} };
+  const result = await waitOutLock(deps, input.signal, () => deps.services.images.generate({ ...request, novelai, includeData: true }, { signal: input.signal }));
+  if (!result.dataBase64)
+    throw new Error("The image provider returned no image data.");
+  return { result, bytes: base64ToBytes2(result.dataBase64) };
+}
+async function generateFrameBreakPanel(deps, input) {
+  const { services } = deps;
+  const target = await requireNovelAI(services);
+  if (!target.connectionDefaultsReadable)
+    throw new Error("The NovelAI connection's saved parameters could not be read, so a saved raw override would be replaced.");
+  const generated = [];
+  try {
+    const cutRequest = { ...input.request, negativePrompt: `${input.request.negativePrompt}, ${CUTOUT_NEGATIVE}` };
+    const cut = await drawDirect(deps, { ...input, request: cutRequest, prompt: input.request.cutoutPrompt, model: target.model, connectionId: target.connectionId });
+    generated.push(cut.result.imageId);
+    const fb = await frameBreakInputs(await decodePng(cut.bytes));
+    const rawOverride = { action: "infill", parameters: { image: bytesToBase642(fb.source), mask: bytesToBase642(fb.mask), add_original_image: true, inpaintImg2ImgStrength: 1, noise: 0 } };
+    const bg = await drawDirect(deps, { ...input, seed: cut.result.seed, prompt: input.request.prompt, model: INPAINT_MODEL, connectionId: target.connectionId, rawOverride });
+    generated.push(bg.result.imageId);
+    const panel = flattenOver(await decodePng(bg.bytes), fb.cutout);
+    const upload = async (image, name) => (await services.host.images.upload({ data: await encodePng(image), filename: `${name}.png`, mime_type: "image/png", owner_chat_id: input.chatId, ...input.characterId ? { owner_character_id: input.characterId } : {} }, services.userId)).id;
+    const panelId = await upload(panel, `webtoon-panel-${input.request.panelId}`);
+    const cutoutId = await upload(fb.cutout, `webtoon-cutout-${input.request.panelId}`);
+    const url = (id) => `/api/v1/images/${encodeURIComponent(id)}`;
+    return {
+      ...takeOf(panelId, cut.result.seed, panel.width, panel.height, (deps.now ?? Date.now)()),
+      url: url(panelId),
+      cutout: { imageId: cutoutId, url: url(cutoutId), bbox: fb.info.bbox, mask: characterGrid(fb.cutout) }
+    };
+  } finally {
+    if (generated.length)
+      services.images.deleteImages(generated.filter(Boolean)).catch(() => {
+        return;
+      });
+  }
+}
+async function drawPanel(deps, input) {
+  if (input.request.cutoutPrompt) {
+    try {
+      return await generateFrameBreakPanel(deps, input);
+    } catch (error) {
+      if (input.signal.aborted || isAbortLike(error))
+        throw error;
+      deps.services.log.append("warn", "webtoon", `Panel ${input.request.panelId}: frame-break skipped, drawing the plain panel`, { error: toRpcError(error).message });
+    }
+  }
+  return generatePanel(deps, input);
 }
 async function plan(deps, prompt, images, signal) {
   const calls = [];
@@ -65393,7 +66169,7 @@ async function runWebtoonStrip(deps, req) {
       const id = String(panel.id);
       req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length });
       try {
-        const take = await generatePanel(deps, { request: requests[id], style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal });
+        const take = await drawPanel(deps, { request: requests[id], style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal });
         await req.assertTarget();
         doc = await write((d) => {
           const p = d.panels[id];
@@ -65441,7 +66217,7 @@ async function rerollWebtoonPanel(deps, req) {
   const request = doc?.requests[req.panelId];
   if (!doc || !request || !doc.style)
     throw new RpcFailure(rpcError("not-found", "This webtoon panel has no image request.", { retryable: false }));
-  const take = await generatePanel(deps, { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal });
+  const take = await drawPanel(deps, { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal });
   if (req.signal.aborted)
     throw aborted();
   const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
@@ -65487,8 +66263,8 @@ async function editWebtoonText(deps, req) {
 }
 
 // src/backend/pipeline/controller.ts
-var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str5 = (v) => v == null ? "" : String(v).trim();
+var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str6 = (v) => v == null ? "" : String(v).trim();
 var sleep = (ms, signal) => new Promise((resolve) => {
   const t = setTimeout(done, ms);
   function done() {
@@ -65676,13 +66452,13 @@ function createChatPipelineController(services, engine, options = {}) {
   const autoRetryable = (error) => {
     if (!error || isCancellation(error))
       return false;
-    const r = rec4(error);
-    const inner = error instanceof RpcFailure ? rec4(error.error) : rec4(r.rpcError);
+    const r = rec5(error);
+    const inner = error instanceof RpcFailure ? rec5(error.error) : rec5(r.rpcError);
     const retryable = r.retryable ?? inner.retryable;
     if (retryable === false)
       return false;
-    const status = Number(r.httpStatus ?? r.status ?? rec4(inner.details).status);
-    const code = str5(r.code) || str5(inner.detailCode);
+    const status = Number(r.httpStatus ?? r.status ?? rec5(inner.details).status);
+    const code = str6(r.code) || str6(inner.detailCode);
     return retryable === true || error instanceof TypeError || status === 408 || status === 429 || status >= 500 && status < 600 || ["ANALYZER_JSON_PARSE", "ANALYZER_EMPTY_RESPONSE", "ANALYZER_TIMEOUT", "REQUEST_TIMEOUT", "CHAN_SERVER_TIMEOUT", "CHAN_SERVER_NETWORK", "V5_ANALYZER_NO_USABLE_ILLUSTRATION"].includes(code) || error instanceof RpcFailure && error.error.code === "timeout";
   };
   const errorOf = (e, label) => {
@@ -66048,7 +66824,7 @@ function createChatPipelineController(services, engine, options = {}) {
   const charactersOf = (record) => {
     const configChars = Array.isArray(record.novelAIConfig?.characterPrompts) ? record.novelAIConfig.characterPrompts : [];
     return record.characters.map((c, i) => {
-      const cfg = rec4(configChars[i]);
+      const cfg = rec5(configChars[i]);
       return {
         prompt: c.prompt,
         uc: c.negativePrompt,
@@ -66106,17 +66882,17 @@ function createChatPipelineController(services, engine, options = {}) {
         const list = listNovelAIArtists(config.characterPrompt.artistPrompts);
         const next = list.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
         const old = list.find((a) => a.id === record.artistId);
-        const tracked = rec4(rec4(record.novelAIConfig).nonArtistPromptWeightArtist);
-        out.positive = replaceSegment(out.positive, str5(tracked.positive) || str5(old?.prompt), str5(next.prompt));
-        out.negative = replaceSegment(out.negative, str5(tracked.negative) || str5(old?.negativePrompt), str5(next.negativePrompt));
-        const o = rec4(next.novelAIOverrides);
+        const tracked = rec5(rec5(record.novelAIConfig).nonArtistPromptWeightArtist);
+        out.positive = replaceSegment(out.positive, str6(tracked.positive) || str6(old?.prompt), str6(next.prompt));
+        out.negative = replaceSegment(out.negative, str6(tracked.negative) || str6(old?.negativePrompt), str6(next.negativePrompt));
+        const o = rec5(next.novelAIOverrides);
         for (const key of ["steps", "scale", "cfgRescale"])
           if (Number.isFinite(Number(o[key])))
             out.configPatch[key] = Number(o[key]);
       } else {
         const entries = config.animaArtists.entries;
         const next = entries.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
-        out.positive = replaceSegment(out.positive, str5(entries.find((a) => a.id === record.artistId)?.text), str5(next.text));
+        out.positive = replaceSegment(out.positive, str6(entries.find((a) => a.id === record.artistId)?.text), str6(next.text));
       }
       out.artistId = overrides.artistId;
     }
@@ -66171,11 +66947,11 @@ function createChatPipelineController(services, engine, options = {}) {
         ...keepCoords ? kept ? { centerX: kept.x, centerY: kept.y, coordinateMode: "fixed" } : { coordinateMode: "automatic" } : {}
       };
     }).filter((_c, i) => !excluded.has(i));
-    const seed = keepSeed ? str5(o.seed) || record.seed : "";
+    const seed = keepSeed ? str6(o.seed) || record.seed : "";
     const provider = record.engineProvider === "comfy-ui" ? "comfy-ui" : record.engineProvider === "chan-server" ? "chan-server" : "novelai";
     if (provider !== "novelai")
       return { provider, prompt: positive, negativePrompt: negative, seed, width, height };
-    const cfg = { ...rec4(record.novelAIConfig) };
+    const cfg = { ...rec5(record.novelAIConfig) };
     delete cfg.nonArtistPromptWeight;
     delete cfg.nonArtistPromptSource;
     delete cfg.nonArtistPromptWeightArtist;
@@ -66252,8 +67028,8 @@ function createChatPipelineController(services, engine, options = {}) {
       if (signal.aborted)
         throw new DOMException("Regeneration was cancelled.", "AbortError");
       await targetGuard(job.target)();
-      const meta = rec4(result.providerMetadata);
-      const imageId = str5(meta.imageId) || str5(result.requestId);
+      const meta = rec5(result.providerMetadata);
+      const imageId = str6(meta.imageId) || str6(result.requestId);
       if (!imageId)
         throw new Error("The image provider returned no image id.");
       const sourceLabel = /^(.+?)\.__am__\./u.exec(source.assetName ?? "")?.[1] ?? "";
@@ -66267,7 +67043,7 @@ function createChatPipelineController(services, engine, options = {}) {
         kind: "generated",
         assetName,
         savedPath: imageResultUrl(imageId),
-        extension: str5(result.extension) || "png",
+        extension: str6(result.extension) || "png",
         createdAt: now(),
         width,
         height,
@@ -66281,7 +67057,7 @@ function createChatPipelineController(services, engine, options = {}) {
         storePlanAndTree(d, plan, tree);
         return d;
       });
-      const finalized = rec4(result.finalizedPrompt);
+      const finalized = rec5(result.finalizedPrompt);
       await updateSidecar(services.storage, chatId, (s) => {
         s.records[entry.entryId] = {
           ...record,
@@ -66289,21 +67065,21 @@ function createChatPipelineController(services, engine, options = {}) {
           imageId,
           assetName,
           createdAt: entry.createdAt,
-          seed: str5(result.seed),
+          seed: str6(result.seed),
           seedFixed: keepSeed,
           width,
           height,
           sizeId: overrides?.sizeId ?? record.sizeId,
-          positivePrompt: str5(result.effectivePrompt) || str5(finalized.positivePrompt) || String(request.prompt ?? ""),
+          positivePrompt: str6(result.effectivePrompt) || str6(finalized.positivePrompt) || String(request.prompt ?? ""),
           negativePrompt: String(request.negativePrompt ?? ""),
-          sentParameters: rec4(meta.sentParameters),
+          sentParameters: rec5(meta.sentParameters),
           generationOrigin: "regenerate",
           parentEntryId: source.entryId,
           actors: rebuilt.actors,
           ...rebuilt.artistId ? { artistId: rebuilt.artistId } : {},
           characters: (request.config && Array.isArray(request.config.characterPrompts) ? request.config.characterPrompts : []).map((ch, i) => ({
-            prompt: str5(ch.prompt),
-            negativePrompt: str5(ch.uc),
+            prompt: str6(ch.prompt),
+            negativePrompt: str6(ch.uc),
             actorIndex: Number.isFinite(Number(ch.actorIndex)) ? Number(ch.actorIndex) : i,
             centerX: Number(ch.centerX ?? 0.5),
             centerY: Number(ch.centerY ?? 0.5),
@@ -66451,7 +67227,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const provider = record ? providerOf(record) : entry.kind === "original" ? "original" : "novelai";
     const imageId = imageIdFromResultUrl(entry.savedPath) ?? "";
     const isNovelAI = record?.engineProvider === "novelai";
-    const v5 = isNovelAI && (rec4(record?.novelAIConfig).analysisProfile === "v5-hybrid" || /^nai-diffusion-5/u.test(record?.model ?? ""));
+    const v5 = isNovelAI && (rec5(record?.novelAIConfig).analysisProfile === "v5-hybrid" || /^nai-diffusion-5/u.test(record?.model ?? ""));
     const busy = messageBusy(chatId, resolved.message.messageKey);
     return {
       chatId,
@@ -66554,15 +67330,15 @@ function createChatPipelineController(services, engine, options = {}) {
     emitChanged(chatId, []);
   };
   const handleGenerationEnded = async (raw) => {
-    const payload = rec4(raw);
+    const payload = rec5(raw);
     tracker.ended(payload);
     if (disposed || payload.error)
       return;
-    const chatId = str5(payload.chatId);
-    const messageId = str5(payload.messageId);
+    const chatId = str6(payload.chatId);
+    const messageId = str6(payload.messageId);
     if (!chatId || !messageId)
       return;
-    if (!AUTO_GENERATION_TYPES.has(str5(payload.generationType).toLowerCase()))
+    if (!AUTO_GENERATION_TYPES.has(str6(payload.generationType).toLowerCase()))
       return;
     try {
       const [settings, config] = await Promise.all([services.storage.loadChatImageGenerationSettings(), services.storage.loadConfig()]);
@@ -66582,8 +67358,8 @@ function createChatPipelineController(services, engine, options = {}) {
     }
   };
   const handleHostEvent = async (event, raw) => {
-    const payload = rec4(raw);
-    const chatId = str5(payload.chatId) || str5(rec4(payload.message).chat_id);
+    const payload = rec5(raw);
+    const chatId = str6(payload.chatId) || str6(rec5(payload.message).chat_id);
     switch (event) {
       case "GENERATION_STARTED":
         tracker.started(payload);
@@ -66594,22 +67370,22 @@ function createChatPipelineController(services, engine, options = {}) {
       case "GENERATION_ENDED":
         return handleGenerationEnded(raw);
       case "MESSAGE_DELETED": {
-        const ids = [str5(payload.messageId), str5(rec4(payload.message).id), ...Array.isArray(payload.messageIds) ? payload.messageIds.map(str5) : []].filter(Boolean);
+        const ids = [str6(payload.messageId), str6(rec5(payload.message).id), ...Array.isArray(payload.messageIds) ? payload.messageIds.map(str6) : []].filter(Boolean);
         for (const id of ids)
           if (chatId)
             await dropMessageData(chatId, id).catch((e) => log("warn", "Message data cleanup failed", toRpcError(e)));
         return;
       }
       case "MESSAGE_SWIPED": {
-        const message = rec4(payload.message);
-        if (payload.action === "deleted" && chatId && str5(message.id) && Number.isSafeInteger(payload.swipeId))
-          await dropMessageData(chatId, str5(message.id), Number(payload.swipeId)).catch((e) => log("warn", "Swipe data cleanup failed", toRpcError(e)));
+        const message = rec5(payload.message);
+        if (payload.action === "deleted" && chatId && str6(message.id) && Number.isSafeInteger(payload.swipeId))
+          await dropMessageData(chatId, str6(message.id), Number(payload.swipeId)).catch((e) => log("warn", "Swipe data cleanup failed", toRpcError(e)));
         else if (chatId)
           emitChanged(chatId, []);
         return;
       }
       case "CHARACTER_EDITED": {
-        const id = str5(payload.characterId) || str5(payload.id) || str5(rec4(payload.character).id);
+        const id = str6(payload.characterId) || str6(payload.id) || str6(rec5(payload.character).id);
         services.sources.invalidate(id || undefined);
         return;
       }
@@ -66671,8 +67447,8 @@ function createChatPipelineController(services, engine, options = {}) {
     async start(params) {
       if (disposed)
         fail2("unsupported", "The pipeline was disposed.");
-      const chatId = str5(params.chatId);
-      const messageId = str5(params.messageId);
+      const chatId = str6(params.chatId);
+      const messageId = str6(params.messageId);
       const swipeIndex = Number(params.swipeIndex);
       if (!chatId || !messageId || !Number.isSafeInteger(swipeIndex) || swipeIndex < 0)
         fail2("bad-request", "chatId, messageId and swipeIndex are required.");
@@ -66734,7 +67510,7 @@ function createChatPipelineController(services, engine, options = {}) {
       return [...jobs.values()].filter((j) => !j.dismissed && (!chatId || j.target.chatId === chatId) && (j.snapshot.status === "queued" || j.snapshot.status === "running" || j.snapshot.canRetry)).map((j) => jsonClone(j.snapshot));
     },
     async regenerateSlot(params) {
-      const chatId = str5(params.chatId);
+      const chatId = str6(params.chatId);
       const doc = await services.storage.loadChatData(chatId);
       const resolved = resolveHistorySlot(doc.history, { slotId: params.slotId, messageKey: params.messageKey });
       if (!resolved)
@@ -66969,7 +67745,7 @@ function createChatPipelineController(services, engine, options = {}) {
       return zoomDetails(chatId, slotId);
     },
     async requestAiPromptEdit(chatId, slotId, entryId, request) {
-      const instruction = str5(request.instruction);
+      const instruction = str6(request.instruction);
       if (!instruction)
         throw new RpcFailure(labelError("bad-request", PIPELINE_TEXT.editInstructionEmpty));
       if (instruction.length > 2000)
@@ -67198,333 +67974,6 @@ var V45_SCHEMA_IDS = Object.freeze({
   illustrationRequest: ace,
   illustrationResponse: r9
 });
-// src/backend/pipeline/providers.ts
-var SCOPE_PREFIX = "inlay-run:";
-
-class ProviderRunRegistry {
-  runs = new Map;
-  counter = 0;
-  register(context) {
-    this.counter += 1;
-    const runId = `${Date.now().toString(36)}-${this.counter.toString(36)}`;
-    this.runs.set(runId, context);
-    return runId;
-  }
-  release(runId) {
-    this.runs.delete(runId);
-  }
-  queueScopeKey(runId) {
-    return `${SCOPE_PREFIX}${runId}`;
-  }
-  resolve(request) {
-    const key = typeof request.providerRef?.queueScopeKey === "string" ? request.providerRef.queueScopeKey : "";
-    return key.startsWith(SCOPE_PREFIX) ? this.runs.get(key.slice(SCOPE_PREFIX.length)) ?? null : null;
-  }
-  get size() {
-    return this.runs.size;
-  }
-}
-var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str6 = (v) => v == null ? "" : String(v).trim();
-var num2 = (v, fallback, min, max) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
-};
-var dim = (v, fallback) => {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? Math.min(2048, Math.max(64, Math.round(n))) : fallback;
-};
-function bytesToBase642(bytes) {
-  let binary = "";
-  const chunk = 32768;
-  for (let i = 0;i < bytes.length; i += chunk)
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  return btoa(binary);
-}
-function base64ToBytes2(data) {
-  const binary = atob(data);
-  const out = new Uint8Array(binary.length);
-  for (let i = 0;i < binary.length; i += 1)
-    out[i] = binary.charCodeAt(i);
-  return out;
-}
-function toImageBytes(value, fallbackMime = "image/png") {
-  if (!value)
-    return null;
-  if (typeof value === "string") {
-    const m = /^data:([^;,]+);base64,(.*)$/su.exec(value);
-    return m ? { data: m[2], mimeType: m[1] } : value.trim() ? { data: value.trim(), mimeType: fallbackMime } : null;
-  }
-  if (value instanceof Uint8Array)
-    return value.length ? { data: bytesToBase642(value), mimeType: fallbackMime } : null;
-  const r = rec5(value);
-  if (typeof r.data === "string" && r.data)
-    return { data: r.data, mimeType: str6(r.mimeType) || str6(r.mime_type) || fallbackMime };
-  if (r.bytes instanceof Uint8Array && r.bytes.length)
-    return { data: bytesToBase642(r.bytes), mimeType: str6(r.mimeType) || fallbackMime };
-  if (r.image !== undefined)
-    return toImageBytes(r.image, fallbackMime);
-  return null;
-}
-function toProviderError(error) {
-  if (isAbortLike(error) || !(error instanceof RpcFailure))
-    return error;
-  const e = error.error;
-  const details = rec5(e.details);
-  const status = Number(details.status ?? details.httpStatus);
-  return Object.assign(new Error(e.message, { cause: error }), {
-    code: e.detailCode || (e.code === "timeout" ? "REQUEST_TIMEOUT" : e.code === "cancelled" ? "REQUEST_ABORTED" : e.code),
-    ...e.retryable !== undefined ? { retryable: e.retryable } : e.code === "timeout" ? { retryable: true } : {},
-    ...Number.isFinite(status) && status > 0 ? { status } : {},
-    rpcError: e
-  });
-}
-async function generateImage(services, request, options) {
-  try {
-    return await services.images.generate(request, options);
-  } catch (error) {
-    throw toProviderError(error);
-  }
-}
-function extensionFor(mime) {
-  return mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
-}
-function emitProgress(provider, onEvent, ctx, progress) {
-  ctx?.onProgress?.(progress);
-  if (!onEvent)
-    return;
-  if (progress.queue)
-    onEvent({ type: "queue", provider, requestId: "", queuePosition: progress.queue.position, queueDepth: progress.queue.depth });
-  else if (progress.total)
-    onEvent({ type: "progress", provider, requestId: "", stage: "generating", value: progress.done ?? 0, max: progress.total, ratio: progress.fraction ?? 0 });
-}
-function engineResult(provider, result, extra = {}) {
-  const mimeType = result.mimeType || "image/png";
-  return {
-    provider,
-    bytes: result.dataBase64 ? base64ToBytes2(result.dataBase64) : new Uint8Array(0),
-    mimeType,
-    extension: extensionFor(mimeType),
-    seed: String(result.seed ?? ""),
-    width: result.width,
-    height: result.height,
-    requestedSize: { width: result.width, height: result.height },
-    actualSize: { width: result.width, height: result.height },
-    requestId: result.imageId,
-    ...extra,
-    providerMetadata: {
-      imageId: result.imageId,
-      url: result.url,
-      lumiverseProvider: result.lumiverseProvider,
-      generationProvider: result.provider,
-      model: result.model,
-      attempts: result.attempts,
-      sentParameters: result.sentParameters,
-      ...rec5(extra.providerMetadata)
-    }
-  };
-}
-function normalizeCharacterPrompts(value) {
-  return (Array.isArray(value) ? value : []).map((raw) => {
-    const r = rec5(raw);
-    return {
-      prompt: str6(r.prompt),
-      uc: str6(r.uc),
-      centerX: num2(r.centerX, 0.5, 0, 1),
-      centerY: num2(r.centerY, 0.5, 0, 1),
-      actorSlot: str6(r.actorSlot) || undefined,
-      coordinateMode: r.coordinateMode === "automatic" ? "automatic" : "fixed"
-    };
-  }).filter((c) => c.prompt || c.uc);
-}
-function buildNovelAIRequest(request, ctx, extras = {}) {
-  const rawPrompt = typeof request.prompt === "string" ? request.prompt : "";
-  const force = request.forceNsfwPrefix ?? ctx.forceNsfwPrefix();
-  const prompt = force && rawPrompt.trim() ? prependNsfwTag2(rawPrompt) : rawPrompt;
-  const config = { ...rec5(request.config), width: request.width, height: request.height, negativePrompt: request.negativePrompt, seed: request.seed };
-  const input = str6(prompt);
-  if (!input)
-    throw Object.assign(new Error("NovelAI prompt is empty."), { code: "NOVELAI_PROMPT_EMPTY", retryable: false });
-  const model = str6(ctx.model) || str6(config.naiModel) || "nai-diffusion-5-full";
-  const v4 = /^nai-diffusion-(?:4|5)(?:-|$)/u.test(model);
-  const v5Profile = config.analysisProfile === "v5-hybrid";
-  const forced = config.forceCharacterCoordinates === true;
-  const characters = normalizeCharacterPrompts(config.characterPrompts);
-  const anyFixed = characters.some((c) => c.coordinateMode !== "automatic");
-  const useCoords = forced ? characters.length > 0 && anyFixed : v5Profile ? !!config.useCoords && characters.length > 0 && anyFixed : !!config.useCoords && characters.length > 1 && anyFixed;
-  const negative = str6(config.negativePrompt);
-  const parameters = { negative_prompt: negative };
-  if (v4) {
-    parameters.v4_prompt = { caption: { base_caption: input, char_captions: toNovelAICharacterCaptions2(characters, "prompt", v5Profile || forced) }, use_coords: useCoords, use_order: config.useOrder !== false };
-    parameters.v4_negative_prompt = { caption: { base_caption: negative, char_captions: toNovelAICharacterCaptions2(characters, "uc", v5Profile || forced) }, legacy_uc: false };
-  }
-  const weighted = applyNonArtistWeightToRequest2({ input, model, action: "generate", parameters }, config);
-  const body = weighted.body;
-  const seedText = normalizeSeed(config.seed);
-  const seed = seedText ? Number(seedText) : randomSeed2();
-  const pos = body.parameters.v4_prompt?.caption.char_captions ?? [];
-  const neg = body.parameters.v4_negative_prompt?.caption.char_captions ?? [];
-  const novelai = {
-    sampler: str6(config.sampler) || "k_euler_ancestral",
-    noiseSchedule: str6(config.noiseSchedule) || "karras",
-    steps: Math.round(num2(config.steps, 28, 1, 50)),
-    scale: Number(config.scale) || 6,
-    cfgRescale: Number.isFinite(Number(config.cfgRescale)) ? Number(config.cfgRescale) : 0.5,
-    qualityToggle: config.qualityToggle !== false,
-    useCoords,
-    useOrder: config.useOrder !== false,
-    characters: v4 ? pos.map((c, i) => ({
-      prompt: c.char_caption,
-      negativePrompt: neg[i]?.char_caption ?? "",
-      ...useCoords && c.centers[0] ? { center: { x: c.centers[0].x, y: c.centers[0].y } } : {}
-    })) : []
-  };
-  if (extras.characterReferences?.length && config.characterReferenceEnabled !== false && /^nai-diffusion-4-5/u.test(model))
-    novelai.characterReferences = extras.characterReferences;
-  if (extras.imageToImage)
-    novelai.imageToImage = extras.imageToImage;
-  const generateRequest = {
-    purpose: ctx.purpose,
-    prompt: body.input,
-    negativePrompt: body.parameters.negative_prompt,
-    width: dim(config.width, 832),
-    height: dim(config.height, 1216),
-    seed,
-    novelai,
-    ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
-    model,
-    ...ctx.ownerChatId ? { ownerChatId: ctx.ownerChatId } : {},
-    ...ctx.ownerCharacterId ? { ownerCharacterId: ctx.ownerCharacterId } : {},
-    retries: 0,
-    queue: true
-  };
-  return { request: generateRequest, body, effectivePrompt: body.input, finalizedPrompt: weighted.finalizedPrompt };
-}
-var DEFAULT_CONTEXT = { purpose: "chat", forceNsfwPrefix: () => false };
-async function prepareReferences(services, refs, signal) {
-  const references = [];
-  const failures = [];
-  for (const raw of refs) {
-    const r = rec5(raw);
-    const asset = rec5(r.asset);
-    try {
-      const prepared = toImageBytes(r.image) ?? await services.imageBytes.getAsset(asset, { signal });
-      const type = str6(r.type);
-      references.push({
-        ...prepared,
-        strength: num2(r.strength, 0.6, 0, 1),
-        fidelity: num2(r.fidelity, 1, 0, 1),
-        type: type === "style" || type === "character&style" ? type : "character"
-      });
-    } catch (error) {
-      if (signal?.aborted)
-        throw error;
-      failures.push({ asset: str6(asset.key) || str6(asset.name), error: error instanceof Error ? error.message : String(error) });
-    }
-  }
-  return { references, failures };
-}
-function createNovelAIAdapter(services, registry) {
-  return {
-    provider: "novelai",
-    serializesRequests: true,
-    async generate(request, options = {}) {
-      const ctx = registry.resolve(request) ?? DEFAULT_CONTEXT;
-      const onEvent = options.onEvent;
-      const signal = request.signal ?? options.signal;
-      onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "queued" });
-      const refs = Array.isArray(request.references) ? request.references : [];
-      const prepared = refs.length ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
-      const i2iRaw = rec5(request.imageToImage);
-      const i2iImage = request.imageToImage ? toImageBytes(i2iRaw.image) : null;
-      const build = buildNovelAIRequest(request, ctx, {
-        characterReferences: prepared.references,
-        ...i2iImage ? { imageToImage: { ...i2iImage, strength: num2(i2iRaw.strength, 0.4, 0.4, 1), noise: num2(i2iRaw.noise, 0, 0, 1) } } : {}
-      });
-      onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "generating" });
-      const result = await generateImage(services, build.request, { signal, onProgress: (p) => emitProgress("novelai", onEvent, ctx, p) });
-      onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "completed" });
-      return engineResult("novelai", result, {
-        effectivePrompt: build.effectivePrompt,
-        finalizedPrompt: build.finalizedPrompt,
-        providerMetadata: {
-          nonArtistPromptWeight: rec5(build.finalizedPrompt).weight,
-          referenceFailures: prepared.failures,
-          requestBody: build.body
-        }
-      });
-    }
-  };
-}
-function createComfyAdapter(services, registry) {
-  return {
-    provider: "comfy-ui",
-    async generate(request, options = {}) {
-      const ctx = registry.resolve(request) ?? DEFAULT_CONTEXT;
-      const signal = request.signal ?? options.signal;
-      options.onEvent?.({ type: "stage", provider: "comfy-ui", requestId: "", stage: "connecting" });
-      const source = toImageBytes(request.outfitReference) ?? toImageBytes(request.characterReference);
-      const seedText = normalizeSeed(request.seed);
-      const result = await generateImage(services, {
-        purpose: ctx.purpose,
-        prompt: str6(request.prompt),
-        negativePrompt: str6(request.negativePrompt),
-        width: Math.max(1, Math.round(Number(request.width) || 832)),
-        height: Math.max(1, Math.round(Number(request.height) || 1216)),
-        seed: seedText ? Number(seedText) : randomSeed2(),
-        comfy: { ...ctx.comfyuiWorkflowId ? { workflowId: ctx.comfyuiWorkflowId } : {}, ...source ? { sourceImage: source } : {} },
-        ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
-        ...ctx.model ? { model: ctx.model } : {},
-        ...ctx.ownerChatId ? { ownerChatId: ctx.ownerChatId } : {},
-        ...ctx.ownerCharacterId ? { ownerCharacterId: ctx.ownerCharacterId } : {},
-        retries: 0
-      }, { signal, onProgress: (p) => emitProgress("comfy-ui", options.onEvent, ctx, p) });
-      options.onEvent?.({ type: "stage", provider: "comfy-ui", requestId: "", stage: "completed" });
-      return engineResult("comfy-ui", result);
-    }
-  };
-}
-function createGenericAdapter(services, registry) {
-  return {
-    provider: "chan-server",
-    async generate(request, options = {}) {
-      const ctx = registry.resolve(request) ?? DEFAULT_CONTEXT;
-      const signal = request.signal ?? options.signal;
-      const seedText = normalizeSeed(request.seed);
-      const result = await generateImage(services, {
-        purpose: ctx.purpose,
-        prompt: str6(request.prompt),
-        negativePrompt: str6(request.negativePrompt),
-        width: Math.max(1, Math.round(Number(request.width) || 832)),
-        height: Math.max(1, Math.round(Number(request.height) || 1216)),
-        seed: seedText ? Number(seedText) : randomSeed2(),
-        ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
-        ...ctx.model ? { model: ctx.model } : {},
-        ...ctx.ownerChatId ? { ownerChatId: ctx.ownerChatId } : {},
-        ...ctx.ownerCharacterId ? { ownerCharacterId: ctx.ownerCharacterId } : {},
-        retries: 0
-      }, { signal, onProgress: (p) => emitProgress("chan-server", options.onEvent, ctx, p) });
-      return engineResult("chan-server", result);
-    }
-  };
-}
-function createImageProviderAdapters(services, registry) {
-  return {
-    novelai: createNovelAIAdapter(services, registry),
-    "comfy-ui": createComfyAdapter(services, registry),
-    "chan-server": createGenericAdapter(services, registry)
-  };
-}
-function createComfyReferencePreparer(services) {
-  return {
-    async prepare(reference, options = {}) {
-      const asset = rec5(reference.asset);
-      const bytes = await services.imageBytes.getAsset(asset, { signal: options.signal });
-      return { bytes: base64ToBytes2(bytes.data), mimeType: bytes.mimeType, extension: extensionFor(bytes.mimeType) };
-    }
-  };
-}
-
 // src/backend/pipeline/engine-port.ts
 function createEnginePort(services, options = {}) {
   const registry = new ProviderRunRegistry;
@@ -69066,7 +69515,17 @@ function createImageService(deps) {
   const log = (level, message, details) => deps.log?.append(level, "image", message, details);
   function toInfo(dto) {
     const r = asRecord3(dto);
-    return { id: str7(r.id), name: str7(r.name), provider: str7(r.provider), model: str7(r.model), isDefault: r.is_default === true, defaultParameters: asRecord3(r.default_parameters), metadata: asRecord3(r.metadata) };
+    const defaults = r.default_parameters;
+    return {
+      id: str7(r.id),
+      name: str7(r.name),
+      provider: str7(r.provider),
+      model: str7(r.model),
+      isDefault: r.is_default === true,
+      defaultParameters: asRecord3(defaults),
+      defaultParametersReadable: !!defaults && typeof defaults === "object" && !Array.isArray(defaults),
+      metadata: asRecord3(r.metadata)
+    };
   }
   async function connection(connectionId) {
     const key = connectionId || "\x00default";
@@ -69101,7 +69560,8 @@ function createImageService(deps) {
       promptCodec: promptCodecForProvider(generationProvider),
       model,
       isNovelAIV5: generationProvider === "novelai" && isNovelAIV5Model(model),
-      comfyuiWorkflowId: config.image.comfyuiWorkflowId
+      comfyuiWorkflowId: config.image.comfyuiWorkflowId,
+      connectionDefaultsReadable: info.defaultParametersReadable
     };
   }
   function queueFor(kind) {

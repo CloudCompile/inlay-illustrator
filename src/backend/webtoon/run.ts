@@ -1,16 +1,19 @@
 /**
  * Webtoon strip run (experimental webtoon mode): planner call -> code validation -> one NovelAI V5 image per image
- * panel (sequential, through the engine dispatcher and the ImageService queue) -> layout, persisted after every step so
+ * panel (sequential, through the engine dispatcher and the ImageService queue; frame-break panels: cut-out + inpainted background)
+ * -> layout, persisted after every step so
  * the chat view shows panels as they finish. Also single-panel reroll and text edits.
  */
-import { rpcError, type ChatDataDocument, type InlayConfig, type RpcError, type WebtoonStripView } from "../../shared/contract/index.js";
+import { rpcError, type ChatDataDocument, type InlayConfig, type RpcError, type WebtoonPanelTake, type WebtoonStripView } from "../../shared/contract/index.js";
 import { isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
 import type { EnginePort } from "../pipeline/engine-port.js";
+import { base64ToBytes, buildNovelAIRequest, bytesToBase64 } from "../pipeline/providers.js";
 import type { ChatMessageView } from "../pipeline/host-chat.js";
 import { buildPlannerPrompt, chosenOutfits, webtoonPanelRange, webtoonPanelTarget } from "./planner-prompt.js";
-import { buildPanelRequest, engineImageRequest, type PanelRequest, type WebtoonStyle } from "./panel-request.js";
+import { buildPanelRequest, CUTOUT_NEGATIVE, engineImageRequest, type PanelRequest, type WebtoonStyle } from "./panel-request.js";
 import { castFor, loadWebtoonContext, validationRoster } from "./roster.js";
+import { characterGrid, decodePng, encodePng, flattenOver, frameBreakInputs, type RgbaImage } from "./cutout.js";
 import type { ImagePanel } from "./storyboard-schema.js";
 import { hardOk, validateStoryboard } from "./storyboard-validate.js";
 import { createStripDocument, readStrip, stripView, takeOf, updateStrip, type PlannerCall, type WebtoonStripDocument } from "./store.js";
@@ -23,6 +26,8 @@ const LOCK_RETRIES = 8;
 const CONCURRENT_LOCK = /\b429\b|concurrent generation/iu;
 /** One planner call may take 2 minutes (bench source c: 132 s). */
 const PLANNER_TIMEOUT_MS = 300_000;
+/** NovelAI V5 inpainting model (0 Anlas on Opus at panel sizes; nai-alpha bench). */
+const INPAINT_MODEL = "nai-diffusion-5-full-inpainting";
 
 export interface WebtoonDeps {
   services: BackendServices;
@@ -76,10 +81,25 @@ async function requireNovelAI(services: BackendServices) {
   return target;
 }
 
+interface PanelInput { request: PanelRequest; style: WebtoonStyle; seed: string; chatId: string; characterId: string; config: InlayConfig; signal: AbortSignal }
+
+/** Retry while NovelAI reports a concurrent generation on the account. */
+async function waitOutLock<T>(deps: WebtoonDeps, signal: AbortSignal, run: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      if (signal.aborted || attempt >= LOCK_RETRIES || !CONCURRENT_LOCK.test(toRpcError(error).message)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, deps.lockWaitMs ?? LOCK_WAIT_MS));
+      if (signal.aborted) throw aborted();
+    }
+  }
+}
+
 /** One panel image through the engine dispatcher (NovelAI adapter, ImageService queue, dispatcher retries). */
-async function generatePanel(deps: WebtoonDeps, input: { request: PanelRequest; style: WebtoonStyle; seed: string; chatId: string; characterId: string; config: InlayConfig; signal: AbortSignal }) {
+async function generatePanel(deps: WebtoonDeps, input: PanelInput): Promise<WebtoonPanelTake> {
   const target = await requireNovelAI(deps.services);
-  const dispatch = () =>
+  const result = await waitOutLock(deps, input.signal, () =>
     deps.engine.dispatch(
       engineImageRequest(input.request, input.style, input.seed),
       {
@@ -93,23 +113,84 @@ async function generatePanel(deps: WebtoonDeps, input: { request: PanelRequest; 
       },
       input.config,
       { signal: input.signal },
-    );
-  let result: Record<string, unknown>;
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      result = await dispatch();
-      break;
-    } catch (error) {
-      if (input.signal.aborted || attempt >= LOCK_RETRIES || !CONCURRENT_LOCK.test(toRpcError(error).message)) throw error;
-      await new Promise((resolve) => setTimeout(resolve, deps.lockWaitMs ?? LOCK_WAIT_MS));
-      if (input.signal.aborted) throw aborted();
-    }
-  }
+    ),
+  );
   const meta = (result.providerMetadata ?? {}) as Record<string, unknown>;
   const imageId = String(meta.imageId ?? result.requestId ?? "").trim();
   if (!imageId) throw new Error("The image provider returned no image id.");
   const now = (deps.now ?? Date.now)();
   return takeOf(imageId, String(result.seed ?? ""), Math.round(Number(result.width) || input.request.width), Math.round(Number(result.height) || input.request.height), now);
+}
+
+/**
+ * One NovelAI image straight through the ImageService: the engine request has no field for the raw override (infill) or a
+ * second model. Same request building as the engine's NovelAI adapter. Returns the result and its PNG bytes.
+ */
+async function drawDirect(deps: WebtoonDeps, input: PanelInput & { prompt: string; model: string; connectionId: string; rawOverride?: Record<string, unknown> }) {
+  const build = buildNovelAIRequest(engineImageRequest({ ...input.request, prompt: input.prompt }, input.style, input.seed), {
+    purpose: "chat",
+    connectionId: input.connectionId,
+    model: input.model,
+    ownerChatId: input.chatId,
+    ownerCharacterId: input.characterId,
+    forceNsfwPrefix: () => false,
+  });
+  const { retries: _engineRetries, ...request } = build.request;
+  const novelai = { ...request.novelai, ...(input.rawOverride ? { rawOverride: input.rawOverride } : {}) };
+  const result = await waitOutLock(deps, input.signal, () => deps.services.images.generate({ ...request, novelai, includeData: true }, { signal: input.signal }));
+  if (!result.dataBase64) throw new Error("The image provider returned no image data.");
+  return { result, bytes: base64ToBytes(result.dataBase64) };
+}
+
+/**
+ * Frame-break panel (nai-alpha route 4): the character drawn on a transparent background, the scene inpainted around it,
+ * the cut-out drawn over the flattened result. Both images are uploaded; the two raw generations are deleted.
+ * Skipped (throws) when the connection's saved parameters cannot be read: our raw override would replace a saved one.
+ */
+async function generateFrameBreakPanel(deps: WebtoonDeps, input: PanelInput): Promise<WebtoonPanelTake> {
+  const { services } = deps;
+  const target = await requireNovelAI(services);
+  if (!target.connectionDefaultsReadable) throw new Error("The NovelAI connection's saved parameters could not be read, so a saved raw override would be replaced.");
+  const generated: string[] = [];
+  try {
+    const cutRequest = { ...input.request, negativePrompt: `${input.request.negativePrompt}, ${CUTOUT_NEGATIVE}` };
+    const cut = await drawDirect(deps, { ...input, request: cutRequest, prompt: input.request.cutoutPrompt!, model: target.model, connectionId: target.connectionId });
+    generated.push(cut.result.imageId);
+    const fb = await frameBreakInputs(await decodePng(cut.bytes));
+    const rawOverride = { action: "infill", parameters: { image: bytesToBase64(fb.source), mask: bytesToBase64(fb.mask), add_original_image: true, inpaintImg2ImgStrength: 1, noise: 0 } };
+    const bg = await drawDirect(deps, { ...input, seed: cut.result.seed, prompt: input.request.prompt, model: INPAINT_MODEL, connectionId: target.connectionId, rawOverride });
+    generated.push(bg.result.imageId);
+    const panel = flattenOver(await decodePng(bg.bytes), fb.cutout);
+    const upload = async (image: RgbaImage, name: string) =>
+      (await services.host.images.upload(
+        { data: await encodePng(image), filename: `${name}.png`, mime_type: "image/png", owner_chat_id: input.chatId, ...(input.characterId ? { owner_character_id: input.characterId } : {}) },
+        services.userId,
+      )).id;
+    const panelId = await upload(panel, `webtoon-panel-${input.request.panelId}`);
+    const cutoutId = await upload(fb.cutout, `webtoon-cutout-${input.request.panelId}`);
+    // Uploads are served by the session route only (the public results route serves image-gen files).
+    const url = (id: string) => `/api/v1/images/${encodeURIComponent(id)}`;
+    return {
+      ...takeOf(panelId, cut.result.seed, panel.width, panel.height, (deps.now ?? Date.now)()),
+      url: url(panelId),
+      cutout: { imageId: cutoutId, url: url(cutoutId), bbox: fb.info.bbox!, mask: characterGrid(fb.cutout) },
+    };
+  } finally {
+    if (generated.length) void services.images.deleteImages(generated.filter(Boolean)).catch(() => undefined);
+  }
+}
+
+/** A frame-break panel falls back to the plain panel when either step fails. */
+async function drawPanel(deps: WebtoonDeps, input: PanelInput): Promise<WebtoonPanelTake> {
+  if (input.request.cutoutPrompt) {
+    try {
+      return await generateFrameBreakPanel(deps, input);
+    } catch (error) {
+      if (input.signal.aborted || isAbortLike(error)) throw error;
+      deps.services.log.append("warn", "webtoon", `Panel ${input.request.panelId}: frame-break skipped, drawing the plain panel`, { error: toRpcError(error).message });
+    }
+  }
+  return generatePanel(deps, input);
 }
 
 async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; max: number }, signal: AbortSignal): Promise<{ raw: unknown; model: string; calls: PlannerCall[] }> {
@@ -212,7 +293,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
       const id = String(panel.id);
       req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length });
       try {
-        const take = await generatePanel(deps, { request: requests[id]!, style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal });
+        const take = await drawPanel(deps, { request: requests[id]!, style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal });
         await req.assertTarget();
         doc = await write((d) => {
           const p = d.panels[id]!;
@@ -258,7 +339,7 @@ export async function rerollWebtoonPanel(
   const doc = await readStrip(deps.services.storage, req.chatId, req.historyId);
   const request = doc?.requests[req.panelId];
   if (!doc || !request || !doc.style) throw new RpcFailure(rpcError("not-found", "This webtoon panel has no image request.", { retryable: false }));
-  const take = await generatePanel(deps, { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal });
+  const take = await drawPanel(deps, { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal });
   if (req.signal.aborted) throw aborted();
   const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
     const d = current ?? doc;

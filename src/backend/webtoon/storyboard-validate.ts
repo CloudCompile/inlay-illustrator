@@ -5,7 +5,7 @@ import {
   type Anchor, type ImagePanel, type Panel, type PlannerCharacter, type Storyboard, type TextBeatPanel, type TextItem,
 } from "./storyboard-schema.js";
 
-export const LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
+export const LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6, maxFrameBreaks: 2 };
 
 // ---------- quote check ----------
 export function normWords(s: string): string[] {
@@ -238,11 +238,30 @@ export function validateStoryboard(raw: any, roster: PlannerCharacter[], source:
       stats.layout_repaired++; log.push(`p${cand.id}: full_width -> ${cand.layout} (inset quota)`);
     }
   }
+  // Inlay: character frame-breaks on 1-2 action panels with one character in a portrait panel (round-2 rules); none marked -> the first such panel
+  const breakable = (p: ImagePanel) => p.beat === "action" && p.nai.characters.length === 1 && PORTRAIT_SIZES.includes(p.size)
+    && ["full_width", "inset_left", "inset_right"].includes(p.layout) && !["hands only", "lower body"].includes(p.nai.characters[0]!.framing);
+  let breaks = 0;
+  for (const p of imgs) {
+    const asked = p.frame_break === true;
+    delete p.frame_break;
+    if (!asked) continue;
+    if (!breakable(p)) { log.push(`p${p.id}: frame_break dropped (needs an action beat with one character in a portrait panel)`); continue; }
+    if (breaks >= LIMITS.maxFrameBreaks) { log.push(`p${p.id}: frame_break dropped (at most ${LIMITS.maxFrameBreaks} per strip)`); continue; }
+    p.frame_break = true; breaks++;
+  }
+  const auto = breaks ? undefined : imgs.find(breakable);
+  if (auto) { auto.frame_break = true; log.push(`p${auto.id}: frame_break added (the planner marked none)`); }
+  // the head has to start in the upper part of the panel: body centre at most halfway down
+  for (const p of imgs) {
+    const c = p.frame_break ? p.nai.characters[0]! : null;
+    if (c && c.y > 0.5) { log.push(`p${p.id}: ${c.name} y ${c.y} -> 0.5 (frame-break)`); c.y = 0.5; }
+  }
   const props = sb.key_props ?? [];
   const inserts = imgs.filter((p) => p.beat === "insert").map((p) => `${p.moment ?? ""} ${p.shot ?? ""} ${p.nai.base}`.toLowerCase()).join(" ");
   Object.assign(stats, {
     props_without_insert: props.filter((pr) => !normWords(pr).some((w) => w.length > 3 && inserts.includes(w))).length,
-    image_panels: imgs.length, text_beats: kept.length - imgs.length,
+    image_panels: imgs.length, text_beats: kept.length - imgs.length, frame_breaks: imgs.filter((p) => p.frame_break).map((p) => p.id),
     layouts: imgs.map((p) => p.layout), sizes: imgs.map((p) => p.size), portrait_share: Number(share().toFixed(2)),
     balloons: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "speech" || t.type === "thought").length, 0),
     narration: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "narration").length, 0),

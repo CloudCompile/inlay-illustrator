@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { createPipelineModule } from "../pipeline/index.js";
 import { CHAT_ID, createFakeEngine, createPipelineFixture, finished, STORY, waitFor } from "../pipeline/testing/fixtures.js";
+import { bytesToBase64 } from "../pipeline/providers.js";
+import { encodePng } from "./cutout.js";
 import { rerollWebtoonPanel } from "./run.js";
 import { readStrip, webtoonPath } from "./store.js";
 
@@ -70,6 +72,7 @@ describe("webtoon mode (controller over a fake engine)", () => {
     expect(prompt).toContain('- Shouta (man/boy): black hair, tall; wardrobe: o1 (current) = "Hoodie" (items: top: grey hoodie; bottom: jeans); o2 = "Uniform" (items: top: gakuran; bottom: black pants; feet: loafers).');
     expect(prompt).not.toContain("black hair, male");
     expect(engine.dispatches.length).toBe(6);
+    expect(fx.imageRequests.length).toBe(0); // the frame-break panel (5) is drawn plain: the fake connection's saved parameters are not readable
     const first = engine.dispatches[1]!.request as Record<string, any>;
     expect(first.prompt).toMatch(/^1boy, /u);
     expect(first.config.useCoords).toBe(true);
@@ -120,6 +123,42 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const reverted = (await pipeline.editWebtoonText({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", textIndex: 0, text: "You're late again!" })).strip;
     expect(balloon(reverted)).toBe("You're late again!");
     expect((await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.textOverrides).toEqual({});
+    pipeline.dispose();
+  });
+
+  test("frame-break panel: transparent cut-out, inpainted background, both uploaded; a failed cut-out falls back to the plain panel", async () => {
+    const { fx, engine, pipeline } = await setup();
+    const resolveTarget = fx.services.images.resolveTarget.bind(fx.services.images);
+    fx.services.images.resolveTarget = async (o) => ({ ...(await resolveTarget(o)), connectionDefaultsReadable: true });
+    const image = (alpha: (y: number, x: number) => number) => {
+      const data = new Uint8Array(64 * 96 * 4);
+      for (let y = 0; y < 96; y += 1) for (let x = 0; x < 64; x += 1) data.set([200, 60, 60, alpha(y, x)], (y * 64 + x) * 4);
+      return encodePng({ width: 64, height: 96, data }).then(bytesToBase64);
+    };
+    const cut = await image((y, x) => (y >= 2 && x >= 16 && x < 48 ? 255 : 0));
+    fx.imageReplies.push({ imageId: "raw-cut", dataBase64: cut }, { imageId: "raw-bg", dataBase64: await image(() => 255) });
+    fx.llmReplies.push(STORYBOARD);
+    const run = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, run.jobId).length > 0);
+
+    expect(engine.dispatches.length).toBe(5);
+    const [cutReq, fillReq] = fx.imageRequests as Array<Record<string, any>>;
+    expect(cutReq!.prompt).toMatch(/^1boy, .*upper body, transparent background, has alpha$/u);
+    expect(cutReq!.prompt).not.toContain("school gate");
+    expect([fillReq!.model, fillReq!.prompt]).toEqual(["nai-diffusion-5-full-inpainting", expect.stringContaining("school gate")]);
+    expect(fillReq!.novelai.rawOverride).toMatchObject({ action: "infill", parameters: { mask: expect.any(String), image: expect.any(String), add_original_image: true, inpaintImg2ImgStrength: 1 } });
+    expect(fx.deletedImageIds).toEqual(["raw-cut", "raw-bg"]);
+    const take = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.panels["5"]!.takes[0]!;
+    expect([take.url, take.cutout?.url, take.cutout?.bbox.top]).toEqual([`/api/v1/images/${take.imageId}`, `/api/v1/images/${take.cutout?.imageId}`, 10 / 96]);
+    const panel = (await pipeline.getWebtoon(CHAT_ID, "illustration:m1@0")).strip!.layout!.panels.find((p) => p.id === 5)!;
+    expect([panel.frameBreak, panel.cutout?.src]).toEqual(["top", take.cutout!.url]);
+
+    fx.imageReplies.push({ imageId: "raw-opaque", dataBase64: await image(() => 255) });
+    const reroll = await pipeline.rerollWebtoonPanel(CHAT_ID, "illustration:m1@0", "5");
+    await waitFor(() => finished(fx, reroll.jobId).length > 0);
+    expect([engine.dispatches.length, fx.imageRequests.length]).toEqual([6, 3]);
+    const second = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.panels["5"]!.takes[1]!;
+    expect(second.cutout).toBeUndefined();
     pipeline.dispose();
   });
 

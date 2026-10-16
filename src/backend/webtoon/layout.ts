@@ -11,7 +11,8 @@ export interface PanelImage {
   width: number;
   height: number;
   faces?: Record<string, NBox>; // detected face boxes by character name (optional, e.g. a vision check)
-  cutout?: { src: string; bbox: NBox }; // RGBA cut-out of the characters (optional): enables a character frame-break on action beats
+  cutout?: { src: string; bbox: NBox; mask?: string[] }; // RGBA cut-out of the characters (optional): enables a character frame-break on action beats
+  // Inlay: `mask` = the cut-out's character area, rows of "0"/"1" cells over the image; balloons keep off it, SFX prefer the rest
 }
 export interface LayoutOptions {
   /** Inlay: strip width (default 690). Panel geometry and SFX scale with it; balloon and narration text keep their size. */
@@ -39,6 +40,7 @@ export const RULES = {
   onArtMin: 0.45, // share of a balloon that must sit on the art (or the free column beside an inset)
   tailMax: 48,
   breakDepth: [60, 140] as [number, number],
+  charMax: 0.08, // Inlay: largest share of a balloon on the cut-out's character area
   breakMaxTop: 0.45, // top break only when the cut-out starts in the top 45% (the frame then starts just below the head; the scene above is not shown) // frame line this far below the cut-out top (px, clamped from 10% of the panel height)
 };
 // framing -> (max half-height of the body box around the NovelAI center, face height), fractions of image height.
@@ -165,6 +167,19 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
       facePx.set(n, { head: toPx(...g.head), face: fb });
     }
     const faces = [...facePx.values()].map((v) => v.face).filter((f): f is Rect => !!f);
+    // Inlay: share of a rect on the cut-out's character cells (7 x 7 sample points)
+    const mask = img.cutout?.mask;
+    const onChar = (r: Rect) => {
+      if (!mask?.length) return 0;
+      let hit = 0;
+      for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) {
+        const nx = (r[0] + ((r[2] - r[0]) * (i + 0.5)) / 7 - x0) / w, ny = crop[1] + ((r[1] + ((r[3] - r[1]) * (j + 0.5)) / 7) / h) * (crop[3] - crop[1]);
+        if (nx < 0 || nx >= 1 || ny < 0 || ny >= 1) continue;
+        const row = mask[Math.floor(ny * mask.length)]!;
+        if (row[Math.floor(nx * row.length)] === "1") hit++;
+      }
+      return hit / 49;
+    };
     // rough body boxes below each head (soft obstacle for SFX)
     const bodies: Rect[] = chars.filter((c) => c.framing !== "hands only").map((c) => {
       const g = facePx.get(c.name)!; const fwid = g.face ? g.face[2] - g.face[0] : 0.25 * w;
@@ -225,6 +240,7 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
         if (placed.some((q) => inter(r, pad(q, 8)) > 0)) return null;
         if (cy < prevCy + 30) return null;
         if (onArt(r) < minArt) return null;
+        if (onChar(r) > RULES.charMax) return null;
         let s = 0;
         if (target) {
           const d = Math.hypot(cx - target[0], cy - target[1]) - Math.max(rx, ry);
@@ -283,7 +299,7 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
         if (faces.some((f) => inter(r, pad(f, 6)) > 0) || placed.some((q) => inter(r, pad(q, 8)) > 0)) continue;
         return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: r, fallback: null };
       }
-      const y0 = fb + 16;
+      const y0 = Math.max(fb + 16, ...placed.filter((q) => q[1] >= fb).map((q) => q[3] + 8)); // Inlay: stack gutter boxes
       return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [fx0 + 14, y0, fx0 + 14 + bw, y0 + bh], fallback: "gutter" };
     };
 
@@ -297,7 +313,7 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
         const r: Rect = [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2];
         if (r[0] < 4 || r[2] > W - 4) return null;
         if (faces.some((f) => inter(r, pad(f, 0.3 * (f[2] - f[0]))) > 0) || placed.some((q) => inter(r, pad(q, 6)) > 0)) return null;
-        return (bodies.reduce((s, b) => s + inter(r, b), 0) / area(r)) * 100; // prefer the background next to the action over the bodies
+        return (bodies.reduce((s, b) => s + inter(r, b), 0) / area(r)) * 100 + onChar(r) * 100; // prefer the background next to the action over the bodies
       };
       const a = t.anchor;
       const left = a.includes("left"), right = a.includes("right");

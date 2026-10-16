@@ -154,6 +154,7 @@ export function relayout(doc: WebtoonStripDocument, width: number = STRIP_WIDTH)
     const take = panel?.takes[panel.selected];
     const [width, height] = p.size.split("x").map(Number) as [number, number];
     images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
+    if (take?.cutout) images[String(p.id)]!.cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
   }
   return layoutStrip(storyboard, images, { width });
 }

@@ -3,9 +3,10 @@
  * positioned panels, one SVG layer of balloon shapes, and real text on top (selectable, editable). Drawn at the
  * layout width (`layout.width`, laid out for the shown width) and scaled to the frame width by the caller (`setStripScale`).
  * Per panel, shown while the pointer is over that panel: reroll button and, when the panel has older takes, previous /
- * next take arrows. Clicking a text item opens a small editor.
+ * next take arrows (on the left edge in the phone layout). Frame-break panels draw their character cut-out over the frame line.
+ * Clicking a text item opens a small editor.
  */
-import type { LaidItem, PanelLayout, SfxItem, TitleItem, WebtoonPanelState, WebtoonStripView } from "../../../shared/contract/webtoon.js";
+import { STRIP_WIDTH, type LaidItem, type PanelLayout, type SfxItem, type TitleItem, type WebtoonPanelState, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import { balloonShapes } from "./svg-shapes.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -33,18 +34,21 @@ function el<K extends keyof HTMLElementTagNameMap>(doc: Document, tag: K, classN
   return node;
 }
 
+/** The image of a panel (or its cut-out) at the panel's crop, drawn from the top-left of `panel.rect`. */
+function croppedImage(doc: Document, src: string, panel: PanelLayout): HTMLImageElement {
+  const w = panel.rect[2] - panel.rect[0];
+  const visH = (panel.rect[3] - panel.rect[1]) / Math.max(0.0001, panel.crop[3] - panel.crop[1]);
+  const img = el(doc, "img", "ii-wt-img", { width: px(w), height: px(visH), "margin-top": px(-panel.crop[1] * visH) });
+  img.src = src;
+  img.alt = "";
+  img.draggable = false;
+  img.loading = "lazy";
+  return img;
+}
+
 function panelImage(doc: Document, state: WebtoonPanelState | undefined, panel: PanelLayout, opts: StripRenderOptions): HTMLElement {
   const take = state && state.selected >= 0 ? state.takes[state.selected] : undefined;
-  if (take) {
-    const w = panel.rect[2] - panel.rect[0];
-    const visH = (panel.rect[3] - panel.rect[1]) / Math.max(0.0001, panel.crop[3] - panel.crop[1]);
-    const img = el(doc, "img", "ii-wt-img", { width: px(w), height: px(visH), "margin-top": px(-panel.crop[1] * visH) });
-    img.src = take.url;
-    img.alt = "";
-    img.draggable = false;
-    img.loading = "lazy";
-    return img;
-  }
+  if (take) return croppedImage(doc, take.url, panel);
   const placeholder = el(doc, "div", "ii-wt-placeholder");
   placeholder.setAttribute("data-ii-wt-state", state?.status ?? "pending");
   placeholder.textContent = state?.status === "error" ? `${opts.labels.failed}${state.error ? `: ${state.error}` : ""}` : opts.stripBusy ? opts.labels.drawing : opts.labels.pending;
@@ -89,6 +93,8 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   if (!layout) return null;
   const canvas = el(doc, "div", "ii-wt-canvas", { width: px(layout.width), height: px(layout.height) });
   canvas.setAttribute("data-ii-wt-revision", String(view.revision));
+  // Phone layout: the panel controls move to the left edge (Lumiverse's fixed side tabs cover the right edge there).
+  if (layout.width < STRIP_WIDTH) canvas.setAttribute("data-ii-wt-narrow", "true");
   for (const panel of layout.panels) {
     const [x0, y0, x1, y1] = panel.rect;
     const box = el(doc, "div", "ii-wt-panel", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) });
@@ -99,6 +105,15 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
       box.style.setProperty("clip-path", `inset(${px(fy0 - y0)} ${px(x1 - fx1)} ${px(y1 - fy1)} ${px(fx0 - x0)})`);
     }
     box.appendChild(panelImage(doc, view.panels[String(panel.id)], panel, opts));
+    canvas.appendChild(box);
+  }
+  // Frame-break: the character cut-out over its panel, clipped to the image rect only, so the head crosses the frame line.
+  for (const panel of layout.panels) {
+    if (!panel.cutout) continue;
+    const [x0, y0, x1, y1] = panel.rect;
+    const box = el(doc, "div", "ii-wt-cutout", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) });
+    box.setAttribute("data-ii-wt-cutout", String(panel.id));
+    box.appendChild(croppedImage(doc, panel.cutout.src, panel));
     canvas.appendChild(box);
   }
   const svg = doc.createElementNS(SVG_NS, "svg");

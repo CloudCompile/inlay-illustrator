@@ -44,6 +44,8 @@ export interface ImagePanel {
   layout: Exclude<Layout, "text_on_white">;
   scene_change?: boolean;
   balloon_space?: string;
+  /** Inlay: the character pops out over the top of the frame (cut-out + inpainted background); kept by the validator on 1-2 eligible panels. */
+  frame_break?: boolean;
   nai: { base: string; characters: StoryCharacter[] };
   text: TextItem[];
 }
@@ -104,6 +106,7 @@ export const STORYBOARD_JSON_SCHEMA = {
           layout: { type: "string", enum: [...LAYOUTS] },
           scene_change: { type: "boolean" },
           pause: { type: "boolean" },
+          frame_break: { type: "boolean" },
           balloon_space: str,
           nai: {
             type: "object",

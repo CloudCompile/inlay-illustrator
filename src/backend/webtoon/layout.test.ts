@@ -48,6 +48,19 @@ describe("webtoon layout (round 2, coordinates only)", () => {
     }
   });
 
+  test("frame-break cut-out: the head crosses the top frame line, balloons keep off the character area", () => {
+    // panel 3 (action, one character): the cut-out covers x 0.3..1 from 10% down
+    const mask = Array.from({ length: 60 }, (_, r) => (r < 6 ? "0".repeat(40) : "0".repeat(12) + "1".repeat(28)));
+    const withCut = { ...images, "3": { ...images["3"]!, cutout: { src: "cut.png", bbox: { left: 0.3, top: 0.1, right: 1, bottom: 1 }, mask } } };
+    const cut = layoutStrip(storyboard, withCut);
+    const panel = cut.panels.find((p) => p.id === 3)!;
+    expect([panel.frameBreak, panel.cutout?.src]).toEqual(["top", "cut.png"]);
+    expect(panel.frame[1]).toBeGreaterThan(panel.rect[1]);
+    const [x0, y0, x1, y1] = panel.rect;
+    const body = [x0 + 0.3 * (x1 - x0), y0 + 0.1 * (y1 - y0), x1, y1];
+    const onBody = (l: typeof layout) => l.items.flatMap((i) => (i.panel === 3 && (i.kind === "speech" || i.kind === "thought") ? [inter(i.rect, body) / ((i.rect[2] - i.rect[0]) * (i.rect[3] - i.rect[1]))] : []));
+    expect(Math.max(...onBody(cut))).toBeLessThan(0.1);
+  });
   test("is deterministic", () => {
     expect(layoutStrip(structuredClone(storyboard), images)).toEqual(layout);
   });

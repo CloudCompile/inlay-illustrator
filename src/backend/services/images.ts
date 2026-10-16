@@ -334,6 +334,7 @@ interface ConnectionInfo {
   model: string;
   isDefault: boolean;
   defaultParameters: Record<string, unknown>;
+  defaultParametersReadable: boolean;
   metadata: Record<string, unknown>;
 }
 
@@ -380,7 +381,11 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
 
   function toInfo(dto: unknown): ConnectionInfo {
     const r = asRecord(dto);
-    return { id: str(r.id), name: str(r.name), provider: str(r.provider), model: str(r.model), isDefault: r.is_default === true, defaultParameters: asRecord(r.default_parameters), metadata: asRecord(r.metadata) };
+    const defaults = r.default_parameters;
+    return {
+      id: str(r.id), name: str(r.name), provider: str(r.provider), model: str(r.model), isDefault: r.is_default === true,
+      defaultParameters: asRecord(defaults), defaultParametersReadable: !!defaults && typeof defaults === "object" && !Array.isArray(defaults), metadata: asRecord(r.metadata),
+    };
   }
 
   async function connection(connectionId: string): Promise<ConnectionInfo> {
@@ -417,6 +422,7 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
       model,
       isNovelAIV5: generationProvider === "novelai" && isNovelAIV5Model(model),
       comfyuiWorkflowId: config.image.comfyuiWorkflowId,
+      connectionDefaultsReadable: info.defaultParametersReadable,
     };
   }
 

@@ -1,5 +1,5 @@
 // Round 2 of the webtoon bench (webtoon-bench2/scripts/planner-prompt.ts), copied for Inlay Illustrator; Inlay changes are marked "Inlay:".
-// Inlay: the target panel count follows the message length, and the planner picks one outfit per character from the
+// Inlay: the target panel count follows the message length, frame-break panels are marked ("frame_break"), and the planner picks one outfit per character from the
 // wardrobe (labels + items only; identity / body tags never reach the planner: Gemini's safety stop, webtoon-proto finding 1).
 import type { PlannerCharacter } from "./storyboard-schema.js";
 
@@ -30,6 +30,7 @@ Layouts:
 - "fade_white": full width, fades into white at the bottom (quiet ending, transition).
 - "title": the first panel only (see rule 1).
 Use at least one inset per episode.
+Frame-break: set "frame_break": true on 1 or 2 "action" panels where ONE character makes a strong move (portrait 832x1216 or tall 704x1472, layout "full_width" or an inset, framing "portrait", "upper body" or "cowboy shot", character y 0.5 or 0.7 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Write the base tags as usual (place and light included). Leave "frame_break" false on every other panel.
 
 Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Use the positions to leave room for the balloons: if a balloon goes top-left, put the speaker at x 0.5-0.7 and y 0.5-0.7 so the top-left area stays empty, and describe what fills the empty area in the base tags (sky, ceiling, wall, window, empty street). Two characters must not share the same x.
 
@@ -51,7 +52,7 @@ Output: JSON only, this shape (example values):
  "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
  "panels": [
   {"id": 1, "kind": "image", "beat": "dialogue", "moment": "They argue on the bridge.", "shot": "low-angle two-shot, she is in front",
-   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left",
+   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left", "frame_break": false,
    "nai": {"base": "cowboy shot, from below, outdoors, bridge, sky, sunset\nTwo students on a bridge, open evening sky fills the upper left.",
            "characters": [{"name": "A", "x": 0.5, "y": 0.7, "framing": "cowboy shot", "shoes_off": false, "drop_outfit": [], "prompt": "standing, arms crossed, pout, looking at another\nShe glares at him."},
                           {"name": "B", "x": 0.9, "y": 0.5, "framing": "upper body", "shoes_off": false, "drop_outfit": ["indoor slippers"], "prompt": "hand in pocket, half-closed eyes\nHe shrugs."}]},

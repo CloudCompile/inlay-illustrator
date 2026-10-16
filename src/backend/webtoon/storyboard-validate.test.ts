@@ -81,6 +81,16 @@ describe("webtoon storyboard validation (round 2)", () => {
     expect(stats.sfx_missing_action).toBe(1);
   });
 
+  test("frame-break marks: kept on action panels with one character in a portrait panel, at most 2; none marked -> the first such panel", () => {
+    const one = (name: string) => ({ base: "upper body, street", characters: [{ name, x: 0.5, y: 0.7, framing: "upper body", prompt: "running" }] });
+    const fb = (raw: unknown[]) => validateStoryboard({ title: "T", panels: raw }, ROSTER, SOURCE).storyboard.panels.flatMap((p) => ((p as ImagePanel).frame_break ? [p.id] : []));
+    const action = (id: number, extra: Record<string, unknown> = {}) => image(id, { beat: "action", nai: one("Natsuki"), ...extra });
+    expect(fb([action(1, { frame_break: true }), action(2, { frame_break: true, nai: { ...one("Natsuki"), characters: [...one("Natsuki").characters, { ...one("Jay").characters[0]!, x: 0.9 }] } }), action(3, { frame_break: true }), action(4, { frame_break: true }), image(5, { frame_break: true, nai: one("Jay") })])).toEqual([1, 3]);
+    expect(fb([image(1, { nai: one("Jay") }), action(2), action(3)])).toEqual([2]);
+    expect(fb([image(1, { nai: one("Jay") })])).toEqual([]);
+    const clamped = validateStoryboard({ title: "T", panels: [action(1, { frame_break: true })] }, ROSTER, SOURCE).storyboard.panels[0] as ImagePanel;
+    expect(clamped.nai.characters[0]!.y).toBe(0.5);
+  });
   test("Inlay outfit pick: known ids kept, unknown ids fall back to the current outfit", () => {
     const roster: PlannerRosterEntry[] = [
       { name: "Natsuki", gender: "female", formLabel: "", currentOutfitId: "school", outfits: [{ id: "school", label: "", outfit: {} }, { id: "casual", label: "", outfit: {} }] },

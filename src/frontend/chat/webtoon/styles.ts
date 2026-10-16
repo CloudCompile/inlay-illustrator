@@ -18,6 +18,7 @@ export const WEBTOON_CSS = [
 .ii-wt-panel[data-ii-wt-fade="bottom"] { -webkit-mask-image: linear-gradient(#000 62%, transparent 98%); mask-image: linear-gradient(#000 62%, transparent 98%); }
 .ii-wt-panel[data-ii-wt-fade="sides"] { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%); }
 .ii-wt-img { display: block; max-width: none; user-select: none; }
+.ii-wt-cutout { position: absolute; overflow: hidden; pointer-events: none; }
 .ii-wt-placeholder { display: grid; place-items: center; width: 100%; height: 100%; padding: 12px; box-sizing: border-box; font: 600 15px/1.3 system-ui, sans-serif; color: #8a8178; text-align: center; background: repeating-linear-gradient(135deg, #f5f2ee 0 14px, #ece8e2 14px 28px); }
 .ii-wt-placeholder[data-ii-wt-state="error"] { color: #b4463c; }
 .ii-wt-balloons { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
@@ -42,6 +43,11 @@ export const WEBTOON_CSS = [
 .ii-wt-controls[data-ii-wt-hover] > .ii-wt-take:disabled { opacity: .45; }
 .ii-wt-reroll[data-ii-wt-busy="true"] { animation: ii-wt-spin 1s linear infinite; }
 @keyframes ii-wt-spin { to { transform: rotate(360deg); } }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-reroll, .ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take { left: 8px; right: auto; top: 50%; width: 48px; height: 48px; border-radius: 50%; }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-reroll { margin-top: -84px; font: 700 28px/48px system-ui, sans-serif; }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take { font: 700 34px/44px system-ui, sans-serif; }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take--prev { margin-top: -24px; }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take--next { margin-top: 36px; }
 @media (pointer: coarse) { .ii-wt-reroll, .ii-wt-take { opacity: .85; } .ii-wt-take:disabled { opacity: .4; } }
 .ii-wt-note { padding: 18px; font: 600 14px/1.4 system-ui, sans-serif; color: #6f665c; text-align: center; }
 .ii-wt-strip[data-ii-wt-status="error"] .ii-wt-note { color: #b4463c; }

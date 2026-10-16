@@ -46,7 +46,16 @@ export interface PanelRequest {
   characters: Array<{ name: string; prompt: string; uc: string; x: number; y: number }>;
   /** Weighted key outfit tags per character (for a later identity / outfit check). */
   keyTags: Record<string, string[]>;
+  /** Frame-break panel: base prompt of the transparent cut-out (camera tags only, no place, plus the transparency tags). */
+  cutoutPrompt?: string;
 }
+
+/** NovelAI V5 draws a real alpha channel with these (nai-alpha bench, route 1). */
+export const TRANSPARENT_TAGS = "transparent background, has alpha";
+/** Added to the cut-out's negative: free-floating effect lines on the transparent background would cross the frame on their own. */
+export const CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
+/** Camera / framing tags of the planner's base; everything else there is place, light or props (left out of a cut-out). */
+const CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
 
 const tags = (s: string | undefined) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 const fmt = (n: number) => String(Math.round(n * 100) / 100);
@@ -137,7 +146,8 @@ export function buildPanelRequest(panel: ImagePanel, cast: ReadonlyMap<string, W
   const species = furry.length && furry.length === chars.length
     ? `${fmt(ID_WEIGHT_FURRY)}::${[furryGenderTag(furry[0]!.gender) || "furry", "anthro", speciesName(furry[0]!.identity)].join(", ")}::`
     : "";
-  const prompt = [countTags(chars.map((c) => cast.get(c.name)!.gender)), species, style.style, baseTags].filter(Boolean).join(", ") + (baseSentence ? `\n${baseSentence}` : "");
+  const head = [countTags(chars.map((c) => cast.get(c.name)!.gender)), species, style.style];
+  const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `\n${baseSentence}` : "");
   const keyTags: Record<string, string[]> = {};
   const characters = chars.map((c: StoryCharacter) => {
     const member = cast.get(c.name)!;
@@ -153,7 +163,8 @@ export function buildPanelRequest(panel: ImagePanel, cast: ReadonlyMap<string, W
     };
   });
   const [width, height] = panel.size.split("x").map(Number) as [number, number];
-  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags };
+  const cutoutPrompt = panel.frame_break ? [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", ") : undefined;
+  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...(cutoutPrompt ? { cutoutPrompt } : {}) };
 }
 
 /** Engine `ImageRequest` (provider "novelai") for the dispatcher: fixed centers, `use_coords` forced on, no NSFW prefix. */
