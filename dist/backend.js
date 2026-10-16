@@ -504,6 +504,7 @@ var filename_tag_table_default = {
 // src/shared/contract/character.ts
 var CHARACTER_DESCRIPTION_LORE_ID = "asset-maid:charx-description:v1";
 var CUSTOM_CHARACTER_ID_PREFIX = "character_";
+var PERSONA_PROMPT_KEY_PREFIX = "persona::";
 function loreSelectionId(worldBookId, entryId) {
   return `${trimString(worldBookId)}:${trimString(entryId)}`;
 }
@@ -64201,913 +64202,6 @@ function createComfyReferencePreparer(services) {
   };
 }
 
-// src/backend/webtoon/planner-prompt.ts
-var PLANNER_PROMPT_TEMPLATE = String.raw`You are the storyboard artist for a vertical-scroll Korean-style webtoon (one long strip, 690 px wide, read top to bottom). You adapt ONE chat reply (below) into a short webtoon episode. A code layout engine letters your text on top of the images using YOUR character positions and balloon anchors, so positions matter.
-
-How the target webtoons are built:
-- Every panel is ONE single illustration with ONE camera. Never ask the image model for a comic page, panels, borders, text or speech bubbles.
-- Panels are BIG: most panels are full width and tall (portrait), the reader scrolls through one strong image at a time. Short wide bands are only for establishing shots and object inserts. White gaps between panels are short; only a deliberate pause gets a long white gap.
-- Vary the camera hard: extreme close-ups of eyes or lips, insert shots of hands/objects/feet, low angle, high angle, back view, over-the-shoulder, a wide establishing shot. Never more than two medium shots in a row.
-- Balloons sit ON the art, in the empty part of the panel next to the speaker's head (sky, wall, ceiling), or straddle the panel's top/bottom edge, with a tail pointing at the speaker. They never cover faces. Narration boxes sit on the panel's corners. Sound effects are big bold lettering over the art, and on action beats they break out of the panel frame.
-
-Hard rules (checked by code; violations are removed or repaired automatically):
-1. {{PANELS}} "image" panels in reading order ({{MIN}} to {{MAX}} accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
-2. At most 2 speech/thought balloons per panel, each at most 10 words (12 is the absolute maximum). Split long lines over panels.
-3. Narration goes ON the image panels: up to 2 narration boxes per image panel (one at a top corner = before the panel's dialogue, one at a bottom corner = after it). Use at most 1 "text_beat" panel (narration on white), only for a deliberate pause (a time skip or a punchline beat), and set "pause": true on it.
-4. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag ("No," she said. "I was..." -> "No, I was..."). Never add, change or invent words. Narration boxes reuse the source's own narration wording, shortened.
-5. Sound effects: use MANY, bold and short. Every "action" panel gets 1-2 sfx (an onomatopoeia like "SLAM", "clack", "tak tak", "fwip", "thud", "gulp"), and quieter panels get ambient or emotional sfx (footsteps, door creak, rustle, "ba-dump", "shff", "tick tock") where the moment makes a sound. Aim for at least 5 sfx in the episode. Mark physical action moments (opening, grabbing, turning, dropping, running, slamming) with beat "action": code lets the sfx and the character break out of the panel frame there.
-6. List the story's key props in "key_props" and give each one an "insert" panel (hands/feet/object close-up).
-7. Keep it non-explicit: clothed, no sexual framing.
-
-Image model: NovelAI V5, one image per panel. Sizes (W x H): 832x1216 (portrait), 704x1472 (tall), 1024x1024 (square), 1216x832 (landscape), 1472x704 (wide band).
-Pick sizes like a webtoon artist: portrait 832x1216 or tall 704x1472 for every shot that shows a character, including close-ups and most two-shots (stack them: one in front, one behind, or use a low/high angle). 1216x832 only for a two- or three-shot that truly needs width. 1472x704 only for an establishing shot of a place or an insert of an object/hands.
-Layouts:
-- "full_width" (default, the big panel; any portrait/tall/landscape size).
-- "inset_left" / "inset_right": a large panel (72% of the width) pushed to one side; the free column beside it takes the balloons. Use 832x1216 or 1024x1024. Good for single-character dialogue or reaction shots.
-- "wide_band": 1472x704, ONLY for beat "establishing" or "insert".
-- "tight_crop": a short crop on eyes, lips or hands (beat "reaction" or "insert"), 1216x832 or 1472x704.
-- "fade_white": full width, fades into white at the bottom (quiet ending, transition).
-- "title": the first panel only (see rule 1).
-Use at least one inset per episode.
-Frame-break: set "frame_break": true on 1 or 2 "action" panels where ONE character makes a strong move (portrait 832x1216 or tall 704x1472, layout "full_width" or an inset, framing "portrait", "upper body" or "cowboy shot", character y 0.5 or 0.7 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Write the base tags as usual (place and light included). Leave "frame_break" false on every other panel.
-
-Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Use the positions to leave room for the balloons: if a balloon goes top-left, put the speaker at x 0.5-0.7 and y 0.5-0.7 so the top-left area stays empty, and describe what fills the empty area in the base tags (sky, ceiling, wall, window, empty street). Two characters must not share the same x.
-
-Text anchors (field "anchor" of every text item): "top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge". Pick the balloon anchor next to the speaker's head on the EMPTY side, away from the other character's face. The first balloon of a panel must be higher than the second (reading order). SFX use the same anchors (next to the action). Narration boxes use the corner anchors (top-left, top-right, bottom-left, bottom-right).
-
-Prompt format:
-- "base": camera/framing tags (e.g. "close-up", "eye focus", "from below", "from above", "from behind", "pov", "pov hands", "upper body", "cowboy shot", "full body", "wide shot", "dutch angle"), then location/lighting tags (e.g. "indoors, kitchen, fluorescent light, evening"), then a newline and 1-2 plain English sentences describing the shot and the empty area. Do NOT write count tags (1girl, 1boy: code adds them), artist or quality tags, "speech bubble" or "text".
-- "characters": one entry per visible character (empty list for object-only or no-human shots). "prompt" = ONLY pose, expression, gaze and action tags for this shot (e.g. "walking, from side, looking away, pout, holding bag"), then a newline and one short English sentence of what the character does. Do NOT write hair, eye, body, species or clothing tags: identity and outfit tags are added by code. "framing" = how much of the character is in frame: "portrait" | "upper body" | "cowboy shot" | "lower body" | "full body" | "hands only" (code uses it to pick outfit tags). "shoes_off": true when the character is indoors at home without shoes.
-- "drop_outfit": the outfits come from a fixed wardrobe record and can contain items that only make sense in one place (indoor slippers, house shoes, an apron, a lab coat). When an item clearly contradicts THIS panel's scene (e.g. indoor "uwabaki" school slippers on the street), list it here, copied exactly from the character's item list. Do not drop items just because they are small or hidden; leave the list empty otherwise.
-
-Characters (identity and outfit tags are injected by code; you only pick an outfit, place and pose them):
-{{ROSTER}}
-{{OFFSCREEN}}
-Outfit: for every character you draw, pick the wardrobe outfit that fits this scene (field "outfits": [{"name", "outfit_id"}]); the one marked (current) is what they wore last. "drop_outfit" items refer to the picked outfit.
-
-Output: JSON only, this shape (example values):
-{"title": "Chapter 1: Example",
- "key_props": ["canvas tote bag"],
- "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
- "panels": [
-  {"id": 1, "kind": "image", "beat": "dialogue", "moment": "They argue on the bridge.", "shot": "low-angle two-shot, she is in front",
-   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left", "frame_break": false,
-   "nai": {"base": "cowboy shot, from below, outdoors, bridge, sky, sunset\nTwo students on a bridge, open evening sky fills the upper left.",
-           "characters": [{"name": "A", "x": 0.5, "y": 0.7, "framing": "cowboy shot", "shoes_off": false, "drop_outfit": [], "prompt": "standing, arms crossed, pout, looking at another\nShe glares at him."},
-                          {"name": "B", "x": 0.9, "y": 0.5, "framing": "upper body", "shoes_off": false, "drop_outfit": ["indoor slippers"], "prompt": "hand in pocket, half-closed eyes\nHe shrugs."}]},
-   "text": [{"type": "narration", "speaker": null, "text": "The bridge was empty.", "anchor": "top-right"},
-            {"type": "speech", "speaker": "A", "text": "You're late.", "anchor": "top-left"},
-            {"type": "sfx", "speaker": null, "text": "tap tap", "anchor": "bottom-left"}]},
-  {"id": 2, "kind": "text_beat", "beat": "quiet", "pause": true, "layout": "text_on_white",
-   "text": [{"type": "narration", "speaker": null, "text": "Nobody answered.", "anchor": "top-left"}]}
- ]}
-Field values: kind "image"|"text_beat"; beat "title"|"establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; layout "title"|"full_width"|"inset_left"|"inset_right"|"wide_band"|"tight_crop"|"fade_white"|"text_on_white"; text type "speech"|"thought"|"narration"|"sfx"; speaker = a character name (may be off-panel) or null for narration/sfx; scene_change true when the place or time jumps.
-All text in the language of the chat reply.
-
-The chat reply:
-<<<
-{{SOURCE}}
->>>
-`;
-var PARTS = ["head", "top", "bottom", "legs", "feet"];
-var WEBTOON_MIN_PANELS = 4;
-var WEBTOON_MAX_PANELS = 14;
-function webtoonPanelTarget(sourceLength) {
-  return Math.min(WEBTOON_MAX_PANELS, Math.max(WEBTOON_MIN_PANELS, Math.round(sourceLength / 1000)));
-}
-function webtoonPanelRange(target) {
-  return { min: Math.max(WEBTOON_MIN_PANELS, target - 2), max: Math.min(WEBTOON_MAX_PANELS, target + 2) };
-}
-function items(outfit) {
-  return PARTS.filter((k) => outfit[k]?.trim()).map((k) => `${k}: ${outfit[k]}`).join("; ");
-}
-function rosterLines(roster) {
-  return roster.map((r) => {
-    const who = r.gender === "female" ? "woman/girl" : r.gender === "male" ? "man/boy" : "character";
-    const wardrobe = r.outfits.map((o) => `${o.id}${o.id === r.currentOutfitId ? " (current)" : ""} = "${o.label || o.id}"${items(o.outfit) ? ` (items: ${items(o.outfit)})` : ""}`).join("; ");
-    return `- ${r.name} (${who}): ${r.formLabel || "no label"}; wardrobe: ${wardrobe || "none"}.`;
-  }).join(`
-`);
-}
-function buildPlannerPrompt(args) {
-  const range = webtoonPanelRange(args.panels);
-  const fill = {
-    "{{PANELS}}": String(args.panels),
-    "{{MIN}}": String(range.min),
-    "{{MAX}}": String(range.max),
-    "{{ROSTER}}": rosterLines(args.roster),
-    "{{OFFSCREEN}}": args.offscreenNote ?? "",
-    "{{SOURCE}}": args.source
-  };
-  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
-}
-function chosenOutfits(raw, roster, log) {
-  const picks = new Map;
-  const list = raw && typeof raw === "object" && Array.isArray(raw.outfits) ? raw.outfits : [];
-  for (const entry of list) {
-    const e = entry && typeof entry === "object" ? entry : {};
-    if (typeof e.name === "string" && typeof e.outfit_id === "string")
-      picks.set(e.name.trim(), e.outfit_id.trim());
-  }
-  const out = {};
-  for (const r of roster) {
-    const pick = picks.get(r.name);
-    const ok = !!pick && r.outfits.some((o) => o.id === pick);
-    if (pick && !ok)
-      log.push(`${r.name}: unknown outfit "${pick}" -> ${r.currentOutfitId}`);
-    if (ok || r.currentOutfitId)
-      out[r.name] = ok ? pick : r.currentOutfitId;
-  }
-  return out;
-}
-
-// src/backend/webtoon/panel-request.ts
-var PARTS2 = ["head", "top", "bottom", "legs", "feet"];
-var OUTER_TOP = /jacket|blazer|coat|hoodie|cardigan|gakuran|sweater|uniform|apron|undershirt/iu;
-var HANDS_ONLY = { head: 0, top: 0.5, bottom: 0, legs: 0, feet: 0 };
-var WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panels, border";
-var MANGA_NEGATIVE = "speech bubble, text, english text, multiple panels, panel border";
-var TRANSPARENT_TAGS = "transparent background, has alpha";
-var CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
-var CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
-var SCENE_OBJECT = /\b(?:door|doorway|screen|shoji|wall|window|fence|railing|table|desk|chair|bench|bed|futon|couch|sofa|counter|shelf|cabinet|locker|car|tree|floor|ground|stairs|gate|pillar|post|sink|stove|fridge|refrigerator|mirror|curtain)s?\b/iu;
-var HELD = /^(?:holding|carrying|hugging|grabbing|clutching|wielding|lifting|raising)\b/iu;
-var BODY = /\b(?:shoulders?|hips?|chest|face|head|cheeks?|mouth|chin|knees?|back|hair|lap|waist|arms?|hands?|legs?|eyes?|ears?|neck|stomach|thighs?)\b/iu;
-var RELATION = /^(.*?)\s+(?:on|against|at|behind|beside|near|by|into|through|under|over|across|onto|toward|towards|in front of|inside|out of)\s+(.+)$/iu;
-var POSTURE = /^(?:sitting|standing|kneeling|lying|leaning|crouching|squatting|reclining)$/iu;
-function cutoutPose(poseTags, placeTags) {
-  const place = placeTags.map((t) => t.toLowerCase()).filter((t) => t.length > 3);
-  const scene = (s) => SCENE_OBJECT.test(s) || place.some((p) => s.toLowerCase().includes(p));
-  return tags(poseTags).flatMap((t) => {
-    if (CAMERA.test(t))
-      return [t];
-    if (HELD.test(t) || /^looking\b/iu.test(t))
-      return scene(t) ? [] : [t];
-    const relation = RELATION.exec(t);
-    if (relation)
-      return BODY.test(relation[2]) && !scene(relation[2]) ? [t] : POSTURE.test(relation[1].trim()) ? [relation[1].trim()] : [];
-    return scene(t) ? [] : [t];
-  }).join(", ");
-}
-var tags = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
-var fmt = (n) => String(Math.round(n * 100) / 100);
-function outfitPrompt(outfit, framing, weights, shoesOff, drop = []) {
-  const w = framing === "hands only" ? HANDS_ONLY : Object.fromEntries(PARTS2.map((p) => [p, weights[p]?.[framing] ?? 1]));
-  const dropped = new Set(drop.map((d) => d.toLowerCase()));
-  const out = [];
-  const keyTags = [];
-  for (const part of PARTS2) {
-    const wp = w[part] ?? 1;
-    if (part === "feet" && shoesOff) {
-      if (wp > 0)
-        out.push("no shoes");
-      continue;
-    }
-    const list = tags(outfit[part]).filter((t) => !dropped.has(t.toLowerCase()));
-    if (!list.length || wp <= 0)
-      continue;
-    for (const t of list) {
-      const key = (part === "legs" || part === "feet") && wp >= 0.8 || part === "top" && wp >= 1 && OUTER_TOP.test(t);
-      if (key) {
-        out.push(`${fmt(part === "legs" || part === "feet" ? 1.3 : 1.2)}::${t}::`);
-        keyTags.push(t);
-      } else
-        out.push(wp < 1 ? `${fmt(wp)}::${t}::` : t);
-    }
-  }
-  return { prompt: out.join(", "), keyTags };
-}
-var SPECIES = /^(furry|anthro|furry (fe)?male|kemono|snout|muzzle|fangs|.*\bfur\b.*|.*\bspots\b|.*\b(tail|scales|feathers|beak|paws|whiskers)\b|animal ears|floppy ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears|dalmatian|(dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)|.*\bchest (fur|tuft)\b.*)$/iu;
-var HAIR_COLOR = /^(pink|black|brown|blonde|blond|white|gray|grey|red|blue|green|purple|silver|orange|light brown|dark brown) hair$/iu;
-var HAIR = /hair|braid|ponytail|pigtails|twintails|bangs|bob cut|bun$/iu;
-var KEMONOMIMI_EARS = /^(animal ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears)$/iu;
-var SPECIES_NAME = /^(dalmatian|dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)$/iu;
-var ID_WEIGHT_FURRY = 1.3;
-var ID_WEIGHT_HAIR = 1.1;
-var isFurry = (identity) => tags(identity).some((t) => /^(furry|anthro)$/iu.test(t));
-var speciesName = (identity) => tags(identity).find((t) => SPECIES_NAME.test(t)) ?? "animal";
-var furryGenderTag = (gender) => gender === "female" ? "furry female" : gender === "male" ? "furry male" : "";
-function identityPrompt(member, boost = 0) {
-  const furry = isFurry(member.identity);
-  const ts = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
-  const gender = ts.filter((t) => t === "female" || t === "male");
-  const named = ts.filter((t) => t.includes("\\(") || !gender.includes(t) && ts.indexOf(t) === gender.length && !SPECIES.test(t) && !HAIR.test(t) && t.includes(" ") && !/eyes|skin/u.test(t));
-  let species = ts.filter((t) => furry && SPECIES.test(t) && !named.includes(t));
-  if (furry)
-    species = [...new Set([...["furry", "anthro", furryGenderTag(member.gender), speciesName(member.identity), "muzzle"].filter(Boolean), ...species])];
-  const hair = ts.filter((t) => HAIR.test(t) && !species.includes(t) && !named.includes(t));
-  const rest = ts.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
-  const out = [...gender, ...named];
-  if (species.length)
-    out.push(`${fmt(ID_WEIGHT_FURRY + boost)}::${species.join(", ")}::`);
-  for (const t of hair)
-    out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR + boost)}::${t}::` : t);
-  return [...out, ...rest].join(", ");
-}
-function furryBaseTag(members, boost = 0) {
-  const furry = members.filter((m) => isFurry(m.identity));
-  return furry.length && furry.length === members.length ? `${fmt(ID_WEIGHT_FURRY + boost)}::${[furryGenderTag(furry[0].gender) || "furry", "anthro", speciesName(furry[0].identity)].join(", ")}::` : "";
-}
-var identityNegative = (identity) => isFurry(identity) ? "human, kemonomimi mode, human face, human skin" : "";
-function countTags(genders) {
-  const f = genders.filter((g) => g === "female").length;
-  const m = genders.filter((g) => g === "male").length;
-  const o = genders.length - f - m;
-  const parts = [f ? `${f}girl${f > 1 ? "s" : ""}` : "", m ? `${m}boy${m > 1 ? "s" : ""}` : "", o ? `${o}other${o > 1 ? "s" : ""}` : ""].filter(Boolean);
-  return parts.length ? parts.join(", ") : "no humans";
-}
-function splitPrompt(p) {
-  const i = p.indexOf(`
-`);
-  const head = (i < 0 ? p : p.slice(0, i)).trim().replace(/^,+|,+$/gu, "").trim();
-  return [head, i < 0 ? "" : p.slice(i + 1).trim()];
-}
-function dedupeTags(s) {
-  const seen = new Set;
-  return tags(s).filter((t) => seen.has(t.toLowerCase()) ? false : (seen.add(t.toLowerCase()), true)).join(", ");
-}
-function buildPanelRequest(panel, cast, style) {
-  const chars = panel.nai.characters.filter((c) => cast.has(c.name));
-  const [baseTags, baseSentence] = splitPrompt(panel.nai.base);
-  const species = furryBaseTag(chars.map((c) => cast.get(c.name)));
-  const head = [countTags(chars.map((c) => cast.get(c.name).gender)), species, style.style];
-  const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
-${baseSentence}` : "");
-  const keyTags = {};
-  const cutoutCharacters = [];
-  const placeTags = tags(baseTags).filter((t) => !CAMERA.test(t));
-  const characters = chars.map((c) => {
-    const member = cast.get(c.name);
-    const [poseTags, sentence] = splitPrompt(c.prompt);
-    const outfit = outfitPrompt(member.outfit, c.framing, style.framingWeights, c.shoes_off === true, c.drop_outfit ?? []);
-    keyTags[c.name] = outfit.keyTags;
-    cutoutCharacters.push([identityPrompt(member), cutoutPose(poseTags, placeTags), outfit.prompt].filter(Boolean).join(", "));
-    return {
-      name: c.name,
-      prompt: [identityPrompt(member), poseTags, outfit.prompt].filter(Boolean).join(", ") + (sentence ? `
-${sentence}` : ""),
-      uc: identityNegative(member.identity),
-      x: c.x,
-      y: c.y
-    };
-  });
-  const [width, height] = panel.size.split("x").map(Number);
-  const cutout = panel.frame_break ? { prompt: [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", "), characters: cutoutCharacters } : undefined;
-  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...cutout ? { cutout } : {} };
-}
-function engineImageRequest(request, style, seed) {
-  return {
-    provider: "novelai",
-    prompt: request.prompt,
-    negativePrompt: request.negativePrompt,
-    seed,
-    width: request.width,
-    height: request.height,
-    forceNsfwPrefix: false,
-    config: {
-      ...style.params,
-      analysisProfile: "v5-hybrid",
-      width: request.width,
-      height: request.height,
-      useOrder: true,
-      useCoords: true,
-      forceCharacterCoordinates: true,
-      characterPrompts: request.characters.map((c) => ({ prompt: c.prompt, uc: c.uc, centerX: c.x, centerY: c.y, coordinateMode: "fixed" }))
-    },
-    references: [],
-    queueMeta: { kind: "generation", source: "webtoon", sourceImageToken: `webtoon:panel:${request.panelId}` }
-  };
-}
-
-// src/backend/webtoon/manga-planner-prompt.ts
-var MANGA_PLANNER_TEMPLATE = String.raw`You are the storyboard artist ("name" / thumbnail artist) for a Japanese manga. You adapt ONE chat reply (below) into a short manga chapter of about {{PAGES}} pages. Pages are read right to left: panels in a row from right to left, rows from top to bottom. Code builds the pages from a small library of page templates and letters your text on top of the images, so you decide WHAT each panel shows and how IMPORTANT it is; code decides the exact panel shapes.
-
-How the target manga are built:
-- Every panel is ONE single illustration with ONE camera. Never ask the image model for a manga page, panels, borders, text or speech bubbles.
-- Rhythm: a page has 4-7 panels. Each page has one big panel (the strongest beat of the page: a reveal, an emotional peak, an establishing view), several normal panels, and small panels for quick beats (a reaction face, an insert of hands/objects/feet, a pause).
-- Vary the camera hard like a manga artist: extreme close-ups of eyes, insert shots of hands/objects/feet, low angle, high angle, back view, over-the-shoulder, a wide establishing shot of the street or room. Never more than two medium shots in a row. The chapter opens with an establishing panel.
-- Outbursts are the best manga beats: a shouted line, a sudden reaction or a punchline ("You don't have a hand mixer?!") gets its own panel (a head snap, a close-up reaction) instead of sharing a panel with calm lines.
-- Speech balloons sit in the empty part of the panel next to the speaker's head; they may cross the panel border into the white gutter. Narration sits in rectangular boxes at a panel corner. Sound effects (SFX) are hand-lettered over the art.
-
-Hard rules (checked by code; violations are removed or repaired automatically):
-1. {{PANELS}} panels in reading order ({{MIN}} to {{MAX}} accepted).
-2. "importance" per panel: "big" (about 1 per page), "small" (quick reaction, insert, pause: about 1/3 of the panels), "normal" (the rest).
-3. At most 2 speech/thought balloons per panel, each ONE short beat of at most 8 words (12 is the absolute maximum): split a long line into two balloons at a sentence break. A "small" panel gets at most 1 balloon.
-4. Up to 1 narration box per panel (at most 12 words). Narration reuses the source's own narration wording, shortened.
-5. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag. Never join two different lines (from different moments) into one balloon. Never add, change or invent words.
-6. "tone" of a speech balloon: "shout" when the line is yelled or snapped (an exclamation, "she yelled"), "whisper" when it is whispered, muttered or said under the breath; leave it out otherwise.
-7. Sound effects: short English onomatopoeia. When the source writes a sound ("*click*", "bzzt", "thud", a door that slams, a phone that buzzes), use that sound: copy the source's sound word, or write the sound the source describes (a silent text alert is "bzzt", not "ring"; loafers on stairs "click click"; a pillow hit "fwump"). Every "action" panel gets 1 sfx; quiet panels may get an ambient one. Aim for 5-8 sfx in the chapter.
-8. List the story's key props in "key_props" and give the most important ones an "insert" panel (hands/feet/object close-up, framing "hands only" or no characters).
-9. Keep it non-explicit: clothed, no sexual framing, no suggestive tags.
-
-Image model: NovelAI V5, one image per panel (code picks the size from the panel shape).{{STYLE}}
-
-Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Leave room for balloons: with a speaker at x 0.3 the right side stays empty for the balloon (manga balloons are read first at the top RIGHT). Two characters must not share the same x. In a two-shot, put the character who speaks FIRST on the RIGHT.
-Frame-break: set "frame_break": true on 1 "action" panel per page at most, where ONE character makes a strong move (framing "portrait", "upper body" or "cowboy shot", character y 0.5 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Leave "frame_break" false on every other panel.
-
-Prompt format:
-- "base": camera/framing tags (e.g. "close-up", "eye focus", "from below", "from above", "from behind", "pov", "upper body", "cowboy shot", "full body", "wide shot", "dutch angle"), then location/lighting tags (e.g. "indoors, kitchen, evening"), then a newline and 1-2 plain English sentences describing the shot. Do NOT write count tags (1girl, 1boy: code adds them), artist, style or quality tags, "speech bubble" or "text".
-- "characters": one entry per visible character (empty list for object-only or no-human shots). "prompt" = ONLY pose, expression, gaze and action tags for this shot (e.g. "walking, from side, looking away, pout, holding bag"), then a newline and one short English sentence of what the character does. Do NOT write hair, eye, body, species or clothing tags: identity and outfit tags are added by code. "framing" = "portrait" | "upper body" | "cowboy shot" | "lower body" | "full body" | "hands only". "shoes_off": true when indoors at home without shoes.
-- "drop_outfit": when an outfit item clearly contradicts THIS panel's scene (e.g. indoor "uwabaki" school slippers on the street, shoes indoors), list it here, copied exactly from the character's item list; otherwise leave it empty.
-
-Characters (identity and outfit tags are injected by code; you only pick an outfit, place and pose them):
-{{ROSTER}}
-Outfit: for every character you draw, pick the wardrobe outfit that fits this scene (field "outfits": [{"name", "outfit_id"}]); the one marked (current) is what they wore last. "drop_outfit" items refer to the picked outfit.
-
-Output: JSON only, this shape (example values):
-{"title": "Chapter 1: Example",
- "key_props": ["canvas tote bag"],
- "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
- "panels": [
-  {"id": 1, "importance": "big", "beat": "establishing", "shot": "wide shot from below, the bridge and evening sky", "moment": "They walk onto the bridge.", "frame_break": false,
-   "nai": {"base": "wide shot, from below, full body, outdoors, bridge, sky, sunset\nTwo students walk onto a long bridge under a wide evening sky.",
-           "characters": [{"name": "A", "x": 0.7, "y": 0.7, "framing": "full body", "shoes_off": false, "drop_outfit": [], "prompt": "walking, arms crossed, pout\nShe walks ahead, sulking."},
-                          {"name": "B", "x": 0.3, "y": 0.7, "framing": "full body", "shoes_off": false, "drop_outfit": [], "prompt": "walking, hand in pocket, half-closed eyes\nHe follows her."}]},
-   "text": [{"type": "narration", "speaker": null, "text": "The bridge was empty."},
-            {"type": "speech", "speaker": "A", "text": "You're late!", "tone": "shout"},
-            {"type": "sfx", "speaker": null, "text": "tap tap"}]},
-  {"id": 2, "importance": "small", "beat": "insert", "shot": "close-up of her hand on the bag strap", "moment": "...", "nai": {"base": "...", "characters": []}, "text": []}
- ]}
-Field values: importance "small"|"normal"|"big"; beat "establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; text type "speech"|"thought"|"narration"|"sfx"; tone "shout"|"whisper" (speech only, optional); speaker = a character name (may be off-panel) or null for narration/sfx; text items in reading order.
-All text in the language of the chat reply.
-
-The chat reply:
-<<<
-{{SOURCE}}
->>>
-`;
-function mangaPagesHint(panels) {
-  const lo = Math.max(1, Math.ceil(panels / 6)), hi = Math.max(1, Math.ceil(panels / 4));
-  return lo === hi ? String(lo) : `${lo}-${hi}`;
-}
-function buildMangaPlannerPrompt(args) {
-  const range = webtoonPanelRange(args.panels);
-  const style = args.mono ? " The art style is black-and-white manga (greyscale): do not rely on colours to tell characters or things apart; use pose, framing, props and light, and write no colour words." : "";
-  const fill = {
-    "{{PANELS}}": String(args.panels),
-    "{{MIN}}": String(range.min),
-    "{{MAX}}": String(range.max),
-    "{{PAGES}}": mangaPagesHint(args.panels),
-    "{{STYLE}}": style,
-    "{{ROSTER}}": rosterLines(args.roster),
-    "{{SOURCE}}": args.source
-  };
-  return MANGA_PLANNER_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|PAGES|STYLE|ROSTER|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
-}
-
-// src/backend/webtoon/manga-style.ts
-var MONO_TAGS = "monochrome, greyscale";
-var MONO = new Set(["greyscale", "grayscale", "monochrome"]);
-function weightedRuns(prompt) {
-  const parts = prompt.split("::");
-  const runs = [];
-  let weight = null;
-  parts.forEach((part, i) => {
-    if (weight !== null) {
-      runs.push([part, weight]);
-      weight = null;
-      return;
-    }
-    const opener = i < parts.length - 1 ? /(-?\d*\.?\d+)\s*$/u.exec(part) : null;
-    runs.push([opener ? part.slice(0, opener.index) : part, 1]);
-    if (opener)
-      weight = Number(opener[1]);
-  });
-  return runs;
-}
-function isMonochromeStyle(positive) {
-  return weightedRuns(positive).some(([text, weight]) => weight > 0 && text.split(/[,\n]/u).some((tag) => MONO.has(tag.replace(/[{}[\]()]/gu, "").trim().toLowerCase())));
-}
-var COLOUR = "red|orange|yellow|green|blue|purple|violet|pink|brown|grey|gray|silver|gold|golden|blonde|blond|platinum|teal|cyan|magenta|beige|navy|maroon|crimson|scarlet|amber|aqua|aquamarine|turquoise|lavender|lilac|indigo|khaki|olive|peach|emerald|ruby|sapphire|azure|multicolou?red|colou?rful|rainbow|two-tone";
-var COLOUR_WORD = new RegExp(`\\b(?:(?:light|dark|pale|bright|deep|pastel|neon|hot|baby|sky|dusty|vivid)[\\s-]+)?(?:${COLOUR})(?:[\\s-]*(?:colou?red|tinted|ish))?\\b`, "giu");
-var BARE = /^(?:hair|eyes?|pupils|irises|skin|hair and eyes|and|&)?$/iu;
-function stripPiece(piece) {
-  if (piece.includes("("))
-    return piece;
-  const lead = /^\s*/u.exec(piece)[0];
-  const out = piece.replace(COLOUR_WORD, " ").replace(/(?:\s*(?:-|\/|&|\band\b))+\s*$/iu, "").replace(/^(?:\s*(?:-|\/|&|and\b))+\s*/iu, "").replace(/\s{2,}/gu, " ").trim();
-  return BARE.test(out) ? "" : lead + out;
-}
-function stripColours(prompt) {
-  const tokens = [];
-  prompt.split(/(-?\d*\.?\d+::|::|,|\n)/u).forEach((t, i) => {
-    if (i % 2 === 0) {
-      const tag = stripPiece(t).trim();
-      if (tag)
-        tokens.push({ tag });
-    } else if (t === `
-`)
-      tokens.push({ nl: true });
-    else if (t === "::")
-      tokens.push({ close: true });
-    else if (t !== ",")
-      tokens.push({ open: t });
-  });
-  let out = "";
-  let comma = false;
-  for (let i = 0;i < tokens.length; i++) {
-    const t = tokens[i];
-    if ("tag" in t) {
-      out += (comma ? ", " : "") + t.tag;
-      comma = true;
-    } else if ("nl" in t) {
-      out += `
-`;
-      comma = false;
-    } else if ("open" in t) {
-      const next = tokens[i + 1];
-      if (next && "close" in next)
-        i++;
-      else {
-        out += (comma ? ", " : "") + t.open;
-        comma = false;
-      }
-    } else {
-      out += "::";
-      comma = true;
-    }
-  }
-  return out;
-}
-function monoCast(cast) {
-  return new Map([...cast].map(([name, m]) => [name, {
-    ...m,
-    identity: stripColours(m.identity),
-    outfit: Object.fromEntries(Object.entries(m.outfit).map(([part, tags]) => [part, stripColours(tags ?? "")]))
-  }]));
-}
-function monoPanel(panel) {
-  return { ...panel, nai: { base: stripColours(panel.nai.base), characters: panel.nai.characters.map((c) => ({ ...c, prompt: stripColours(c.prompt) })) } };
-}
-function withMonoTags(request) {
-  const mono = (prompt) => `${MONO_TAGS}, ${prompt}`;
-  return {
-    ...request,
-    characters: request.characters.map((c) => ({ ...c, prompt: mono(c.prompt) })),
-    ...request.cutout ? { cutout: { ...request.cutout, characters: request.cutout.characters.map(mono) } } : {}
-  };
-}
-
-// src/backend/webtoon/storyboard-schema.ts
-var IMAGE_SIZES = ["832x1216", "704x1472", "1024x1024", "1216x832", "1472x704"];
-var PORTRAIT_SIZES = ["832x1216", "704x1472"];
-var LAYOUTS = ["title", "full_width", "inset_left", "inset_right", "wide_band", "tight_crop", "fade_white", "text_on_white"];
-var BEATS = ["title", "establishing", "action", "dialogue", "reaction", "insert", "quiet"];
-var ANCHORS = ["top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge"];
-var FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full body", "hands only"];
-var TEXT_TYPES = ["speech", "thought", "narration", "sfx"];
-var GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
-var str4 = { type: "string" };
-var num2 = { type: "number" };
-var textItem = {
-  type: "object",
-  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str4, anchor: { type: "string", enum: [...ANCHORS] } },
-  required: ["type", "text", "anchor"]
-};
-var STORYBOARD_JSON_SCHEMA = {
-  type: "object",
-  properties: {
-    title: str4,
-    key_props: { type: "array", items: str4 },
-    panels: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          id: { type: "integer" },
-          kind: { type: "string", enum: ["image", "text_beat"] },
-          beat: { type: "string", enum: [...BEATS] },
-          moment: str4,
-          shot: str4,
-          size: { type: "string", enum: [...IMAGE_SIZES] },
-          layout: { type: "string", enum: [...LAYOUTS] },
-          scene_change: { type: "boolean" },
-          pause: { type: "boolean" },
-          frame_break: { type: "boolean" },
-          balloon_space: str4,
-          nai: {
-            type: "object",
-            properties: {
-              base: str4,
-              characters: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: str4,
-                    x: num2,
-                    y: num2,
-                    framing: { type: "string", enum: [...FRAMINGS] },
-                    shoes_off: { type: "boolean" },
-                    drop_outfit: { type: "array", items: str4 },
-                    prompt: str4
-                  },
-                  required: ["name", "x", "y", "framing", "prompt"]
-                }
-              }
-            },
-            required: ["base", "characters"]
-          },
-          text: { type: "array", items: textItem }
-        },
-        required: ["id", "kind", "beat", "layout", "text"]
-      }
-    }
-  },
-  required: ["title", "panels"]
-};
-
-// src/backend/webtoon/storyboard-validate.ts
-var LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6, maxFrameBreaks: 2 };
-function normWords(s) {
-  s = s.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
-  return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
-}
-function fragments(text) {
-  return text.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/).map((f) => f.trim()).filter((f) => normWords(f).length);
-}
-function speechStream(para) {
-  const segs = [];
-  for (const m of para.matchAll(/["\u201c]([^"\u201d]*)["\u201d]|\*([^*]+)\*/g))
-    segs.push((m[1] ?? m[2] ?? "").trim());
-  return segs.join(" ");
-}
-function buildQuoteIndex(source) {
-  const paras = source.split(`
-`).filter((p) => p.trim());
-  const streams = paras.map(speechStream).filter((s) => s.trim());
-  const texts = [...paras, ...streams];
-  return { texts, hay: [" " + normWords(source).join(" ") + " ", ...streams.map((s) => " " + normWords(s).join(" ") + " ")] };
-}
-function lcs(a, b) {
-  const dp = new Array(b.length + 1).fill(0);
-  for (let i = 1;i <= a.length; i++) {
-    let prev = 0;
-    for (let j = 1;j <= b.length; j++) {
-      const tmp = dp[j];
-      dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
-      prev = tmp;
-    }
-  }
-  return dp[b.length];
-}
-function repairFragment(frag, idx) {
-  const tw = normWords(frag);
-  const n = tw.length;
-  let best = [0, null];
-  for (const text of idx.texts) {
-    const toks = [...text.matchAll(/[A-Za-z0-9'\u2019]+/g)].map((m) => ({ w: m[0].replace(/^['\u2019]+|['\u2019]+$/g, "").toLowerCase().replace(/\u2019/g, "'"), a: m.index, b: m.index + m[0].length })).filter((t) => t.w);
-    for (const L of new Set([Math.max(1, n - 1), n, n + 1])) {
-      for (let i = 0;i + L <= toks.length; i++) {
-        const win = toks.slice(i, i + L);
-        const r = 2 * lcs(tw, win.map((t) => t.w)) / (n + L);
-        if (r > best[0])
-          best = [r, text.slice(win[0].a, win[L - 1].b)];
-      }
-    }
-  }
-  return best;
-}
-function checkQuote(text, idx) {
-  const keep = [];
-  const notes = [];
-  for (const f of fragments(text)) {
-    const w = " " + normWords(f).join(" ") + " ";
-    const hit = idx.hay.findIndex((h) => h.includes(w));
-    if (hit === 0) {
-      keep.push(f);
-      continue;
-    }
-    if (hit > 0) {
-      keep.push(f);
-      notes.push({ kind: "joined", fragment: f, replacement: null, ratio: 1 });
-      continue;
-    }
-    const [r, cand] = repairFragment(f, idx);
-    if (r >= LIMITS.repairRatio && cand) {
-      const end = /[!?.]$/.test(f.trimEnd()) ? f.trimEnd().slice(-1) : "";
-      keep.push(cand + end);
-      notes.push({ kind: "repaired", fragment: f, replacement: cand + end, ratio: r });
-    } else
-      notes.push({ kind: "dropped", fragment: f, replacement: null, ratio: r });
-  }
-  return { text: keep.length ? keep.join(text.includes("...") || text.includes("…") ? "... " : " ").replace(/([.!?])\.\.\. /g, "$1 ") : null, notes };
-}
-function splitLong(t) {
-  const words = t.split(/\s+/);
-  if (words.length <= LIMITS.maxWords)
-    return [t];
-  const parts = t.split(/(?<=[.!?])\s+/);
-  if (parts.length < 2)
-    return [t];
-  const a = [], b = [];
-  let acc = 0;
-  for (const p of parts) {
-    (acc + p.split(/\s+/).length <= Math.ceil(words.length / 2) || !a.length ? a : b).push(p);
-    acc += p.split(/\s+/).length;
-  }
-  return b.length ? [a.join(" "), b.join(" ")] : [t];
-}
-var snap = (v) => {
-  const n = Number(v);
-  const x = Number.isFinite(n) ? n : 0.5;
-  return GRID.reduce((a, g) => Math.abs(g - x) < Math.abs(a - x) ? g : a, GRID[0]);
-};
-function hardOk(raw, images) {
-  try {
-    const imgs = raw.panels.filter((p) => p?.kind === "image");
-    return imgs.length >= images.min && imgs.length <= images.max && imgs.every((p) => p.nai?.base);
-  } catch {
-    return false;
-  }
-}
-function outfitItems(r) {
-  return Object.values(r.outfit).flatMap((v) => (v ?? "").split(",").map((t) => t.trim()).filter(Boolean));
-}
-function checkedQuote(panelId, text, idx, log, stats) {
-  const q = checkQuote(text, idx);
-  for (const nt of q.notes) {
-    if (nt.kind === "repaired") {
-      stats.quote_repaired++;
-      log.push(`p${panelId}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`);
-    } else if (nt.kind === "joined") {
-      stats.quote_joined++;
-      log.push(`p${panelId}: quote kept, joined across narration "${nt.fragment}"`);
-    } else {
-      stats.invented_dropped++;
-      log.push(`p${panelId}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`);
-    }
-  }
-  return q.text;
-}
-function validateCharacters(p, byName, log, stats) {
-  const chars = [];
-  for (const c of p.nai.characters ?? []) {
-    const r = byName.get(c.name);
-    if (!r) {
-      stats.unknown_char++;
-      log.push(`p${p.id}: dropped unknown character ${c.name}`);
-      continue;
-    }
-    c.x = snap(c.x);
-    c.y = snap(c.y);
-    if (!FRAMINGS.includes(c.framing))
-      c.framing = "upper body";
-    const items = outfitItems(r);
-    const drops = [];
-    for (const d of c.drop_outfit ?? []) {
-      const dl = String(d).toLowerCase().trim();
-      const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
-      if (hit.length === 1) {
-        drops.push(hit[0]);
-        stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`);
-        log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`);
-      } else
-        log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
-    }
-    c.drop_outfit = drops;
-    chars.push(c);
-  }
-  const used = new Set;
-  for (const c of chars) {
-    let k = 0;
-    while (used.has(c.x) && k++ < 5) {
-      c.x = GRID[(GRID.indexOf(c.x) + 1) % 5];
-      log.push(`p${p.id}: moved ${c.name} x (same column)`);
-    }
-    used.add(c.x);
-  }
-  return chars;
-}
-function validateStoryboard(raw, roster, source) {
-  const log = [];
-  const stats = {
-    invented_dropped: 0,
-    quote_repaired: 0,
-    quote_joined: 0,
-    balloons_dropped: 0,
-    split: 0,
-    layout_repaired: 0,
-    size_repaired: 0,
-    narration_merged: 0,
-    sfx_missing_action: 0,
-    unknown_char: 0,
-    outfit_dropped: []
-  };
-  const byName = new Map(roster.map((r) => [r.name, r]));
-  const idx = buildQuoteIndex(source);
-  const sb = { title: String(raw.title ?? ""), key_props: raw.key_props ?? [], panels: [] };
-  const panels = (raw.panels ?? []).filter((p) => p && typeof p === "object");
-  for (const p of panels) {
-    const out = [];
-    for (const t0 of p.text ?? []) {
-      if (!t0 || !String(t0.text ?? "").trim())
-        continue;
-      const t = { type: t0.type, speaker: t0.speaker ?? null, text: String(t0.text).trim(), anchor: t0.anchor };
-      if (!["speech", "thought", "narration", "sfx"].includes(t.type))
-        continue;
-      const a = String(t.anchor);
-      t.anchor = a === "gutter-above" ? "over-top-edge" : a === "gutter-below" ? "over-bottom-edge" : ANCHORS.includes(a) ? a : t.type === "narration" ? "top-left" : "top";
-      if (t.type === "speech" || t.type === "thought") {
-        const text = checkedQuote(p.id, t.text, idx, log, stats);
-        if (!text)
-          continue;
-        t.text = text;
-        const parts = splitLong(t.text);
-        if (parts.length > 1) {
-          stats.split++;
-          log.push(`p${p.id}: split ${t.text.split(/\s+/).length}-word balloon`);
-          out.push({ ...t, text: parts[0] }, { ...t, text: parts[1] });
-          continue;
-        }
-      }
-      out.push(t);
-    }
-    p.text = out;
-  }
-  let pauseKept = false;
-  const narrCount = (p) => p.text.filter((t) => t.type === "narration").length;
-  const kept = [];
-  panels.forEach((p, i) => {
-    if (p.kind !== "text_beat") {
-      kept.push(p);
-      return;
-    }
-    if (p.pause && !pauseKept) {
-      pauseKept = true;
-      p.layout = "text_on_white";
-      kept.push(p);
-      return;
-    }
-    const next = panels.slice(i + 1).find((q) => q.kind === "image");
-    const prev = [...kept].reverse().find((q) => q.kind === "image");
-    const items = p.text;
-    const room = (q) => q && narrCount(q) + items.filter((t) => t.type === "narration").length <= LIMITS.maxNarrImage;
-    if (room(next)) {
-      next.text = [...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "top-right" : "top-left" : t.anchor })), ...next.text];
-      if (p.scene_change)
-        next.scene_change = true;
-      stats.narration_merged += items.length;
-      log.push(`p${p.id}: text beat merged into the top of p${next.id}`);
-    } else if (room(prev)) {
-      prev.text = [...prev.text, ...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "bottom-left" : "bottom-right" : t.anchor }))];
-      stats.narration_merged += items.length;
-      log.push(`p${p.id}: text beat merged into the bottom of p${prev.id}`);
-    } else if (!pauseKept) {
-      pauseKept = true;
-      p.pause = true;
-      kept.push(p);
-      log.push(`p${p.id}: text beat kept as the pause (no room to merge)`);
-    } else {
-      stats.balloons_dropped += items.length;
-      log.push(`p${p.id}: text beat dropped (no room)`);
-    }
-  });
-  const imgs = kept.filter((p) => p.kind === "image");
-  imgs.forEach((p, i) => {
-    const nai = p.nai ??= { base: "", characters: [] };
-    if (!IMAGE_SIZES.includes(p.size)) {
-      p.size = "832x1216";
-      log.push(`p${p.id}: bad size -> 832x1216`);
-    }
-    const chars = validateCharacters(p, byName, log, stats);
-    nai.characters = chars;
-    if (!LAYOUTS.includes(p.layout) || p.layout === "text_on_white")
-      p.layout = "full_width";
-    if (p.layout === "title" && i > 0) {
-      p.layout = "full_width";
-      log.push(`p${p.id}: title only on the first panel -> full_width`);
-    }
-    const tallFor = () => chars.length >= 2 && p.size === "1216x832" ? "1216x832" : "832x1216";
-    if (p.layout === "wide_band" && p.beat === "reaction") {
-      p.layout = "tight_crop";
-      log.push(`p${p.id}: wide_band on a reaction beat -> tight_crop`);
-    }
-    if (p.layout === "wide_band" && !["establishing", "insert", "title"].includes(p.beat)) {
-      p.layout = "full_width";
-      p.size = tallFor();
-      stats.layout_repaired++;
-      log.push(`p${p.id}: wide_band on a ${p.beat} beat -> full_width ${p.size}`);
-    }
-    if (p.layout === "wide_band")
-      p.size = "1472x704";
-    if (p.layout === "tight_crop" && !(["reaction", "insert"].includes(p.beat) || chars.every((c) => c.framing === "portrait" || c.framing === "hands only"))) {
-      p.layout = "full_width";
-      p.size = "832x1216";
-      stats.layout_repaired++;
-      log.push(`p${p.id}: tight_crop on a ${p.beat} beat -> full_width 832x1216`);
-    }
-    if (p.layout === "tight_crop" && !["1216x832", "1472x704"].includes(p.size))
-      p.size = "1216x832";
-    if (p.layout.startsWith("inset") && !["832x1216", "1024x1024"].includes(p.size)) {
-      p.size = "832x1216";
-      stats.size_repaired++;
-    }
-    if (p.layout !== "wide_band" && p.size === "1472x704" && chars.length) {
-      p.size = "1216x832";
-      stats.size_repaired++;
-      log.push(`p${p.id}: 1472x704 with characters outside a band -> 1216x832`);
-    }
-    const out = [];
-    let nb = 0, nn = 0;
-    for (const t of p.text) {
-      if (t.type === "speech" || t.type === "thought") {
-        if (++nb > LIMITS.maxBalloons) {
-          stats.balloons_dropped++;
-          log.push(`p${p.id}: dropped balloon #${nb} "${t.text}"`);
-          continue;
-        }
-      }
-      if (t.type === "narration") {
-        if (++nn > LIMITS.maxNarrImage) {
-          stats.balloons_dropped++;
-          log.push(`p${p.id}: dropped narration #${nn}`);
-          continue;
-        }
-      }
-      out.push(t);
-    }
-    p.text = [
-      ...out.filter((t) => t.type === "narration" && !t.anchor.startsWith("bottom") && t.anchor !== "over-bottom-edge"),
-      ...out.filter((t) => !(t.type === "narration" && !t.anchor.startsWith("bottom") && t.anchor !== "over-bottom-edge"))
-    ];
-    if (p.beat === "action" && !p.text.some((t) => t.type === "sfx")) {
-      stats.sfx_missing_action++;
-      log.push(`p${p.id}: action beat without sfx`);
-    }
-  });
-  for (const p of kept)
-    if (p.kind === "text_beat")
-      p.text = p.text.slice(0, LIMITS.maxNarrBeat);
-  const charPanels = () => imgs.filter((p) => p.nai.characters.length && !["wide_band", "tight_crop"].includes(p.layout));
-  const share = () => charPanels().filter((p) => PORTRAIT_SIZES.includes(p.size)).length / Math.max(1, charPanels().length);
-  for (const p of charPanels()) {
-    if (share() >= LIMITS.portraitShare)
-      break;
-    if (!PORTRAIT_SIZES.includes(p.size) && p.nai.characters.length === 1) {
-      log.push(`p${p.id}: ${p.size} -> 832x1216 (portrait bias)`);
-      p.size = "832x1216";
-      stats.size_repaired++;
-    }
-  }
-  if (!imgs.some((p) => p.layout.startsWith("inset"))) {
-    const cand = imgs.find((p, i) => i > 0 && p.layout === "full_width" && p.nai.characters.length === 1 && ["dialogue", "reaction", "quiet"].includes(p.beat) && ["832x1216", "1024x1024"].includes(p.size));
-    if (cand) {
-      const first = cand.text.find((t) => t.type === "speech" || t.type === "thought");
-      cand.layout = first && first.anchor.includes("left") ? "inset_right" : "inset_left";
-      stats.layout_repaired++;
-      log.push(`p${cand.id}: full_width -> ${cand.layout} (inset quota)`);
-    }
-  }
-  const breakable = (p) => p.beat === "action" && p.nai.characters.length === 1 && PORTRAIT_SIZES.includes(p.size) && ["full_width", "inset_left", "inset_right"].includes(p.layout) && !["hands only", "lower body"].includes(p.nai.characters[0].framing);
-  let breaks = 0;
-  for (const p of imgs) {
-    const asked = p.frame_break === true;
-    delete p.frame_break;
-    if (!asked)
-      continue;
-    if (!breakable(p)) {
-      log.push(`p${p.id}: frame_break dropped (needs an action beat with one character in a portrait panel)`);
-      continue;
-    }
-    if (breaks >= LIMITS.maxFrameBreaks) {
-      log.push(`p${p.id}: frame_break dropped (at most ${LIMITS.maxFrameBreaks} per strip)`);
-      continue;
-    }
-    p.frame_break = true;
-    breaks++;
-  }
-  const auto = breaks ? undefined : imgs.find(breakable);
-  if (auto) {
-    auto.frame_break = true;
-    log.push(`p${auto.id}: frame_break added (the planner marked none)`);
-  }
-  for (const p of imgs) {
-    const c = p.frame_break ? p.nai.characters[0] : null;
-    if (c && c.y > 0.5) {
-      log.push(`p${p.id}: ${c.name} y ${c.y} -> 0.5 (frame-break)`);
-      c.y = 0.5;
-    }
-  }
-  const props = sb.key_props ?? [];
-  const inserts = imgs.filter((p) => p.beat === "insert").map((p) => `${p.moment ?? ""} ${p.shot ?? ""} ${p.nai.base}`.toLowerCase()).join(" ");
-  Object.assign(stats, {
-    props_without_insert: props.filter((pr) => !normWords(pr).some((w) => w.length > 3 && inserts.includes(w))).length,
-    image_panels: imgs.length,
-    text_beats: kept.length - imgs.length,
-    frame_breaks: imgs.filter((p) => p.frame_break).map((p) => p.id),
-    layouts: imgs.map((p) => p.layout),
-    sizes: imgs.map((p) => p.size),
-    portrait_share: Number(share().toFixed(2)),
-    balloons: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "speech" || t.type === "thought").length, 0),
-    narration: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "narration").length, 0),
-    sfx: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "sfx").length, 0),
-    max_words: Math.max(0, ...kept.flatMap((p) => p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.text.split(/\s+/).length)))
-  });
-  sb.panels = kept;
-  return { storyboard: sb, log, stats };
-}
-
 // src/backend/webtoon/font-metrics.ts
 var FONT_METRICS = {
   speech: { " ": 356, "!": 261, '"': 325, "#": 711, $: 602, "%": 681, "&": 625, "'": 206, "(": 357, ")": 357, "*": 379, "+": 440, ",": 191, "-": 409, ".": 181, "/": 438, "0": 572, "1": 393, "2": 498, "3": 493, "4": 469, "5": 531, "6": 523, "7": 450, "8": 512, "9": 523, ":": 207, ";": 223, "<": 543, "=": 465, ">": 543, "?": 499, "@": 849, A: 552, B: 611, C: 601, D: 623, E: 593, F: 581, G: 706, H: 714, I: 405, J: 471, K: 563, L: 513, M: 806, N: 652, O: 638, P: 553, Q: 695, R: 583, S: 546, T: 524, U: 669, V: 538, W: 847, X: 707, Y: 582, Z: 575, "[": 335, "\\": 571, "]": 335, "^": 526, _: 516, "`": 205, a: 508, b: 525, c: 470, d: 522, e: 491, f: 321, g: 548, h: 528, i: 243, j: 261, k: 487, l: 236, m: 796, n: 543, o: 517, p: 521, q: 511, r: 403, s: 425, t: 328, u: 518, v: 425, w: 620, x: 490, y: 458, z: 429, "{": 382, "|": 219, "}": 382, "~": 606, "…": 666, "—": 806, "–": 622, "’": 204, "‘": 204, "“": 371, "”": 369, "é": 491 },
@@ -66161,6 +65255,1213 @@ function layoutPage(slots, images, ctx) {
   }
 }
 
+// src/backend/webtoon/store.ts
+var webtoonDir = (chatId) => `${STORAGE_PATHS.chatDir(chatId)}webtoon/`;
+var webtoonPath = (chatId, historyId) => `${webtoonDir(chatId)}${safePathSegment(historyId)}.json`;
+var indexPath = (chatId) => `${webtoonDir(chatId)}index.json`;
+function createStripDocument(input) {
+  return {
+    schema: "inlay-illustrator.webtoon",
+    version: 1,
+    chatId: input.chatId,
+    messageKey: input.messageKey,
+    historyId: input.historyId,
+    characterId: input.characterId,
+    status: "planning",
+    revision: input.revision ?? 1,
+    createdAt: input.now,
+    updatedAt: input.now,
+    sourceLength: input.sourceLength,
+    planner: null,
+    storyboardRaw: null,
+    storyboard: null,
+    validation: null,
+    cast: [],
+    style: null,
+    requests: {},
+    panels: {},
+    textOverrides: {}
+  };
+}
+async function readStrip(storage, chatId, historyId) {
+  const raw = await storage.readJson(webtoonPath(chatId, historyId), null);
+  return raw && raw.schema === "inlay-illustrator.webtoon" && raw.version === 1 ? raw : null;
+}
+async function writeIndex(storage, doc, chatId, historyId) {
+  await storage.updateJson(indexPath(chatId), {}, (index) => {
+    const next = { ...index };
+    if (doc)
+      next[historyId] = { revision: doc.revision, status: doc.status, ...doc.format === "manga" ? { format: "manga" } : {} };
+    else
+      delete next[historyId];
+    return next;
+  });
+}
+async function updateStrip(storage, chatId, historyId, mutate, now = Date.now) {
+  const written = await storage.updateJson(webtoonPath(chatId, historyId), null, (current) => {
+    const valid = current && current.schema === "inlay-illustrator.webtoon" && current.version === 1 ? current : null;
+    const next = mutate(valid ? structuredClone(valid) : null);
+    return { ...next, revision: (valid?.revision ?? next.revision - 1) + 1, updatedAt: now() };
+  });
+  await writeIndex(storage, written, chatId, historyId);
+  return written;
+}
+async function stripSummaries(storage, chatId) {
+  return storage.readJson(indexPath(chatId), {});
+}
+function effectiveStoryboard(doc) {
+  if (!doc.storyboard)
+    return null;
+  return {
+    ...doc.storyboard,
+    panels: doc.storyboard.panels.map((p) => ({
+      ...p,
+      text: p.text.map((t, i) => {
+        const edited = doc.textOverrides[`${p.id}:${i}`];
+        return edited === undefined ? t : { ...t, text: edited };
+      })
+    }))
+  };
+}
+function relayout(doc, width = doc.format === "manga" ? MANGA_PAGE_WIDTH : STRIP_WIDTH) {
+  const storyboard = effectiveStoryboard(doc);
+  if (!storyboard)
+    return null;
+  const images = {};
+  for (const p of storyboard.panels) {
+    if (p.kind !== "image")
+      continue;
+    const panel = doc.panels[String(p.id)];
+    const take = panel?.takes[panel.selected];
+    const [width, height] = p.size.split("x").map(Number);
+    images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
+    if (take?.cutout)
+      images[String(p.id)].cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
+    if (take?.check && Object.keys(take.check.faces).length)
+      images[String(p.id)].faces = take.check.faces;
+  }
+  return doc.format === "manga" ? layoutManga(storyboard, images, { width, grey: !!doc.mono }) : layoutStrip(storyboard, images, { width });
+}
+function stripView(doc, width) {
+  const manga = doc.format === "manga";
+  const w = Math.round(width ?? 0) || (manga ? MANGA_PAGE_WIDTH : STRIP_WIDTH);
+  return {
+    chatId: doc.chatId,
+    messageKey: doc.messageKey,
+    status: doc.status,
+    ...doc.error ? { error: doc.error } : {},
+    ...manga ? { format: "manga" } : {},
+    revision: doc.revision,
+    title: doc.storyboard?.title ?? "",
+    layout: relayout(doc, manga && w >= MANGA_PAGE_WIDTH ? MANGA_PAGE_WIDTH : Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, w))),
+    panels: doc.panels,
+    updatedAt: doc.updatedAt
+  };
+}
+function takeOf(imageId, seed, width, height, createdAt) {
+  return { imageId, url: imageResultUrl(imageId), seed, width, height, createdAt };
+}
+
+// src/backend/webtoon/looks.ts
+var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str4 = (v) => typeof v === "string" ? v.trim() : "";
+var PARTS = ["head", "top", "bottom", "legs", "feet"];
+var fold2 = (s) => s.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ");
+var EXPLICIT = /genital|pubic|labia|vagin|vulva|penis|nipple|areola|breast|\bbust\b|\b[a-k][- ]?cup\b|\banus\b|clitor|testic|\bnude\b|naked|\bbra\b|panties|lingerie|underwear|\bnsfw\b|\bsex/iu;
+var APPEARANCE_HEADING = /^\s*(?:#{1,6}\s*|\[|<|\*\*)?\s*(?:appearance|looks?|physical(?: description| appearance| traits)?|visual(?: description)?|외모|외형|外見|外貌)\b/iu;
+var HEADING = /^\s*(?:#{1,6}\s+\S|\[[^\]]+\]\s*$|<\/?[\p{L}_ -]+>\s*$|\*\*[^*]+\*\*:?\s*$|[\p{L}][\p{L} &/-]{1,40}:\s*$)/u;
+var APPEARANCE_MAX = 2000;
+function appearanceText(description, vars) {
+  const lines = description.replace(/\{\{\s*char\s*\}\}/giu, vars.char).replace(/\{\{\s*user\s*\}\}/giu, vars.user).replace(/\{\{[^}]*\}\}/gu, "").split(/\r?\n/u);
+  const start = lines.findIndex((l) => APPEARANCE_HEADING.test(l));
+  let section = lines;
+  if (start >= 0) {
+    const end = lines.findIndex((l, i) => i > start && HEADING.test(l) && !APPEARANCE_HEADING.test(l));
+    const body = lines.slice(start, end < 0 ? undefined : end);
+    if (body.slice(1).some((l) => l.trim()) || /:\s*\S/u.test(body[0]))
+      section = body;
+  }
+  let out = "";
+  for (const line of section.filter((l) => !EXPLICIT.test(l))) {
+    if (out.length + line.length + 1 > APPEARANCE_MAX) {
+      if (!out)
+        out = line.slice(0, APPEARANCE_MAX);
+      break;
+    }
+    out += (out ? `
+` : "") + line;
+  }
+  return out.replace(/\n{3,}/gu, `
+
+`).trim();
+}
+var TAG = /^[\p{Ll}\p{Lo}0-9][\p{Ll}\p{Lo}0-9 ()'!.-]{0,39}$/u;
+var COUNT = /^(?:\d+\s*(?:girls?|boys?|others?)|solo|multiple (?:girls|boys))$/u;
+var GENDER_WORD = /^(?:female|male|girl|boy|woman|man|other)$/u;
+var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+function cleanTags(value, names, max) {
+  const banned = names.filter((n) => n.trim().length > 1).map((n) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(fold2(n))}(?![\\p{L}\\p{N}])`, "u"));
+  const seen = new Set;
+  return str4(value).split(/[,\n]/u).map((t) => t.replace(/[{}[\]]|::/gu, " ").replace(/_/gu, " ").replace(/\s+/gu, " ").trim().toLocaleLowerCase()).filter((t) => TAG.test(t) && t.split(" ").length <= 5 && !COUNT.test(t) && !EXPLICIT.test(t) && !banned.some((b) => b.test(t)) && !seen.has(t) && (seen.add(t), true)).slice(0, max);
+}
+function parseLook(value, otherNames) {
+  const v = rec4(value);
+  const name = str4(v.name);
+  if (!name)
+    return null;
+  const tags = cleanTags(v.identity, otherNames, 16);
+  const genderTag = tags.find((t) => t === "female" || t === "male");
+  const g = str4(v.gender).toLowerCase();
+  const gender = g === "female" || g === "male" ? g : genderTag ?? (g ? "other" : "");
+  const o = rec4(v.outfit);
+  const outfit = {};
+  for (const part of PARTS) {
+    const t = cleanTags(o[part], otherNames, 6);
+    if (t.length)
+      outfit[part] = t.join(", ");
+  }
+  return { name, gender, identity: tags.filter((t) => !GENDER_WORD.test(t)), outfitLabel: str4(o.label ?? o.name).slice(0, 60), outfit };
+}
+var identityOf = (gender, tags) => [gender === "female" || gender === "male" ? gender : "", ...tags].filter(Boolean).join(", ");
+var hasOutfit = (o) => PARTS.some((p) => o[p]);
+function resolveLooks(raw, roster, known) {
+  const log = [];
+  const list = Array.isArray(rec4(raw).looks) ? rec4(raw).looks : [];
+  const allNames = roster.map((r) => r.name);
+  const byName = new Map;
+  for (const item of list) {
+    const name = str4(rec4(item).name);
+    const look = parseLook(item, allNames.filter((n) => fold2(n) !== fold2(name)));
+    if (look && !byName.has(fold2(look.name)))
+      byName.set(fold2(look.name), look);
+  }
+  const out = [];
+  const outfits = {};
+  const looks = new Map;
+  for (const r of roster) {
+    const look = byName.get(fold2(r.name));
+    byName.delete(fold2(r.name));
+    if (r.appearance !== undefined) {
+      if (!look?.identity.length) {
+        log.push(`${r.name}: no look written, left out of the cast`);
+        continue;
+      }
+      const outfit = hasOutfit(look.outfit) ? [{ id: "look_1", label: look.outfitLabel || "outfit", outfit: look.outfit }] : [];
+      const gender = look.gender || r.gender;
+      const designed = { ...r, gender, identity: identityOf(gender, look.identity), outfits: outfit, currentOutfitId: outfit[0]?.id ?? "" };
+      delete designed.appearance;
+      out.push(designed);
+      looks.set(r.key, { identity: designed.identity, outfitLabel: outfit[0]?.label ?? "", outfit: outfit[0]?.outfit ?? {} });
+      continue;
+    }
+    if (r.designed) {
+      let next = r;
+      if (look && hasOutfit(look.outfit)) {
+        const id = `look_${Math.max(0, ...r.outfits.map((o) => Number(/^look_(\d+)$/u.exec(o.id)?.[1] ?? 0))) + 1}`;
+        next = { ...r, outfits: [...r.outfits, { id, label: look.outfitLabel || "outfit", outfit: look.outfit }], currentOutfitId: id };
+        outfits[r.name] = id;
+      }
+      const o = next.outfits.find((x) => x.id === next.currentOutfitId);
+      looks.set(r.key, { identity: r.identity, outfitLabel: o?.label ?? "", outfit: o?.outfit ?? {} });
+      out.push(next);
+      continue;
+    }
+    out.push(r);
+  }
+  const strangers = [];
+  const knownSet = new Set((known ?? []).map(fold2));
+  for (const look of byName.values()) {
+    if (!known)
+      log.push(`${look.name}: not in the roster, free character generation is off`);
+    else if (knownSet.has(fold2(look.name)))
+      log.push(`${look.name}: a known character, not created again`);
+    else if (!look.identity.length || !hasOutfit(look.outfit))
+      log.push(`${look.name}: incomplete look, left out`);
+    else {
+      const id = "look_1";
+      strangers.push({
+        key: `free::${fold2(look.name)}`,
+        name: look.name,
+        gender: look.gender,
+        formLabel: "",
+        outfits: [{ id, label: look.outfitLabel || "outfit", outfit: look.outfit }],
+        currentOutfitId: id,
+        identity: identityOf(look.gender, look.identity),
+        identityTags: look.identity
+      });
+    }
+  }
+  return { roster: [...out, ...strangers], outfits, strangers, looks, log };
+}
+var HAIR_COLOUR_WORD = /\b(?:black|white|red|orange|yellow|green|blue|purple|pink|brown|grey|gray|silver|blonde|blond|platinum|teal|aqua)\b/u;
+function profileGroups(tags) {
+  const groups = {};
+  const add = (g, t) => (groups[g] ??= []).push(t);
+  for (const t of tags) {
+    if (/^(?:very short|short|medium|long|very long|absurdly long) hair$/u.test(t))
+      add("hair.length", t);
+    else if (/ hair$/u.test(t) && HAIR_COLOUR_WORD.test(t))
+      add("hair.color", t);
+    else if (/hair|bangs|braid|ponytail|twintails|pigtails|bob cut|hime cut|ahoge|bun\b/u.test(t))
+      add("hair.style", t);
+    else if (/eyes?$|pupils|eyelashes/u.test(t))
+      add("eyes.color", t);
+    else if (/skin$|\btan\b|freckles/u.test(t))
+      add("body.skin", t);
+    else if (/^(?:slim|slender|petite|tall|short|muscular|chubby|plump|curvy|stocky|lanky|thin|fat|average height|small|large|athletic|toned)\b/u.test(t))
+      add("body.build", t);
+    else if (/ears|tail|horns|wings|fur|scales|muzzle|snout|fangs|halo|furry|anthro/u.test(t))
+      add("nonhuman.features", t);
+    else
+      add("marks.distinctive", t);
+  }
+  return groups;
+}
+async function latestLooks(storage, chatId) {
+  const docs = [];
+  for (const historyId of Object.keys(await stripSummaries(storage, chatId))) {
+    const doc = await readStrip(storage, chatId, historyId);
+    if (doc?.cast.some((c) => c.look))
+      docs.push(doc);
+  }
+  docs.sort((a, b) => b.updatedAt - a.updatedAt);
+  const out = new Map;
+  for (const doc of docs)
+    for (const c of doc.cast)
+      if (c.look && !out.has(c.key))
+        out.set(c.key, { ...c.look, gender: c.gender ?? "", outfitId: c.outfitId });
+  return out;
+}
+function looksNote(roster, freeCharacters) {
+  const undesigned = roster.some((r) => r.appearance !== undefined);
+  const designed = roster.some((r) => r.designed);
+  const parts = [];
+  if (undesigned || freeCharacters)
+    parts.push(`Looks (field "looks", next to "outfits"): ${undesigned ? 'for each character marked "no design yet" that you draw' : ""}${undesigned && freeCharacters ? ", and " : ""}${freeCharacters ? 'for each person the reply shows who is NOT listed above (a shop manager, a stranger on the train; give them their name from the reply, or a short role name like "Store Manager", and use that name everywhere)' : ""}, write their look ONCE: {"name", "gender": "female"|"male"|"other", "identity": "...", "outfit": {"label", "head", "top", "bottom", "legs", "feet"}}.`, `- "identity": 5-12 NovelAI/danbooru tags for what never changes: hair colour, hair length and style, bangs, eye colour, skin, height/build (e.g. "slim", "tall"), species traits (animal ears, tail, horns) when they have them. Follow the card's appearance text exactly where it has one. No names, no count tags (1girl), no clothes, no expressions, no body-size or sexual tags.`, `- "outfit": the clothes for THIS scene as tags per part (head = hat / glasses / hair accessory, top, bottom, legs = socks / legwear, feet = shoes; "" when nothing), fitting the card and the story. Write colours even for black-and-white art (code removes them there).`, `- Code adds these tags to every panel of that character, so the character looks the same in every panel. ${undesigned ? "Leave out a card that describes a story, a setting or a narrator instead of one person." : ""}`.trimEnd());
+  if (designed)
+    parts.push(`Characters marked "designed earlier" keep their look; pick their outfit from the wardrobe like the others. Only when the story clearly puts them in clothes that match no wardrobe outfit, add {"name", "outfit": {...}} for them to "looks" (no identity).`);
+  if (!freeCharacters)
+    parts.push(`Anyone not listed above appears only as an unnamed background person in the base tags (e.g. "store clerk in background"), never in "characters" or as a balloon speaker.`);
+  return parts.join(`
+`);
+}
+
+// src/backend/webtoon/planner-prompt.ts
+var PLANNER_PROMPT_TEMPLATE = String.raw`You are the storyboard artist for a vertical-scroll Korean-style webtoon (one long strip, 690 px wide, read top to bottom). You adapt ONE chat reply (below) into a short webtoon episode. A code layout engine letters your text on top of the images using YOUR character positions and balloon anchors, so positions matter.
+
+How the target webtoons are built:
+- Every panel is ONE single illustration with ONE camera. Never ask the image model for a comic page, panels, borders, text or speech bubbles.
+- Panels are BIG: most panels are full width and tall (portrait), the reader scrolls through one strong image at a time. Short wide bands are only for establishing shots and object inserts. White gaps between panels are short; only a deliberate pause gets a long white gap.
+- Vary the camera hard: extreme close-ups of eyes or lips, insert shots of hands/objects/feet, low angle, high angle, back view, over-the-shoulder, a wide establishing shot. Never more than two medium shots in a row.
+- Balloons sit ON the art, in the empty part of the panel next to the speaker's head (sky, wall, ceiling), or straddle the panel's top/bottom edge, with a tail pointing at the speaker. They never cover faces. Narration boxes sit on the panel's corners. Sound effects are big bold lettering over the art, and on action beats they break out of the panel frame.
+
+Hard rules (checked by code; violations are removed or repaired automatically):
+1. {{PANELS}} "image" panels in reading order ({{MIN}} to {{MAX}} accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
+2. At most 2 speech/thought balloons per panel, each at most 10 words (12 is the absolute maximum). Split long lines over panels.
+3. Narration goes ON the image panels: up to 2 narration boxes per image panel (one at a top corner = before the panel's dialogue, one at a bottom corner = after it). Use at most 1 "text_beat" panel (narration on white), only for a deliberate pause (a time skip or a punchline beat), and set "pause": true on it.
+4. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag ("No," she said. "I was..." -> "No, I was..."). Never add, change or invent words. Narration boxes reuse the source's own narration wording, shortened.
+5. Sound effects: use MANY, bold and short. Every "action" panel gets 1-2 sfx (an onomatopoeia like "SLAM", "clack", "tak tak", "fwip", "thud", "gulp"), and quieter panels get ambient or emotional sfx (footsteps, door creak, rustle, "ba-dump", "shff", "tick tock") where the moment makes a sound. Aim for at least 5 sfx in the episode. Mark physical action moments (opening, grabbing, turning, dropping, running, slamming) with beat "action": code lets the sfx and the character break out of the panel frame there.
+6. List the story's key props in "key_props" and give each one an "insert" panel (hands/feet/object close-up).
+7. Keep it non-explicit: clothed, no sexual framing.
+
+Image model: NovelAI V5, one image per panel. Sizes (W x H): 832x1216 (portrait), 704x1472 (tall), 1024x1024 (square), 1216x832 (landscape), 1472x704 (wide band).
+Pick sizes like a webtoon artist: portrait 832x1216 or tall 704x1472 for every shot that shows a character, including close-ups and most two-shots (stack them: one in front, one behind, or use a low/high angle). 1216x832 only for a two- or three-shot that truly needs width. 1472x704 only for an establishing shot of a place or an insert of an object/hands.
+Layouts:
+- "full_width" (default, the big panel; any portrait/tall/landscape size).
+- "inset_left" / "inset_right": a large panel (72% of the width) pushed to one side; the free column beside it takes the balloons. Use 832x1216 or 1024x1024. Good for single-character dialogue or reaction shots.
+- "wide_band": 1472x704, ONLY for beat "establishing" or "insert".
+- "tight_crop": a short crop on eyes, lips or hands (beat "reaction" or "insert"), 1216x832 or 1472x704.
+- "fade_white": full width, fades into white at the bottom (quiet ending, transition).
+- "title": the first panel only (see rule 1).
+Use at least one inset per episode.
+Frame-break: set "frame_break": true on 1 or 2 "action" panels where ONE character makes a strong move (portrait 832x1216 or tall 704x1472, layout "full_width" or an inset, framing "portrait", "upper body" or "cowboy shot", character y 0.5 or 0.7 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Write the base tags as usual (place and light included). Leave "frame_break" false on every other panel.
+
+Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Use the positions to leave room for the balloons: if a balloon goes top-left, put the speaker at x 0.5-0.7 and y 0.5-0.7 so the top-left area stays empty, and describe what fills the empty area in the base tags (sky, ceiling, wall, window, empty street). Two characters must not share the same x.
+
+Text anchors (field "anchor" of every text item): "top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge". Pick the balloon anchor next to the speaker's head on the EMPTY side, away from the other character's face. The first balloon of a panel must be higher than the second (reading order). SFX use the same anchors (next to the action). Narration boxes use the corner anchors (top-left, top-right, bottom-left, bottom-right).
+
+Prompt format:
+- "base": camera/framing tags (e.g. "close-up", "eye focus", "from below", "from above", "from behind", "pov", "pov hands", "upper body", "cowboy shot", "full body", "wide shot", "dutch angle"), then location/lighting tags (e.g. "indoors, kitchen, fluorescent light, evening"), then a newline and 1-2 plain English sentences describing the shot and the empty area. Do NOT write count tags (1girl, 1boy: code adds them), artist or quality tags, "speech bubble" or "text".
+- "characters": one entry per visible character (empty list for object-only or no-human shots). "prompt" = ONLY pose, expression, gaze and action tags for this shot (e.g. "walking, from side, looking away, pout, holding bag"), then a newline and one short English sentence of what the character does. Do NOT write hair, eye, body, species or clothing tags: identity and outfit tags are added by code. "framing" = how much of the character is in frame: "portrait" | "upper body" | "cowboy shot" | "lower body" | "full body" | "hands only" (code uses it to pick outfit tags). "shoes_off": true when the character is indoors at home without shoes.
+- "drop_outfit": the outfits come from a fixed wardrobe record and can contain items that only make sense in one place (indoor slippers, house shoes, an apron, a lab coat). When an item clearly contradicts THIS panel's scene (e.g. indoor "uwabaki" school slippers on the street), list it here, copied exactly from the character's item list. Do not drop items just because they are small or hidden; leave the list empty otherwise.
+
+Characters (identity and outfit tags are injected by code; you only pick an outfit, place and pose them):
+{{ROSTER}}
+{{OFFSCREEN}}
+Outfit: for every character you draw, pick the wardrobe outfit that fits this scene (field "outfits": [{"name", "outfit_id"}]); the one marked (current) is what they wore last. "drop_outfit" items refer to the picked outfit.
+
+Output: JSON only, this shape (example values):
+{"title": "Chapter 1: Example",
+ "key_props": ["canvas tote bag"],
+ "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
+ "panels": [
+  {"id": 1, "kind": "image", "beat": "dialogue", "moment": "They argue on the bridge.", "shot": "low-angle two-shot, she is in front",
+   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left", "frame_break": false,
+   "nai": {"base": "cowboy shot, from below, outdoors, bridge, sky, sunset\nTwo students on a bridge, open evening sky fills the upper left.",
+           "characters": [{"name": "A", "x": 0.5, "y": 0.7, "framing": "cowboy shot", "shoes_off": false, "drop_outfit": [], "prompt": "standing, arms crossed, pout, looking at another\nShe glares at him."},
+                          {"name": "B", "x": 0.9, "y": 0.5, "framing": "upper body", "shoes_off": false, "drop_outfit": ["indoor slippers"], "prompt": "hand in pocket, half-closed eyes\nHe shrugs."}]},
+   "text": [{"type": "narration", "speaker": null, "text": "The bridge was empty.", "anchor": "top-right"},
+            {"type": "speech", "speaker": "A", "text": "You're late.", "anchor": "top-left"},
+            {"type": "sfx", "speaker": null, "text": "tap tap", "anchor": "bottom-left"}]},
+  {"id": 2, "kind": "text_beat", "beat": "quiet", "pause": true, "layout": "text_on_white",
+   "text": [{"type": "narration", "speaker": null, "text": "Nobody answered.", "anchor": "top-left"}]}
+ ]}
+Field values: kind "image"|"text_beat"; beat "title"|"establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; layout "title"|"full_width"|"inset_left"|"inset_right"|"wide_band"|"tight_crop"|"fade_white"|"text_on_white"; text type "speech"|"thought"|"narration"|"sfx"; speaker = a character name (may be off-panel) or null for narration/sfx; scene_change true when the place or time jumps.
+All text in the language of the chat reply.
+
+The chat reply:
+<<<
+{{SOURCE}}
+>>>
+`;
+var PARTS2 = ["head", "top", "bottom", "legs", "feet"];
+var WEBTOON_MIN_PANELS = 4;
+var WEBTOON_MAX_PANELS = 14;
+function webtoonPanelTarget(sourceLength) {
+  return Math.min(WEBTOON_MAX_PANELS, Math.max(WEBTOON_MIN_PANELS, Math.round(sourceLength / 1000)));
+}
+function webtoonPanelRange(target) {
+  return { min: Math.max(WEBTOON_MIN_PANELS, target - 2), max: Math.min(WEBTOON_MAX_PANELS, target + 2) };
+}
+function items(outfit) {
+  return PARTS2.filter((k) => outfit[k]?.trim()).map((k) => `${k}: ${outfit[k]}`).join("; ");
+}
+function rosterLines(roster) {
+  return roster.map((r) => {
+    const who = r.gender === "female" ? "woman/girl" : r.gender === "male" ? "man/boy" : "character";
+    if (r.appearance !== undefined)
+      return `- ${r.name} (${who}): no design yet. Appearance from the card:
+<<<
+${r.appearance || "(none: design them from the story)"}
+>>>`;
+    const wardrobe = r.outfits.map((o) => `${o.id}${o.id === r.currentOutfitId ? " (current)" : ""} = "${o.label || o.id}"${items(o.outfit) ? ` (items: ${items(o.outfit)})` : ""}`).join("; ");
+    return `- ${r.name} (${who}): ${r.designed ? "designed earlier" : r.formLabel || "no label"}; wardrobe: ${wardrobe || "none"}.`;
+  }).join(`
+`);
+}
+function rosterBlock(roster, freeCharacters) {
+  return [rosterLines(roster), looksNote(roster, freeCharacters)].filter(Boolean).join(`
+`);
+}
+function buildPlannerPrompt(args) {
+  const range = webtoonPanelRange(args.panels);
+  const fill = {
+    "{{PANELS}}": String(args.panels),
+    "{{MIN}}": String(range.min),
+    "{{MAX}}": String(range.max),
+    "{{ROSTER}}": rosterBlock(args.roster, !!args.freeCharacters),
+    "{{OFFSCREEN}}": args.offscreenNote ?? "",
+    "{{SOURCE}}": args.source
+  };
+  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
+}
+function chosenOutfits(raw, roster, log) {
+  const picks = new Map;
+  const list = raw && typeof raw === "object" && Array.isArray(raw.outfits) ? raw.outfits : [];
+  for (const entry of list) {
+    const e = entry && typeof entry === "object" ? entry : {};
+    if (typeof e.name === "string" && typeof e.outfit_id === "string")
+      picks.set(e.name.trim(), e.outfit_id.trim());
+  }
+  const out = {};
+  for (const r of roster) {
+    const pick = picks.get(r.name);
+    const ok = !!pick && r.outfits.some((o) => o.id === pick);
+    if (pick && !ok)
+      log.push(`${r.name}: unknown outfit "${pick}" -> ${r.currentOutfitId}`);
+    if (ok || r.currentOutfitId)
+      out[r.name] = ok ? pick : r.currentOutfitId;
+  }
+  return out;
+}
+
+// src/backend/webtoon/panel-request.ts
+var PARTS3 = ["head", "top", "bottom", "legs", "feet"];
+var OUTER_TOP = /jacket|blazer|coat|hoodie|cardigan|gakuran|sweater|uniform|apron|undershirt/iu;
+var HANDS_ONLY = { head: 0, top: 0.5, bottom: 0, legs: 0, feet: 0 };
+var WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panels, border";
+var MANGA_NEGATIVE = "speech bubble, text, english text, multiple panels, panel border";
+var TRANSPARENT_TAGS = "transparent background, has alpha";
+var CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
+var CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
+var SCENE_OBJECT = /\b(?:door|doorway|screen|shoji|wall|window|fence|railing|table|desk|chair|bench|bed|futon|couch|sofa|counter|shelf|cabinet|locker|car|tree|floor|ground|stairs|gate|pillar|post|sink|stove|fridge|refrigerator|mirror|curtain)s?\b/iu;
+var HELD = /^(?:holding|carrying|hugging|grabbing|clutching|wielding|lifting|raising)\b/iu;
+var BODY = /\b(?:shoulders?|hips?|chest|face|head|cheeks?|mouth|chin|knees?|back|hair|lap|waist|arms?|hands?|legs?|eyes?|ears?|neck|stomach|thighs?)\b/iu;
+var RELATION = /^(.*?)\s+(?:on|against|at|behind|beside|near|by|into|through|under|over|across|onto|toward|towards|in front of|inside|out of)\s+(.+)$/iu;
+var POSTURE = /^(?:sitting|standing|kneeling|lying|leaning|crouching|squatting|reclining)$/iu;
+function cutoutPose(poseTags, placeTags) {
+  const place = placeTags.map((t) => t.toLowerCase()).filter((t) => t.length > 3);
+  const scene = (s) => SCENE_OBJECT.test(s) || place.some((p) => s.toLowerCase().includes(p));
+  return tags(poseTags).flatMap((t) => {
+    if (CAMERA.test(t))
+      return [t];
+    if (HELD.test(t) || /^looking\b/iu.test(t))
+      return scene(t) ? [] : [t];
+    const relation = RELATION.exec(t);
+    if (relation)
+      return BODY.test(relation[2]) && !scene(relation[2]) ? [t] : POSTURE.test(relation[1].trim()) ? [relation[1].trim()] : [];
+    return scene(t) ? [] : [t];
+  }).join(", ");
+}
+var tags = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+var fmt = (n) => String(Math.round(n * 100) / 100);
+function outfitPrompt(outfit, framing, weights, shoesOff, drop = []) {
+  const w = framing === "hands only" ? HANDS_ONLY : Object.fromEntries(PARTS3.map((p) => [p, weights[p]?.[framing] ?? 1]));
+  const dropped = new Set(drop.map((d) => d.toLowerCase()));
+  const out = [];
+  const keyTags = [];
+  for (const part of PARTS3) {
+    const wp = w[part] ?? 1;
+    if (part === "feet" && shoesOff) {
+      if (wp > 0)
+        out.push("no shoes");
+      continue;
+    }
+    const list = tags(outfit[part]).filter((t) => !dropped.has(t.toLowerCase()));
+    if (!list.length || wp <= 0)
+      continue;
+    for (const t of list) {
+      const key = (part === "legs" || part === "feet") && wp >= 0.8 || part === "top" && wp >= 1 && OUTER_TOP.test(t);
+      if (key) {
+        out.push(`${fmt(part === "legs" || part === "feet" ? 1.3 : 1.2)}::${t}::`);
+        keyTags.push(t);
+      } else
+        out.push(wp < 1 ? `${fmt(wp)}::${t}::` : t);
+    }
+  }
+  return { prompt: out.join(", "), keyTags };
+}
+var SPECIES = /^(furry|anthro|furry (fe)?male|kemono|snout|muzzle|fangs|.*\bfur\b.*|.*\bspots\b|.*\b(tail|scales|feathers|beak|paws|whiskers)\b|animal ears|floppy ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears|dalmatian|(dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)|.*\bchest (fur|tuft)\b.*)$/iu;
+var HAIR_COLOR = /^(pink|black|brown|blonde|blond|white|gray|grey|red|blue|green|purple|silver|orange|light brown|dark brown) hair$/iu;
+var HAIR = /hair|braid|ponytail|pigtails|twintails|bangs|bob cut|bun$/iu;
+var KEMONOMIMI_EARS = /^(animal ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears)$/iu;
+var SPECIES_NAME = /^(dalmatian|dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)$/iu;
+var ID_WEIGHT_FURRY = 1.3;
+var ID_WEIGHT_HAIR = 1.1;
+var isFurry = (identity) => tags(identity).some((t) => /^(furry|anthro)$/iu.test(t));
+var speciesName = (identity) => tags(identity).find((t) => SPECIES_NAME.test(t)) ?? "animal";
+var furryGenderTag = (gender) => gender === "female" ? "furry female" : gender === "male" ? "furry male" : "";
+function identityPrompt(member, boost = 0) {
+  const furry = isFurry(member.identity);
+  const ts = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
+  const gender = ts.filter((t) => t === "female" || t === "male");
+  const named = ts.filter((t) => t.includes("\\(") || !gender.includes(t) && ts.indexOf(t) === gender.length && !SPECIES.test(t) && !HAIR.test(t) && t.includes(" ") && !/eyes|skin/u.test(t));
+  let species = ts.filter((t) => furry && SPECIES.test(t) && !named.includes(t));
+  if (furry)
+    species = [...new Set([...["furry", "anthro", furryGenderTag(member.gender), speciesName(member.identity), "muzzle"].filter(Boolean), ...species])];
+  const hair = ts.filter((t) => HAIR.test(t) && !species.includes(t) && !named.includes(t));
+  const rest = ts.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
+  const out = [...gender, ...named];
+  if (species.length)
+    out.push(`${fmt(ID_WEIGHT_FURRY + boost)}::${species.join(", ")}::`);
+  for (const t of hair)
+    out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR + boost)}::${t}::` : t);
+  return [...out, ...rest].join(", ");
+}
+function furryBaseTag(members, boost = 0) {
+  const furry = members.filter((m) => isFurry(m.identity));
+  return furry.length && furry.length === members.length ? `${fmt(ID_WEIGHT_FURRY + boost)}::${[furryGenderTag(furry[0].gender) || "furry", "anthro", speciesName(furry[0].identity)].join(", ")}::` : "";
+}
+var identityNegative = (identity) => isFurry(identity) ? "human, kemonomimi mode, human face, human skin" : "";
+function countTags(genders) {
+  const f = genders.filter((g) => g === "female").length;
+  const m = genders.filter((g) => g === "male").length;
+  const o = genders.length - f - m;
+  const parts = [f ? `${f}girl${f > 1 ? "s" : ""}` : "", m ? `${m}boy${m > 1 ? "s" : ""}` : "", o ? `${o}other${o > 1 ? "s" : ""}` : ""].filter(Boolean);
+  return parts.length ? parts.join(", ") : "no humans";
+}
+function splitPrompt(p) {
+  const i = p.indexOf(`
+`);
+  const head = (i < 0 ? p : p.slice(0, i)).trim().replace(/^,+|,+$/gu, "").trim();
+  return [head, i < 0 ? "" : p.slice(i + 1).trim()];
+}
+function dedupeTags(s) {
+  const seen = new Set;
+  return tags(s).filter((t) => seen.has(t.toLowerCase()) ? false : (seen.add(t.toLowerCase()), true)).join(", ");
+}
+function buildPanelRequest(panel, cast, style) {
+  const chars = panel.nai.characters.filter((c) => cast.has(c.name));
+  const [baseTags, baseSentence] = splitPrompt(panel.nai.base);
+  const species = furryBaseTag(chars.map((c) => cast.get(c.name)));
+  const head = [countTags(chars.map((c) => cast.get(c.name).gender)), species, style.style];
+  const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
+${baseSentence}` : "");
+  const keyTags = {};
+  const cutoutCharacters = [];
+  const placeTags = tags(baseTags).filter((t) => !CAMERA.test(t));
+  const characters = chars.map((c) => {
+    const member = cast.get(c.name);
+    const [poseTags, sentence] = splitPrompt(c.prompt);
+    const outfit = outfitPrompt(member.outfit, c.framing, style.framingWeights, c.shoes_off === true, c.drop_outfit ?? []);
+    keyTags[c.name] = outfit.keyTags;
+    cutoutCharacters.push([identityPrompt(member), cutoutPose(poseTags, placeTags), outfit.prompt].filter(Boolean).join(", "));
+    return {
+      name: c.name,
+      prompt: [identityPrompt(member), poseTags, outfit.prompt].filter(Boolean).join(", ") + (sentence ? `
+${sentence}` : ""),
+      uc: identityNegative(member.identity),
+      x: c.x,
+      y: c.y
+    };
+  });
+  const [width, height] = panel.size.split("x").map(Number);
+  const cutout = panel.frame_break ? { prompt: [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", "), characters: cutoutCharacters } : undefined;
+  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...cutout ? { cutout } : {} };
+}
+function engineImageRequest(request, style, seed) {
+  return {
+    provider: "novelai",
+    prompt: request.prompt,
+    negativePrompt: request.negativePrompt,
+    seed,
+    width: request.width,
+    height: request.height,
+    forceNsfwPrefix: false,
+    config: {
+      ...style.params,
+      analysisProfile: "v5-hybrid",
+      width: request.width,
+      height: request.height,
+      useOrder: true,
+      useCoords: true,
+      forceCharacterCoordinates: true,
+      characterPrompts: request.characters.map((c) => ({ prompt: c.prompt, uc: c.uc, centerX: c.x, centerY: c.y, coordinateMode: "fixed" }))
+    },
+    references: [],
+    queueMeta: { kind: "generation", source: "webtoon", sourceImageToken: `webtoon:panel:${request.panelId}` }
+  };
+}
+
+// src/backend/webtoon/manga-planner-prompt.ts
+var MANGA_PLANNER_TEMPLATE = String.raw`You are the storyboard artist ("name" / thumbnail artist) for a Japanese manga. You adapt ONE chat reply (below) into a short manga chapter of about {{PAGES}} pages. Pages are read right to left: panels in a row from right to left, rows from top to bottom. Code builds the pages from a small library of page templates and letters your text on top of the images, so you decide WHAT each panel shows and how IMPORTANT it is; code decides the exact panel shapes.
+
+How the target manga are built:
+- Every panel is ONE single illustration with ONE camera. Never ask the image model for a manga page, panels, borders, text or speech bubbles.
+- Rhythm: a page has 4-7 panels. Each page has one big panel (the strongest beat of the page: a reveal, an emotional peak, an establishing view), several normal panels, and small panels for quick beats (a reaction face, an insert of hands/objects/feet, a pause).
+- Vary the camera hard like a manga artist: extreme close-ups of eyes, insert shots of hands/objects/feet, low angle, high angle, back view, over-the-shoulder, a wide establishing shot of the street or room. Never more than two medium shots in a row. The chapter opens with an establishing panel.
+- Outbursts are the best manga beats: a shouted line, a sudden reaction or a punchline ("You don't have a hand mixer?!") gets its own panel (a head snap, a close-up reaction) instead of sharing a panel with calm lines.
+- Speech balloons sit in the empty part of the panel next to the speaker's head; they may cross the panel border into the white gutter. Narration sits in rectangular boxes at a panel corner. Sound effects (SFX) are hand-lettered over the art.
+
+Hard rules (checked by code; violations are removed or repaired automatically):
+1. {{PANELS}} panels in reading order ({{MIN}} to {{MAX}} accepted).
+2. "importance" per panel: "big" (about 1 per page), "small" (quick reaction, insert, pause: about 1/3 of the panels), "normal" (the rest).
+3. At most 2 speech/thought balloons per panel, each ONE short beat of at most 8 words (12 is the absolute maximum): split a long line into two balloons at a sentence break. A "small" panel gets at most 1 balloon.
+4. Up to 1 narration box per panel (at most 12 words). Narration reuses the source's own narration wording, shortened.
+5. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag. Never join two different lines (from different moments) into one balloon. Never add, change or invent words.
+6. "tone" of a speech balloon: "shout" when the line is yelled or snapped (an exclamation, "she yelled"), "whisper" when it is whispered, muttered or said under the breath; leave it out otherwise.
+7. Sound effects: short English onomatopoeia. When the source writes a sound ("*click*", "bzzt", "thud", a door that slams, a phone that buzzes), use that sound: copy the source's sound word, or write the sound the source describes (a silent text alert is "bzzt", not "ring"; loafers on stairs "click click"; a pillow hit "fwump"). Every "action" panel gets 1 sfx; quiet panels may get an ambient one. Aim for 5-8 sfx in the chapter.
+8. List the story's key props in "key_props" and give the most important ones an "insert" panel (hands/feet/object close-up, framing "hands only" or no characters).
+9. Keep it non-explicit: clothed, no sexual framing, no suggestive tags.
+
+Image model: NovelAI V5, one image per panel (code picks the size from the panel shape).{{STYLE}}
+
+Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Leave room for balloons: with a speaker at x 0.3 the right side stays empty for the balloon (manga balloons are read first at the top RIGHT). Two characters must not share the same x. In a two-shot, put the character who speaks FIRST on the RIGHT.
+Frame-break: set "frame_break": true on 1 "action" panel per page at most, where ONE character makes a strong move (framing "portrait", "upper body" or "cowboy shot", character y 0.5 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Leave "frame_break" false on every other panel.
+
+Prompt format:
+- "base": camera/framing tags (e.g. "close-up", "eye focus", "from below", "from above", "from behind", "pov", "upper body", "cowboy shot", "full body", "wide shot", "dutch angle"), then location/lighting tags (e.g. "indoors, kitchen, evening"), then a newline and 1-2 plain English sentences describing the shot. Do NOT write count tags (1girl, 1boy: code adds them), artist, style or quality tags, "speech bubble" or "text".
+- "characters": one entry per visible character (empty list for object-only or no-human shots). "prompt" = ONLY pose, expression, gaze and action tags for this shot (e.g. "walking, from side, looking away, pout, holding bag"), then a newline and one short English sentence of what the character does. Do NOT write hair, eye, body, species or clothing tags: identity and outfit tags are added by code. "framing" = "portrait" | "upper body" | "cowboy shot" | "lower body" | "full body" | "hands only". "shoes_off": true when indoors at home without shoes.
+- "drop_outfit": when an outfit item clearly contradicts THIS panel's scene (e.g. indoor "uwabaki" school slippers on the street, shoes indoors), list it here, copied exactly from the character's item list; otherwise leave it empty.
+
+Characters (identity and outfit tags are injected by code; you only pick an outfit, place and pose them):
+{{ROSTER}}
+Outfit: for every character you draw, pick the wardrobe outfit that fits this scene (field "outfits": [{"name", "outfit_id"}]); the one marked (current) is what they wore last. "drop_outfit" items refer to the picked outfit.
+
+Output: JSON only, this shape (example values):
+{"title": "Chapter 1: Example",
+ "key_props": ["canvas tote bag"],
+ "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
+ "panels": [
+  {"id": 1, "importance": "big", "beat": "establishing", "shot": "wide shot from below, the bridge and evening sky", "moment": "They walk onto the bridge.", "frame_break": false,
+   "nai": {"base": "wide shot, from below, full body, outdoors, bridge, sky, sunset\nTwo students walk onto a long bridge under a wide evening sky.",
+           "characters": [{"name": "A", "x": 0.7, "y": 0.7, "framing": "full body", "shoes_off": false, "drop_outfit": [], "prompt": "walking, arms crossed, pout\nShe walks ahead, sulking."},
+                          {"name": "B", "x": 0.3, "y": 0.7, "framing": "full body", "shoes_off": false, "drop_outfit": [], "prompt": "walking, hand in pocket, half-closed eyes\nHe follows her."}]},
+   "text": [{"type": "narration", "speaker": null, "text": "The bridge was empty."},
+            {"type": "speech", "speaker": "A", "text": "You're late!", "tone": "shout"},
+            {"type": "sfx", "speaker": null, "text": "tap tap"}]},
+  {"id": 2, "importance": "small", "beat": "insert", "shot": "close-up of her hand on the bag strap", "moment": "...", "nai": {"base": "...", "characters": []}, "text": []}
+ ]}
+Field values: importance "small"|"normal"|"big"; beat "establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; text type "speech"|"thought"|"narration"|"sfx"; tone "shout"|"whisper" (speech only, optional); speaker = a character name (may be off-panel) or null for narration/sfx; text items in reading order.
+All text in the language of the chat reply.
+
+The chat reply:
+<<<
+{{SOURCE}}
+>>>
+`;
+function mangaPagesHint(panels) {
+  const lo = Math.max(1, Math.ceil(panels / 6)), hi = Math.max(1, Math.ceil(panels / 4));
+  return lo === hi ? String(lo) : `${lo}-${hi}`;
+}
+function buildMangaPlannerPrompt(args) {
+  const range = webtoonPanelRange(args.panels);
+  const style = args.mono ? " The art style is black-and-white manga (greyscale): do not rely on colours to tell characters or things apart; use pose, framing, props and light, and write no colour words." : "";
+  const fill = {
+    "{{PANELS}}": String(args.panels),
+    "{{MIN}}": String(range.min),
+    "{{MAX}}": String(range.max),
+    "{{PAGES}}": mangaPagesHint(args.panels),
+    "{{STYLE}}": style,
+    "{{ROSTER}}": rosterBlock(args.roster, !!args.freeCharacters),
+    "{{SOURCE}}": args.source
+  };
+  return MANGA_PLANNER_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|PAGES|STYLE|ROSTER|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
+}
+
+// src/backend/webtoon/manga-style.ts
+var MONO_TAGS = "monochrome, greyscale";
+var MONO = new Set(["greyscale", "grayscale", "monochrome"]);
+function weightedRuns(prompt) {
+  const parts = prompt.split("::");
+  const runs = [];
+  let weight = null;
+  parts.forEach((part, i) => {
+    if (weight !== null) {
+      runs.push([part, weight]);
+      weight = null;
+      return;
+    }
+    const opener = i < parts.length - 1 ? /(-?\d*\.?\d+)\s*$/u.exec(part) : null;
+    runs.push([opener ? part.slice(0, opener.index) : part, 1]);
+    if (opener)
+      weight = Number(opener[1]);
+  });
+  return runs;
+}
+function isMonochromeStyle(positive) {
+  return weightedRuns(positive).some(([text, weight]) => weight > 0 && text.split(/[,\n]/u).some((tag) => MONO.has(tag.replace(/[{}[\]()]/gu, "").trim().toLowerCase())));
+}
+var COLOUR = "red|orange|yellow|green|blue|purple|violet|pink|brown|grey|gray|silver|gold|golden|blonde|blond|platinum|teal|cyan|magenta|beige|navy|maroon|crimson|scarlet|amber|aqua|aquamarine|turquoise|lavender|lilac|indigo|khaki|olive|peach|emerald|ruby|sapphire|azure|multicolou?red|colou?rful|rainbow|two-tone";
+var COLOUR_WORD = new RegExp(`\\b(?:(?:light|dark|pale|bright|deep|pastel|neon|hot|baby|sky|dusty|vivid)[\\s-]+)?(?:${COLOUR})(?:[\\s-]*(?:colou?red|tinted|ish))?\\b`, "giu");
+var BARE = /^(?:hair|eyes?|pupils|irises|skin|hair and eyes|and|&)?$/iu;
+function stripPiece(piece) {
+  if (piece.includes("("))
+    return piece;
+  const lead = /^\s*/u.exec(piece)[0];
+  const out = piece.replace(COLOUR_WORD, " ").replace(/(?:\s*(?:-|\/|&|\band\b))+\s*$/iu, "").replace(/^(?:\s*(?:-|\/|&|and\b))+\s*/iu, "").replace(/\s{2,}/gu, " ").trim();
+  return BARE.test(out) ? "" : lead + out;
+}
+function stripColours(prompt) {
+  const tokens = [];
+  prompt.split(/(-?\d*\.?\d+::|::|,|\n)/u).forEach((t, i) => {
+    if (i % 2 === 0) {
+      const tag = stripPiece(t).trim();
+      if (tag)
+        tokens.push({ tag });
+    } else if (t === `
+`)
+      tokens.push({ nl: true });
+    else if (t === "::")
+      tokens.push({ close: true });
+    else if (t !== ",")
+      tokens.push({ open: t });
+  });
+  let out = "";
+  let comma = false;
+  for (let i = 0;i < tokens.length; i++) {
+    const t = tokens[i];
+    if ("tag" in t) {
+      out += (comma ? ", " : "") + t.tag;
+      comma = true;
+    } else if ("nl" in t) {
+      out += `
+`;
+      comma = false;
+    } else if ("open" in t) {
+      const next = tokens[i + 1];
+      if (next && "close" in next)
+        i++;
+      else {
+        out += (comma ? ", " : "") + t.open;
+        comma = false;
+      }
+    } else {
+      out += "::";
+      comma = true;
+    }
+  }
+  return out;
+}
+function monoCast(cast) {
+  return new Map([...cast].map(([name, m]) => [name, {
+    ...m,
+    identity: stripColours(m.identity),
+    outfit: Object.fromEntries(Object.entries(m.outfit).map(([part, tags]) => [part, stripColours(tags ?? "")]))
+  }]));
+}
+function monoPanel(panel) {
+  return { ...panel, nai: { base: stripColours(panel.nai.base), characters: panel.nai.characters.map((c) => ({ ...c, prompt: stripColours(c.prompt) })) } };
+}
+function withMonoTags(request) {
+  const mono = (prompt) => `${MONO_TAGS}, ${prompt}`;
+  return {
+    ...request,
+    characters: request.characters.map((c) => ({ ...c, prompt: mono(c.prompt) })),
+    ...request.cutout ? { cutout: { ...request.cutout, characters: request.cutout.characters.map(mono) } } : {}
+  };
+}
+
+// src/backend/webtoon/storyboard-schema.ts
+var IMAGE_SIZES = ["832x1216", "704x1472", "1024x1024", "1216x832", "1472x704"];
+var PORTRAIT_SIZES = ["832x1216", "704x1472"];
+var LAYOUTS = ["title", "full_width", "inset_left", "inset_right", "wide_band", "tight_crop", "fade_white", "text_on_white"];
+var BEATS = ["title", "establishing", "action", "dialogue", "reaction", "insert", "quiet"];
+var ANCHORS = ["top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge"];
+var FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full body", "hands only"];
+var TEXT_TYPES = ["speech", "thought", "narration", "sfx"];
+var GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
+var str5 = { type: "string" };
+var num2 = { type: "number" };
+var textItem = {
+  type: "object",
+  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str5, anchor: { type: "string", enum: [...ANCHORS] } },
+  required: ["type", "text", "anchor"]
+};
+var STORYBOARD_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    title: str5,
+    key_props: { type: "array", items: str5 },
+    panels: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          kind: { type: "string", enum: ["image", "text_beat"] },
+          beat: { type: "string", enum: [...BEATS] },
+          moment: str5,
+          shot: str5,
+          size: { type: "string", enum: [...IMAGE_SIZES] },
+          layout: { type: "string", enum: [...LAYOUTS] },
+          scene_change: { type: "boolean" },
+          pause: { type: "boolean" },
+          frame_break: { type: "boolean" },
+          balloon_space: str5,
+          nai: {
+            type: "object",
+            properties: {
+              base: str5,
+              characters: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: str5,
+                    x: num2,
+                    y: num2,
+                    framing: { type: "string", enum: [...FRAMINGS] },
+                    shoes_off: { type: "boolean" },
+                    drop_outfit: { type: "array", items: str5 },
+                    prompt: str5
+                  },
+                  required: ["name", "x", "y", "framing", "prompt"]
+                }
+              }
+            },
+            required: ["base", "characters"]
+          },
+          text: { type: "array", items: textItem }
+        },
+        required: ["id", "kind", "beat", "layout", "text"]
+      }
+    }
+  },
+  required: ["title", "panels"]
+};
+
+// src/backend/webtoon/storyboard-validate.ts
+var LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6, maxFrameBreaks: 2 };
+function normWords(s) {
+  s = s.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
+  return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
+}
+function fragments(text) {
+  return text.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/).map((f) => f.trim()).filter((f) => normWords(f).length);
+}
+function speechStream(para) {
+  const segs = [];
+  for (const m of para.matchAll(/["\u201c]([^"\u201d]*)["\u201d]|\*([^*]+)\*/g))
+    segs.push((m[1] ?? m[2] ?? "").trim());
+  return segs.join(" ");
+}
+function buildQuoteIndex(source) {
+  const paras = source.split(`
+`).filter((p) => p.trim());
+  const streams = paras.map(speechStream).filter((s) => s.trim());
+  const texts = [...paras, ...streams];
+  return { texts, hay: [" " + normWords(source).join(" ") + " ", ...streams.map((s) => " " + normWords(s).join(" ") + " ")] };
+}
+function lcs(a, b) {
+  const dp = new Array(b.length + 1).fill(0);
+  for (let i = 1;i <= a.length; i++) {
+    let prev = 0;
+    for (let j = 1;j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[b.length];
+}
+function repairFragment(frag, idx) {
+  const tw = normWords(frag);
+  const n = tw.length;
+  let best = [0, null];
+  for (const text of idx.texts) {
+    const toks = [...text.matchAll(/[A-Za-z0-9'\u2019]+/g)].map((m) => ({ w: m[0].replace(/^['\u2019]+|['\u2019]+$/g, "").toLowerCase().replace(/\u2019/g, "'"), a: m.index, b: m.index + m[0].length })).filter((t) => t.w);
+    for (const L of new Set([Math.max(1, n - 1), n, n + 1])) {
+      for (let i = 0;i + L <= toks.length; i++) {
+        const win = toks.slice(i, i + L);
+        const r = 2 * lcs(tw, win.map((t) => t.w)) / (n + L);
+        if (r > best[0])
+          best = [r, text.slice(win[0].a, win[L - 1].b)];
+      }
+    }
+  }
+  return best;
+}
+function checkQuote(text, idx) {
+  const keep = [];
+  const notes = [];
+  for (const f of fragments(text)) {
+    const w = " " + normWords(f).join(" ") + " ";
+    const hit = idx.hay.findIndex((h) => h.includes(w));
+    if (hit === 0) {
+      keep.push(f);
+      continue;
+    }
+    if (hit > 0) {
+      keep.push(f);
+      notes.push({ kind: "joined", fragment: f, replacement: null, ratio: 1 });
+      continue;
+    }
+    const [r, cand] = repairFragment(f, idx);
+    if (r >= LIMITS.repairRatio && cand) {
+      const end = /[!?.]$/.test(f.trimEnd()) ? f.trimEnd().slice(-1) : "";
+      keep.push(cand + end);
+      notes.push({ kind: "repaired", fragment: f, replacement: cand + end, ratio: r });
+    } else
+      notes.push({ kind: "dropped", fragment: f, replacement: null, ratio: r });
+  }
+  return { text: keep.length ? keep.join(text.includes("...") || text.includes("…") ? "... " : " ").replace(/([.!?])\.\.\. /g, "$1 ") : null, notes };
+}
+function splitLong(t) {
+  const words = t.split(/\s+/);
+  if (words.length <= LIMITS.maxWords)
+    return [t];
+  const parts = t.split(/(?<=[.!?])\s+/);
+  if (parts.length < 2)
+    return [t];
+  const a = [], b = [];
+  let acc = 0;
+  for (const p of parts) {
+    (acc + p.split(/\s+/).length <= Math.ceil(words.length / 2) || !a.length ? a : b).push(p);
+    acc += p.split(/\s+/).length;
+  }
+  return b.length ? [a.join(" "), b.join(" ")] : [t];
+}
+var snap = (v) => {
+  const n = Number(v);
+  const x = Number.isFinite(n) ? n : 0.5;
+  return GRID.reduce((a, g) => Math.abs(g - x) < Math.abs(a - x) ? g : a, GRID[0]);
+};
+function hardOk(raw, images) {
+  try {
+    const imgs = raw.panels.filter((p) => p?.kind === "image");
+    return imgs.length >= images.min && imgs.length <= images.max && imgs.every((p) => p.nai?.base);
+  } catch {
+    return false;
+  }
+}
+function outfitItems(r) {
+  return Object.values(r.outfit).flatMap((v) => (v ?? "").split(",").map((t) => t.trim()).filter(Boolean));
+}
+function checkedQuote(panelId, text, idx, log, stats) {
+  const q = checkQuote(text, idx);
+  for (const nt of q.notes) {
+    if (nt.kind === "repaired") {
+      stats.quote_repaired++;
+      log.push(`p${panelId}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`);
+    } else if (nt.kind === "joined") {
+      stats.quote_joined++;
+      log.push(`p${panelId}: quote kept, joined across narration "${nt.fragment}"`);
+    } else {
+      stats.invented_dropped++;
+      log.push(`p${panelId}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`);
+    }
+  }
+  return q.text;
+}
+function validateCharacters(p, byName, log, stats) {
+  const chars = [];
+  for (const c of p.nai.characters ?? []) {
+    const r = byName.get(c.name);
+    if (!r) {
+      stats.unknown_char++;
+      log.push(`p${p.id}: dropped unknown character ${c.name}`);
+      continue;
+    }
+    c.x = snap(c.x);
+    c.y = snap(c.y);
+    if (!FRAMINGS.includes(c.framing))
+      c.framing = "upper body";
+    const items = outfitItems(r);
+    const drops = [];
+    for (const d of c.drop_outfit ?? []) {
+      const dl = String(d).toLowerCase().trim();
+      const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
+      if (hit.length === 1) {
+        drops.push(hit[0]);
+        stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`);
+        log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`);
+      } else
+        log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
+    }
+    c.drop_outfit = drops;
+    chars.push(c);
+  }
+  const used = new Set;
+  for (const c of chars) {
+    let k = 0;
+    while (used.has(c.x) && k++ < 5) {
+      c.x = GRID[(GRID.indexOf(c.x) + 1) % 5];
+      log.push(`p${p.id}: moved ${c.name} x (same column)`);
+    }
+    used.add(c.x);
+  }
+  return chars;
+}
+function validateStoryboard(raw, roster, source) {
+  const log = [];
+  const stats = {
+    invented_dropped: 0,
+    quote_repaired: 0,
+    quote_joined: 0,
+    balloons_dropped: 0,
+    split: 0,
+    layout_repaired: 0,
+    size_repaired: 0,
+    narration_merged: 0,
+    sfx_missing_action: 0,
+    unknown_char: 0,
+    outfit_dropped: []
+  };
+  const byName = new Map(roster.map((r) => [r.name, r]));
+  const idx = buildQuoteIndex(source);
+  const sb = { title: String(raw.title ?? ""), key_props: raw.key_props ?? [], panels: [] };
+  const panels = (raw.panels ?? []).filter((p) => p && typeof p === "object");
+  for (const p of panels) {
+    const out = [];
+    for (const t0 of p.text ?? []) {
+      if (!t0 || !String(t0.text ?? "").trim())
+        continue;
+      const t = { type: t0.type, speaker: t0.speaker ?? null, text: String(t0.text).trim(), anchor: t0.anchor };
+      if (!["speech", "thought", "narration", "sfx"].includes(t.type))
+        continue;
+      const a = String(t.anchor);
+      t.anchor = a === "gutter-above" ? "over-top-edge" : a === "gutter-below" ? "over-bottom-edge" : ANCHORS.includes(a) ? a : t.type === "narration" ? "top-left" : "top";
+      if (t.type === "speech" || t.type === "thought") {
+        const text = checkedQuote(p.id, t.text, idx, log, stats);
+        if (!text)
+          continue;
+        t.text = text;
+        const parts = splitLong(t.text);
+        if (parts.length > 1) {
+          stats.split++;
+          log.push(`p${p.id}: split ${t.text.split(/\s+/).length}-word balloon`);
+          out.push({ ...t, text: parts[0] }, { ...t, text: parts[1] });
+          continue;
+        }
+      }
+      out.push(t);
+    }
+    p.text = out;
+  }
+  let pauseKept = false;
+  const narrCount = (p) => p.text.filter((t) => t.type === "narration").length;
+  const kept = [];
+  panels.forEach((p, i) => {
+    if (p.kind !== "text_beat") {
+      kept.push(p);
+      return;
+    }
+    if (p.pause && !pauseKept) {
+      pauseKept = true;
+      p.layout = "text_on_white";
+      kept.push(p);
+      return;
+    }
+    const next = panels.slice(i + 1).find((q) => q.kind === "image");
+    const prev = [...kept].reverse().find((q) => q.kind === "image");
+    const items = p.text;
+    const room = (q) => q && narrCount(q) + items.filter((t) => t.type === "narration").length <= LIMITS.maxNarrImage;
+    if (room(next)) {
+      next.text = [...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "top-right" : "top-left" : t.anchor })), ...next.text];
+      if (p.scene_change)
+        next.scene_change = true;
+      stats.narration_merged += items.length;
+      log.push(`p${p.id}: text beat merged into the top of p${next.id}`);
+    } else if (room(prev)) {
+      prev.text = [...prev.text, ...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "bottom-left" : "bottom-right" : t.anchor }))];
+      stats.narration_merged += items.length;
+      log.push(`p${p.id}: text beat merged into the bottom of p${prev.id}`);
+    } else if (!pauseKept) {
+      pauseKept = true;
+      p.pause = true;
+      kept.push(p);
+      log.push(`p${p.id}: text beat kept as the pause (no room to merge)`);
+    } else {
+      stats.balloons_dropped += items.length;
+      log.push(`p${p.id}: text beat dropped (no room)`);
+    }
+  });
+  const imgs = kept.filter((p) => p.kind === "image");
+  imgs.forEach((p, i) => {
+    const nai = p.nai ??= { base: "", characters: [] };
+    if (!IMAGE_SIZES.includes(p.size)) {
+      p.size = "832x1216";
+      log.push(`p${p.id}: bad size -> 832x1216`);
+    }
+    const chars = validateCharacters(p, byName, log, stats);
+    nai.characters = chars;
+    if (!LAYOUTS.includes(p.layout) || p.layout === "text_on_white")
+      p.layout = "full_width";
+    if (p.layout === "title" && i > 0) {
+      p.layout = "full_width";
+      log.push(`p${p.id}: title only on the first panel -> full_width`);
+    }
+    const tallFor = () => chars.length >= 2 && p.size === "1216x832" ? "1216x832" : "832x1216";
+    if (p.layout === "wide_band" && p.beat === "reaction") {
+      p.layout = "tight_crop";
+      log.push(`p${p.id}: wide_band on a reaction beat -> tight_crop`);
+    }
+    if (p.layout === "wide_band" && !["establishing", "insert", "title"].includes(p.beat)) {
+      p.layout = "full_width";
+      p.size = tallFor();
+      stats.layout_repaired++;
+      log.push(`p${p.id}: wide_band on a ${p.beat} beat -> full_width ${p.size}`);
+    }
+    if (p.layout === "wide_band")
+      p.size = "1472x704";
+    if (p.layout === "tight_crop" && !(["reaction", "insert"].includes(p.beat) || chars.every((c) => c.framing === "portrait" || c.framing === "hands only"))) {
+      p.layout = "full_width";
+      p.size = "832x1216";
+      stats.layout_repaired++;
+      log.push(`p${p.id}: tight_crop on a ${p.beat} beat -> full_width 832x1216`);
+    }
+    if (p.layout === "tight_crop" && !["1216x832", "1472x704"].includes(p.size))
+      p.size = "1216x832";
+    if (p.layout.startsWith("inset") && !["832x1216", "1024x1024"].includes(p.size)) {
+      p.size = "832x1216";
+      stats.size_repaired++;
+    }
+    if (p.layout !== "wide_band" && p.size === "1472x704" && chars.length) {
+      p.size = "1216x832";
+      stats.size_repaired++;
+      log.push(`p${p.id}: 1472x704 with characters outside a band -> 1216x832`);
+    }
+    const out = [];
+    let nb = 0, nn = 0;
+    for (const t of p.text) {
+      if (t.type === "speech" || t.type === "thought") {
+        if (++nb > LIMITS.maxBalloons) {
+          stats.balloons_dropped++;
+          log.push(`p${p.id}: dropped balloon #${nb} "${t.text}"`);
+          continue;
+        }
+      }
+      if (t.type === "narration") {
+        if (++nn > LIMITS.maxNarrImage) {
+          stats.balloons_dropped++;
+          log.push(`p${p.id}: dropped narration #${nn}`);
+          continue;
+        }
+      }
+      out.push(t);
+    }
+    p.text = [
+      ...out.filter((t) => t.type === "narration" && !t.anchor.startsWith("bottom") && t.anchor !== "over-bottom-edge"),
+      ...out.filter((t) => !(t.type === "narration" && !t.anchor.startsWith("bottom") && t.anchor !== "over-bottom-edge"))
+    ];
+    if (p.beat === "action" && !p.text.some((t) => t.type === "sfx")) {
+      stats.sfx_missing_action++;
+      log.push(`p${p.id}: action beat without sfx`);
+    }
+  });
+  for (const p of kept)
+    if (p.kind === "text_beat")
+      p.text = p.text.slice(0, LIMITS.maxNarrBeat);
+  const charPanels = () => imgs.filter((p) => p.nai.characters.length && !["wide_band", "tight_crop"].includes(p.layout));
+  const share = () => charPanels().filter((p) => PORTRAIT_SIZES.includes(p.size)).length / Math.max(1, charPanels().length);
+  for (const p of charPanels()) {
+    if (share() >= LIMITS.portraitShare)
+      break;
+    if (!PORTRAIT_SIZES.includes(p.size) && p.nai.characters.length === 1) {
+      log.push(`p${p.id}: ${p.size} -> 832x1216 (portrait bias)`);
+      p.size = "832x1216";
+      stats.size_repaired++;
+    }
+  }
+  if (!imgs.some((p) => p.layout.startsWith("inset"))) {
+    const cand = imgs.find((p, i) => i > 0 && p.layout === "full_width" && p.nai.characters.length === 1 && ["dialogue", "reaction", "quiet"].includes(p.beat) && ["832x1216", "1024x1024"].includes(p.size));
+    if (cand) {
+      const first = cand.text.find((t) => t.type === "speech" || t.type === "thought");
+      cand.layout = first && first.anchor.includes("left") ? "inset_right" : "inset_left";
+      stats.layout_repaired++;
+      log.push(`p${cand.id}: full_width -> ${cand.layout} (inset quota)`);
+    }
+  }
+  const breakable = (p) => p.beat === "action" && p.nai.characters.length === 1 && PORTRAIT_SIZES.includes(p.size) && ["full_width", "inset_left", "inset_right"].includes(p.layout) && !["hands only", "lower body"].includes(p.nai.characters[0].framing);
+  let breaks = 0;
+  for (const p of imgs) {
+    const asked = p.frame_break === true;
+    delete p.frame_break;
+    if (!asked)
+      continue;
+    if (!breakable(p)) {
+      log.push(`p${p.id}: frame_break dropped (needs an action beat with one character in a portrait panel)`);
+      continue;
+    }
+    if (breaks >= LIMITS.maxFrameBreaks) {
+      log.push(`p${p.id}: frame_break dropped (at most ${LIMITS.maxFrameBreaks} per strip)`);
+      continue;
+    }
+    p.frame_break = true;
+    breaks++;
+  }
+  const auto = breaks ? undefined : imgs.find(breakable);
+  if (auto) {
+    auto.frame_break = true;
+    log.push(`p${auto.id}: frame_break added (the planner marked none)`);
+  }
+  for (const p of imgs) {
+    const c = p.frame_break ? p.nai.characters[0] : null;
+    if (c && c.y > 0.5) {
+      log.push(`p${p.id}: ${c.name} y ${c.y} -> 0.5 (frame-break)`);
+      c.y = 0.5;
+    }
+  }
+  const props = sb.key_props ?? [];
+  const inserts = imgs.filter((p) => p.beat === "insert").map((p) => `${p.moment ?? ""} ${p.shot ?? ""} ${p.nai.base}`.toLowerCase()).join(" ");
+  Object.assign(stats, {
+    props_without_insert: props.filter((pr) => !normWords(pr).some((w) => w.length > 3 && inserts.includes(w))).length,
+    image_panels: imgs.length,
+    text_beats: kept.length - imgs.length,
+    frame_breaks: imgs.filter((p) => p.frame_break).map((p) => p.id),
+    layouts: imgs.map((p) => p.layout),
+    sizes: imgs.map((p) => p.size),
+    portrait_share: Number(share().toFixed(2)),
+    balloons: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "speech" || t.type === "thought").length, 0),
+    narration: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "narration").length, 0),
+    sfx: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "sfx").length, 0),
+    max_words: Math.max(0, ...kept.flatMap((p) => p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.text.split(/\s+/).length)))
+  });
+  sb.panels = kept;
+  return { storyboard: sb, log, stats };
+}
+
 // src/backend/webtoon/manga-validate.ts
 var MANGA_LIMITS = { words: 8, balloons: { small: 2, normal: 3, big: 3 }, narration: 2, joinGapWords: 60 };
 var IMPORTANCE = ["small", "normal", "big"];
@@ -66224,7 +66525,7 @@ function falseJoin(text, source) {
   }
   return { text, dropped: [] };
 }
-function cleanTags(line, panelId, who, log) {
+function cleanTags2(line, panelId, who, log) {
   const [tagLine, ...rest] = line.split(`
 `);
   const kept = (tagLine ?? "").split(",").map((t) => t.trim()).filter((t) => {
@@ -66262,10 +66563,10 @@ function validateMangaStoryboard(raw, roster, source) {
       ...typeof r.moment === "string" ? { moment: r.moment } : {},
       ...typeof r.shot === "string" ? { shot: r.shot } : {},
       ...r.frame_break === true ? { frame_break: true } : {},
-      nai: { base: cleanTags(String(r.nai?.base ?? ""), id, "base", log), characters: Array.isArray(r.nai?.characters) ? r.nai.characters.filter((c) => c && typeof c === "object") : [] },
+      nai: { base: cleanTags2(String(r.nai?.base ?? ""), id, "base", log), characters: Array.isArray(r.nai?.characters) ? r.nai.characters.filter((c) => c && typeof c === "object") : [] },
       text: []
     };
-    p.nai.characters = validateCharacters(p, byName, log, stats).map((c) => ({ ...c, prompt: cleanTags(String(c.prompt ?? ""), id, c.name, log) }));
+    p.nai.characters = validateCharacters(p, byName, log, stats).map((c) => ({ ...c, prompt: cleanTags2(String(c.prompt ?? ""), id, c.name, log) }));
     const out = [];
     for (const t0 of Array.isArray(r.text) ? r.text : []) {
       if (!t0 || !["speech", "thought", "narration", "sfx"].includes(t0.type) || !String(t0.text ?? "").trim())
@@ -66378,32 +66679,38 @@ function validateMangaStoryboard(raw, roster, source) {
 }
 
 // src/backend/webtoon/roster.ts
-var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str5 = (v) => v == null ? "" : String(v).trim();
-var PARTS3 = ["head", "top", "bottom", "legs", "feet"];
-var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str6 = (v) => v == null ? "" : String(v).trim();
+var PARTS4 = ["head", "top", "bottom", "legs", "feet"];
+var escapeRe2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 function mentions(text, names) {
-  return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text));
+  return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe2(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text));
 }
 function rosterEntry(candidate, currentOutfitId) {
   const forms = candidate.appearanceForms ?? [];
   const form = forms.find((f) => f.formId === candidate.defaultFormId) ?? forms[0];
   if (!form)
     return null;
-  const gender = str5(form.gender) || str5(candidate.gender);
-  const outfits = (form.outfits ?? []).map((o) => ({ ...rec4(o), id: str5(rec4(o).outfitId ?? rec4(o).id), label: str5(o.label) })).filter((o) => o.id && PARTS3.some((p) => str5(o[p])));
+  const gender = str6(form.gender) || str6(candidate.gender);
+  const outfits = (form.outfits ?? []).map((o) => ({ ...rec5(o), id: str6(rec5(o).outfitId ?? rec5(o).id), label: str6(o.label) })).filter((o) => o.id && PARTS4.some((p) => str6(o[p])));
   const ids = outfits.map((o) => o.id);
-  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str5(form.defaultOutfitId)) ? str5(form.defaultOutfitId) : ids[0] ?? "";
+  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str6(form.defaultOutfitId)) ? str6(form.defaultOutfitId) : ids[0] ?? "";
   const main = compileMainPrompt(form.basePromptGroups, gender);
   return {
     key: candidate.key,
     name: candidate.characterName.trim(),
     gender,
-    formLabel: str5(form.label),
-    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS3.flatMap((p) => str5(o[p]) ? [[p, str5(o[p])]] : [])) })),
+    formLabel: str6(form.label),
+    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS4.flatMap((p) => str6(o[p]) ? [[p, str6(o[p])]] : [])) })),
     currentOutfitId: current,
     identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", ")
   };
+}
+function designedEntry(key, name, look) {
+  if (!look?.identity)
+    return null;
+  const outfits = Object.values(look.outfit).some(Boolean) ? [{ id: look.outfitId || "look_1", label: look.outfitLabel, outfit: look.outfit }] : [];
+  return { key, name, gender: look.gender, formLabel: "", outfits, currentOutfitId: outfits[0]?.id ?? "", identity: look.identity, designed: true };
 }
 function validationRoster(roster, outfits) {
   return roster.map((r) => {
@@ -66436,10 +66743,10 @@ async function loadWebtoonContext(services, input) {
   const custom = [...docs.values()].flatMap((d) => d.customCharacters);
   const target = await services.images.resolveTarget();
   const runtime = buildRuntimeConfig(config, docs.get(primaryId) ?? null, { resolvedImageModel: target.model });
-  const cp = rec4(runtime.characterPrompt);
-  const forms = { ...rec4(cp.characterForms) };
+  const cp = rec5(runtime.characterPrompt);
+  const forms = { ...rec5(cp.characterForms) };
   for (const id of memberIds.slice(1))
-    for (const [k, v] of Object.entries(rec4(rec4(docs.get(id)?.characterPrompt).characterForms)))
+    for (const [k, v] of Object.entries(rec5(rec5(docs.get(id)?.characterPrompt).characterForms)))
       if (!(k in forms))
         forms[k] = v;
   runtime.characterPrompt = { ...cp, characterForms: forms };
@@ -66472,15 +66779,60 @@ async function loadWebtoonContext(services, input) {
     if (ref?.lorebook_prompt_key && ref.outfit_id)
       previous.set(ref.lorebook_prompt_key, ref.outfit_id);
   const candidates = [...ft.analyzerIdentityCandidates, ...ft.analyzerPersonaCandidates];
+  const personaProfiles = rec5(config.characterPrompt.personaSettings.profiles);
   const all = candidates.flatMap((c) => {
-    const entry = rosterEntry(c, previous.get(str5(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
+    if (c.key.startsWith(PERSONA_PROMPT_KEY_PREFIX) && !personaProfiles[c.key.slice(PERSONA_PROMPT_KEY_PREFIX.length)])
+      return [];
+    const entry = rosterEntry(c, previous.get(str6(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
     return entry && entry.name ? [{ entry, names: [c.characterName, ...c.aliases ?? []] }] : [];
   });
-  let roster = all.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
+  const looks = await latestLooks(services.storage, input.chatId);
+  const analysedFor = (key, names) => {
+    const folded = new Set(names.map(fold2).filter(Boolean));
+    return all.find((a) => a.entry.key === key || a.entry.key.startsWith(`${key}::lore::asset-maid:charx-description`) || a.names.some((n) => folded.has(fold2(n))));
+  };
+  const people = [];
+  for (const id of memberIds) {
+    const info = id === primaryId ? character : await services.sources.getCharacter(id);
+    people.push({ key: id, names: [info.name], description: info.description });
+  }
+  for (const c of custom)
+    if (c.rosterRegistered !== false && c.workspaceEnabled !== false)
+      people.push({ key: c.id, names: [c.title, ...c.recognitionKeys], description: c.appearanceDescription });
+  if (active)
+    people.push({ key: `${PERSONA_PROMPT_KEY_PREFIX}${active.personaId}`, names: [active.name], description: active.description });
+  const pool = [...all];
+  let primary;
+  for (const p of people) {
+    const name = p.names[0].trim();
+    if (!name)
+      continue;
+    const analysed = analysedFor(p.key, p.names);
+    const entry = analysed?.entry ?? designedEntry(p.key, name, looks.get(p.key)) ?? {
+      key: p.key,
+      name,
+      gender: "",
+      formLabel: "",
+      outfits: [],
+      currentOutfitId: "",
+      identity: "",
+      appearance: appearanceText(p.description, { char: name, user: active?.name ?? "" })
+    };
+    if (p.key === primaryId)
+      primary = entry;
+    if (!analysed)
+      pool.push({ entry, names: p.names });
+  }
+  let roster = pool.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
   if (!roster.length)
     roster = all.filter((a) => a.entry.key.startsWith(primaryId)).map((a) => a.entry).slice(0, 1);
+  if (primary)
+    roster.unshift(primary);
   const names = new Set;
-  roster = roster.filter((r) => names.has(r.name) ? false : (names.add(r.name), true));
+  roster = roster.filter((r) => names.has(fold2(r.name)) ? false : (names.add(fold2(r.name)), true));
+  const profile = str6(rec5(runtime.novelai).analysisProfile);
+  const free = profile === "v5-hybrid" && resolveSourceGenerationSettings2(amConfig, primaryId).freeCharacterGenerationEnabled;
+  const knownIdentities = free ? buildKnownIdentities(withCustomCharacterMembers(source, custom, "all"), personas.map(personaRecord2)) : null;
   const prompts = ft.promptInputs({ actors: {} });
   const nai = resolveNovelAIRunConfig2(amConfig, { sourceId: primaryId });
   const params = {};
@@ -66490,11 +66842,12 @@ async function loadWebtoonContext(services, input) {
   return {
     characterId: primaryId,
     roster,
+    knownIdentities,
     style: {
-      style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str5).filter(Boolean).join(", "),
-      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, input.format === "manga" ? MANGA_NEGATIVE : WEBTOON_NEGATIVE].map(str5).filter(Boolean).join(", ")),
+      style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str6).filter(Boolean).join(", "),
+      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, input.format === "manga" ? MANGA_NEGATIVE : WEBTOON_NEGATIVE].map(str6).filter(Boolean).join(", ")),
       params,
-      framingWeights: rec4(cp.outfitPartFramingWeights)
+      framingWeights: rec5(cp.outfitPartFramingWeights)
     }
   };
 }
@@ -66868,113 +67221,6 @@ async function frameBreakInputs(generated) {
   return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(display) };
 }
 
-// src/backend/webtoon/store.ts
-var webtoonDir = (chatId) => `${STORAGE_PATHS.chatDir(chatId)}webtoon/`;
-var webtoonPath = (chatId, historyId) => `${webtoonDir(chatId)}${safePathSegment(historyId)}.json`;
-var indexPath = (chatId) => `${webtoonDir(chatId)}index.json`;
-function createStripDocument(input) {
-  return {
-    schema: "inlay-illustrator.webtoon",
-    version: 1,
-    chatId: input.chatId,
-    messageKey: input.messageKey,
-    historyId: input.historyId,
-    characterId: input.characterId,
-    status: "planning",
-    revision: input.revision ?? 1,
-    createdAt: input.now,
-    updatedAt: input.now,
-    sourceLength: input.sourceLength,
-    planner: null,
-    storyboardRaw: null,
-    storyboard: null,
-    validation: null,
-    cast: [],
-    style: null,
-    requests: {},
-    panels: {},
-    textOverrides: {}
-  };
-}
-async function readStrip(storage, chatId, historyId) {
-  const raw = await storage.readJson(webtoonPath(chatId, historyId), null);
-  return raw && raw.schema === "inlay-illustrator.webtoon" && raw.version === 1 ? raw : null;
-}
-async function writeIndex(storage, doc, chatId, historyId) {
-  await storage.updateJson(indexPath(chatId), {}, (index) => {
-    const next = { ...index };
-    if (doc)
-      next[historyId] = { revision: doc.revision, status: doc.status, ...doc.format === "manga" ? { format: "manga" } : {} };
-    else
-      delete next[historyId];
-    return next;
-  });
-}
-async function updateStrip(storage, chatId, historyId, mutate, now = Date.now) {
-  const written = await storage.updateJson(webtoonPath(chatId, historyId), null, (current) => {
-    const valid = current && current.schema === "inlay-illustrator.webtoon" && current.version === 1 ? current : null;
-    const next = mutate(valid ? structuredClone(valid) : null);
-    return { ...next, revision: (valid?.revision ?? next.revision - 1) + 1, updatedAt: now() };
-  });
-  await writeIndex(storage, written, chatId, historyId);
-  return written;
-}
-async function stripSummaries(storage, chatId) {
-  return storage.readJson(indexPath(chatId), {});
-}
-function effectiveStoryboard(doc) {
-  if (!doc.storyboard)
-    return null;
-  return {
-    ...doc.storyboard,
-    panels: doc.storyboard.panels.map((p) => ({
-      ...p,
-      text: p.text.map((t, i) => {
-        const edited = doc.textOverrides[`${p.id}:${i}`];
-        return edited === undefined ? t : { ...t, text: edited };
-      })
-    }))
-  };
-}
-function relayout(doc, width = doc.format === "manga" ? MANGA_PAGE_WIDTH : STRIP_WIDTH) {
-  const storyboard = effectiveStoryboard(doc);
-  if (!storyboard)
-    return null;
-  const images = {};
-  for (const p of storyboard.panels) {
-    if (p.kind !== "image")
-      continue;
-    const panel = doc.panels[String(p.id)];
-    const take = panel?.takes[panel.selected];
-    const [width, height] = p.size.split("x").map(Number);
-    images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
-    if (take?.cutout)
-      images[String(p.id)].cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
-    if (take?.check && Object.keys(take.check.faces).length)
-      images[String(p.id)].faces = take.check.faces;
-  }
-  return doc.format === "manga" ? layoutManga(storyboard, images, { width, grey: !!doc.mono }) : layoutStrip(storyboard, images, { width });
-}
-function stripView(doc, width) {
-  const manga = doc.format === "manga";
-  const w = Math.round(width ?? 0) || (manga ? MANGA_PAGE_WIDTH : STRIP_WIDTH);
-  return {
-    chatId: doc.chatId,
-    messageKey: doc.messageKey,
-    status: doc.status,
-    ...doc.error ? { error: doc.error } : {},
-    ...manga ? { format: "manga" } : {},
-    revision: doc.revision,
-    title: doc.storyboard?.title ?? "",
-    layout: relayout(doc, manga && w >= MANGA_PAGE_WIDTH ? MANGA_PAGE_WIDTH : Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, w))),
-    panels: doc.panels,
-    updatedAt: doc.updatedAt
-  };
-}
-function takeOf(imageId, seed, width, height, createdAt) {
-  return { imageId, url: imageResultUrl(imageId), seed, width, height, createdAt };
-}
-
 // src/backend/webtoon/vision.ts
 var VISION_CAPABILITY = "decision-images-v1";
 var VISION_MODEL = "jev-1.14.0";
@@ -67230,6 +67476,47 @@ async function plan(deps, prompt, images, signal, manga = false) {
   const last = calls.at(-1);
   throw Object.assign(new RpcFailure(rpcError("provider-error", last?.error ? `The webtoon planner failed: ${last.error}` : `The webtoon planner returned no usable storyboard (${images.min} to ${images.max} image panels).`, { retryable: true })), { calls, model });
 }
+async function openAuto(deps, characterId) {
+  try {
+    return await openAutoGeneration(deps.services, deps.getModules, characterId);
+  } catch (error) {
+    deps.services.log.append("warn", "webtoon", "Free character generation is unavailable for this strip.", { error: toRpcError(error).message });
+    return null;
+  }
+}
+async function createStrangers(deps, auto, context, resolved, req) {
+  const byKey = new Map(resolved.strangers.map((s, i) => [`webtoon_free_${i + 1}`, s]));
+  try {
+    const prepared = await auto.autoCharacter.prepare({
+      actors: [...byKey].map(([candidateKey, s]) => ({
+        candidateKey,
+        label: s.name,
+        sex: s.gender || "unknown",
+        profile: {
+          recognitionKeys: [s.name],
+          humanlike: !isFurry(s.identity),
+          basePromptGroups: profileGroups(s.identityTags),
+          defaultOutfit: { name: s.outfits[0].label, ...s.outfits[0].outfit }
+        }
+      })),
+      signal: req.signal,
+      owner: req,
+      sourceId: context.characterId,
+      knownIdentities: context.knownIdentities
+    });
+    for (const p of prepared) {
+      const s = byKey.get(p.candidateKey);
+      if (s)
+        s.key = p.identityKey;
+    }
+    await auto.autoCharacter.settle();
+    resolved.log.push(`new characters: ${resolved.strangers.map((s) => `${s.name} (${s.key})`).join(", ")}`);
+  } catch (error) {
+    if (req.signal.aborted || isAbortLike(error))
+      throw error;
+    deps.services.log.append("warn", "webtoon", "New characters could not be stored; they are drawn in this strip only.", { error: toRpcError(error).message });
+  }
+}
 async function visionRun(deps, config, run) {
   try {
     const connectionId = await visionConnection(deps.services, config);
@@ -67331,37 +67618,50 @@ async function runWebtoonStrip(deps, req) {
         if (manga)
           Object.assign(d, { format: "manga", mono });
       });
-      let planned;
+      const auto = context.knownIdentities ? await openAuto(deps, characterId) : null;
       try {
-        const panels = webtoonPanelTarget(req.source.length);
-        const prompt = manga ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono }) : buildPlannerPrompt({ roster: context.roster, source: req.source, panels });
-        planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
-      } catch (error) {
-        const meta = error;
-        if (meta.calls)
-          await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls }));
-        throw error;
+        const freeCharacters = !!auto;
+        let planned;
+        try {
+          const panels = webtoonPanelTarget(req.source.length);
+          const prompt = manga ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono, freeCharacters }) : buildPlannerPrompt({ roster: context.roster, source: req.source, panels, freeCharacters });
+          planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
+        } catch (error) {
+          const meta = error;
+          if (meta.calls)
+            await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls }));
+          throw error;
+        }
+        await req.assertTarget();
+        const resolved = resolveLooks(planned.raw, context.roster, auto ? context.knownIdentities.flatMap((k) => [k.name, ...k.keys]) : null);
+        if (auto && resolved.strangers.length)
+          await createStrangers(deps, auto, context, resolved, req);
+        const roster = resolved.roster;
+        const outfitLog = [...resolved.log];
+        const outfits = { ...chosenOutfits(planned.raw, roster, outfitLog), ...resolved.outfits };
+        const validate = manga ? validateMangaStoryboard : validateStoryboard;
+        const validated = validate(structuredClone(planned.raw), validationRoster(roster, outfits), req.source);
+        validated.log.unshift(...outfitLog);
+        const cast = mono ? monoCast(castFor(roster, outfits)) : castFor(roster, outfits);
+        const planImages = validated.storyboard.panels.filter((p) => p.kind === "image");
+        const request = (p) => mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style);
+        doc = await write((d) => {
+          d.planner = { model: planned.model, calls: planned.calls };
+          d.storyboardRaw = planned.raw;
+          d.storyboard = validated.storyboard;
+          d.validation = { log: validated.log, stats: validated.stats };
+          d.cast = roster.map((r) => {
+            const look = resolved.looks.get(r.key);
+            return { name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity, ...look ? { look } : {} };
+          });
+          d.style = context.style;
+          d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
+          d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
+          d.status = "generating";
+        });
+      } finally {
+        auto?.dispose();
       }
-      await req.assertTarget();
-      const outfitLog = [];
-      const outfits = chosenOutfits(planned.raw, context.roster, outfitLog);
-      const validate = manga ? validateMangaStoryboard : validateStoryboard;
-      const validated = validate(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
-      validated.log.unshift(...outfitLog);
-      const cast = mono ? monoCast(castFor(context.roster, outfits)) : castFor(context.roster, outfits);
-      const planImages = validated.storyboard.panels.filter((p) => p.kind === "image");
-      const request = (p) => mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style);
-      doc = await write((d) => {
-        d.planner = { model: planned.model, calls: planned.calls };
-        d.storyboardRaw = planned.raw;
-        d.storyboard = validated.storyboard;
-        d.validation = { log: validated.log, stats: validated.stats };
-        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity }));
-        d.style = context.style;
-        d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
-        d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
-        d.status = "generating";
-      });
     }
     const requests = doc.requests;
     const images = (doc.storyboard?.panels ?? []).filter((p) => p.kind === "image" && !!requests[String(p.id)]);
@@ -67507,8 +67807,8 @@ async function editWebtoonText(deps, req) {
 }
 
 // src/backend/pipeline/controller.ts
-var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str6 = (v) => v == null ? "" : String(v).trim();
+var rec6 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str7 = (v) => v == null ? "" : String(v).trim();
 var sleep = (ms, signal) => new Promise((resolve) => {
   const t = setTimeout(done, ms);
   function done() {
@@ -67696,13 +67996,13 @@ function createChatPipelineController(services, engine, options = {}) {
   const autoRetryable = (error) => {
     if (!error || isCancellation(error))
       return false;
-    const r = rec5(error);
-    const inner = error instanceof RpcFailure ? rec5(error.error) : rec5(r.rpcError);
+    const r = rec6(error);
+    const inner = error instanceof RpcFailure ? rec6(error.error) : rec6(r.rpcError);
     const retryable = r.retryable ?? inner.retryable;
     if (retryable === false)
       return false;
-    const status = Number(r.httpStatus ?? r.status ?? rec5(inner.details).status);
-    const code = str6(r.code) || str6(inner.detailCode);
+    const status = Number(r.httpStatus ?? r.status ?? rec6(inner.details).status);
+    const code = str7(r.code) || str7(inner.detailCode);
     return retryable === true || error instanceof TypeError || status === 408 || status === 429 || status >= 500 && status < 600 || ["ANALYZER_JSON_PARSE", "ANALYZER_EMPTY_RESPONSE", "ANALYZER_TIMEOUT", "REQUEST_TIMEOUT", "CHAN_SERVER_TIMEOUT", "CHAN_SERVER_NETWORK", "V5_ANALYZER_NO_USABLE_ILLUSTRATION"].includes(code) || error instanceof RpcFailure && error.error.code === "timeout";
   };
   const errorOf = (e, label) => {
@@ -67956,7 +68256,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const characterId = await speakingCharacterId(services, input.chat, input.view);
     const document2 = await services.storage.loadCharacterDocument(characterId);
     const clean = messageSlots(job.planKey, input.content, nativeDetectorsFor(characterId, "", document2)).clean;
-    const result = await runWebtoonStrip({ services, engine, now }, {
+    const result = await runWebtoonStrip({ services, engine, now, ...options.getModules ? { getModules: options.getModules } : {} }, {
       chatId,
       chat: input.chat,
       messages: input.messages,
@@ -68070,7 +68370,7 @@ function createChatPipelineController(services, engine, options = {}) {
   const charactersOf = (record) => {
     const configChars = Array.isArray(record.novelAIConfig?.characterPrompts) ? record.novelAIConfig.characterPrompts : [];
     return record.characters.map((c, i) => {
-      const cfg = rec5(configChars[i]);
+      const cfg = rec6(configChars[i]);
       return {
         prompt: c.prompt,
         uc: c.negativePrompt,
@@ -68128,17 +68428,17 @@ function createChatPipelineController(services, engine, options = {}) {
         const list = listNovelAIArtists(config.characterPrompt.artistPrompts);
         const next = list.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
         const old = list.find((a) => a.id === record.artistId);
-        const tracked = rec5(rec5(record.novelAIConfig).nonArtistPromptWeightArtist);
-        out.positive = replaceSegment(out.positive, str6(tracked.positive) || str6(old?.prompt), str6(next.prompt));
-        out.negative = replaceSegment(out.negative, str6(tracked.negative) || str6(old?.negativePrompt), str6(next.negativePrompt));
-        const o = rec5(next.novelAIOverrides);
+        const tracked = rec6(rec6(record.novelAIConfig).nonArtistPromptWeightArtist);
+        out.positive = replaceSegment(out.positive, str7(tracked.positive) || str7(old?.prompt), str7(next.prompt));
+        out.negative = replaceSegment(out.negative, str7(tracked.negative) || str7(old?.negativePrompt), str7(next.negativePrompt));
+        const o = rec6(next.novelAIOverrides);
         for (const key of ["steps", "scale", "cfgRescale"])
           if (Number.isFinite(Number(o[key])))
             out.configPatch[key] = Number(o[key]);
       } else {
         const entries = config.animaArtists.entries;
         const next = entries.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
-        out.positive = replaceSegment(out.positive, str6(entries.find((a) => a.id === record.artistId)?.text), str6(next.text));
+        out.positive = replaceSegment(out.positive, str7(entries.find((a) => a.id === record.artistId)?.text), str7(next.text));
       }
       out.artistId = overrides.artistId;
     }
@@ -68193,11 +68493,11 @@ function createChatPipelineController(services, engine, options = {}) {
         ...keepCoords ? kept ? { centerX: kept.x, centerY: kept.y, coordinateMode: "fixed" } : { coordinateMode: "automatic" } : {}
       };
     }).filter((_c, i) => !excluded.has(i));
-    const seed = keepSeed ? str6(o.seed) || record.seed : "";
+    const seed = keepSeed ? str7(o.seed) || record.seed : "";
     const provider = record.engineProvider === "comfy-ui" ? "comfy-ui" : record.engineProvider === "chan-server" ? "chan-server" : "novelai";
     if (provider !== "novelai")
       return { provider, prompt: positive, negativePrompt: negative, seed, width, height };
-    const cfg = { ...rec5(record.novelAIConfig) };
+    const cfg = { ...rec6(record.novelAIConfig) };
     delete cfg.nonArtistPromptWeight;
     delete cfg.nonArtistPromptSource;
     delete cfg.nonArtistPromptWeightArtist;
@@ -68274,8 +68574,8 @@ function createChatPipelineController(services, engine, options = {}) {
       if (signal.aborted)
         throw new DOMException("Regeneration was cancelled.", "AbortError");
       await targetGuard(job.target)();
-      const meta = rec5(result.providerMetadata);
-      const imageId = str6(meta.imageId) || str6(result.requestId);
+      const meta = rec6(result.providerMetadata);
+      const imageId = str7(meta.imageId) || str7(result.requestId);
       if (!imageId)
         throw new Error("The image provider returned no image id.");
       const sourceLabel = /^(.+?)\.__am__\./u.exec(source.assetName ?? "")?.[1] ?? "";
@@ -68289,7 +68589,7 @@ function createChatPipelineController(services, engine, options = {}) {
         kind: "generated",
         assetName,
         savedPath: imageResultUrl(imageId),
-        extension: str6(result.extension) || "png",
+        extension: str7(result.extension) || "png",
         createdAt: now(),
         width,
         height,
@@ -68303,7 +68603,7 @@ function createChatPipelineController(services, engine, options = {}) {
         storePlanAndTree(d, plan, tree);
         return d;
       });
-      const finalized = rec5(result.finalizedPrompt);
+      const finalized = rec6(result.finalizedPrompt);
       await updateSidecar(services.storage, chatId, (s) => {
         s.records[entry.entryId] = {
           ...record,
@@ -68311,21 +68611,21 @@ function createChatPipelineController(services, engine, options = {}) {
           imageId,
           assetName,
           createdAt: entry.createdAt,
-          seed: str6(result.seed),
+          seed: str7(result.seed),
           seedFixed: keepSeed,
           width,
           height,
           sizeId: overrides?.sizeId ?? record.sizeId,
-          positivePrompt: str6(result.effectivePrompt) || str6(finalized.positivePrompt) || String(request.prompt ?? ""),
+          positivePrompt: str7(result.effectivePrompt) || str7(finalized.positivePrompt) || String(request.prompt ?? ""),
           negativePrompt: String(request.negativePrompt ?? ""),
-          sentParameters: rec5(meta.sentParameters),
+          sentParameters: rec6(meta.sentParameters),
           generationOrigin: "regenerate",
           parentEntryId: source.entryId,
           actors: rebuilt.actors,
           ...rebuilt.artistId ? { artistId: rebuilt.artistId } : {},
           characters: (request.config && Array.isArray(request.config.characterPrompts) ? request.config.characterPrompts : []).map((ch, i) => ({
-            prompt: str6(ch.prompt),
-            negativePrompt: str6(ch.uc),
+            prompt: str7(ch.prompt),
+            negativePrompt: str7(ch.uc),
             actorIndex: Number.isFinite(Number(ch.actorIndex)) ? Number(ch.actorIndex) : i,
             centerX: Number(ch.centerX ?? 0.5),
             centerY: Number(ch.centerY ?? 0.5),
@@ -68473,7 +68773,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const provider = record ? providerOf(record) : entry.kind === "original" ? "original" : "novelai";
     const imageId = imageIdFromResultUrl(entry.savedPath) ?? "";
     const isNovelAI = record?.engineProvider === "novelai";
-    const v5 = isNovelAI && (rec5(record?.novelAIConfig).analysisProfile === "v5-hybrid" || /^nai-diffusion-5/u.test(record?.model ?? ""));
+    const v5 = isNovelAI && (rec6(record?.novelAIConfig).analysisProfile === "v5-hybrid" || /^nai-diffusion-5/u.test(record?.model ?? ""));
     const busy = messageBusy(chatId, resolved.message.messageKey);
     return {
       chatId,
@@ -68576,15 +68876,15 @@ function createChatPipelineController(services, engine, options = {}) {
     emitChanged(chatId, []);
   };
   const handleGenerationEnded = async (raw) => {
-    const payload = rec5(raw);
+    const payload = rec6(raw);
     tracker.ended(payload);
     if (disposed || payload.error)
       return;
-    const chatId = str6(payload.chatId);
-    const messageId = str6(payload.messageId);
+    const chatId = str7(payload.chatId);
+    const messageId = str7(payload.messageId);
     if (!chatId || !messageId)
       return;
-    if (!AUTO_GENERATION_TYPES.has(str6(payload.generationType).toLowerCase()))
+    if (!AUTO_GENERATION_TYPES.has(str7(payload.generationType).toLowerCase()))
       return;
     try {
       const [settings, config] = await Promise.all([services.storage.loadChatImageGenerationSettings(), services.storage.loadConfig()]);
@@ -68604,8 +68904,8 @@ function createChatPipelineController(services, engine, options = {}) {
     }
   };
   const handleHostEvent = async (event, raw) => {
-    const payload = rec5(raw);
-    const chatId = str6(payload.chatId) || str6(rec5(payload.message).chat_id);
+    const payload = rec6(raw);
+    const chatId = str7(payload.chatId) || str7(rec6(payload.message).chat_id);
     switch (event) {
       case "GENERATION_STARTED":
         tracker.started(payload);
@@ -68616,22 +68916,22 @@ function createChatPipelineController(services, engine, options = {}) {
       case "GENERATION_ENDED":
         return handleGenerationEnded(raw);
       case "MESSAGE_DELETED": {
-        const ids = [str6(payload.messageId), str6(rec5(payload.message).id), ...Array.isArray(payload.messageIds) ? payload.messageIds.map(str6) : []].filter(Boolean);
+        const ids = [str7(payload.messageId), str7(rec6(payload.message).id), ...Array.isArray(payload.messageIds) ? payload.messageIds.map(str7) : []].filter(Boolean);
         for (const id of ids)
           if (chatId)
             await dropMessageData(chatId, id).catch((e) => log("warn", "Message data cleanup failed", toRpcError(e)));
         return;
       }
       case "MESSAGE_SWIPED": {
-        const message = rec5(payload.message);
-        if (payload.action === "deleted" && chatId && str6(message.id) && Number.isSafeInteger(payload.swipeId))
-          await dropMessageData(chatId, str6(message.id), Number(payload.swipeId)).catch((e) => log("warn", "Swipe data cleanup failed", toRpcError(e)));
+        const message = rec6(payload.message);
+        if (payload.action === "deleted" && chatId && str7(message.id) && Number.isSafeInteger(payload.swipeId))
+          await dropMessageData(chatId, str7(message.id), Number(payload.swipeId)).catch((e) => log("warn", "Swipe data cleanup failed", toRpcError(e)));
         else if (chatId)
           emitChanged(chatId, []);
         return;
       }
       case "CHARACTER_EDITED": {
-        const id = str6(payload.characterId) || str6(payload.id) || str6(rec5(payload.character).id);
+        const id = str7(payload.characterId) || str7(payload.id) || str7(rec6(payload.character).id);
         services.sources.invalidate(id || undefined);
         return;
       }
@@ -68693,8 +68993,8 @@ function createChatPipelineController(services, engine, options = {}) {
     async start(params) {
       if (disposed)
         fail2("unsupported", "The pipeline was disposed.");
-      const chatId = str6(params.chatId);
-      const messageId = str6(params.messageId);
+      const chatId = str7(params.chatId);
+      const messageId = str7(params.messageId);
       const swipeIndex = Number(params.swipeIndex);
       if (!chatId || !messageId || !Number.isSafeInteger(swipeIndex) || swipeIndex < 0)
         fail2("bad-request", "chatId, messageId and swipeIndex are required.");
@@ -68756,7 +69056,7 @@ function createChatPipelineController(services, engine, options = {}) {
       return [...jobs.values()].filter((j) => !j.dismissed && (!chatId || j.target.chatId === chatId) && (j.snapshot.status === "queued" || j.snapshot.status === "running" || j.snapshot.canRetry)).map((j) => jsonClone(j.snapshot));
     },
     async regenerateSlot(params) {
-      const chatId = str6(params.chatId);
+      const chatId = str7(params.chatId);
       const doc = await services.storage.loadChatData(chatId);
       const resolved = resolveHistorySlot(doc.history, { slotId: params.slotId, messageKey: params.messageKey });
       if (!resolved)
@@ -68991,7 +69291,7 @@ function createChatPipelineController(services, engine, options = {}) {
       return zoomDetails(chatId, slotId);
     },
     async requestAiPromptEdit(chatId, slotId, entryId, request) {
-      const instruction = str6(request.instruction);
+      const instruction = str7(request.instruction);
       if (!instruction)
         throw new RpcFailure(labelError("bad-request", PIPELINE_TEXT.editInstructionEmpty));
       if (instruction.length > 2000)
@@ -69409,7 +69709,7 @@ function asRecord3(value) {
 function asArray2(value) {
   return Array.isArray(value) ? value : [];
 }
-function str7(value) {
+function str8(value) {
   return typeof value === "string" ? value.trim() : typeof value === "number" && Number.isFinite(value) ? String(value) : "";
 }
 function errorMessage(error) {
@@ -69552,7 +69852,7 @@ function jsonClone2(value) {
 var EXTENSION_VERSION = "0.10.0";
 var REQUIRED_PERMISSIONS = ["generation", "image_gen", "chat_mutation", "chats", "characters", "personas", "world_books", "images", "interceptor", "app_manipulation"];
 function requireId(value, name) {
-  const id = str7(value);
+  const id = str8(value);
   if (!id)
     fail2("bad-request", `${name} is required.`);
   return id;
@@ -69738,7 +70038,7 @@ var coreHandlers = {
   },
   async "artists.list"(params, ctx) {
     const config = await ctx.storage.loadConfig();
-    const characterId = str7(params.characterId);
+    const characterId = str8(params.characterId);
     const doc = characterId ? await ctx.storage.loadCharacterDocument(characterId) : null;
     const anima = normalizeAnimaArtists(config.animaArtists);
     if (characterId && doc?.animaArtistId)
@@ -69758,20 +70058,20 @@ var coreHandlers = {
     let saved;
     await ctx.storage.updateConfig((config) => {
       const list = [...config.characterPrompt.artistPrompts];
-      const preset = DEFAULT_ARTIST_PRESETS.find((p) => p.id === str7(input.id));
+      const preset = DEFAULT_ARTIST_PRESETS.find((p) => p.id === str8(input.id));
       if (preset?.id === NO_ARTIST_ID)
         fail2("bad-request", "The 'no artist' entry cannot be edited.");
-      const taken = new Set(list.map((e) => str7(e.id)).concat(DEFAULT_ARTIST_PRESETS.map((p) => p.id)));
-      const id = str7(input.id) || prefixedId("artist", taken);
+      const taken = new Set(list.map((e) => str8(e.id)).concat(DEFAULT_ARTIST_PRESETS.map((p) => p.id)));
+      const id = str8(input.id) || prefixedId("artist", taken);
       if (preset) {
         saved = { id, title: preset.title, prompt: preset.prompt, ...input.novelAIOverrides ? { novelAIOverrides: input.novelAIOverrides } : {}, ...input.nonArtistPromptWeight ? { nonArtistPromptWeight: input.nonArtistPromptWeight } : {} };
       } else {
-        const title = str7(input.title);
+        const title = str8(input.title);
         if (!title)
           fail2("bad-request", "The artist title is required.", { messageKo: "작가 이름을 입력해주세요." });
-        saved = { ...input, id, title, prompt: str7(input.prompt), ...input.negativePrompt !== undefined ? { negativePrompt: str7(input.negativePrompt) } : {} };
+        saved = { ...input, id, title, prompt: str8(input.prompt), ...input.negativePrompt !== undefined ? { negativePrompt: str8(input.negativePrompt) } : {} };
       }
-      const index = list.findIndex((e) => str7(e.id) === id);
+      const index = list.findIndex((e) => str8(e.id) === id);
       if (index >= 0)
         list[index] = saved;
       else
@@ -69784,20 +70084,20 @@ var coreHandlers = {
     const id = requireId(params.id, "id");
     await ctx.storage.updateConfig((config) => ({
       ...config,
-      characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str7(e.id) !== id), defaultArtistId: config.characterPrompt.defaultArtistId === id ? NO_ARTIST_ID : config.characterPrompt.defaultArtistId }
+      characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str8(e.id) !== id), defaultArtistId: config.characterPrompt.defaultArtistId === id ? NO_ARTIST_ID : config.characterPrompt.defaultArtistId }
     }));
     return { ok: true };
   },
   async "artists.upsertAnima"(params, ctx) {
     const input = asRecord3(params.entry);
-    const text = str7(input.text);
+    const text = str8(input.text);
     if (!text)
       fail2("bad-request", "The artist prompt text is required.");
     let saved;
     await ctx.storage.updateConfig((config) => {
       const entries = [...config.animaArtists.entries];
-      const id = str7(input.id) && str7(input.id) !== NO_ARTIST_ID ? str7(input.id) : prefixedId("anima", new Set(entries.map((e) => e.id)));
-      saved = { id, title: str7(input.title) || id, text, ...str7(input.portableOrigin) ? { portableOrigin: str7(input.portableOrigin) } : {} };
+      const id = str8(input.id) && str8(input.id) !== NO_ARTIST_ID ? str8(input.id) : prefixedId("anima", new Set(entries.map((e) => e.id)));
+      saved = { id, title: str8(input.title) || id, text, ...str8(input.portableOrigin) ? { portableOrigin: str8(input.portableOrigin) } : {} };
       const index = entries.findIndex((e) => e.id === id);
       if (index >= 0)
         entries[index] = saved;
@@ -69813,8 +70113,8 @@ var coreHandlers = {
     return { ok: true };
   },
   async "artists.select"(params, ctx) {
-    const artistId = str7(params.artistId);
-    const characterId = str7(params.characterId);
+    const artistId = str8(params.artistId);
+    const characterId = str8(params.characterId);
     const config = await ctx.storage.loadConfig();
     if (params.list === "novelai") {
       const followGlobal = !artistId && !!characterId;
@@ -69840,7 +70140,7 @@ var coreHandlers = {
   async "personas.list"(params, ctx) {
     const [config, personas, active, chat] = await Promise.all([ctx.storage.loadConfig(), ctx.sources.listPersonas(), ctx.sources.getActivePersona(), ctx.sources.getActiveChat()]);
     const settings = normalizePersonaSettings(config.characterPrompt.personaSettings);
-    const characterId = str7(params.characterId);
+    const characterId = str8(params.characterId);
     const boundId = chat && (!characterId || chat.characterId === characterId || chat.groupCharacterIds.includes(characterId)) ? chat.personaId : null;
     return {
       personas: personas.map((p) => ({
@@ -69861,7 +70161,7 @@ var coreHandlers = {
     await ctx.storage.updateConfig((config) => {
       const settings = normalizePersonaSettings(config.characterPrompt.personaSettings);
       const current = resolvePersonaForms(settings, config.characterPrompt.personaGender, personaId);
-      if (formCollectionRevision(current) !== str7(params.baseRevision)) {
+      if (formCollectionRevision(current) !== str8(params.baseRevision)) {
         fail2("conflict", "The persona appearance was changed elsewhere. Reload it, then apply your edit again.", { detailCode: "FORM_COLLECTION_BASE_CHANGED", details: { expected: params.baseRevision, actual: formCollectionRevision(current) } });
       }
       collection = normalizeFormCollection(params.collection, { fallbackGender: config.characterPrompt.personaGender === "female" ? "female" : "male" });
@@ -70420,8 +70720,8 @@ function createImageBytesService(deps) {
   const service = {
     pendingCount: () => pending.size,
     async getImage(ref, options = {}) {
-      const url = str7(ref.url);
-      const imageId = url ? imageIdFromUrl(url) : str7(ref.imageId);
+      const url = str8(ref.url);
+      const imageId = url ? imageIdFromUrl(url) : str8(ref.imageId);
       if (!imageId)
         fail2("bad-request", url ? `Not a Lumiverse image URL: "${url.slice(0, 120)}".` : "No image id or URL given.", { detailCode: "IMAGE_REF_INVALID" });
       return readImage(imageId, options.signal);
@@ -70431,13 +70731,13 @@ function createImageBytesService(deps) {
       if (asset.key.startsWith(STORAGE_KEY_PREFIX))
         return fromStorageKey(asset.key);
       const crop = asRecord3(asset.cropReference);
-      const characterId = str7(asset.characterTarget?.chaId);
+      const characterId = str8(asset.characterTarget?.chaId);
       if ((Object.keys(crop).length || asset.name.startsWith(CROP_ASSET_NAME_PREFIX)) && characterId) {
         const cropName = (asset.name || asset.key).replace(/\.png$/i, "");
         const bytes = await fromStorage(STORAGE_PATHS.characterReferenceCrop(characterId, cropName), "png");
         if (bytes)
           return bytes;
-        const sourceKey = str7(crop.assetKey);
+        const sourceKey = str8(crop.assetKey);
         if (sourceKey.startsWith(STORAGE_KEY_PREFIX))
           return fromStorageKey(sourceKey);
         if (sourceKey)
@@ -70459,10 +70759,10 @@ function createImageBytesService(deps) {
       const type = message?.type;
       if (type !== FETCH_BRIDGE_RESPONSE)
         return false;
-      const entry = finish(str7(message.requestId));
+      const entry = finish(str8(message.requestId));
       if (!entry)
         return true;
-      const error = str7(message.error);
+      const error = str8(message.error);
       if (error) {
         const status = Number(message.status);
         entry.reject(new RpcFailure({ code: status === 404 ? "not-found" : status === 401 || status === 403 ? "permission-denied" : "provider-error", message: error, detailCode: "FETCH_BRIDGE_ERROR", ...Number.isFinite(status) && status ? { details: { status } } : {} }));
@@ -70519,7 +70819,7 @@ function randomSeed3() {
   return buf[0];
 }
 function parseSeed(value) {
-  const s = typeof value === "number" ? Number.isSafeInteger(value) ? String(value) : "" : str7(value);
+  const s = typeof value === "number" ? Number.isSafeInteger(value) ? String(value) : "" : str8(value);
   if (!/^\d+$/.test(s))
     return null;
   const n = Number(s);
@@ -70528,8 +70828,8 @@ function parseSeed(value) {
 function readComfyConfig(metadata, workflowId) {
   const record = asRecord3(metadata);
   const library = asArray2(record.comfyui_workflows);
-  const selected = str7(workflowId) || str7(record.comfyui_active_workflow_id);
-  const comfy = (selected ? library.find((entry) => str7(entry?.id) === selected)?.config : undefined) ?? record.comfyui;
+  const selected = str8(workflowId) || str8(record.comfyui_active_workflow_id);
+  const comfy = (selected ? library.find((entry) => str8(entry?.id) === selected)?.config : undefined) ?? record.comfyui;
   const config = asRecord3(comfy);
   const workflow = config.workflow_api_json || config.workflow_json;
   if (!workflow || typeof workflow !== "object" || !Array.isArray(config.field_mappings))
@@ -70584,7 +70884,7 @@ function buildNovelAIParameters(request, config, target, connectionDefaults = {}
   const scale = Number.isFinite(Number(o.scale ?? nai.scale)) ? Number(o.scale ?? nai.scale) || 6 : 6;
   const cfgRescale = clampNum(o.cfgRescale ?? nai.cfgRescale, 0, 1, 0.5);
   const sampler = normalizeNovelAiSampler(o.sampler ?? nai.sampler) ?? "k_euler_ancestral";
-  const noiseSchedule = str7(o.noiseSchedule ?? nai.noiseSchedule) || "karras";
+  const noiseSchedule = str8(o.noiseSchedule ?? nai.noiseSchedule) || "karras";
   const qualityToggle = (o.qualityToggle ?? nai.qualityToggle) !== false;
   const useOrder = (o.useOrder ?? nai.useOrder) !== false;
   const useCoords = o.useCoords === true;
@@ -70650,7 +70950,7 @@ function buildComfyParameters(request, config, target, connectionMetadata, seedS
   const width = clampInt2(request.width, 64, 4096, 832);
   const height = clampInt2(request.height, 64, 4096, 1216);
   const seed = parseSeed(request.seed) ?? seedSource();
-  const workflowId = str7(request.comfy?.workflowId) || target.comfyuiWorkflowId;
+  const workflowId = str8(request.comfy?.workflowId) || target.comfyuiWorkflowId;
   const parameters = { ...config.image.parameters, width, height, seed, negativePrompt: String(request.negativePrompt ?? "") };
   delete parameters.rawRequestOverride;
   if (workflowId)
@@ -70765,10 +71065,10 @@ function createImageService(deps) {
     const r = asRecord3(dto);
     const defaults = r.default_parameters;
     return {
-      id: str7(r.id),
-      name: str7(r.name),
-      provider: str7(r.provider),
-      model: str7(r.model),
+      id: str8(r.id),
+      name: str8(r.name),
+      provider: str8(r.provider),
+      model: str8(r.model),
       isDefault: r.is_default === true,
       defaultParameters: asRecord3(defaults),
       defaultParametersReadable: !!defaults && typeof defaults === "object" && !Array.isArray(defaults),
@@ -70799,7 +71099,7 @@ function createImageService(deps) {
   }
   function targetOf(config, info, modelOverride) {
     const generationProvider = generationProviderFromLumiverse(info.provider);
-    const model = str7(modelOverride) || config.image.model || info.model;
+    const model = str8(modelOverride) || config.image.model || info.model;
     return {
       connectionId: info.id,
       connectionName: info.name,
@@ -70821,7 +71121,7 @@ function createImageService(deps) {
   const service = {
     async resolveTarget(overrides = {}) {
       const config = await deps.loadConfig();
-      const info = await connection(str7(overrides.connectionId) || config.image.connectionId);
+      const info = await connection(str8(overrides.connectionId) || config.image.connectionId);
       return targetOf(config, info, overrides.model);
     },
     async generate(request, options = {}) {
@@ -70829,7 +71129,7 @@ function createImageService(deps) {
       if (signal?.aborted)
         throw abortError(signal.reason);
       const config = normalizeConfig(await deps.loadConfig());
-      const info = await connection(str7(request.connectionId) || config.image.connectionId);
+      const info = await connection(str8(request.connectionId) || config.image.connectionId);
       const target = targetOf(config, info, request.model);
       const prompt = String(request.prompt ?? "").trim();
       if (!prompt)
@@ -70855,7 +71155,7 @@ function createImageService(deps) {
         const pending = host.imageGen.generate(input);
         let abandoned = false;
         pending.then((late) => {
-          const id = str7(asRecord3(late).imageId);
+          const id = str8(asRecord3(late).imageId);
           if (abandoned && id)
             host.images.delete(id, userId).catch(() => {
               return;
@@ -70887,7 +71187,7 @@ function createImageService(deps) {
           onProgress?.({ label: attempt === 1 ? "Generating image" : `Generating image (retry ${attempt - 1}/${retries})`, labelKo: "이미지 생성 중", ...attempt > 1 ? { retry: { attempt: attempt - 1, total: retries }, retryCount: `${attempt - 1}/${retries}` } : {} });
           try {
             const result = await callOnce();
-            if (!str7(result.imageId) && !str7(result.imageDataUrl))
+            if (!str8(result.imageId) && !str8(result.imageDataUrl))
               throw new RpcFailure({ code: "provider-error", message: "The image provider returned no image.", retryable: true, detailCode: "IMAGE_EMPTY_RESULT" });
             return { result, attempts: attempt };
           } catch (error) {
@@ -70905,17 +71205,17 @@ function createImageService(deps) {
         }
       };
       const { result, attempts } = request.queue === false ? await attemptLoop() : await queueFor(target.generationProvider).run(gapMs, attemptLoop, signal, (position, depth) => onProgress?.({ label: "Waiting for the image queue", labelKo: "이미지 생성 대기 중", queue: { position, depth } }));
-      const imageId = str7(result.imageId);
+      const imageId = str8(result.imageId);
       const data = mimeOfDataUrl(result.imageDataUrl);
       const out = {
         imageId,
-        url: str7(result.imageUrl) || (imageId ? `/api/v1/image-gen/results/${imageId}` : ""),
+        url: str8(result.imageUrl) || (imageId ? `/api/v1/image-gen/results/${imageId}` : ""),
         width: built.width,
         height: built.height,
         seed: built.seed === null ? "" : String(built.seed),
         provider: target.generationProvider,
-        lumiverseProvider: str7(result.provider) || target.lumiverseProvider,
-        model: str7(result.model) || target.model,
+        lumiverseProvider: str8(result.provider) || target.lumiverseProvider,
+        model: str8(result.model) || target.model,
         mimeType: data?.mimeType ?? "image/png",
         sentParameters: stripBase64ForRecord(built.parameters),
         attempts
@@ -70927,7 +71227,7 @@ function createImageService(deps) {
     async deleteImages(imageIds) {
       const out = [];
       for (const imageId of imageIds) {
-        if (!str7(imageId))
+        if (!str8(imageId))
           continue;
         try {
           out.push({ imageId, status: await host.images.delete(imageId, userId) ? "removed" : "unknown" });
@@ -70949,10 +71249,10 @@ function createImageService(deps) {
       }
     },
     async listModels(connectionId) {
-      const info = await connection(str7(connectionId));
+      const info = await connection(str8(connectionId));
       try {
         const list = asArray2(await host.imageGen.getModels(info.id, userId));
-        const models = list.map((m) => ({ id: str7(m.id), label: str7(m.label) || str7(m.id) })).filter((m) => m.id);
+        const models = list.map((m) => ({ id: str8(m.id), label: str8(m.label) || str8(m.id) })).filter((m) => m.id);
         if (info.model && !models.some((m) => m.id === info.model))
           models.unshift({ id: info.model, label: info.model });
         return models;
@@ -70965,7 +71265,7 @@ function createImageService(deps) {
       try {
         const config = await deps.loadConfig();
         cache.clear();
-        const info = await connection(str7(connectionId) || config.image.connectionId);
+        const info = await connection(str8(connectionId) || config.image.connectionId);
         await host.imageGen.getModels(info.id, userId);
         return { ok: true, latencyMs: now() - started };
       } catch (error) {
@@ -71062,7 +71362,7 @@ function declaredVisionSupport(metadata) {
   const nested = pick(capabilities, ["vision", "image", "images", "multimodal"]);
   if (nested !== null)
     return nested;
-  const modalities = [record.input_modalities, record.inputModalities, capabilities.input_modalities, capabilities.inputModalities].flatMap((v) => asArray2(v).map((x) => str7(x).toLowerCase()));
+  const modalities = [record.input_modalities, record.inputModalities, capabilities.input_modalities, capabilities.inputModalities].flatMap((v) => asArray2(v).map((x) => str8(x).toLowerCase()));
   if (modalities.includes("image") || modalities.includes("vision"))
     return true;
   if (modalities.length > 0 && modalities.every((v) => v === "text"))
@@ -71099,7 +71399,7 @@ function makeAnalyzerError(message, extra) {
 function classifyLlmError(error) {
   if (error instanceof AnalyzerClientErrorClass)
     return error;
-  const code = str7(asRecord3(error).code);
+  const code = str8(asRecord3(error).code);
   if (/^ANALYZER_/.test(code))
     return makeAnalyzerError(errorMessage(error), { code, httpStatus: httpStatusOf(error), cause: error });
   const status = httpStatusOf(error);
@@ -71168,7 +71468,7 @@ function toLlmMessage(message) {
     const p = asRecord3(raw);
     if (p.type === "image") {
       const data = String(p.data ?? "").replace(/^data:[^;,]+;base64,/, "");
-      const mime = str7(p.mime_type) || str7(p.mimeType) || "image/png";
+      const mime = str8(p.mime_type) || str8(p.mimeType) || "image/png";
       if (data)
         parts.push({ type: "image", data, mime_type: mime });
     } else if (typeof p.text === "string")
@@ -71205,14 +71505,14 @@ function createLlmService(deps) {
     } catch (error) {
       throw new RpcFailure({ code: "provider-error", message: `Could not read the LLM connection: ${errorMessage(error)}`, detailCode: "ANALYZER_CONNECTION_MISSING" });
     }
-    if (!dto || !str7(dto.id)) {
+    if (!dto || !str8(dto.id)) {
       throw new RpcFailure({
         code: "bad-request",
         message: connectionId ? "The selected LLM connection no longer exists. Select another connection in the model settings." : "No LLM connection is configured. Add one in Lumiverse and select it in the model settings.",
         detailCode: "ANALYZER_CONNECTION_MISSING"
       });
     }
-    return connectionCache.set(key, { id: str7(dto.id), name: str7(dto.name), provider: str7(dto.provider), model: str7(dto.model), metadata: asRecord3(dto.metadata) });
+    return connectionCache.set(key, { id: str8(dto.id), name: str8(dto.name), provider: str8(dto.provider), model: str8(dto.model), metadata: asRecord3(dto.metadata) });
   }
   async function effectiveSettings(overrides) {
     const config = await deps.loadConfig();
@@ -71390,7 +71690,7 @@ function createLlmService(deps) {
           const timeoutMs = Number(o.timeoutMs);
           const maxOutputTokens = Number(o.maxOutputTokens ?? o.maxTokens);
           const result = await run({
-            purpose: str7(o.purpose) || clientOptions.purpose || "analyzer",
+            purpose: str8(o.purpose) || clientOptions.purpose || "analyzer",
             messages: messages.map(toLlmMessage),
             responseMode: o.responseMode === "text" ? "text" : "json",
             ...o.structuredOutputSchema && typeof o.structuredOutputSchema === "object" ? { schema: o.structuredOutputSchema } : {},
@@ -71416,13 +71716,13 @@ function createLlmService(deps) {
     async listConnections() {
       try {
         const list = asArray2(await host.connections.list(userId));
-        return list.map((c) => ({ id: str7(c.id), name: str7(c.name), provider: str7(c.provider), model: str7(c.model), isDefault: c.is_default === true, hasApiKey: c.has_api_key === true }));
+        return list.map((c) => ({ id: str8(c.id), name: str8(c.name), provider: str8(c.provider), model: str8(c.model), isDefault: c.is_default === true, hasApiKey: c.has_api_key === true }));
       } catch (error) {
         throw new RpcFailure({ code: "provider-error", message: `Could not list LLM connections: ${errorMessage(error)}` });
       }
     },
     async listModels(connectionId) {
-      const connection = await resolveConnection(str7(connectionId));
+      const connection = await resolveConnection(str8(connectionId));
       const out = [];
       const seen = new Set;
       const add = (id, label = id) => {
@@ -71441,7 +71741,7 @@ function createLlmService(deps) {
           const labels = asRecord3(result.model_labels);
           for (const id of asArray2(result.models))
             if (typeof id === "string")
-              add(id, str7(labels[id]) || id);
+              add(id, str8(labels[id]) || id);
         }
       } catch (error) {
         log("warn", `Model list of ${connection.name || connection.id} unavailable.`, errorMessage(error));
@@ -71451,7 +71751,7 @@ function createLlmService(deps) {
     async testMessage(text, settings) {
       const started = Date.now();
       try {
-        const result = await run({ purpose: "message-test", messages: [{ role: "user", content: str7(text) || DEFAULT_TEST_MESSAGE }], responseMode: "text", retries: 0, ...settings ? { settings } : {} }, {}, 0);
+        const result = await run({ purpose: "message-test", messages: [{ role: "user", content: str8(text) || DEFAULT_TEST_MESSAGE }], responseMode: "text", retries: 0, ...settings ? { settings } : {} }, {}, 0);
         return { ok: true, latencyMs: Date.now() - started, reply: result.raw };
       } catch (error) {
         const rpc = isAbortLike(error) ? { code: "cancelled", message: "The test was cancelled." } : error instanceof RpcFailure ? error.error : llmErrorToRpc(classifyLlmError(error));
@@ -71551,13 +71851,13 @@ var UUID_RE2 = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu;
 var CHARACTER_WORDS = ["character", "profile", "identity", "persona", "appearance", "personality", "speech", "body", "face", "hair", "eyes"];
 var WORLD_WORDS = ["world", "setting", "location", "school", "system", "rule", "rules", "scenario", "background", "plot"];
 function lowerSpace(value) {
-  return str7(value).toLocaleLowerCase().replace(/\s+/g, " ").trim();
+  return str8(value).toLocaleLowerCase().replace(/\s+/g, " ").trim();
 }
 function uniqueTrimmed(values) {
-  return [...new Set(values.map(str7).filter(Boolean))];
+  return [...new Set(values.map(str8).filter(Boolean))];
 }
 function displayName(name, fallback) {
-  const n = str7(name) || fallback;
+  const n = str8(name) || fallback;
   return UUID_RE2.test(n) ? fallback : n;
 }
 function memberAliases(values) {
@@ -71572,23 +71872,23 @@ function memberAliases(values) {
   return [...out].filter((a) => a.length >= 2);
 }
 function sourceSummary(c) {
-  const d = str7(c.description);
+  const d = str8(c.description);
   return [
     d ? `Description:
 ${d.slice(0, 1200)}` : "",
     c.personality ? `Personality:
-${str7(c.personality).slice(0, 800)}` : "",
+${str8(c.personality).slice(0, 800)}` : "",
     c.scenario ? `Scenario:
-${str7(c.scenario).slice(0, 800)}` : "",
+${str8(c.scenario).slice(0, 800)}` : "",
     c.creatorNotes ? `Notes:
-${str7(c.creatorNotes).slice(0, 800)}` : ""
+${str8(c.creatorNotes).slice(0, 800)}` : ""
   ].filter(Boolean).join(`
 
 `);
 }
 function splitLoreKeys2(values) {
   const list = Array.isArray(values) ? values : [values];
-  return uniqueTrimmed(list.flatMap((v) => str7(v).split(/[,;\n|]+/g)));
+  return uniqueTrimmed(list.flatMap((v) => str8(v).split(/[,;\n|]+/g)));
 }
 function loreScore(entry, aliases) {
   const title = lowerSpace([entry.comment, entry.keys.join(","), entry.secondaryKeys.join(",")].filter(Boolean).join(" "));
@@ -71607,19 +71907,19 @@ function loreScore(entry, aliases) {
     score += 1;
   if (WORLD_WORDS.some((w) => title.includes(w)) && !aliases.some((a) => both.includes(a)))
     score -= 3;
-  if (!str7(entry.content))
+  if (!str8(entry.content))
     score -= 2;
   return score;
 }
 function isAssetMaidOwned(entry) {
-  const comment = str7(entry.comment);
+  const comment = str8(entry.comment);
   return comment === "__ASSET_MAID_DATA__" || comment === "__ASSET_MAID_BACKUP__" || entry.entryId === "asset-maid:data" || entry.entryId.startsWith("asset-maid:quarantine:");
 }
 function loreRecordsOf(entries, aliases, source) {
   return entries.flatMap((entry, index) => {
     if (entry.disabled || isAssetMaidOwned(entry))
       return [];
-    const content = str7(entry.content);
+    const content = str8(entry.content);
     if (!content)
       return [];
     const primaryKeys = splitLoreKeys2(entry.keys);
@@ -71630,7 +71930,7 @@ function loreRecordsOf(entries, aliases, source) {
         kind: "lorebook",
         id,
         selectionId: id,
-        title: str7(entry.comment) || primaryKeys.join(", ") || `Lore ${index + 1}`,
+        title: str8(entry.comment) || primaryKeys.join(", ") || `Lore ${index + 1}`,
         keys: uniqueTrimmed([...primaryKeys, ...secondaryKeys]),
         primaryKeys,
         secondaryKeys,
@@ -71648,7 +71948,7 @@ function loreRecordsOf(entries, aliases, source) {
   }).sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
 }
 function descriptionLore(name, description) {
-  const content = str7(description);
+  const content = str8(description);
   if (!content)
     return null;
   const keys = uniqueTrimmed([name]);
@@ -71667,7 +71967,7 @@ function dedupe(...lists) {
 function assetGenerationSignature(sourceId, activeModuleIds, shared, members, chatAssets) {
   let h = 2166136261;
   const feed = (value) => {
-    const s = str7(value);
+    const s = str8(value);
     for (let i = 0;i < s.length; i += 1) {
       h ^= s.charCodeAt(i);
       h = Math.imul(h, 16777619);
@@ -71708,7 +72008,7 @@ function extensionOf2(name, mime) {
   const fromName = name.includes(".") ? name.split(".").at(-1).toLowerCase() : "";
   if (IMAGE_EXTENSIONS.has(fromName))
     return fromName;
-  const m = str7(mime).toLowerCase();
+  const m = str8(mime).toLowerCase();
   if (m.includes("jpeg") || m.includes("jpg"))
     return "jpg";
   if (m.includes("webp"))
@@ -71754,14 +72054,14 @@ function createSourcesService(deps) {
   }
   function toCharacterInfo(dto) {
     return {
-      characterId: str7(dto.id),
-      name: str7(dto.name),
+      characterId: str8(dto.id),
+      name: str8(dto.name),
       description: String(dto.description ?? ""),
       personality: String(dto.personality ?? ""),
       scenario: String(dto.scenario ?? ""),
       creatorNotes: String(dto.creator_notes ?? ""),
-      tags: asArray2(dto.tags).map(str7).filter(Boolean),
-      avatarImageId: str7(dto.image_id) || null,
+      tags: asArray2(dto.tags).map(str8).filter(Boolean),
+      avatarImageId: str8(dto.image_id) || null,
       worldBookIds: uniqueTrimmed(asArray2(dto.world_book_ids)),
       extensions: asRecord3(dto.extensions)
     };
@@ -71770,21 +72070,21 @@ function createSourcesService(deps) {
     const metadata = asRecord3(dto.metadata);
     const group = metadata.group === true || metadata.group === 1;
     return {
-      chatId: str7(dto.id),
-      characterId: str7(dto.character_id),
+      chatId: str8(dto.id),
+      characterId: str8(dto.character_id),
       groupCharacterIds: group ? uniqueTrimmed(asArray2(metadata.character_ids)) : [],
-      personaId: str7(metadata.persona_id) || null,
+      personaId: str8(metadata.persona_id) || null,
       metadata
     };
   }
   function toPersonaInfo(dto) {
     return {
-      personaId: str7(dto.id),
-      name: str7(dto.name),
+      personaId: str8(dto.id),
+      name: str8(dto.name),
       description: String(dto.description ?? ""),
-      avatarImageId: str7(dto.image_id) || null,
+      avatarImageId: str8(dto.image_id) || null,
       isDefault: dto.is_default === true,
-      attachedWorldBookId: str7(dto.attached_world_book_id) || null,
+      attachedWorldBookId: str8(dto.attached_world_book_id) || null,
       metadata: asRecord3(dto.metadata)
     };
   }
@@ -71814,17 +72114,17 @@ function createSourcesService(deps) {
     return cached(`wb:${worldBookId}`, async () => {
       try {
         const dto = asRecord3(await host.world_books.get(worldBookId, userId));
-        if (!str7(dto.id))
+        if (!str8(dto.id))
           return null;
         const raw = await paged((offset) => host.world_books.entries.list(worldBookId, { limit: PAGE2, offset, ...userId ? { userId } : {} }));
         const entries = raw.map((e) => {
           const r = asRecord3(e);
           return {
             worldBookId,
-            entryId: str7(r.id),
+            entryId: str8(r.id),
             comment: String(r.comment ?? ""),
-            keys: asArray2(r.key).map(str7).filter(Boolean),
-            secondaryKeys: asArray2(r.keysecondary).map(str7).filter(Boolean),
+            keys: asArray2(r.key).map(str8).filter(Boolean),
+            secondaryKeys: asArray2(r.keysecondary).map(str8).filter(Boolean),
             content: String(r.content ?? ""),
             disabled: r.disabled === true,
             constant: r.constant === true,
@@ -71833,7 +72133,7 @@ function createSourcesService(deps) {
             order: Number(r.order_value) || 0
           };
         });
-        return { name: str7(dto.name) || worldBookId, entries: entries.filter((e) => e.entryId) };
+        return { name: str8(dto.name) || worldBookId, entries: entries.filter((e) => e.entryId) };
       } catch (error) {
         log("warn", `World book ${worldBookId} unavailable.`, errorMessage(error));
         return null;
@@ -71865,12 +72165,12 @@ function createSourcesService(deps) {
       const list = await cached("characters", () => paged((offset) => host.characters.list({ limit: PAGE2, offset, ...userId ? { userId } : {} })));
       const rows = list.map((c) => asRecord3(c));
       return mapLimit(rows, 8, async (dto) => {
-        const characterId = str7(dto.id);
+        const characterId = str8(dto.id);
         const [chatCount, hasDocument] = await Promise.all([chatCountOf(characterId), deps.storage ? deps.storage.hasCharacterDocument(characterId).catch(() => false) : Promise.resolve(false)]);
         return {
           characterId,
           name: displayName(dto.name, "Character"),
-          avatarUrl: str7(dto.image_id) ? `/api/v1/characters/${encodeURIComponent(characterId)}/avatar?size=sm` : null,
+          avatarUrl: str8(dto.image_id) ? `/api/v1/characters/${encodeURIComponent(characterId)}/avatar?size=sm` : null,
           hasDocument,
           chatCount,
           worldBookIds: uniqueTrimmed(asArray2(dto.world_book_ids))
@@ -71878,7 +72178,7 @@ function createSourcesService(deps) {
       });
     },
     async getCharacter(characterId) {
-      return toCharacterInfo(await getCharacterDto(str7(characterId)));
+      return toCharacterInfo(await getCharacterDto(str8(characterId)));
     },
     async getActiveChat() {
       try {
@@ -71888,7 +72188,7 @@ function createSourcesService(deps) {
         return null;
       }
     },
-    getChat: (chatId) => chatInfo(str7(chatId)),
+    getChat: (chatId) => chatInfo(str8(chatId)),
     async loadWorldBooks(characterId, document2, options = {}) {
       const character = await service.getCharacter(characterId);
       const order = [];
@@ -71909,13 +72209,13 @@ function createSourcesService(deps) {
           chat = active;
       }
       for (const id of asArray2(chat?.metadata.chat_world_book_ids))
-        push(str7(id), "chat");
+        push(str8(id), "chat");
       try {
         for (const id of asArray2(await host.world_books.getGlobal(userId)))
-          push(str7(id), "global");
+          push(str8(id), "global");
       } catch {}
       for (const id of document2.characterPrompt.activeModules[characterId] ?? [])
-        push(str7(id), "extra");
+        push(str8(id), "extra");
       const books = await mapLimit(order, 6, async ({ id, scope }) => {
         const book = await worldBook(id);
         return book ? { worldBookId: id, name: book.name, scope, entries: book.entries } : null;
@@ -71930,7 +72230,7 @@ function createSourcesService(deps) {
         const all = await cached("worldbooks", () => paged((offset) => host.world_books.list({ limit: PAGE2, offset, ...userId ? { userId } : {} })));
         for (const raw of all) {
           const dto = asRecord3(raw);
-          const id = str7(dto.id);
+          const id = str8(dto.id);
           if (!id || out.some((s) => s.worldBookId === id))
             continue;
           const total = await cached(`wbcount:${id}`, async () => {
@@ -71940,7 +72240,7 @@ function createSourcesService(deps) {
               return 0;
             }
           });
-          out.push({ worldBookId: id, name: str7(dto.name) || id, attached: false, connected: connected.has(id), entryCount: total, scope: "extra" });
+          out.push({ worldBookId: id, name: str8(dto.name) || id, attached: false, connected: connected.has(id), entryCount: total, scope: "extra" });
         }
       } catch (error) {
         log("warn", "World book list unavailable.", errorMessage(error));
@@ -72042,7 +72342,7 @@ function createSourcesService(deps) {
         const add = (origin, imageId, name, extra = {}) => {
           if (!imageId || seen.has(imageId))
             return;
-          const cleanName = str7(name) || imageId;
+          const cleanName = str8(name) || imageId;
           if (cleanName.startsWith(CROP_ASSET_NAME_PREFIX))
             return;
           seen.add(imageId);
@@ -72068,7 +72368,7 @@ function createSourcesService(deps) {
             const gallery = viaBridge ? asArray2(await deps.imageBytes.getJson(`/api/v1/characters/${encodeURIComponent(characterId)}/gallery`, { timeoutMs: 15000 })) : await host.characters.getGallery(characterId, userId);
             for (const raw of gallery) {
               const g = asRecord3(raw);
-              add("gallery", str7(g.image_id), str7(g.caption) || str7(g.reference) || `gallery-${str7(g.id)}`, { mime: str7(g.mime_type), width: Number(g.width) || null, height: Number(g.height) || null });
+              add("gallery", str8(g.image_id), str8(g.caption) || str8(g.reference) || `gallery-${str8(g.id)}`, { mime: str8(g.mime_type), width: Number(g.width) || null, height: Number(g.height) || null });
             }
           } catch (error) {
             log("warn", `Gallery of ${characterId} unavailable${viaBridge ? " (the overlay must be open to read it)" : ""}.`, errorMessage(error));
@@ -72076,18 +72376,18 @@ function createSourcesService(deps) {
         }
         const expressions = asRecord3(asRecord3(character.extensions.expressions).mappings);
         for (const [label, imageId] of Object.entries(expressions))
-          add("expression", str7(imageId), label);
+          add("expression", str8(imageId), label);
         const risu = asRecord3(character.extensions.risu_asset_map);
         for (const [assetName, imageId] of Object.entries(risu))
-          add("risu-asset", str7(imageId), assetName);
+          add("risu-asset", str8(imageId), assetName);
         if (options.includeGenerated !== false) {
           try {
             const generated = await paged((offset) => host.images.list({ characterId, onlyOwned: true, limit: PAGE2, offset, ...userId ? { userId } : {} }));
             for (const raw of generated) {
               const img = asRecord3(raw);
-              add("generated", str7(img.id), str7(img.original_filename) || str7(img.id), { mime: str7(img.mime_type), width: Number(img.width) || null, height: Number(img.height) || null, generated: true });
+              add("generated", str8(img.id), str8(img.original_filename) || str8(img.id), { mime: str8(img.mime_type), width: Number(img.width) || null, height: Number(img.height) || null, generated: true });
               const last = out.at(-1);
-              if (last && last.imageId === str7(img.id) && last.kind === "outfit" && str7(img.owner_chat_id) && assetKindOfName(last.name) === "original")
+              if (last && last.imageId === str8(img.id) && last.kind === "outfit" && str8(img.owner_chat_id) && assetKindOfName(last.name) === "original")
                 last.kind = "chat";
             }
           } catch (error) {

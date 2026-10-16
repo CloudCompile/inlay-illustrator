@@ -1,11 +1,13 @@
 /**
  * Webtoon cast from the extension's character data: the analyzer context inputs (identity candidates of the
- * character's roster + the active persona, their forms and outfits), the artist preset, negative prompt, NovelAI
+ * character's roster + the active persona, their forms and outfits; chat characters without an analysis join with their
+ * appearance text or the look of the chat's latest strip, see looks.ts), the artist preset, negative prompt, NovelAI
  * parameters and outfit framing weights of the speaking character (same sources as `generate.ts`, no analyzer call).
  */
 import {
   buildRuntimeConfig,
   chatKeyForChat,
+  PERSONA_PROMPT_KEY_PREFIX,
   compileMainPrompt,
   type CharacterDocument,
   type ChatDataDocument,
@@ -15,7 +17,10 @@ import {
 import { mergeLocalLoreActorState, rebuildContinuityAtMessage, type ContinuityChatStore } from "../../engine/continuity/index.js";
 import {
   buildAnalyzerContextInputs,
-  resolveNovelAIRunConfig,   withCustomCharacterMembers,
+  buildKnownIdentities,
+  resolveNovelAIRunConfig,
+  resolveSourceGenerationSettings,
+  withCustomCharacterMembers,
   type AssetMaidConfig,
   type CharacterSource,
   type IdentityCandidate,
@@ -25,6 +30,7 @@ import type { BackendServices, ChatInfo, PersonaInfo } from "../services/types.j
 import type { ChatMessageView } from "../pipeline/host-chat.js";
 import { cleanMessageContent } from "../pipeline/markup.js";
 import { speakingCharacterId } from "../pipeline/generate.js";
+import { appearanceText, fold, latestLooks, type DerivedLook } from "./looks.js";
 import type { PlannerRosterEntry } from "./planner-prompt.js";
 import type { PlannerCharacter } from "./storyboard-schema.js";
 import { dedupeTags, MANGA_NEGATIVE, WEBTOON_NEGATIVE, type OutfitPart, type WebtoonCastMember, type WebtoonStyle } from "./panel-request.js";
@@ -42,6 +48,8 @@ export interface RosterCharacter extends PlannerRosterEntry {
 export interface WebtoonContext {
   characterId: string;
   roster: RosterCharacter[];
+  /** Free character generation on: the identities the planner's new characters must not repeat (AM knownIdentities). */
+  knownIdentities: Array<{ name: string; keys: string[] }> | null;
   style: WebtoonStyle;
 }
 
@@ -70,6 +78,13 @@ export function rosterEntry(candidate: IdentityCandidate, currentOutfitId: strin
     currentOutfitId: current,
     identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", "),
   };
+}
+
+/** Roster entry of a chat character with the look of an earlier strip (designed by the planner). */
+function designedEntry(key: string, name: string, look: (DerivedLook & { gender: string; outfitId: string }) | undefined): RosterCharacter | null {
+  if (!look?.identity) return null;
+  const outfits = Object.values(look.outfit).some(Boolean) ? [{ id: look.outfitId || "look_1", label: look.outfitLabel, outfit: look.outfit }] : [];
+  return { key, name, gender: look.gender, formLabel: "", outfits, currentOutfitId: outfits[0]?.id ?? "", identity: look.identity, designed: true };
 }
 
 /** Validator roster (round 2): the chosen outfit's label and items, for the `drop_outfit` check. */
@@ -144,14 +159,50 @@ export async function loadWebtoonContext(
   const previous = new Map<string, string>();
   for (const ref of Object.values(ft.visualContinuity.previous_outfit_refs.actors)) if (ref?.lorebook_prompt_key && ref.outfit_id) previous.set(ref.lorebook_prompt_key, ref.outfit_id);
   const candidates = [...ft.analyzerIdentityCandidates, ...ft.analyzerPersonaCandidates];
+  // A persona without an Inlay profile is no analysis (AM gives it a default form from its name).
+  const personaProfiles = rec(config.characterPrompt.personaSettings.profiles);
   const all = candidates.flatMap((c) => {
+    if (c.key.startsWith(PERSONA_PROMPT_KEY_PREFIX) && !personaProfiles[c.key.slice(PERSONA_PROMPT_KEY_PREFIX.length)]) return [];
     const entry = rosterEntry(c, previous.get(str(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
     return entry && entry.name ? [{ entry, names: [c.characterName, ...(c.aliases ?? [])] }] : [];
   });
-  let roster = all.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
+  // Chat characters (card, group members, custom characters, persona) without an analysed look: the look of the chat's
+  // latest strip, else the planner designs them from their appearance text. An analysis (same key or name) always wins.
+  const looks = await latestLooks(services.storage, input.chatId);
+  const analysedFor = (key: string, names: readonly string[]) => {
+    const folded = new Set(names.map(fold).filter(Boolean));
+    return all.find((a) => a.entry.key === key || a.entry.key.startsWith(`${key}::lore::asset-maid:charx-description`) || a.names.some((n) => folded.has(fold(n))));
+  };
+  const people: Array<{ key: string; names: string[]; description: string }> = [];
+  for (const id of memberIds) {
+    const info = id === primaryId ? character : await services.sources.getCharacter(id);
+    people.push({ key: id, names: [info.name], description: info.description });
+  }
+  for (const c of custom) if (c.rosterRegistered !== false && c.workspaceEnabled !== false) people.push({ key: c.id, names: [c.title, ...c.recognitionKeys], description: c.appearanceDescription });
+  if (active) people.push({ key: `${PERSONA_PROMPT_KEY_PREFIX}${active.personaId}`, names: [active.name], description: active.description });
+  const pool = [...all];
+  let primary: RosterCharacter | undefined;
+  for (const p of people) {
+    const name = p.names[0]!.trim();
+    if (!name) continue;
+    const analysed = analysedFor(p.key, p.names);
+    const entry = analysed?.entry ?? designedEntry(p.key, name, looks.get(p.key)) ?? {
+      key: p.key, name, gender: "", formLabel: "", outfits: [], currentOutfitId: "", identity: "",
+      appearance: appearanceText(p.description, { char: name, user: active?.name ?? "" }),
+    };
+    if (p.key === primaryId) primary = entry;
+    if (!analysed) pool.push({ entry, names: p.names });
+  }
+  // The speaking character is always in the roster; others when the reply names them.
+  let roster = pool.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
   if (!roster.length) roster = all.filter((a) => a.entry.key.startsWith(primaryId)).map((a) => a.entry).slice(0, 1);
+  if (primary) roster.unshift(primary);
   const names = new Set<string>();
-  roster = roster.filter((r) => (names.has(r.name) ? false : (names.add(r.name), true)));
+  roster = roster.filter((r) => (names.has(fold(r.name)) ? false : (names.add(fold(r.name)), true)));
+
+  const profile = str(rec(runtime.novelai).analysisProfile);
+  const free = profile === "v5-hybrid" && resolveSourceGenerationSettings(amConfig, primaryId).freeCharacterGenerationEnabled;
+  const knownIdentities = free ? buildKnownIdentities(withCustomCharacterMembers(source, custom as unknown[], "all"), personas.map(personaRecord)) : null;
 
   const prompts = ft.promptInputs({ actors: {} });
   const nai = resolveNovelAIRunConfig(amConfig, { sourceId: primaryId });
@@ -160,6 +211,7 @@ export async function loadWebtoonContext(
   return {
     characterId: primaryId,
     roster,
+    knownIdentities,
     style: {
       style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str).filter(Boolean).join(", "),
       negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, input.format === "manga" ? MANGA_NEGATIVE : WEBTOON_NEGATIVE].map(str).filter(Boolean).join(", ")),

@@ -1,7 +1,8 @@
 /**
  * Webtoon strip storage: one document per message swipe, `chats/<chatId>/webtoon/<messageId>@<swipe>.json`, plus
  * `chats/<chatId>/webtoon/index.json` (revision + status per swipe, read by `chatDom.getMessageStates`).
- * The document keeps the planner output (raw + validated storyboard, validation log), the exact panel requests, every
+ * The document keeps the planner output (raw + validated storyboard, validation log), the cast (with the looks the planner
+ * wrote for characters without an analysis: the latest one is reused by later strips), the exact panel requests, every
  * take (image id + seed), the selected take and text overrides. The layout is computed from all of that per view, at the
  * width the chat shows the strip (older documents also carry a stored 690 px `layout`; it is not read).
  */
@@ -21,6 +22,7 @@ import {
 import type { StorageService } from "../services/types.js";
 import { layoutStrip, type PanelImage } from "./layout.js";
 import { layoutManga } from "./manga-layout.js";
+import type { DerivedLook } from "./looks.js";
 import type { PanelRequest, WebtoonStyle } from "./panel-request.js";
 import type { Storyboard } from "./storyboard-schema.js";
 
@@ -54,7 +56,7 @@ export interface WebtoonStripDocument {
   storyboard: Storyboard | null;
   validation: { log: string[]; stats: Record<string, unknown> } | null;
   /** Cast of this strip: name -> prompt key and chosen outfit; gender and identity tags for the vision check (absent in older documents). */
-  cast: Array<{ name: string; key: string; outfitId: string; gender?: string; identity?: string }>;
+  cast: Array<{ name: string; key: string; outfitId: string; gender?: string; identity?: string; look?: DerivedLook }>;
   style: WebtoonStyle | null;
   /** Panel id -> exact request (prompts, size, centers). */
   requests: Record<string, PanelRequest>;

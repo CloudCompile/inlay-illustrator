@@ -10,6 +10,8 @@
 import { rpcError, type ChatDataDocument, type ComicFormat, type InlayConfig, type RpcError, type WebtoonPanelCheck, type WebtoonPanelTake, type WebtoonStripView } from "../../shared/contract/index.js";
 import { isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
+import type { BackendModules } from "../rpc/types.js";
+import { openAutoGeneration, type AutoGeneration } from "../pipeline/auto.js";
 import type { EnginePort } from "../pipeline/engine-port.js";
 import { base64ToBytes, buildNovelAIRequest, bytesToBase64 } from "../pipeline/providers.js";
 import type { ChatMessageView } from "../pipeline/host-chat.js";
@@ -18,7 +20,9 @@ import { buildPanelRequest, CUTOUT_NEGATIVE, engineImageRequest, type PanelReque
 import { buildMangaPlannerPrompt } from "./manga-planner-prompt.js";
 import { isMonochromeStyle, monoCast, monoPanel, stripColours, withMonoTags } from "./manga-style.js";
 import { mangaHardOk, validateMangaStoryboard } from "./manga-validate.js";
-import { castFor, loadWebtoonContext, validationRoster } from "./roster.js";
+import { castFor, loadWebtoonContext, validationRoster, type RosterCharacter, type WebtoonContext } from "./roster.js";
+import { profileGroups, resolveLooks, type ResolvedLooks } from "./looks.js";
+import { isFurry } from "./panel-request.js";
 import { characterGrid, decodePng, encodePng, flattenOver, frameBreakInputs, type RgbaImage } from "./cutout.js";
 import type { ImagePanel } from "./storyboard-schema.js";
 import { hardOk, validateStoryboard } from "./storyboard-validate.js";
@@ -39,6 +43,8 @@ const INPAINT_MODEL = "nai-diffusion-5-full-inpainting";
 export interface WebtoonDeps {
   services: BackendServices;
   engine: EnginePort;
+  /** Outfit image generator of free-generated characters (as in normal mode); without it they are created tags-only. */
+  getModules?: () => BackendModules;
   now?: () => number;
   /** Wait between attempts while NovelAI reports a concurrent generation (tests). */
   lockWaitMs?: number;
@@ -236,6 +242,53 @@ async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; ma
   );
 }
 
+/** The free character generation store of the speaking character, or null (unavailable: the planner adds no characters). */
+async function openAuto(deps: WebtoonDeps, characterId: string): Promise<AutoGeneration | null> {
+  try {
+    return await openAutoGeneration(deps.services, deps.getModules, characterId);
+  } catch (error) {
+    deps.services.log.append("warn", "webtoon", "Free character generation is unavailable for this strip.", { error: toRpcError(error).message });
+    return null;
+  }
+}
+
+/**
+ * New story characters of the planner through normal mode's autoCharacter path (AM QOt): stored as AI-generated custom
+ * characters of the speaking character (reused by later strips and normal mode); the strip's cast uses their identity key.
+ * A failure leaves them in this strip only.
+ */
+async function createStrangers(deps: WebtoonDeps, auto: AutoGeneration, context: WebtoonContext, resolved: ResolvedLooks, req: WebtoonRunRequest): Promise<void> {
+  const byKey = new Map<string, RosterCharacter & { identityTags: string[] }>(resolved.strangers.map((s, i) => [`webtoon_free_${i + 1}`, s]));
+  try {
+    const prepared = await auto.autoCharacter.prepare({
+      actors: [...byKey].map(([candidateKey, s]) => ({
+        candidateKey,
+        label: s.name,
+        sex: s.gender || "unknown",
+        profile: {
+          recognitionKeys: [s.name],
+          humanlike: !isFurry(s.identity),
+          basePromptGroups: profileGroups(s.identityTags),
+          defaultOutfit: { name: s.outfits[0]!.label, ...s.outfits[0]!.outfit },
+        },
+      })),
+      signal: req.signal,
+      owner: req,
+      sourceId: context.characterId,
+      knownIdentities: context.knownIdentities,
+    });
+    for (const p of prepared) {
+      const s = byKey.get(p.candidateKey);
+      if (s) s.key = p.identityKey;
+    }
+    await auto.autoCharacter.settle();
+    resolved.log.push(`new characters: ${resolved.strangers.map((s) => `${s.name} (${s.key})`).join(", ")}`);
+  } catch (error) {
+    if (req.signal.aborted || isAbortLike(error)) throw error;
+    deps.services.log.append("warn", "webtoon", "New characters could not be stored; they are drawn in this strip only.", { error: toRpcError(error).message });
+  }
+}
+
 /** What the vision check of one run needs (see vision.ts). */
 interface VisionRun {
   deps: WebtoonDeps;
@@ -354,36 +407,51 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         Object.assign(d, createStripDocument({ chatId: req.chatId, messageKey: req.planKey, historyId: req.historyId, characterId, sourceLength: req.source.length, now: now(), revision: previous?.revision ?? 0 }));
         if (manga) Object.assign(d, { format: "manga", mono });
       });
-      let planned: Awaited<ReturnType<typeof plan>>;
+      // Free character generation (normal mode's rule): the per-character setting and the autoCharacter store.
+      const auto = context.knownIdentities ? await openAuto(deps, characterId) : null;
       try {
-        const panels = webtoonPanelTarget(req.source.length);
-        const prompt = manga ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono }) : buildPlannerPrompt({ roster: context.roster, source: req.source, panels });
-        planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
-      } catch (error) {
-        const meta = error as { calls?: PlannerCall[]; model?: string };
-        if (meta.calls) await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls! }));
-        throw error;
+        const freeCharacters = !!auto;
+        let planned: Awaited<ReturnType<typeof plan>>;
+        try {
+          const panels = webtoonPanelTarget(req.source.length);
+          const prompt = manga
+            ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono, freeCharacters })
+            : buildPlannerPrompt({ roster: context.roster, source: req.source, panels, freeCharacters });
+          planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
+        } catch (error) {
+          const meta = error as { calls?: PlannerCall[]; model?: string };
+          if (meta.calls) await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls! }));
+          throw error;
+        }
+        await req.assertTarget();
+        const resolved = resolveLooks(planned.raw, context.roster, auto ? context.knownIdentities!.flatMap((k) => [k.name, ...k.keys]) : null);
+        if (auto && resolved.strangers.length) await createStrangers(deps, auto, context, resolved, req);
+        const roster = resolved.roster;
+        const outfitLog: string[] = [...resolved.log];
+        const outfits = { ...chosenOutfits(planned.raw, roster, outfitLog), ...resolved.outfits };
+        const validate = manga ? validateMangaStoryboard : validateStoryboard;
+        const validated = validate(structuredClone(planned.raw), validationRoster(roster, outfits), req.source);
+        validated.log.unshift(...outfitLog);
+        const cast = mono ? monoCast(castFor(roster, outfits)) : castFor(roster, outfits);
+        const planImages = validated.storyboard.panels.filter((p): p is ImagePanel => p.kind === "image");
+        const request = (p: ImagePanel) => (mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style));
+        doc = await write((d) => {
+          d.planner = { model: planned.model, calls: planned.calls };
+          d.storyboardRaw = planned.raw;
+          d.storyboard = validated.storyboard;
+          d.validation = { log: validated.log, stats: validated.stats };
+          d.cast = roster.map((r) => {
+            const look = resolved.looks.get(r.key);
+            return { name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity, ...(look ? { look } : {}) };
+          });
+          d.style = context.style;
+          d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
+          d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
+          d.status = "generating";
+        });
+      } finally {
+        auto?.dispose();
       }
-      await req.assertTarget();
-      const outfitLog: string[] = [];
-      const outfits = chosenOutfits(planned.raw, context.roster, outfitLog);
-      const validate = manga ? validateMangaStoryboard : validateStoryboard;
-      const validated = validate(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
-      validated.log.unshift(...outfitLog);
-      const cast = mono ? monoCast(castFor(context.roster, outfits)) : castFor(context.roster, outfits);
-      const planImages = validated.storyboard.panels.filter((p): p is ImagePanel => p.kind === "image");
-      const request = (p: ImagePanel) => (mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style));
-      doc = await write((d) => {
-        d.planner = { model: planned.model, calls: planned.calls };
-        d.storyboardRaw = planned.raw;
-        d.storyboard = validated.storyboard;
-        d.validation = { log: validated.log, stats: validated.stats };
-        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity }));
-        d.style = context.style;
-        d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
-        d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
-        d.status = "generating";
-      });
     }
     const requests = doc.requests;
     const images = (doc.storyboard?.panels ?? []).filter((p): p is ImagePanel => p.kind === "image" && !!requests[String(p.id)]);

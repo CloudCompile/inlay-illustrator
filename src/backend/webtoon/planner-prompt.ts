@@ -1,6 +1,8 @@
 // Round 2 of the webtoon bench (webtoon-bench2/scripts/planner-prompt.ts), copied for Inlay Illustrator; Inlay changes are marked "Inlay:".
 // Inlay: the target panel count follows the message length, frame-break panels are marked ("frame_break"), and the planner picks one outfit per character from the
 // wardrobe (labels + items only; identity / body tags never reach the planner: Gemini's safety stop, webtoon-proto finding 1).
+// Inlay: characters without an analysed look get their look written by the planner from the card's appearance text (looks.ts).
+import { looksNote } from "./looks.js";
 import type { PlannerCharacter } from "./storyboard-schema.js";
 
 export const PLANNER_PROMPT_TEMPLATE = String.raw`You are the storyboard artist for a vertical-scroll Korean-style webtoon (one long strip, 690 px wide, read top to bottom). You adapt ONE chat reply (below) into a short webtoon episode. A code layout engine letters your text on top of the images using YOUR character positions and balloon anchors, so positions matter.
@@ -80,6 +82,10 @@ export interface PlannerRosterEntry {
   formLabel: string;
   outfits: Array<{ id: string; label: string; outfit: PlannerCharacter["outfit"] }>;
   currentOutfitId: string;
+  /** No analysed look: the card's (or persona's) appearance text; the planner writes the look ("looks"). */
+  appearance?: string;
+  /** Look written by the planner for an earlier strip of this chat: fixed identity, wardrobe = that outfit. */
+  designed?: boolean;
 }
 
 export const WEBTOON_MIN_PANELS = 4;
@@ -104,21 +110,27 @@ export function rosterLines(roster: readonly PlannerRosterEntry[]): string {
   return roster
     .map((r) => {
       const who = r.gender === "female" ? "woman/girl" : r.gender === "male" ? "man/boy" : "character";
+      if (r.appearance !== undefined) return `- ${r.name} (${who}): no design yet. Appearance from the card:\n<<<\n${r.appearance || "(none: design them from the story)"}\n>>>`;
       const wardrobe = r.outfits
         .map((o) => `${o.id}${o.id === r.currentOutfitId ? " (current)" : ""} = "${o.label || o.id}"${items(o.outfit) ? ` (items: ${items(o.outfit)})` : ""}`)
         .join("; ");
-      return `- ${r.name} (${who}): ${r.formLabel || "no label"}; wardrobe: ${wardrobe || "none"}.`;
+      return `- ${r.name} (${who}): ${r.designed ? "designed earlier" : r.formLabel || "no label"}; wardrobe: ${wardrobe || "none"}.`;
     })
     .join("\n");
 }
 
-export function buildPlannerPrompt(args: { roster: readonly PlannerRosterEntry[]; source: string; panels: number; offscreenNote?: string }): string {
+/** Roster lines and, when needed, the "looks" instructions. */
+export function rosterBlock(roster: readonly PlannerRosterEntry[], freeCharacters: boolean): string {
+  return [rosterLines(roster), looksNote(roster, freeCharacters)].filter(Boolean).join("\n");
+}
+
+export function buildPlannerPrompt(args: { roster: readonly PlannerRosterEntry[]; source: string; panels: number; offscreenNote?: string; freeCharacters?: boolean }): string {
   const range = webtoonPanelRange(args.panels);
   const fill: Record<string, string> = {
     "{{PANELS}}": String(args.panels),
     "{{MIN}}": String(range.min),
     "{{MAX}}": String(range.max),
-    "{{ROSTER}}": rosterLines(args.roster),
+    "{{ROSTER}}": rosterBlock(args.roster, !!args.freeCharacters),
     "{{OFFSCREEN}}": args.offscreenNote ?? "",
     "{{SOURCE}}": args.source,
   };

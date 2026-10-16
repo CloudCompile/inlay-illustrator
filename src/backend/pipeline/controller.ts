@@ -705,7 +705,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const document = await services.storage.loadCharacterDocument(characterId);
     const clean = messageSlots(job.planKey, input.content, nativeDetectorsFor(characterId, "", document)).clean;
     const result = await runWebtoonStrip(
-      { services, engine, now },
+      { services, engine, now, ...(options.getModules ? { getModules: options.getModules } : {}) },
       {
         chatId,
         chat: input.chat,

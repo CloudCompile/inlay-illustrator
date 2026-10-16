@@ -5,7 +5,7 @@
  * the prototype's lettering findings: shout / whisper tones, sound effects from the source's own sound words, one source line per
  * balloon, outbursts as their own beats. Identity / body tags never reach the planner (webtoon finding 1).
  */
-import { rosterLines, webtoonPanelRange, type PlannerRosterEntry } from "./planner-prompt.js";
+import { rosterBlock, webtoonPanelRange, type PlannerRosterEntry } from "./planner-prompt.js";
 
 export const MANGA_PLANNER_TEMPLATE = String.raw`You are the storyboard artist ("name" / thumbnail artist) for a Japanese manga. You adapt ONE chat reply (below) into a short manga chapter of about {{PAGES}} pages. Pages are read right to left: panels in a row from right to left, rows from top to bottom. Code builds the pages from a small library of page templates and letters your text on top of the images, so you decide WHAT each panel shows and how IMPORTANT it is; code decides the exact panel shapes.
 
@@ -70,7 +70,7 @@ export function mangaPagesHint(panels: number): string {
   return lo === hi ? String(lo) : `${lo}-${hi}`;
 }
 
-export function buildMangaPlannerPrompt(args: { roster: readonly PlannerRosterEntry[]; source: string; panels: number; mono: boolean }): string {
+export function buildMangaPlannerPrompt(args: { roster: readonly PlannerRosterEntry[]; source: string; panels: number; mono: boolean; freeCharacters?: boolean }): string {
   const range = webtoonPanelRange(args.panels);
   const style = args.mono
     ? " The art style is black-and-white manga (greyscale): do not rely on colours to tell characters or things apart; use pose, framing, props and light, and write no colour words."
@@ -81,7 +81,7 @@ export function buildMangaPlannerPrompt(args: { roster: readonly PlannerRosterEn
     "{{MAX}}": String(range.max),
     "{{PAGES}}": mangaPagesHint(args.panels),
     "{{STYLE}}": style,
-    "{{ROSTER}}": rosterLines(args.roster),
+    "{{ROSTER}}": rosterBlock(args.roster, !!args.freeCharacters),
     "{{SOURCE}}": args.source,
   };
   return MANGA_PLANNER_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|PAGES|STYLE|ROSTER|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
