@@ -41,6 +41,22 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
   }
   store.set({ chatId: activeChatId() });
 
+  /**
+   * Roster character of the active chat (count panel button). Group chats: the host's chat character (the greeting
+   * character, by default the first member), else the first member; the speaking character is not known here.
+   */
+  function chatCharacter(): { characterId?: string } {
+    let characterId = "";
+    try {
+      characterId = String(ctx.getActiveChat().characterId || "");
+    } catch {
+      characterId = "";
+    }
+    const status = app.state.status;
+    if (!characterId && status?.activeChatId === activeChatId()) characterId = status.activeGroupCharacterIds[0] ?? "";
+    return characterId ? { characterId } : {};
+  }
+
   const overlay = createOverlayController(ctx, {
     store,
     app,
@@ -66,7 +82,8 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
     getActiveChatId: activeChatId,
     subscribeOverlay: (listener) => store.subscribe(() => listener(store.get().overlayOpen)),
     corner: runtimeCorner,
-    generateLatest
+    generateLatest,
+    openOverview: () => overlay.open({ tab: "assets", ...chatCharacter() })
   });
 
   // The runtime host's bottom corners sit above the host composer, whatever its height.

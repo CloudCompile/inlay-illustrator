@@ -209,6 +209,21 @@ describe("overlay controller", () => {
   });
 });
 
+describe("overlay open options", () => {
+  test("selects the requested character, then applies the tab to it", async () => {
+    const { createOverlayController } = await import("./controller.js");
+    const { FrontendStore } = await import("./store.js");
+    const app = testApp();
+    await app.selectCharacter("char-a");
+    const controller = createOverlayController(fakeCtx({ calls: [], visible: [] }), { store: new FrontendStore(), app, doc });
+    controller.open({ tab: "prompts", characterId: "char-b" });
+    for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(app.state.selectedCharacterId).toBe("char-b");
+    expect(doc.querySelector('[data-workspace-header] [role="tab"][aria-selected="true"]')?.textContent).toBe("Prompts");
+    controller.destroy();
+  });
+});
+
 describe("geometry helpers", () => {
   test("places floating content below, or above when there is more room", () => {
     const viewport = { width: 800, height: 600 };

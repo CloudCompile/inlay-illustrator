@@ -33,6 +33,8 @@ export interface ChatSideOptions {
   corner?: Pick<RuntimeCornerPreference, "get" | "subscribe">;
   /** Count panel action: illustrate (or reroll) the latest eligible assistant message. */
   generateLatest?: () => Promise<void>;
+  /** Count panel action: open the overlay on the active chat's character. */
+  openOverview?: () => void;
 }
 
 export interface ChatSideInternalOptions extends ChatSideOptions {
@@ -120,7 +122,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     else hostRoot.removeAttribute("data-ii-overlay");
   };
   disposers.push(runtime.subscribe(syncHostFlags));
-  render(<ChatRuntime app={app} store={runtime} getActiveChatId={options.getActiveChatId} generateLatest={options.generateLatest} onToastCommand={(toast, command) => void onToastCommand(toast, command)} />, hostRoot);
+  render(<ChatRuntime app={app} store={runtime} getActiveChatId={options.getActiveChatId} generateLatest={options.generateLatest} openOverview={options.openOverview} onToastCommand={(toast, command) => void onToastCommand(toast, command)} />, hostRoot);
   runtime.setFlags({ zoomOpen: zoom.isOpen() });
   disposers.push(zoom.subscribe((open) => runtime.setFlags({ zoomOpen: open })));
   if (options.subscribeOverlay) disposers.push(options.subscribeOverlay((open) => runtime.setFlags({ overlayOpen: open })));

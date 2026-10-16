@@ -19,6 +19,8 @@ const svgProps = { viewBox: "0 0 24 24", "aria-hidden": "true" as const, fill: "
 
 /** AM 171732: diamond (initial). */
 export const GenerateIcon = () => <svg {...svgProps}><path d="M12 2.5 20 12 12 21.5 4 12Z" /><path d="M12 7 16.5 12 12 17 7.5 12Z" /></svg>;
+/** Extension icon (drawer tab / input-bar action): opens the overlay. */
+export const OverviewIcon = () => <svg {...svgProps}><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8" cy="10" r="2" /><path d="M21 16l-5-5L5 19" /></svg>;
 /** AM 171734: lucide rotate-ccw (reroll). */
 export const RerollIcon = () => <svg {...svgProps}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>;
 /** AM `G_e` 170949: lucide refresh-ccw-dot (retry). */

@@ -11,7 +11,8 @@ import { LayerStack } from "./ui/layers.js";
 import { ToastStore } from "./ui/toast.js";
 import { trackKeyboardInset } from "./viewport.js";
 
-export type OverlayOpenOptions = { tab?: WorkspaceTab; settings?: SettingsSection | true };
+/** `characterId` selects that roster character first; `tab` is then applied to it. */
+export type OverlayOpenOptions = { tab?: WorkspaceTab; settings?: SettingsSection | true; characterId?: string };
 
 export type OverlayController = {
   open(options?: OverlayOpenOptions): void;
@@ -93,11 +94,12 @@ export function createOverlayController(ctx: SpindleFrontendContext, options: Ov
 
   const controller: OverlayController = {
     open(openOptions) {
-      if (openOptions?.tab || openOptions?.settings) {
+      if (openOptions?.tab || openOptions?.settings || openOptions?.characterId) {
         navigation = {
           requestId: navigation.requestId + 1,
           tab: openOptions.tab,
-          settings: openOptions.settings === true ? "charx" : openOptions.settings
+          settings: openOptions.settings === true ? "charx" : openOptions.settings,
+          characterId: openOptions.characterId
         };
         if (host) renderApp();
       }

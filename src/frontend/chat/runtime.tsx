@@ -11,7 +11,7 @@ import { applyCountAction, countLimits, countToggleText, countView, floatingStyl
 import { COUNT_LABELS, ERROR_DIALOG_LABELS, fill, TOAST_LABELS } from "./labels.js";
 import type { ChatRuntimeStore } from "./runtime-store.js";
 import { buildToastStack, errorDetailText, errorLogText, hasErrorDetails, type RuntimeToastModel } from "./toast-model.js";
-import { GenerateIcon, RetryIcon } from "./widgets.js";
+import { GenerateIcon, OverviewIcon, RetryIcon } from "./widgets.js";
 import { directionPatch, selectPreset } from "../overlay/settings/directions.js";
 
 export type ToastCommand = "cancel" | "retry" | "restart" | "dismiss";
@@ -22,6 +22,8 @@ export interface ChatRuntimeProps {
   getActiveChatId: () => string;
   /** Count panel action (illustrate or reroll the latest assistant message); no button without it. */
   generateLatest?: () => Promise<void>;
+  /** Count panel action: open the overlay on the active chat's character; no button without it. */
+  openOverview?: () => void;
   onToastCommand: (toast: RuntimeToastModel, command: ToastCommand) => void;
 }
 
@@ -35,7 +37,7 @@ function useRuntimeRevision(store: ChatRuntimeStore): number {
 }
 
 /** Root of the body-level runtime host. */
-export function ChatRuntime({ app, store, getActiveChatId, generateLatest, onToastCommand }: ChatRuntimeProps) {
+export function ChatRuntime({ app, store, getActiveChatId, generateLatest, openOverview, onToastCommand }: ChatRuntimeProps) {
   useRuntimeRevision(store);
   const settings = useSelector(app.store, (s) => s.chatImageGeneration);
   const config = useSelector(app.store, (s) => s.config);
@@ -48,7 +50,7 @@ export function ChatRuntime({ app, store, getActiveChatId, generateLatest, onToa
       data-ii-zoom={store.zoomOpen ? "true" : undefined}
       data-ii-count={showCount && !floating ? "true" : undefined}
     >
-      {showCount ? <CountPanel app={app} settings={settings!} config={config!} chatId={getActiveChatId()} generateLatest={generateLatest} /> : null}
+      {showCount ? <CountPanel app={app} settings={settings!} config={config!} chatId={getActiveChatId()} generateLatest={generateLatest} openOverview={openOverview} /> : null}
       <ToastStack app={app} store={store} onCommand={onToastCommand} />
       <ErrorDialog store={store} onDismiss={(item) => { if (item?.jobId) onToastCommand({ key: `generation:${item.jobId}`, jobId: item.jobId } as RuntimeToastModel, "dismiss"); }} />
     </div>
@@ -276,9 +278,10 @@ interface CountPanelProps {
   config: InlayConfig;
   chatId: string;
   generateLatest?: () => Promise<void>;
+  openOverview?: () => void;
 }
 
-function CountPanel({ app, settings, config, chatId, generateLatest }: CountPanelProps) {
+function CountPanel({ app, settings, config, chatId, generateLatest, openOverview }: CountPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [starting, setStarting] = useState(false);
   const chatBusy = useSelector(app.store, (s) => Object.values(s.generationJobs).some((job) => job.chatId === chatId));
@@ -386,6 +389,17 @@ function CountPanel({ app, settings, config, chatId, generateLatest }: CountPane
             }}
           >
             <GenerateIcon />
+          </button>
+        ) : null}
+        {openOverview ? (
+          <button
+            type="button"
+            class="ii-am-chat-count__option ii-am-chat-count__overview"
+            aria-label={COUNT_LABELS.openOverview}
+            title={COUNT_LABELS.openOverview}
+            onClick={openOverview}
+          >
+            <OverviewIcon />
           </button>
         ) : null}
         {sceneAvailable ? (

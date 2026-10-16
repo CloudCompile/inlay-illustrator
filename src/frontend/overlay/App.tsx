@@ -39,8 +39,8 @@ import { discardWorkspaceDrafts, unsavedWorkspaceDrafts, useWorkspaceTabView } f
 import { SPLIT_MAX, SPLIT_MIN, WorkspaceUiContext, WorkspaceUiStore, useSourceUi, useWorkspaceUi, type TabView } from "./workspace-ui.js";
 import { CharxPickerGrid, CharxRail, CustomCharacterEditor, EDITOR_LABELS, RosterInfoPanel, RosterSidebar, ROSTER_LABELS } from "./roster/index.js";
 
-/** External navigation request (launchers may ask for a tab or a settings page). */
-export type OverlayNavigation = { requestId: number; tab?: WorkspaceTab; settings?: SettingsSection };
+/** External navigation request (launchers may ask for a tab or a settings page, or for a roster character). */
+export type OverlayNavigation = { requestId: number; tab?: WorkspaceTab; settings?: SettingsSection; characterId?: string };
 
 export type OverlayAppProps = {
   store: FrontendStore;
@@ -128,13 +128,22 @@ function ShellInner({ navigation, onClose, workspaceUi }: { navigation: OverlayN
 
   const setActiveTab = (tab: WorkspaceTab) => workspaceUi.updateSource(characterId, { activeTab: tab, secondaryOpen: false, infoPromptKey: null });
 
-  // A requested tab is applied to the character that is selected (or selected next, when none is loaded yet).
+  // A requested tab is applied to the character that is selected (or selected next: none loaded yet, or a requested
+  // character that is being selected).
   const pendingTab = useRef<WorkspaceTab | null>(null);
   useEffect(() => {
     if (!navigation.requestId) return;
+    const target = navigation.characterId;
     if (navigation.settings) {
       setSection(navigation.settings);
       setSettingsOpen(true);
+    } else if (target && target !== characterId) {
+      setSettingsOpen(false);
+      guarded(() => {
+        pendingTab.current = navigation.tab ?? null;
+        workspaceUi.updateSource(characterId, { editor: null });
+        void app.selectCharacter(target);
+      });
     } else if (navigation.tab) {
       pendingTab.current = characterId ? null : navigation.tab;
       setActiveTab(navigation.tab);

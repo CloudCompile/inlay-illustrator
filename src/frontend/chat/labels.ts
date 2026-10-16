@@ -158,7 +158,8 @@ export const COUNT_LABELS = {
   saveFailed: "Saving generation settings failed.", // 생성 설정 저장에 실패했습니다.
   dragHint: "Drag to move", // (port) 끌어서 이동
   generateLatest: "Generate images for the latest message", // (port) replaces the removed floating button
-  noEligibleMessage: "No assistant message to illustrate." // (port)
+  noEligibleMessage: "No assistant message to illustrate.", // (port)
+  openOverview: "Open this character in Inlay Illustrator" // (port)
 } as const;
 
 /** Runtime error dialog (spec/ui.md §6.4). */
