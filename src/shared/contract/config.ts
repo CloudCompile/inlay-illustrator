@@ -22,11 +22,13 @@ import {
   createDefaultAnimaArtists,
   createDefaultPersonaSettings,
   DEFAULT_MALE_PERSONA_PROMPT,
+  DEFAULT_SELECTED_ARTIST_ID,
   type FixedResolution,
   type NativeAssetVisibility,
   normalizeAnimaArtists,
   normalizePersonaSettings,
   type PersonaSettings,
+  resolveNovelAIArtistSelection,
 } from "./character.js";
 import { type CountPolicy, fixedCountPolicy, MAX_IMAGE_COUNT, normalizeCountPolicy, UNLIMITED_IMAGE_COUNT } from "./chat.js";
 import {
@@ -428,6 +430,8 @@ export interface GlobalCharacterPromptSettings {
   assetRegexEntries?: unknown[];
   /** Global NovelAI artist list (AM `asset_maid:v1:config:artists-global`). */
   artistPrompts: ArtistEntry[];
+  /** Global NovelAI artist preset, used by characters without an own `selectedArtistId` (port addition). */
+  defaultArtistId: string;
 }
 
 export interface RuntimeSettings {
@@ -542,6 +546,7 @@ export function createDefaultConfig(): InlayConfig {
       fixedPositivePrompt: "",
       charxGenerationDefaults: createDefaultCharxGenerationDefaults(),
       artistPrompts: [],
+      defaultArtistId: DEFAULT_SELECTED_ARTIST_ID,
     },
     runtime: {
       customImageSizes: [],
@@ -755,6 +760,7 @@ export function normalizeConfigWithIssues(raw: unknown): ConfigNormalizeResult {
     charxGenerationDefaults: normalizeCharxGenerationDefaults(asRecord(input.characterPrompt).charxGenerationDefaults),
     ...(Array.isArray(cp.assetRegexEntries) ? { assetRegexEntries: jsonClone(cp.assetRegexEntries) } : {}),
     artistPrompts: asArray(cp.artistPrompts).filter(isPlainObject).map((e) => jsonClone(e) as ArtistEntry),
+    defaultArtistId: trimString(cp.defaultArtistId) || DEFAULT_SELECTED_ARTIST_ID,
   };
 
   const rt = asRecord(merged.runtime);
@@ -811,8 +817,8 @@ export interface StoredGlobalConfig {
   model: Record<string, unknown>;
   /** `config/settings.json`: enabled, ui, presetCatalog (minus lastError), runtime, novelai.negativePrompt, characterPrompt (global part minus artistPrompts). */
   settings: Record<string, unknown>;
-  /** `config/artists-global.json`: `{characterPrompt:{artistPrompts}}`. */
-  artistsGlobal: { characterPrompt: { artistPrompts: ArtistEntry[] } };
+  /** `config/artists-global.json`: `{characterPrompt:{artistPrompts, defaultArtistId}}`. */
+  artistsGlobal: { characterPrompt: { artistPrompts: ArtistEntry[]; defaultArtistId: string } };
   /** `config/anima-artists.json`: entries + defaultId. */
   animaArtists: AnimaArtistList;
 }
@@ -823,8 +829,8 @@ export function splitConfigForStorage(config: InlayConfig): StoredGlobalConfig {
   const { negativePrompt: _n, characterPrompts: _c, ...novelaiModel } = config.novelai;
   const { negativePrompt: _dn, characterPrompts: _dc, ...novelaiModelDefaults } = defaults.novelai;
   const model = asRecord(diffAgainstDefaults({ analysis: config.analysis, jevConnection: config.jevConnection, novelai: novelaiModel, image: config.image }, { analysis: defaults.analysis, jevConnection: defaults.jevConnection, novelai: novelaiModelDefaults, image: defaults.image }));
-  const { artistPrompts, ...cpSettings } = config.characterPrompt;
-  const { artistPrompts: _a, ...cpDefaults } = defaults.characterPrompt;
+  const { artistPrompts, defaultArtistId, ...cpSettings } = config.characterPrompt;
+  const { artistPrompts: _a, defaultArtistId: _d, ...cpDefaults } = defaults.characterPrompt;
   const settings = asRecord(
     diffAgainstDefaults(
       { version: config.version, enabled: config.enabled, ui: config.ui, presetCatalog: { rawJson: config.presetCatalog.rawJson }, runtime: config.runtime, novelai: { negativePrompt: config.novelai.negativePrompt }, characterPrompt: cpSettings },
@@ -836,7 +842,7 @@ export function splitConfigForStorage(config: InlayConfig): StoredGlobalConfig {
   return {
     model,
     settings,
-    artistsGlobal: { characterPrompt: { artistPrompts: jsonClone(artistPrompts) } },
+    artistsGlobal: { characterPrompt: { artistPrompts: jsonClone(artistPrompts), defaultArtistId } },
     animaArtists: { version: 1, entries: jsonClone(config.animaArtists.entries), selection: { defaultId: config.animaArtists.selection.defaultId, bySourceId: {} } },
   };
 }
@@ -846,7 +852,8 @@ export function mergeStoredConfig(parts: Partial<StoredGlobalConfig>): InlayConf
   const model = asRecord(parts.model);
   const settings = asRecord(parts.settings);
   const novelai = { ...asRecord(model.novelai), ...asRecord(settings.novelai) };
-  const characterPrompt = { ...asRecord(settings.characterPrompt), ...(parts.artistsGlobal ? { artistPrompts: asArray(asRecord(asRecord(parts.artistsGlobal).characterPrompt).artistPrompts) } : {}) };
+  const artists = asRecord(asRecord(parts.artistsGlobal).characterPrompt);
+  const characterPrompt = { ...asRecord(settings.characterPrompt), ...(parts.artistsGlobal ? { artistPrompts: asArray(artists.artistPrompts), defaultArtistId: artists.defaultArtistId } : {}) };
   return normalizeConfig({
     ...settings,
     ...model,
@@ -1144,6 +1151,7 @@ export function buildRuntimeConfig(global: InlayConfig, document: CharacterDocum
     animaArtists: { ...g.animaArtists, selection: { ...g.animaArtists.selection, bySourceId: animaSelection } },
     characterPrompt: { ...g.characterPrompt, ...(document ? cp : ({} as CharacterScopedPrompt)) } as GlobalCharacterPromptSettings & CharacterScopedPrompt,
   };
+  runtime.characterPrompt.selectedArtistId = resolveNovelAIArtistSelection(g.characterPrompt, document?.characterPrompt.selectedArtistId).id;
   return runtime;
 }
 

@@ -161,13 +161,13 @@ describe("character document", () => {
     const { value, issues } = normalizeCharacterDocument(JSON.parse(JSON.stringify(doc)), "c1");
     expect(issues).toEqual([]);
     expect(value).toEqual(doc);
-    expect(value.characterPrompt.selectedArtistId).toBe("detail_anime_illustration_style");
+    expect(value.characterPrompt.selectedArtistId).toBe("");
     expect(value.characterPrompt.outfitPartFramingWeights.feet["full body"]).toBe(1);
   });
   test("normalizes maps, drops invalid custom characters, idempotent", () => {
     const raw = {
       schema: "inlay-illustrator.character",
-      version: 1,
+      version: 2,
       characterId: "c1",
       updatedAt: "2026-01-01T00:00:00.000Z",
       animaArtistId: "  ",

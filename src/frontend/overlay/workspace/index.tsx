@@ -9,7 +9,7 @@ import { useAppState } from "../../state/app-state.js";
 import type { TabView, TabViewHook } from "../workspace-ui.js";
 import { WORKSPACE_TABS } from "../labels.js";
 import { AssetsContent, AssetsDock, AssetsHeaderEnd, useAssetsCount } from "./assets-tab.js";
-import { ArtistsContent, ArtistsDock, artistsTitle } from "./artists-tab.js";
+import { ArtistsContent, ArtistsDock, ArtistsHeaderEnd, artistsTitle } from "./artists-tab.js";
 import { useWorkspaceCtx } from "./context.js";
 import { usePersonas } from "./data.js";
 import { AnalysisNotices } from "./notices.js";
@@ -74,7 +74,7 @@ export const useWorkspaceTabView: TabViewHook = ({ tab, mobile }) => {
     case "prompts":
       return { ...base, title: definition.label, count: promptsCount, headerEnd: <PromptsHeaderEnd />, layout: "character-grid", content: <PromptsContent />, dock: hasCharacter ? <PromptsDock /> : undefined };
     case "artists":
-      return { ...base, title: artistsTitle(ctx.provider.anima), layout: "standard", content: <ArtistsContent />, dock: <ArtistsDock />, dockExpanded: ctx.session.artists.expanded };
+      return { ...base, title: artistsTitle(ctx.provider.anima), headerEnd: <ArtistsHeaderEnd />, layout: "standard", content: <ArtistsContent />, dock: <ArtistsDock />, dockExpanded: ctx.session.artists.expanded };
     case "persona":
       return { ...base, title: definition.label, headerEnd: <PersonaHeaderEnd />, layout: "character-grid", content: <PersonaContent />, dock: <PersonaDock /> };
   }

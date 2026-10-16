@@ -342,7 +342,10 @@ function returnLabel(tab: WorkspaceTab): string {
   return WORKSPACE_TABS.find((t) => t.id === tab)?.returnLabel ?? SHELL_LABELS.backToWorkspaceShort;
 }
 
-/** Loading / error gate in front of the workspace tabs (AM `N0e` 153844). The persona tab does not need a character. */
+/**
+ * Loading / error gate in front of the workspace tabs (AM `N0e` 153844). The persona tab does not need a character; the
+ * artists tab without a character edits the global presets.
+ */
 function WorkspaceGate({ tab, children }: { tab: WorkspaceTab; children: ComponentChildren }) {
   const app = useApp();
   const characterId = useAppState((s) => s.selectedCharacterId);
@@ -350,7 +353,7 @@ function WorkspaceGate({ tab, children }: { tab: WorkspaceTab; children: Compone
   const error = useAppState((s) => s.workspaceError);
   const ready = useAppState((s) => !!s.workspace && s.workspace.characterId === s.selectedCharacterId);
   const connection = useAppState((s) => s.connection);
-  if (tab === "persona" || ready) return <>{children}</>;
+  if (tab === "persona" || ready || (tab === "artists" && !characterId)) return <>{children}</>;
   if (!characterId && connection === "ready") {
     return <div class="grid flex-1 place-items-center p-6 text-center text-xs text-muted-foreground" data-workspace-empty="">{SHELL_LABELS.noCharacterSelected}</div>;
   }

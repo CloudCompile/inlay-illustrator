@@ -55,5 +55,11 @@ export const ARTISTS_LABELS = {
   animaSave: "Save Anima artist tag", // Anima 작가 태그 저장
   addShort: "Add", // 추가
   saveShort: "Save", // 저장
-  loadFailed: "Could not load the artist list."
+  loadFailed: "Could not load the artist list.",
+  source: "Artist of this character",
+  sourceGlobal: "Global preset",
+  sourceOwn: "Own artist",
+  globalBadge: "Global",
+  setGlobal: "Set as global preset",
+  setGlobalOf: (title: string) => `${title} set as global preset`
 } as const;

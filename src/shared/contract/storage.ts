@@ -3,7 +3,7 @@
  * Maps Asset Maid's stores (pluginStorage keys `asset_maid:v1:*`, the charx lore entry `asset-maid:data`,
  * the chat localLore entry `asset-maid:chat-data`) onto JSON files. Pure path + version helpers; no I/O.
  */
-import { CHARACTER_DOCUMENT_SCHEMA, CHARACTER_DOCUMENT_VERSION, normalizeAnimaArtists } from "./character.js";
+import { CHARACTER_DOCUMENT_SCHEMA, CHARACTER_DOCUMENT_VERSION, DEFAULT_SELECTED_ARTIST_ID, normalizeAnimaArtists } from "./character.js";
 import { CHAT_DATA_SCHEMA, CHAT_DATA_VERSION } from "./chat.js";
 import { asRecord, isPlainObject, trimString } from "./common.js";
 import { CONFIG_VERSION } from "./config.js";
@@ -31,7 +31,7 @@ export const STORAGE_PATHS = {
   configModel: "config/model.json",
   /** Diff vs defaults of the "settings" domain (AM `asset_maid:v1:config:settings`). */
   configSettings: "config/settings.json",
-  /** `{characterPrompt:{artistPrompts}}` (AM `asset_maid:v1:config:artists-global`). */
+  /** `{characterPrompt:{artistPrompts, defaultArtistId}}` (AM `asset_maid:v1:config:artists-global`; `defaultArtistId` is a port addition). */
   artistsGlobal: "config/artists-global.json",
   /** Anima artist entries + default selection (AM `asset_maid:v1:config:anima-artists`, global part). */
   animaArtists: "config/anima-artists.json",
@@ -131,6 +131,16 @@ export const STORAGE_MIGRATIONS: StorageMigration[] = [
     migrate: (raw) => {
       const list = normalizeAnimaArtists(isPlainObject(raw.animaArtists) ? raw.animaArtists : raw);
       return { ...list, selection: { ...list.selection, bySourceId: {} } };
+    },
+  },
+  // v1 -> v2: v1 wrote the built-in default artist into every document, chosen or not; it now means "follow the global preset".
+  {
+    kind: "character-document",
+    from: 1,
+    to: 2,
+    migrate: (raw) => {
+      const cp = asRecord(raw.characterPrompt);
+      return trimString(cp.selectedArtistId) === DEFAULT_SELECTED_ARTIST_ID ? { ...raw, characterPrompt: { ...cp, selectedArtistId: "" } } : raw;
     },
   },
 ];
