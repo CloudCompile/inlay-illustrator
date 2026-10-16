@@ -5,7 +5,8 @@ import { bytesToBase64 } from "../pipeline/providers.js";
 import { encodePng } from "./cutout.js";
 import { cutoutPose } from "./panel-request.js";
 import { rerollWebtoonPanel } from "./run.js";
-import { readStrip, webtoonPath } from "./store.js";
+import { readStrip, relayout, webtoonPath } from "./store.js";
+import { visionConnection } from "./vision.js";
 
 const shot = (id: number, extra: Record<string, unknown> = {}) => ({
   id,
@@ -85,7 +86,7 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const strip = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
     expect(fx.json.has(webtoonPath(CHAT_ID, "m1@0"))).toBe(true);
     expect(strip.status).toBe("complete");
-    expect(strip.cast).toEqual([{ name: "Shouta", key: "persona::persona-1", outfitId: "o2" }]);
+    expect(strip.cast).toEqual([{ name: "Shouta", key: "persona::persona-1", outfitId: "o2", gender: "male", identity: "male, black hair" }]);
     expect(Object.values(strip.panels).map((p) => [p.status, p.takes.length, p.selected])).toEqual(Array(6).fill(["done", 1, 0]));
     const layout = (await pipeline.getWebtoon(CHAT_ID, "illustration:m1@0")).strip!.layout!;
     expect([layout.width, layout.panels.length]).toEqual([690, 6]);
@@ -199,6 +200,104 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const strip = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
     expect(strip.status).toBe("error");
     expect(strip.planner!.calls.map((c) => c.hardOk)).toEqual([false, false, false]);
+    pipeline.dispose();
+  });
+});
+
+describe("webtoon vision check (Jev 1.14 face boxes + identity redraw)", () => {
+  const typesafe = (id: string, isDefault = false, provider = "typesafe") =>
+    ({ id, name: id, provider, api_url: "", model: "jev-latest", is_default: isDefault, has_api_key: true, default_parameters: {}, metadata: {}, created_at: 0, updated_at: 0 });
+
+  /** Capability on, a TypeSafe connection as the extension's Decision connection, scripted answers per image id. */
+  async function visionSetup(answer: (imageId: string, dispatch: Record<string, any>) => Record<string, unknown> | Error) {
+    const ctx = await setup();
+    const { fx, engine } = ctx;
+    (fx.services.host as { host: unknown }).host = { descriptorVersion: 1, lumiverseVersion: "test", capabilities: { "decisions-v1": 1, "decision-images-v1": 1 }, extensionInstallationId: "fake" };
+    fx.fakeHost!.decisionConnections.push(typesafe("ts-1"));
+    await fx.services.storage.updateConfig((c) => ({ ...c, jevConnection: { ...c.jevConnection, connectionId: "ts-1" } }));
+    const calls: Array<Record<string, any>> = [];
+    fx.services.decisions.evaluateImages = async (input) => {
+      calls.push(input as Record<string, any>);
+      const imageId = (input.assets!.panel as { image_id: string }).image_id;
+      const result = answer(imageId, engine.dispatches[Number(imageId.split("-")[1]) - 1]!.request as Record<string, any>);
+      if (result instanceof Error) throw result;
+      return { model: "jev-1.14.0", answers: result as never };
+    };
+    return { ...ctx, calls };
+  }
+  const face = (confidence: number) => ({ type: "box", box: { left: 0.4, top: 0.1, right: 0.6, bottom: 0.3 }, confidence });
+  const noul = (v: number) => ({ type: "noul", noul: v });
+  const boosted = (dispatch: Record<string, any>) => String(dispatch.config.characterPrompts[0]?.prompt ?? "").startsWith("male, 1.35::black hair::");
+
+  test("turned on only with the decision-images-v1 capability and a TypeSafe connection (the extension's, else the default)", async () => {
+    const { fx, pipeline } = await setup();
+    const config = await fx.services.storage.loadConfig();
+    const pick = (jev: string) => visionConnection(fx.services, { ...config, jevConnection: { ...config.jevConnection, connectionId: jev } });
+    fx.fakeHost!.decisionConnections.push(typesafe("or-1", true, "openrouter"), typesafe("ts-1"));
+    expect(await pick("ts-1")).toBeNull(); // no capability
+    (fx.services.host as { host: unknown }).host = { descriptorVersion: 1, lumiverseVersion: "test", capabilities: { "decision-images-v1": 1 }, extensionInstallationId: "fake" };
+    expect(await pick("ts-1")).toBe("ts-1");
+    expect(await pick("")).toBeNull(); // the default is OpenRouter
+    fx.fakeHost!.decisionConnections.splice(0, 2, typesafe("or-1", false, "openrouter"), typesafe("ts-1", true));
+    expect(await pick("or-1")).toBe("ts-1");
+    pipeline.dispose();
+  });
+
+  test("one request per character panel by image id (jev-1.14.0, face Box + identity noul); confident faces go into the layout", async () => {
+    const { fx, engine, pipeline, calls } = await visionSetup((imageId) => ({ present0: noul(0.9), face0: face(imageId === "regen-6" ? 0.1 : 0.7), id0_0: noul(0.9) }));
+    fx.llmReplies.push(STORYBOARD);
+    const run = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, run.jobId).length > 0);
+    expect(engine.dispatches.length).toBe(6); // no redraw
+    expect(calls.length).toBe(5); // the insert panel has no character
+    expect(calls[0]).toMatchObject({ connection_id: "ts-1", model: "jev-1.14.0", state: { image: "panel" }, assets: { panel: { image_id: "regen-1" } } });
+    expect(calls[0]!.questions).toEqual({
+      present0: { type: "noul", instructions: "Is there a man (Shouta) with black hair in `image`?" },
+      face0: { type: "box", instructions: "the face of the man (Shouta) with black hair in `image`" },
+      id0_0: { type: "noul", instructions: "Does the man in `image` have black hair?" },
+    });
+    const strip = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    expect(strip.panels["2"]!.takes[0]!.check).toMatchObject({ faces: { Shouta: { left: 0.4, top: 0.1, right: 0.6, bottom: 0.3 } }, failed: [] });
+    expect(strip.panels["7"]!.takes[0]!.check!.faces).toEqual({}); // below the confidence gate: coordinates
+    const withFaces = relayout(strip)!.panels.find((p) => p.id === 2)!.faces.Shouta!;
+    const coords = relayout({ ...strip, panels: { ...strip.panels, "2": { ...strip.panels["2"]!, takes: [{ ...strip.panels["2"]!.takes[0]!, check: undefined }] } } })!.panels.find((p) => p.id === 2)!.faces.Shouta!;
+    expect(withFaces).not.toEqual(coords);
+    pipeline.dispose();
+  });
+
+  test("a Decision error leaves the strip on coordinates", async () => {
+    const { fx, engine, pipeline, calls } = await visionSetup(() => new Error("TypeSafe decision evaluation failed (400): Invalid image request."));
+    fx.llmReplies.push(STORYBOARD);
+    const run = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, run.jobId).length > 0);
+    expect(finished(fx, run.jobId)[0]!.result).toBe("completed");
+    expect([engine.dispatches.length, calls.length]).toEqual([6, 5]);
+    const strip = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    expect(strip.status).toBe("complete");
+    expect(Object.values(strip.panels).flatMap((p) => p.takes).some((t) => t.check)).toBe(false);
+    expect(fx.services.log.list().some((e) => e.level === "warn" && e.message.includes("vision check failed"))).toBe(true);
+    pipeline.dispose();
+  });
+
+  test("failed identity check: one redraw (new seed, boosted identity tags); the better-scoring take is shown, both are kept", async () => {
+    // First takes: wrong hair (0.1). Redraws: right hair (0.8), except panel 7's (0.05, worse than its first take).
+    const { fx, engine, pipeline } = await visionSetup((_id, d) => ({
+      present0: noul(0.9), face0: face(0.7),
+      id0_0: noul(!boosted(d) ? 0.1 : d.queueMeta.sourceImageToken === "webtoon:panel:7" ? 0.05 : 0.8),
+    }));
+    fx.llmReplies.push(STORYBOARD);
+    const run = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, run.jobId).length > 0);
+    expect(engine.dispatches.length).toBe(11); // 6 panels + 5 redraws, no second redraw
+    const redraws = engine.dispatches.filter((d) => boosted(d.request));
+    expect(redraws.length).toBe(5);
+    expect(redraws.map((d) => d.request.seed)).toEqual(Array(5).fill(""));
+    const strip = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    expect(strip.status).toBe("complete");
+    const p2 = strip.panels["2"]!, p7 = strip.panels["7"]!;
+    expect([p2.takes.length, p2.selected, p2.takes[0]!.check!.failed, p2.takes[1]!.check!.redraw]).toEqual([2, 1, ["Shouta: hair:black hair (0.10)"], true]);
+    expect([p7.takes.length, p7.selected]).toEqual([2, 0]);
+    expect(strip.panels["3"]!.takes.length).toBe(1);
     pipeline.dispose();
   });
 });

@@ -3,8 +3,11 @@
  * panel (sequential, through the engine dispatcher and the ImageService queue; frame-break panels: cut-out + inpainted background)
  * -> layout, persisted after every step so
  * the chat view shows panels as they finish. Also single-panel reroll and text edits.
+ * Vision check (vision.ts, when available): each stored take is checked in the background while the next panel draws;
+ * face boxes are stored on the take, and a failed identity check gets one redraw (new seed, boosted identity tags),
+ * drawn in the same sequential queue; the better-scoring take is shown.
  */
-import { rpcError, type ChatDataDocument, type InlayConfig, type RpcError, type WebtoonPanelTake, type WebtoonStripView } from "../../shared/contract/index.js";
+import { rpcError, type ChatDataDocument, type InlayConfig, type RpcError, type WebtoonPanelCheck, type WebtoonPanelTake, type WebtoonStripView } from "../../shared/contract/index.js";
 import { isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
 import type { EnginePort } from "../pipeline/engine-port.js";
@@ -17,6 +20,7 @@ import { characterGrid, decodePng, encodePng, flattenOver, frameBreakInputs, typ
 import type { ImagePanel } from "./storyboard-schema.js";
 import { hardOk, validateStoryboard } from "./storyboard-validate.js";
 import { createStripDocument, readStrip, stripView, takeOf, updateStrip, type PlannerCall, type WebtoonStripDocument } from "./store.js";
+import { boostedRequest, checkPanel, visionConnection, type CastIdentity } from "./vision.js";
 
 const MAX_PLANNER_CALLS = 3;
 /** NovelAI Opus allows one generation at a time per account: "429 Concurrent generation is locked" while another client
@@ -225,6 +229,81 @@ async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; ma
   );
 }
 
+/** What the vision check of one run needs (see vision.ts). */
+interface VisionRun {
+  deps: WebtoonDeps;
+  connectionId: string;
+  cast: CastIdentity[];
+  chatId: string;
+  historyId: string;
+  signal: AbortSignal;
+  onChanged: () => void;
+}
+
+/** The vision check for this run, or null (host without images in Decisions, no TypeSafe connection, lookup error): coordinates only. */
+async function visionRun(deps: WebtoonDeps, config: InlayConfig, run: Omit<VisionRun, "deps" | "connectionId">): Promise<VisionRun | null> {
+  try {
+    const connectionId = await visionConnection(deps.services, config);
+    return connectionId ? { deps, connectionId, ...run } : null;
+  } catch (error) {
+    deps.services.log.append("warn", "webtoon", "Vision check unavailable, balloons placed by coordinates", { error: toRpcError(error).message });
+    return null;
+  }
+}
+
+/**
+ * Check a stored take and save the result on it. `redrawOf`: the take is the identity redraw of that take, and it is shown
+ * instead when it scores better (and that take is still the one shown). Never throws.
+ */
+async function checkTake(v: VisionRun, panel: ImagePanel, take: WebtoonPanelTake, redrawOf?: { imageId: string; score: number }): Promise<WebtoonPanelCheck | null> {
+  const { services } = v.deps;
+  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal });
+  if (!check) return null;
+  const id = String(panel.id);
+  const chosen = !!redrawOf && check.score > redrawOf.score;
+  try {
+    await updateStrip(services.storage, v.chatId, v.historyId, (current) => {
+      if (!current) throw new Error("The strip no longer exists.");
+      const p = current.panels[id];
+      const index = p ? p.takes.findIndex((t) => t.imageId === take.imageId) : -1;
+      if (!p || index < 0) return current;
+      p.takes[index]!.check = redrawOf ? { ...check, redraw: true } : check;
+      if (chosen && p.takes[p.selected]?.imageId === redrawOf!.imageId) p.selected = index;
+      return current;
+    }, v.deps.now);
+    v.onChanged();
+  } catch (error) {
+    services.log.append("warn", "webtoon", `Panel ${id}: the vision check could not be saved`, { error: toRpcError(error).message });
+  }
+  services.log.append("info", "webtoon", `Panel ${id}${redrawOf ? " (identity redraw)" : ""}: ${Object.keys(check.faces).length} face box(es), identity score ${check.score.toFixed(2)}${check.failed.length ? `, failed: ${check.failed.join("; ")}` : ""}${redrawOf ? (chosen ? ", shown" : ", first take kept") : ""}`);
+  return check;
+}
+
+/** The one identity redraw of a panel: new seed, boosted identity tags; stored as another take (not shown until its check scores better). */
+async function redrawIdentity(v: VisionRun, input: PanelInput, panel: ImagePanel, assertTarget?: () => Promise<void>): Promise<WebtoonPanelTake | null> {
+  let take: WebtoonPanelTake;
+  try {
+    take = await drawPanel(v.deps, { ...input, request: boostedRequest(input.request, v.cast), seed: "" });
+  } catch (error) {
+    if (input.signal.aborted || isAbortLike(error)) throw error;
+    v.deps.services.log.append("warn", "webtoon", `Panel ${panel.id}: identity redraw failed`, { error: toRpcError(error).message });
+    return null;
+  }
+  await assertTarget?.();
+  try {
+    await updateStrip(v.deps.services.storage, v.chatId, v.historyId, (current) => {
+      if (!current?.panels[String(panel.id)]) throw new Error("The strip no longer exists.");
+      current.panels[String(panel.id)]!.takes.push(take);
+      return current;
+    }, v.deps.now);
+  } catch (error) {
+    v.deps.services.log.append("warn", "webtoon", `Panel ${panel.id}: the identity redraw could not be saved`, { error: toRpcError(error).message });
+    return null;
+  }
+  v.onChanged();
+  return take;
+}
+
 /** Plan and draw the strip of one message swipe. Never throws for panel failures (they are counted). */
 export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest): Promise<WebtoonRunResult> {
   const { services } = deps;
@@ -281,7 +360,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         d.storyboardRaw = planned.raw;
         d.storyboard = validated.storyboard;
         d.validation = { log: validated.log, stats: validated.stats };
-        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId }));
+        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: r.identity }));
         d.style = context.style;
         d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), buildPanelRequest(p, cast, context.style)]));
         d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
@@ -292,13 +371,36 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
     const images = (doc.storyboard?.panels ?? []).filter((p): p is ImagePanel => p.kind === "image" && !!requests[String(p.id)]);
     const todo = images.filter((p) => doc!.panels[String(p.id)]?.status !== "done");
 
+    // Vision checks run in the background while the next panel draws; identity redraws join the sequential NovelAI queue.
+    const vision = await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged });
+    const background = new Set<Promise<unknown>>();
+    const redraws: Array<() => Promise<void>> = [];
+    const inBackground = (work: Promise<unknown>) => {
+      background.add(work);
+      void work.finally(() => background.delete(work));
+    };
+    const drainRedraws = async () => {
+      for (let job = redraws.shift(); job; job = redraws.shift()) await job();
+    };
+    const afterTake = (v: VisionRun, panel: ImagePanel, input: PanelInput, take: WebtoonPanelTake) =>
+      inBackground(
+        checkTake(v, panel, take).then((check) => {
+          if (!check?.failed.length) return;
+          redraws.push(async () => {
+            const redraw = await redrawIdentity(v, input, panel, req.assertTarget);
+            if (redraw) inBackground(checkTake(v, panel, redraw, { imageId: take.imageId, score: check.score }));
+          });
+        }),
+      );
+
     let failed = 0;
     for (const [index, panel] of todo.entries()) {
       if (req.signal.aborted) throw aborted();
       const id = String(panel.id);
       req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length });
       try {
-        const take = await drawPanel(deps, { request: requests[id]!, style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal });
+        const input: PanelInput = { request: requests[id]!, style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal };
+        const take = await drawPanel(deps, input);
         await req.assertTarget();
         doc = await write((d) => {
           const p = d.panels[id]!;
@@ -307,6 +409,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
           p.status = "done";
           delete p.error;
         });
+        if (vision) afterTake(vision, panel, input, take);
       } catch (error) {
         if (req.signal.aborted || isAbortLike(error)) throw error;
         failed += 1;
@@ -316,6 +419,11 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         });
         services.log.append("warn", "webtoon", `Panel ${id} failed`, { chatId: req.chatId, historyId: req.historyId, error: message });
       }
+      await drainRedraws();
+    }
+    while (background.size || redraws.length) {
+      await Promise.all([...background]);
+      await drainRedraws();
     }
     req.onProgress({ stage: "committing", done: images.length - failed, total: images.length });
     const error = failed ? rpcError("provider-error", `${failed} webtoon panel(s) failed to generate.`, { retryable: true }) : undefined;
@@ -344,9 +452,10 @@ export async function rerollWebtoonPanel(
   const doc = await readStrip(deps.services.storage, req.chatId, req.historyId);
   const request = doc?.requests[req.panelId];
   if (!doc || !request || !doc.style) throw new RpcFailure(rpcError("not-found", "This webtoon panel has no image request.", { retryable: false }));
-  const take = await drawPanel(deps, { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal });
+  const input: PanelInput = { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal };
+  const take = await drawPanel(deps, input);
   if (req.signal.aborted) throw aborted();
-  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
+  let written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
     const d = current ?? doc;
     const p = d.panels[req.panelId] ?? { panelId: req.panelId, status: "pending" as const, takes: [], selected: -1 };
     p.takes.push(take);
@@ -357,6 +466,17 @@ export async function rerollWebtoonPanel(
     return d;
   }, deps.now);
   req.onChanged();
+  // Same vision check as a strip run, awaited here (one panel): face boxes, and one identity redraw when the check fails.
+  const panel = doc.storyboard?.panels.find((p): p is ImagePanel => p.kind === "image" && String(p.id) === req.panelId);
+  const vision = panel ? await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged }) : null;
+  if (vision && panel) {
+    const check = await checkTake(vision, panel, take);
+    if (check?.failed.length) {
+      const redraw = await redrawIdentity(vision, input, panel);
+      if (redraw) await checkTake(vision, panel, redraw, { imageId: take.imageId, score: check.score });
+    }
+    written = (await readStrip(deps.services.storage, req.chatId, req.historyId)) ?? written;
+  }
   return stripView(written);
 }
 

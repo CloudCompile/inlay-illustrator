@@ -47,8 +47,8 @@ export interface WebtoonStripDocument {
   storyboardRaw: unknown;
   storyboard: Storyboard | null;
   validation: { log: string[]; stats: Record<string, unknown> } | null;
-  /** Cast of this strip: name -> prompt key and chosen outfit. */
-  cast: Array<{ name: string; key: string; outfitId: string }>;
+  /** Cast of this strip: name -> prompt key and chosen outfit; gender and identity tags for the vision check (absent in older documents). */
+  cast: Array<{ name: string; key: string; outfitId: string; gender?: string; identity?: string }>;
   style: WebtoonStyle | null;
   /** Panel id -> exact request (prompts, size, centers). */
   requests: Record<string, PanelRequest>;
@@ -143,7 +143,7 @@ export function effectiveStoryboard(doc: Pick<WebtoonStripDocument, "storyboard"
   };
 }
 
-/** Layout from the storyboard + overrides at `width`; image sizes from the selected takes, else the planned size. */
+/** Layout from the storyboard + overrides at `width`; image sizes, cut-out and face boxes from the selected takes, else the planned size. */
 export function relayout(doc: WebtoonStripDocument, width: number = STRIP_WIDTH): StripLayout | null {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard) return null;
@@ -155,6 +155,7 @@ export function relayout(doc: WebtoonStripDocument, width: number = STRIP_WIDTH)
     const [width, height] = p.size.split("x").map(Number) as [number, number];
     images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
     if (take?.cutout) images[String(p.id)]!.cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
+    if (take?.check && Object.keys(take.check.faces).length) images[String(p.id)]!.faces = take.check.faces;
   }
   return layoutStrip(storyboard, images, { width });
 }

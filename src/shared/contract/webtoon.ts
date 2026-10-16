@@ -74,6 +74,23 @@ export interface WebtoonPanelTake {
   createdAt: number;
   /** Frame-break take: the panel image is the inpainted background with this cut-out drawn in. */
   cutout?: WebtoonPanelCutout;
+  /** Vision check of this take (Jev 1.14 through a TypeSafe Decision connection); absent when it did not run. */
+  check?: WebtoonPanelCheck;
+}
+
+/** Face boxes and identity checks of one take. The layout keeps balloons off these faces. */
+export interface WebtoonPanelCheck {
+  model: string;
+  /** Face box per character name (normalized image coords); only answers above the confidence gate. */
+  faces: Record<string, CutoutBox>;
+  /** Identity checks ("species", "hair:<colour> hair", "glasses") with their noul answers. */
+  identity: Array<{ name: string; check: string; noul: number }>;
+  /** Smallest margin of an identity check above its threshold (1 when there is none); the better take has the larger score. */
+  score: number;
+  /** Identity checks below their threshold. */
+  failed: string[];
+  /** This take is the automatic identity redraw (new seed, boosted identity tags). */
+  redraw?: boolean;
 }
 
 export interface WebtoonPanelState {

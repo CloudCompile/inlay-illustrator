@@ -1,7 +1,7 @@
 /**
  * DecisionService over Lumiverse decision connections (`spindle.decisions`).
  */
-import type { SpindleHost, RunLog } from "./types.js";
+import type { DecisionImagesInput, DecisionImagesResult, SpindleHost, RunLog } from "./types.js";
 import { rpcError, type DecisionConnectionSummary, type ModelOption, type RpcError } from "../../shared/contract/index.js";
 import type { JevConnectionSettings } from "../../shared/contract/config.js";
 
@@ -26,6 +26,8 @@ export interface DecisionService {
   listConnections(options?: DecisionServiceOptions): Promise<DecisionConnectionSummary[]>;
   listModels(connectionId: string, options?: DecisionServiceOptions): Promise<ModelOption[]>;
   testConnection(params: DecisionTestParams, options?: { signal?: AbortSignal }): Promise<DecisionTestResult>;
+  /** One request with image assets / Box questions (host capability `decision-images-v1`, TypeSafe connections only). Throws on errors. */
+  evaluateImages(input: DecisionImagesInput, options?: { signal?: AbortSignal }): Promise<DecisionImagesResult>;
   createJevAdapter(getConfig: () => JevConnectionSettings, options?: DecisionServiceOptions): {
     network: {
       fetch(url: string, init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal }): Promise<Response>;
@@ -112,6 +114,11 @@ export function createDecisionService(host: SpindleHost, log: RunLog, defaultUse
           error: rpcError("provider-error", err instanceof Error ? err.message : String(err)),
         };
       }
+    },
+
+    async evaluateImages(input, options = {}) {
+      const res = await host.decisions.evaluate({ ...input, ...(defaultUserId ? { userId: defaultUserId } : {}) }, { signal: options.signal });
+      return { model: res.model, answers: res.answers };
     },
 
     createJevAdapter(getConfig, adapterOptions = {}) {

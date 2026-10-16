@@ -1,6 +1,6 @@
 /**
  * Storyboard panel -> NovelAI V5 request through the engine dispatcher (webtoon bench round 2,
- * `webtoon-bench2/scripts/images.py build_jobs` / `identity_prompt` / `outfit_prompt`; no Jev retry boosts). Pure.
+ * `webtoon-bench2/scripts/images.py build_jobs` / `identity_prompt` / `outfit_prompt`; the identity boost of the redraw is in vision.ts). Pure.
  *
  * Base prompt = count tags + style (artist / quality) + the planner's camera and scene tags (+ its sentence).
  * Character prompt = identity tags + the planner's pose tags + the chosen outfit's parts weighted by framing
@@ -115,7 +115,7 @@ export function outfitPrompt(outfit: WebtoonCastMember["outfit"], framing: strin
 /* ---------------------------------------------------------------- identity (species first, weighted) */
 
 const SPECIES = /^(furry|anthro|furry (fe)?male|kemono|snout|muzzle|fangs|.*\bfur\b.*|.*\bspots\b|.*\b(tail|scales|feathers|beak|paws|whiskers)\b|animal ears|floppy ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears|dalmatian|(dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)|.*\bchest (fur|tuft)\b.*)$/iu;
-const HAIR_COLOR = /^(pink|black|brown|blonde|blond|white|gray|grey|red|blue|green|purple|silver|orange|light brown|dark brown) hair$/iu;
+export const HAIR_COLOR = /^(pink|black|brown|blonde|blond|white|gray|grey|red|blue|green|purple|silver|orange|light brown|dark brown) hair$/iu;
 const HAIR = /hair|braid|ponytail|pigtails|twintails|bangs|bob cut|bun$/iu;
 const KEMONOMIMI_EARS = /^(animal ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears)$/iu;
 const SPECIES_NAME = /^(dalmatian|dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)$/iu;
@@ -123,10 +123,11 @@ const ID_WEIGHT_FURRY = 1.3;
 const ID_WEIGHT_HAIR = 1.1;
 
 export const isFurry = (identity: string) => tags(identity).some((t) => /^(furry|anthro)$/iu.test(t));
-const speciesName = (identity: string) => tags(identity).find((t) => SPECIES_NAME.test(t)) ?? "animal";
+export const speciesName = (identity: string) => tags(identity).find((t) => SPECIES_NAME.test(t)) ?? "animal";
 const furryGenderTag = (gender: string) => (gender === "female" ? "furry female" : gender === "male" ? "furry male" : "");
 
-export function identityPrompt(member: Pick<WebtoonCastMember, "identity" | "gender">): string {
+/** `boost` is added to the identity weights (the identity redraw after a failed vision check). */
+export function identityPrompt(member: Pick<WebtoonCastMember, "identity" | "gender">, boost = 0): string {
   const furry = isFurry(member.identity);
   const ts = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
   const gender: string[] = ts.filter((t) => t === "female" || t === "male");
@@ -138,9 +139,17 @@ export function identityPrompt(member: Pick<WebtoonCastMember, "identity" | "gen
   const hair = ts.filter((t) => HAIR.test(t) && !species.includes(t) && !named.includes(t));
   const rest = ts.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
   const out = [...gender, ...named];
-  if (species.length) out.push(`${fmt(ID_WEIGHT_FURRY)}::${species.join(", ")}::`);
-  for (const t of hair) out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR)}::${t}::` : t);
+  if (species.length) out.push(`${fmt(ID_WEIGHT_FURRY + boost)}::${species.join(", ")}::`);
+  for (const t of hair) out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR + boost)}::${t}::` : t);
   return [...out, ...rest].join(", ");
+}
+
+/** All visible characters anthro: the species also goes into the base caption, before the artists ("" otherwise). */
+export function furryBaseTag(members: ReadonlyArray<Pick<WebtoonCastMember, "identity" | "gender">>, boost = 0): string {
+  const furry = members.filter((m) => isFurry(m.identity));
+  return furry.length && furry.length === members.length
+    ? `${fmt(ID_WEIGHT_FURRY + boost)}::${[furryGenderTag(furry[0]!.gender) || "furry", "anthro", speciesName(furry[0]!.identity)].join(", ")}::`
+    : "";
 }
 
 export const identityNegative = (identity: string) => (isFurry(identity) ? "human, kemonomimi mode, human face, human skin" : "");
@@ -169,11 +178,7 @@ export function dedupeTags(s: string): string {
 export function buildPanelRequest(panel: ImagePanel, cast: ReadonlyMap<string, WebtoonCastMember>, style: WebtoonStyle): PanelRequest {
   const chars = panel.nai.characters.filter((c) => cast.has(c.name));
   const [baseTags, baseSentence] = splitPrompt(panel.nai.base);
-  // All visible characters anthro: the species also goes into the base caption, before the artists.
-  const furry = chars.map((c) => cast.get(c.name)!).filter((m) => isFurry(m.identity));
-  const species = furry.length && furry.length === chars.length
-    ? `${fmt(ID_WEIGHT_FURRY)}::${[furryGenderTag(furry[0]!.gender) || "furry", "anthro", speciesName(furry[0]!.identity)].join(", ")}::`
-    : "";
+  const species = furryBaseTag(chars.map((c) => cast.get(c.name)!));
   const head = [countTags(chars.map((c) => cast.get(c.name)!.gender)), species, style.style];
   const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `\n${baseSentence}` : "");
   const keyTags: Record<string, string[]> = {};

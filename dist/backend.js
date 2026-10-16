@@ -64377,7 +64377,7 @@ var ID_WEIGHT_HAIR = 1.1;
 var isFurry = (identity) => tags(identity).some((t) => /^(furry|anthro)$/iu.test(t));
 var speciesName = (identity) => tags(identity).find((t) => SPECIES_NAME.test(t)) ?? "animal";
 var furryGenderTag = (gender) => gender === "female" ? "furry female" : gender === "male" ? "furry male" : "";
-function identityPrompt(member) {
+function identityPrompt(member, boost = 0) {
   const furry = isFurry(member.identity);
   const ts = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
   const gender = ts.filter((t) => t === "female" || t === "male");
@@ -64389,10 +64389,14 @@ function identityPrompt(member) {
   const rest = ts.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
   const out = [...gender, ...named];
   if (species.length)
-    out.push(`${fmt(ID_WEIGHT_FURRY)}::${species.join(", ")}::`);
+    out.push(`${fmt(ID_WEIGHT_FURRY + boost)}::${species.join(", ")}::`);
   for (const t of hair)
-    out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR)}::${t}::` : t);
+    out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR + boost)}::${t}::` : t);
   return [...out, ...rest].join(", ");
+}
+function furryBaseTag(members, boost = 0) {
+  const furry = members.filter((m) => isFurry(m.identity));
+  return furry.length && furry.length === members.length ? `${fmt(ID_WEIGHT_FURRY + boost)}::${[furryGenderTag(furry[0].gender) || "furry", "anthro", speciesName(furry[0].identity)].join(", ")}::` : "";
 }
 var identityNegative = (identity) => isFurry(identity) ? "human, kemonomimi mode, human face, human skin" : "";
 function countTags(genders) {
@@ -64415,8 +64419,7 @@ function dedupeTags(s) {
 function buildPanelRequest(panel, cast, style) {
   const chars = panel.nai.characters.filter((c) => cast.has(c.name));
   const [baseTags, baseSentence] = splitPrompt(panel.nai.base);
-  const furry = chars.map((c) => cast.get(c.name)).filter((m) => isFurry(m.identity));
-  const species = furry.length && furry.length === chars.length ? `${fmt(ID_WEIGHT_FURRY)}::${[furryGenderTag(furry[0].gender) || "furry", "anthro", speciesName(furry[0].identity)].join(", ")}::` : "";
+  const species = furryBaseTag(chars.map((c) => cast.get(c.name)));
   const head = [countTags(chars.map((c) => cast.get(c.name).gender)), species, style.style];
   const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
 ${baseSentence}` : "");
@@ -66011,6 +66014,8 @@ function relayout(doc, width = STRIP_WIDTH) {
     images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
     if (take?.cutout)
       images[String(p.id)].cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
+    if (take?.check && Object.keys(take.check.faces).length)
+      images[String(p.id)].faces = take.check.faces;
   }
   return layoutStrip(storyboard, images, { width });
 }
@@ -66029,6 +66034,126 @@ function stripView(doc, width = STRIP_WIDTH) {
 }
 function takeOf(imageId, seed, width, height, createdAt) {
   return { imageId, url: imageResultUrl(imageId), seed, width, height, createdAt };
+}
+
+// src/backend/webtoon/vision.ts
+var VISION_CAPABILITY = "decision-images-v1";
+var VISION_MODEL = "jev-1.14.0";
+var FACE_MIN_CONFIDENCE = 0.3;
+var PRESENT_MIN = 0.2;
+var ID_THRESHOLD = { species: 0.5 };
+var ID_THRESHOLD_DEFAULT = 0.3;
+var ID_BOOST = 0.25;
+var NO_FACE = new Set(["hands only", "lower body"]);
+var ASSET = "panel";
+async function visionConnection(services, config) {
+  if (!((services.host.host?.capabilities?.[VISION_CAPABILITY] ?? 0) >= 1))
+    return null;
+  const list = await services.decisions.listConnections();
+  const chosen = config.jevConnection.connectionId;
+  const candidates = [chosen ? list.find((c) => c.id === chosen) : undefined, list.find((c) => c.isDefault)];
+  return candidates.find((c) => c?.provider === "typesafe" && c.hasApiKey)?.id ?? null;
+}
+var tags2 = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+var WHERE = { "0.1": "at the far left", "0.3": "on the left", "0.5": "in the middle", "0.7": "on the right", "0.9": "at the far right" };
+function describe(member) {
+  const noun = member.identity && isFurry(member.identity) ? "character" : member.gender === "female" ? "girl" : member.gender === "male" ? "man" : "character";
+  const appearance = tags2(member.identity).filter((t) => t !== "female" && t !== "male" && !/\\\(|petite|short$|breasts|slender|stocky|build|waist|shoulders|skin$/u.test(t)).slice(0, 8).join(", ");
+  return { noun, named: `${noun} (${member.name})${appearance ? ` with ${appearance}` : ""}` };
+}
+function identityQuestions(member, c, count, noun) {
+  if (!member.identity || NO_FACE.has(c.framing))
+    return [];
+  const where = count > 1 ? WHERE[String(c.x)] ?? "" : "";
+  const who = `the ${noun}${where ? ` ${where}` : ""}`;
+  if (isFurry(member.identity)) {
+    return [["species", `Is ${who} in \`image\` drawn as a furry anthropomorphic animal (${speciesName(member.identity)}) with a full animal head, a muzzle and fur over the whole body, rather than a human girl or man with animal ears?`]];
+  }
+  const out = [];
+  const colours = tags2(member.identity).filter((t) => HAIR_COLOR.test(t));
+  if (colours.length === 1)
+    out.push([`hair:${colours[0]}`, `Does ${who} in \`image\` have ${colours[0]}?`]);
+  if (tags2(member.identity).includes("glasses") && ["portrait", "upper body", "cowboy shot"].includes(c.framing))
+    out.push(["glasses", `Is ${who} in \`image\` wearing glasses?`]);
+  return out;
+}
+function panelQuestions(panel, cast) {
+  const members = new Map(cast.map((m) => [m.name, m]));
+  const chars = panel.nai.characters.filter((c) => members.has(c.name));
+  const out = { questions: {}, faces: [], identity: [] };
+  chars.forEach((c, i) => {
+    const member = members.get(c.name);
+    const { noun, named } = describe(member);
+    if (!NO_FACE.has(c.framing)) {
+      out.questions[`present${i}`] = { type: "noul", instructions: `Is there a ${named} in \`image\`?` };
+      out.questions[`face${i}`] = { type: "box", instructions: `the face of the ${named} in \`image\`` };
+      out.faces.push({ name: c.name, face: `face${i}`, present: `present${i}` });
+    }
+    identityQuestions(member, c, chars.length, noun).forEach(([check, text], j) => {
+      out.questions[`id${i}_${j}`] = { type: "noul", instructions: text };
+      out.identity.push({ name: c.name, check, key: `id${i}_${j}` });
+    });
+  });
+  return out;
+}
+var threshold = (check) => ID_THRESHOLD[check] ?? ID_THRESHOLD_DEFAULT;
+function readPanelCheck(q, model, answers) {
+  const noul = (key) => {
+    const a = answers[key];
+    return a?.type === "noul" && Number.isFinite(a.noul) ? a.noul : null;
+  };
+  const faces = {};
+  for (const f of q.faces) {
+    const a = answers[f.face];
+    if (a?.type !== "box" || a.confidence < FACE_MIN_CONFIDENCE || (noul(f.present) ?? 0) < PRESENT_MIN)
+      continue;
+    const { left, top, right, bottom } = a.box;
+    faces[f.name] = { left, top, right, bottom };
+  }
+  const identity = q.identity.flatMap((d) => {
+    const v = noul(d.key);
+    return v === null ? [] : [{ name: d.name, check: d.check, noul: v }];
+  });
+  const margins = identity.map((d) => d.noul - threshold(d.check));
+  return {
+    model,
+    faces,
+    identity,
+    score: margins.length ? Math.min(...margins) : 1,
+    failed: identity.filter((d) => d.noul < threshold(d.check)).map((d) => `${d.name}: ${d.check} (${d.noul.toFixed(2)})`)
+  };
+}
+async function checkPanel(services, input) {
+  const q = panelQuestions(input.panel, input.cast);
+  if (!Object.keys(q.questions).length)
+    return null;
+  try {
+    const res = await services.decisions.evaluateImages({ connection_id: input.connectionId, model: VISION_MODEL, state: { image: ASSET }, questions: q.questions, assets: { [ASSET]: { image_id: input.imageId } } }, { signal: input.signal });
+    return readPanelCheck(q, res.model, res.answers);
+  } catch (error) {
+    if (!input.signal.aborted && !isAbortLike(error))
+      services.log.append("warn", "webtoon", `Panel ${input.panel.id}: vision check failed, balloons placed by coordinates`, { error: toRpcError(error).message });
+    return null;
+  }
+}
+function boostedRequest(request, cast) {
+  const members = new Map(cast.map((m) => [m.name, { gender: m.gender ?? "", identity: m.identity ?? "" }]));
+  const swap = (prompt, name) => {
+    const m = members.get(name);
+    if (!m?.identity)
+      return prompt;
+    const from = identityPrompt(m);
+    return prompt.startsWith(from) ? identityPrompt(m, ID_BOOST) + prompt.slice(from.length) : prompt;
+  };
+  const visible = request.characters.flatMap((c) => members.get(c.name) ?? []);
+  const species = visible.length === request.characters.length ? furryBaseTag(visible) : "";
+  const base = (prompt) => species ? prompt.replace(species, furryBaseTag(visible, ID_BOOST)) : prompt;
+  return {
+    ...request,
+    prompt: base(request.prompt),
+    characters: request.characters.map((c) => ({ ...c, prompt: swap(c.prompt, c.name) })),
+    ...request.cutout ? { cutout: { prompt: base(request.cutout.prompt), characters: request.cutout.characters.map((p, i) => swap(p, request.characters[i]?.name ?? "")) } } : {}
+  };
 }
 
 // src/backend/webtoon/run.ts
@@ -66163,6 +66288,67 @@ async function plan(deps, prompt, images, signal) {
   const last = calls.at(-1);
   throw Object.assign(new RpcFailure(rpcError("provider-error", last?.error ? `The webtoon planner failed: ${last.error}` : `The webtoon planner returned no usable storyboard (${images.min} to ${images.max} image panels).`, { retryable: true })), { calls, model });
 }
+async function visionRun(deps, config, run) {
+  try {
+    const connectionId = await visionConnection(deps.services, config);
+    return connectionId ? { deps, connectionId, ...run } : null;
+  } catch (error) {
+    deps.services.log.append("warn", "webtoon", "Vision check unavailable, balloons placed by coordinates", { error: toRpcError(error).message });
+    return null;
+  }
+}
+async function checkTake(v, panel, take, redrawOf) {
+  const { services } = v.deps;
+  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal });
+  if (!check)
+    return null;
+  const id = String(panel.id);
+  const chosen = !!redrawOf && check.score > redrawOf.score;
+  try {
+    await updateStrip(services.storage, v.chatId, v.historyId, (current) => {
+      if (!current)
+        throw new Error("The strip no longer exists.");
+      const p = current.panels[id];
+      const index = p ? p.takes.findIndex((t) => t.imageId === take.imageId) : -1;
+      if (!p || index < 0)
+        return current;
+      p.takes[index].check = redrawOf ? { ...check, redraw: true } : check;
+      if (chosen && p.takes[p.selected]?.imageId === redrawOf.imageId)
+        p.selected = index;
+      return current;
+    }, v.deps.now);
+    v.onChanged();
+  } catch (error) {
+    services.log.append("warn", "webtoon", `Panel ${id}: the vision check could not be saved`, { error: toRpcError(error).message });
+  }
+  services.log.append("info", "webtoon", `Panel ${id}${redrawOf ? " (identity redraw)" : ""}: ${Object.keys(check.faces).length} face box(es), identity score ${check.score.toFixed(2)}${check.failed.length ? `, failed: ${check.failed.join("; ")}` : ""}${redrawOf ? chosen ? ", shown" : ", first take kept" : ""}`);
+  return check;
+}
+async function redrawIdentity(v, input, panel, assertTarget) {
+  let take;
+  try {
+    take = await drawPanel(v.deps, { ...input, request: boostedRequest(input.request, v.cast), seed: "" });
+  } catch (error) {
+    if (input.signal.aborted || isAbortLike(error))
+      throw error;
+    v.deps.services.log.append("warn", "webtoon", `Panel ${panel.id}: identity redraw failed`, { error: toRpcError(error).message });
+    return null;
+  }
+  await assertTarget?.();
+  try {
+    await updateStrip(v.deps.services.storage, v.chatId, v.historyId, (current) => {
+      if (!current?.panels[String(panel.id)])
+        throw new Error("The strip no longer exists.");
+      current.panels[String(panel.id)].takes.push(take);
+      return current;
+    }, v.deps.now);
+  } catch (error) {
+    v.deps.services.log.append("warn", "webtoon", `Panel ${panel.id}: the identity redraw could not be saved`, { error: toRpcError(error).message });
+    return null;
+  }
+  v.onChanged();
+  return take;
+}
 async function runWebtoonStrip(deps, req) {
   const { services } = deps;
   const now = deps.now ?? Date.now;
@@ -66218,7 +66404,7 @@ async function runWebtoonStrip(deps, req) {
         d.storyboardRaw = planned.raw;
         d.storyboard = validated.storyboard;
         d.validation = { log: validated.log, stats: validated.stats };
-        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId }));
+        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: r.identity }));
         d.style = context.style;
         d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), buildPanelRequest(p, cast, context.style)]));
         d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
@@ -66228,6 +66414,26 @@ async function runWebtoonStrip(deps, req) {
     const requests = doc.requests;
     const images = (doc.storyboard?.panels ?? []).filter((p) => p.kind === "image" && !!requests[String(p.id)]);
     const todo = images.filter((p) => doc.panels[String(p.id)]?.status !== "done");
+    const vision = await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged });
+    const background = new Set;
+    const redraws = [];
+    const inBackground = (work) => {
+      background.add(work);
+      work.finally(() => background.delete(work));
+    };
+    const drainRedraws = async () => {
+      for (let job = redraws.shift();job; job = redraws.shift())
+        await job();
+    };
+    const afterTake = (v, panel, input, take) => inBackground(checkTake(v, panel, take).then((check) => {
+      if (!check?.failed.length)
+        return;
+      redraws.push(async () => {
+        const redraw = await redrawIdentity(v, input, panel, req.assertTarget);
+        if (redraw)
+          inBackground(checkTake(v, panel, redraw, { imageId: take.imageId, score: check.score }));
+      });
+    }));
     let failed = 0;
     for (const [index, panel] of todo.entries()) {
       if (req.signal.aborted)
@@ -66235,7 +66441,8 @@ async function runWebtoonStrip(deps, req) {
       const id = String(panel.id);
       req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length });
       try {
-        const take = await drawPanel(deps, { request: requests[id], style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal });
+        const input = { request: requests[id], style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal };
+        const take = await drawPanel(deps, input);
         await req.assertTarget();
         doc = await write((d) => {
           const p = d.panels[id];
@@ -66244,6 +66451,8 @@ async function runWebtoonStrip(deps, req) {
           p.status = "done";
           delete p.error;
         });
+        if (vision)
+          afterTake(vision, panel, input, take);
       } catch (error) {
         if (req.signal.aborted || isAbortLike(error))
           throw error;
@@ -66254,6 +66463,11 @@ async function runWebtoonStrip(deps, req) {
         });
         services.log.append("warn", "webtoon", `Panel ${id} failed`, { chatId: req.chatId, historyId: req.historyId, error: message });
       }
+      await drainRedraws();
+    }
+    while (background.size || redraws.length) {
+      await Promise.all([...background]);
+      await drainRedraws();
     }
     req.onProgress({ stage: "committing", done: images.length - failed, total: images.length });
     const error = failed ? rpcError("provider-error", `${failed} webtoon panel(s) failed to generate.`, { retryable: true }) : undefined;
@@ -66283,10 +66497,11 @@ async function rerollWebtoonPanel(deps, req) {
   const request = doc?.requests[req.panelId];
   if (!doc || !request || !doc.style)
     throw new RpcFailure(rpcError("not-found", "This webtoon panel has no image request.", { retryable: false }));
-  const take = await drawPanel(deps, { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal });
+  const input = { request, style: doc.style, seed: "", chatId: req.chatId, characterId: doc.characterId, config: req.config, signal: req.signal };
+  const take = await drawPanel(deps, input);
   if (req.signal.aborted)
     throw aborted();
-  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
+  let written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
     const d = current ?? doc;
     const p = d.panels[req.panelId] ?? { panelId: req.panelId, status: "pending", takes: [], selected: -1 };
     p.takes.push(take);
@@ -66297,6 +66512,17 @@ async function rerollWebtoonPanel(deps, req) {
     return d;
   }, deps.now);
   req.onChanged();
+  const panel = doc.storyboard?.panels.find((p) => p.kind === "image" && String(p.id) === req.panelId);
+  const vision = panel ? await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged }) : null;
+  if (vision && panel) {
+    const check = await checkTake(vision, panel, take);
+    if (check?.failed.length) {
+      const redraw = await redrawIdentity(vision, input, panel);
+      if (redraw)
+        await checkTake(vision, panel, redraw, { imageId: take.imageId, score: check.score });
+    }
+    written = await readStrip(deps.services.storage, req.chatId, req.historyId) ?? written;
+  }
   return stripView(written);
 }
 async function selectWebtoonTake(deps, req) {
@@ -71346,6 +71572,10 @@ function createDecisionService(host, log, defaultUserId) {
           error: rpcError("provider-error", err instanceof Error ? err.message : String(err))
         };
       }
+    },
+    async evaluateImages(input, options = {}) {
+      const res = await host.decisions.evaluate({ ...input, ...defaultUserId ? { userId: defaultUserId } : {} }, { signal: options.signal });
+      return { model: res.model, answers: res.answers };
     },
     createJevAdapter(getConfig, adapterOptions = {}) {
       return {

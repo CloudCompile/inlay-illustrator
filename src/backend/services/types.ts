@@ -8,7 +8,7 @@ import type { DecisionService } from "./decisions.js";
  * Error convention: services throw `RpcFailure` (src/backend/rpc/errors.ts) for typed failures; aborts surface as an
  * `AbortError` DOMException. The router maps everything else to `internal`.
  */
-import type { SpindleAPI } from "lumiverse-spindle-types";
+import type { DecisionAnswer, DecisionDescription, DecisionEvaluationInput, DecisionQuestion, SpindleAPI } from "lumiverse-spindle-types";
 import type {
   AnalyzerSettings,
   AssetKind,
@@ -54,7 +54,24 @@ export interface CharacterGalleryItem {
 export type SpindleHost = SpindleAPI & {
   characters: SpindleAPI["characters"] & { getGallery?(characterId: string, userId?: string): Promise<CharacterGalleryItem[]> };
   connections: SpindleAPI["connections"] & { getModels?(connectionId: string, userId?: string): Promise<Array<{ id: string; label: string }>> };
+  decisions: SpindleAPI["decisions"] & { evaluate(input: DecisionImagesInput, options?: { signal?: AbortSignal }): Promise<DecisionImagesResult> };
 };
+
+/*
+ * Images and Box questions in `decisions.evaluate` (Lumiverse PR #467, open; host capability `decision-images-v1`; types in
+ * spindle-types PR #64, not published). Declared here until the SDK ships them; `assets` is optional, so older hosts type-check the same.
+ * `image_id` sends a stored Lumiverse image (needs the `images` permission); only TypeSafe connections accept images.
+ */
+export type DecisionImageAsset = { type?: "image"; format: "png" | "jpg" | "jpeg"; data_base64: string } | { type?: "image"; image_id: string };
+/** Box edges as fractions of the image width (left, right) and height (top, bottom). */
+export interface DecisionBox { top: number; bottom: number; left: number; right: number }
+export type DecisionImageQuestion = DecisionQuestion | { type: "box"; instructions: DecisionDescription };
+export type DecisionImageAnswer = DecisionAnswer | { type: "box"; box: DecisionBox; confidence: number };
+export interface DecisionImagesInput extends Omit<DecisionEvaluationInput, "questions"> {
+  questions: Record<string, DecisionImageQuestion>;
+  assets?: Record<string, DecisionImageAsset>;
+}
+export interface DecisionImagesResult { model: string; answers: Record<string, DecisionImageAnswer> }
 
 /* ------------------------------------------------------------------------------------------------
  * Storage (userStorage, contract layout: src/shared/contract/storage.ts)
