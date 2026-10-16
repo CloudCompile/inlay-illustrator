@@ -25,6 +25,7 @@ import type { ChatMessageView } from "../pipeline/host-chat.js";
 import { cleanMessageContent } from "../pipeline/markup.js";
 import { speakingCharacterId } from "../pipeline/generate.js";
 import type { PlannerRosterEntry } from "./planner-prompt.js";
+import type { PlannerCharacter } from "./storyboard-schema.js";
 import { dedupeTags, WEBTOON_NEGATIVE, type OutfitPart, type WebtoonCastMember, type WebtoonStyle } from "./panel-request.js";
 
 type Rec = Record<string, unknown>;
@@ -35,7 +36,6 @@ const PARTS: readonly OutfitPart[] = ["head", "top", "bottom", "legs", "feet"];
 export interface RosterCharacter extends PlannerRosterEntry {
   key: string;
   identity: string;
-  outfitParts: Record<string, Partial<Record<OutfitPart, string>>>;
 }
 
 export interface WebtoonContext {
@@ -57,7 +57,6 @@ export function rosterEntry(candidate: IdentityCandidate, currentOutfitId: strin
   if (!form) return null;
   const gender = str(form.gender) || str(candidate.gender);
   const outfits = (form.outfits ?? []).map((o): Rec & { id: string; label: string } => ({ ...rec(o), id: str(rec(o).outfitId ?? rec(o).id), label: str(o.label) })).filter((o) => o.id && PARTS.some((p) => str(o[p])));
-  const outfitParts = Object.fromEntries(outfits.map((o) => [o.id, Object.fromEntries(PARTS.map((p) => [p, str(o[p])]))]));
   const ids = outfits.map((o) => o.id);
   const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str(form.defaultOutfitId)) ? str(form.defaultOutfitId) : (ids[0] ?? "");
   const main = compileMainPrompt(form.basePromptGroups, gender);
@@ -65,12 +64,19 @@ export function rosterEntry(candidate: IdentityCandidate, currentOutfitId: strin
     key: candidate.key,
     name: candidate.characterName.trim(),
     gender,
-    label: str(form.label),
-    outfits: outfits.map((o) => ({ id: o.id, label: o.label })),
+    formLabel: str(form.label),
+    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS.flatMap((p) => (str(o[p]) ? [[p, str(o[p])]] : []))) })),
     currentOutfitId: current,
     identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", "),
-    outfitParts,
   };
+}
+
+/** Validator roster (round 2): the chosen outfit's label and items, for the `drop_outfit` check. */
+export function validationRoster(roster: readonly RosterCharacter[], outfits: Record<string, string>): PlannerCharacter[] {
+  return roster.map((r) => {
+    const o = r.outfits.find((x) => x.id === (outfits[r.name] ?? r.currentOutfitId));
+    return { name: r.name, gender: r.gender, formLabel: r.formLabel, outfitLabel: o?.label ?? "", outfit: o?.outfit ?? {} };
+  });
 }
 
 /** Cast of the chosen outfits for the validated storyboard. */
@@ -78,7 +84,7 @@ export function castFor(roster: readonly RosterCharacter[], outfits: Record<stri
   return new Map(
     roster.map((r) => {
       const outfitId = outfits[r.name] ?? r.currentOutfitId;
-      return [r.name, { name: r.name, gender: r.gender, identity: r.identity, outfitId, outfit: r.outfitParts[outfitId] ?? {} }];
+      return [r.name, { name: r.name, gender: r.gender, identity: r.identity, outfitId, outfit: r.outfits.find((o) => o.id === outfitId)?.outfit ?? {} }];
     }),
   );
 }

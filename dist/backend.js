@@ -63861,101 +63861,136 @@ async function updateSidecar(storage, chatId, mutate, tree) {
 }
 
 // src/backend/webtoon/planner-prompt.ts
-var TEMPLATE = String.raw`You are the storyboard artist for a vertical-scroll Korean-style webtoon (one long strip, 690 px wide, read top to bottom). You adapt ONE chat reply (below) into a short webtoon episode. A code layout engine will letter your text on top of the images using YOUR character positions and balloon anchors, so positions matter.
+var PLANNER_PROMPT_TEMPLATE = String.raw`You are the storyboard artist for a vertical-scroll Korean-style webtoon (one long strip, 690 px wide, read top to bottom). You adapt ONE chat reply (below) into a short webtoon episode. A code layout engine letters your text on top of the images using YOUR character positions and balloon anchors, so positions matter.
 
 How the target webtoons are built:
 - Every panel is ONE single illustration with ONE camera. Never ask the image model for a comic page, panels, borders, text or speech bubbles.
+- Panels are BIG: most panels are full width and tall (portrait), the reader scrolls through one strong image at a time. Short wide bands are only for establishing shots and object inserts. White gaps between panels are short; only a deliberate pause gets a long white gap.
 - Vary the camera hard: extreme close-ups of eyes or lips, insert shots of hands/objects/feet, low angle, high angle, back view, over-the-shoulder, a wide establishing shot. Never more than two medium shots in a row.
-- Panel shapes vary: full-width panels, short wide bands, tight crops, small insets pushed left or right, panels that fade into white. White space between panels sets the pacing.
-- Balloons sit ON the art, in the empty part of the panel next to the speaker's head (sky, wall, ceiling), or straddle the panel's top/bottom edge, with a tail pointing at the speaker. They never cover faces. Narration boxes sit on panel corners/edges. Sound effects are big lettering drawn over the art next to the action.
+- Balloons sit ON the art, in the empty part of the panel next to the speaker's head (sky, wall, ceiling), or straddle the panel's top/bottom edge, with a tail pointing at the speaker. They never cover faces. Narration boxes sit on the panel's corners. Sound effects are big bold lettering over the art, and on action beats they break out of the panel frame.
 
 Hard rules (checked by code; violations are removed or repaired automatically):
-1. {{PANELS}} "image" panels in reading order (6 to 8 accepted), plus at most 2 "text_beat" panels (narration on white, for pacing). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
-2. At most 2 speech/thought balloons per panel, each at most 10 words (12 is the absolute maximum). Split long lines over panels. At most 1 narration box per image panel (a text_beat may have up to 3).
-3. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short or drop words and mark the gap with "...", but never add, change or invent words. Narration boxes reuse the source's own narration wording, shortened.
-4. Every panel with beat "action" has at least 1 "sfx" (an onomatopoeia like "clack", "SLAM", "gulp gulp", "tak tak", "fwip", "thud"). Pick sounds the moment actually makes.
-5. At least 3 image panels use a non-full_width layout (wide_band, inset_left, inset_right, fade_white, tight_crop), including at least one inset.
+1. {{PANELS}} "image" panels in reading order (6 to 8 accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
+2. At most 2 speech/thought balloons per panel, each at most 10 words (12 is the absolute maximum). Split long lines over panels.
+3. Narration goes ON the image panels: up to 2 narration boxes per image panel (one at a top corner = before the panel's dialogue, one at a bottom corner = after it). Use at most 1 "text_beat" panel (narration on white), only for a deliberate pause (a time skip or a punchline beat), and set "pause": true on it.
+4. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag ("No," she said. "I was..." -> "No, I was..."). Never add, change or invent words. Narration boxes reuse the source's own narration wording, shortened.
+5. Sound effects: use MANY, bold and short. Every "action" panel gets 1-2 sfx (an onomatopoeia like "SLAM", "clack", "tak tak", "fwip", "thud", "gulp"), and quieter panels get ambient or emotional sfx (footsteps, door creak, rustle, "ba-dump", "shff", "tick tock") where the moment makes a sound. Aim for at least 5 sfx in the episode. Mark physical action moments (opening, grabbing, turning, dropping, running, slamming) with beat "action": code lets the sfx and the character break out of the panel frame there.
 6. List the story's key props in "key_props" and give each one an "insert" panel (hands/feet/object close-up).
 7. Keep it non-explicit: clothed, no sexual framing.
 
-Image model: NovelAI V5, one image per panel. Sizes (W x H): 832x1216 (portrait), 1216x832 (landscape), 1024x1024 (square), 704x1472 (tall), 1472x704 (wide band).
-Layout -> size: wide_band uses 1472x704; tight_crop uses 1216x832 or 1472x704 (a face or hand crop); inset_left/inset_right use 832x1216 or 1024x1024; full_width/fade_white/title use any size.
+Image model: NovelAI V5, one image per panel. Sizes (W x H): 832x1216 (portrait), 704x1472 (tall), 1024x1024 (square), 1216x832 (landscape), 1472x704 (wide band).
+Pick sizes like a webtoon artist: portrait 832x1216 or tall 704x1472 for every shot that shows a character, including close-ups and most two-shots (stack them: one in front, one behind, or use a low/high angle). 1216x832 only for a two- or three-shot that truly needs width. 1472x704 only for an establishing shot of a place or an insert of an object/hands.
+Layouts:
+- "full_width" (default, the big panel; any portrait/tall/landscape size).
+- "inset_left" / "inset_right": a large panel (72% of the width) pushed to one side; the free column beside it takes the balloons. Use 832x1216 or 1024x1024. Good for single-character dialogue or reaction shots.
+- "wide_band": 1472x704, ONLY for beat "establishing" or "insert".
+- "tight_crop": a short crop on eyes, lips or hands (beat "reaction" or "insert"), 1216x832 or 1472x704.
+- "fade_white": full width, fades into white at the bottom (quiet ending, transition).
+- "title": the first panel only (see rule 1).
+Use at least one inset per episode.
 
 Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Use the positions to leave room for the balloons: if a balloon goes top-left, put the speaker at x 0.5-0.7 and y 0.5-0.7 so the top-left area stays empty, and describe what fills the empty area in the base tags (sky, ceiling, wall, window, empty street). Two characters must not share the same x.
 
-Balloon anchors (field "anchor" of every text item): "top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge", "gutter-above", "gutter-below". Pick the anchor next to the speaker's head on the EMPTY side, away from the other character's face. The first balloon of a panel must be higher than the second (reading order). SFX use the same anchors (place them on the art next to the action). Narration boxes use top-left, top-right, bottom-left, bottom-right, over-top-edge or over-bottom-edge.
+Text anchors (field "anchor" of every text item): "top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge". Pick the balloon anchor next to the speaker's head on the EMPTY side, away from the other character's face. The first balloon of a panel must be higher than the second (reading order). SFX use the same anchors (next to the action). Narration boxes use the corner anchors (top-left, top-right, bottom-left, bottom-right).
 
 Prompt format:
 - "base": camera/framing tags (e.g. "close-up", "eye focus", "from below", "from above", "from behind", "pov", "pov hands", "upper body", "cowboy shot", "full body", "wide shot", "dutch angle"), then location/lighting tags (e.g. "indoors, kitchen, fluorescent light, evening"), then a newline and 1-2 plain English sentences describing the shot and the empty area. Do NOT write count tags (1girl, 1boy: code adds them), artist or quality tags, "speech bubble" or "text".
 - "characters": one entry per visible character (empty list for object-only or no-human shots). "prompt" = ONLY pose, expression, gaze and action tags for this shot (e.g. "walking, from side, looking away, pout, holding bag"), then a newline and one short English sentence of what the character does. Do NOT write hair, eye, body, species or clothing tags: identity and outfit tags are added by code. "framing" = how much of the character is in frame: "portrait" | "upper body" | "cowboy shot" | "lower body" | "full body" | "hands only" (code uses it to pick outfit tags). "shoes_off": true when the character is indoors at home without shoes.
+- "drop_outfit": the outfits come from a fixed wardrobe record and can contain items that only make sense in one place (indoor slippers, house shoes, an apron, a lab coat). When an item clearly contradicts THIS panel's scene (e.g. indoor "uwabaki" school slippers on the street), list it here, copied exactly from the character's item list. Do not drop items just because they are small or hidden; leave the list empty otherwise.
 
 Characters (identity and outfit tags are injected by code; you only pick an outfit, place and pose them):
 {{ROSTER}}
 {{OFFSCREEN}}
-Outfit: for every character you draw, pick the outfit id that fits this scene (field "outfits", name -> outfit id); the one marked (current) is what they wore last.
+Outfit: for every character you draw, pick the wardrobe outfit that fits this scene (field "outfits": [{"name", "outfit_id"}]); the one marked (current) is what they wore last. "drop_outfit" items refer to the picked outfit.
 
 Output: JSON only, this shape (example values):
 {"title": "Chapter 1: Example",
  "key_props": ["canvas tote bag"],
- "outfits": {"A": "outfit_school_uniform", "B": "default"},
+ "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
  "panels": [
-  {"id": 1, "kind": "image", "beat": "dialogue", "moment": "They argue on the bridge.", "shot": "wide two-shot from the side",
-   "size": "1216x832", "layout": "full_width", "scene_change": false, "balloon_space": "top-left",
-   "nai": {"base": "wide shot, from side, outdoors, bridge, sky, sunset\nTwo students stand on a bridge, open evening sky fills the upper left.",
-           "characters": [{"name": "A", "x": 0.5, "y": 0.7, "framing": "full body", "shoes_off": false, "prompt": "standing, arms crossed, pout, looking at another\nShe glares at him."},
-                          {"name": "B", "x": 0.9, "y": 0.7, "framing": "full body", "shoes_off": false, "prompt": "standing, hand in pocket, half-closed eyes\nHe shrugs."}]},
-   "text": [{"type": "speech", "speaker": "A", "text": "You're late.", "anchor": "top-left"},
+  {"id": 1, "kind": "image", "beat": "dialogue", "moment": "They argue on the bridge.", "shot": "low-angle two-shot, she is in front",
+   "size": "832x1216", "layout": "full_width", "scene_change": false, "balloon_space": "top-left",
+   "nai": {"base": "cowboy shot, from below, outdoors, bridge, sky, sunset\nTwo students on a bridge, open evening sky fills the upper left.",
+           "characters": [{"name": "A", "x": 0.5, "y": 0.7, "framing": "cowboy shot", "shoes_off": false, "drop_outfit": [], "prompt": "standing, arms crossed, pout, looking at another\nShe glares at him."},
+                          {"name": "B", "x": 0.9, "y": 0.5, "framing": "upper body", "shoes_off": false, "drop_outfit": ["indoor slippers"], "prompt": "hand in pocket, half-closed eyes\nHe shrugs."}]},
+   "text": [{"type": "narration", "speaker": null, "text": "The bridge was empty.", "anchor": "top-right"},
+            {"type": "speech", "speaker": "A", "text": "You're late.", "anchor": "top-left"},
             {"type": "sfx", "speaker": null, "text": "tap tap", "anchor": "bottom-left"}]},
-  {"id": 2, "kind": "text_beat", "beat": "quiet", "moment": "...", "layout": "text_on_white",
+  {"id": 2, "kind": "text_beat", "beat": "quiet", "pause": true, "layout": "text_on_white",
    "text": [{"type": "narration", "speaker": null, "text": "Nobody answered.", "anchor": "top-left"}]}
  ]}
-Field values: kind "image"|"text_beat"; beat "title"|"establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; layout "title"|"full_width"|"wide_band"|"inset_left"|"inset_right"|"fade_white"|"tight_crop"|"text_on_white"; text type "speech"|"thought"|"narration"|"sfx"; speaker = a character name (may be off-panel) or null for narration/sfx; scene_change true when the place or time jumps.
+Field values: kind "image"|"text_beat"; beat "title"|"establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; layout "title"|"full_width"|"inset_left"|"inset_right"|"wide_band"|"tight_crop"|"fade_white"|"text_on_white"; text type "speech"|"thought"|"narration"|"sfx"; speaker = a character name (may be off-panel) or null for narration/sfx; scene_change true when the place or time jumps.
 All text in the language of the chat reply.
 
 The chat reply:
 <<<
 {{SOURCE}}
->>>`;
+>>>
+`;
+var PARTS = ["head", "top", "bottom", "legs", "feet"];
 function webtoonPanelTarget(sourceLength) {
   return sourceLength <= 2500 ? 6 : sourceLength <= 5000 ? 7 : 8;
 }
-function plannerRosterLines(roster) {
+function items(outfit) {
+  return PARTS.filter((k) => outfit[k]?.trim()).map((k) => `${k}: ${outfit[k]}`).join("; ");
+}
+function rosterLines(roster) {
   return roster.map((r) => {
     const who = r.gender === "female" ? "woman/girl" : r.gender === "male" ? "man/boy" : "character";
-    const outfits = r.outfits.map((o) => `${o.id} = "${o.label || o.id}"${o.id === r.currentOutfitId ? " (current)" : ""}`).join("; ");
-    return `- ${r.name} (${who}): ${r.label || "no label"}; outfits: ${outfits || "none"}.`;
+    const wardrobe = r.outfits.map((o) => `${o.id}${o.id === r.currentOutfitId ? " (current)" : ""} = "${o.label || o.id}"${items(o.outfit) ? ` (items: ${items(o.outfit)})` : ""}`).join("; ");
+    return `- ${r.name} (${who}): ${r.formLabel || "no label"}; wardrobe: ${wardrobe || "none"}.`;
   }).join(`
 `);
 }
-function buildPlannerPrompt(input) {
+function buildPlannerPrompt(args) {
   const fill = {
-    "{{PANELS}}": String(webtoonPanelTarget(input.source.length)),
-    "{{ROSTER}}": plannerRosterLines(input.roster),
-    "{{OFFSCREEN}}": input.offscreenNote ?? "",
-    "{{SOURCE}}": input.source
+    "{{PANELS}}": String(webtoonPanelTarget(args.source.length)),
+    "{{ROSTER}}": rosterLines(args.roster),
+    "{{OFFSCREEN}}": args.offscreenNote ?? "",
+    "{{SOURCE}}": args.source
   };
-  return TEMPLATE.replace(/\{\{(?:PANELS|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
+  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
+}
+function chosenOutfits(raw, roster, log) {
+  const picks = new Map;
+  const list = raw && typeof raw === "object" && Array.isArray(raw.outfits) ? raw.outfits : [];
+  for (const entry of list) {
+    const e = entry && typeof entry === "object" ? entry : {};
+    if (typeof e.name === "string" && typeof e.outfit_id === "string")
+      picks.set(e.name.trim(), e.outfit_id.trim());
+  }
+  const out = {};
+  for (const r of roster) {
+    const pick = picks.get(r.name);
+    const ok = !!pick && r.outfits.some((o) => o.id === pick);
+    if (pick && !ok)
+      log.push(`${r.name}: unknown outfit "${pick}" -> ${r.currentOutfitId}`);
+    if (ok || r.currentOutfitId)
+      out[r.name] = ok ? pick : r.currentOutfitId;
+  }
+  return out;
 }
 
 // src/backend/webtoon/panel-request.ts
-var PARTS = ["head", "top", "bottom", "legs", "feet"];
+var PARTS2 = ["head", "top", "bottom", "legs", "feet"];
 var OUTER_TOP = /jacket|blazer|coat|hoodie|cardigan|gakuran|sweater|uniform|apron|undershirt/iu;
 var HANDS_ONLY = { head: 0, top: 0.5, bottom: 0, legs: 0, feet: 0 };
 var WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panels, border";
 var tags = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 var fmt = (n) => String(Math.round(n * 100) / 100);
-function outfitPrompt(outfit, framing, weights, shoesOff) {
-  const w = framing === "hands only" ? HANDS_ONLY : Object.fromEntries(PARTS.map((p) => [p, weights[p]?.[framing] ?? 1]));
+function outfitPrompt(outfit, framing, weights, shoesOff, drop = []) {
+  const w = framing === "hands only" ? HANDS_ONLY : Object.fromEntries(PARTS2.map((p) => [p, weights[p]?.[framing] ?? 1]));
+  const dropped = new Set(drop.map((d) => d.toLowerCase()));
   const out = [];
   const keyTags = [];
-  for (const part of PARTS) {
+  for (const part of PARTS2) {
     const wp = w[part] ?? 1;
     if (part === "feet" && shoesOff) {
       if (wp > 0)
         out.push("no shoes");
       continue;
     }
-    const list = tags(outfit[part]);
+    const list = tags(outfit[part]).filter((t) => !dropped.has(t.toLowerCase()));
     if (!list.length || wp <= 0)
       continue;
     for (const t of list) {
@@ -63969,6 +64004,34 @@ function outfitPrompt(outfit, framing, weights, shoesOff) {
   }
   return { prompt: out.join(", "), keyTags };
 }
+var SPECIES = /^(furry|anthro|furry (fe)?male|kemono|snout|muzzle|fangs|.*\bfur\b.*|.*\bspots\b|.*\b(tail|scales|feathers|beak|paws|whiskers)\b|animal ears|floppy ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears|dalmatian|(dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)|.*\bchest (fur|tuft)\b.*)$/iu;
+var HAIR_COLOR = /^(pink|black|brown|blonde|blond|white|gray|grey|red|blue|green|purple|silver|orange|light brown|dark brown) hair$/iu;
+var HAIR = /hair|braid|ponytail|pigtails|twintails|bangs|bob cut|bun$/iu;
+var KEMONOMIMI_EARS = /^(animal ears|(dog|cat|fox|wolf|rabbit|bunny|horse|cow|mouse|bear|tiger|lion) ears)$/iu;
+var SPECIES_NAME = /^(dalmatian|dog|cat|fox|wolf|rabbit|horse|cow|mouse|bear|tiger|lion|deer|goat|dragon|lizard|bird)$/iu;
+var ID_WEIGHT_FURRY = 1.3;
+var ID_WEIGHT_HAIR = 1.1;
+var isFurry = (identity) => tags(identity).some((t) => /^(furry|anthro)$/iu.test(t));
+var speciesName = (identity) => tags(identity).find((t) => SPECIES_NAME.test(t)) ?? "animal";
+var furryGenderTag = (gender) => gender === "female" ? "furry female" : gender === "male" ? "furry male" : "";
+function identityPrompt(member) {
+  const furry = isFurry(member.identity);
+  const ts = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
+  const gender = ts.filter((t) => t === "female" || t === "male");
+  const named = ts.filter((t) => t.includes("\\(") || !gender.includes(t) && ts.indexOf(t) === gender.length && !SPECIES.test(t) && !HAIR.test(t) && t.includes(" ") && !/eyes|skin/u.test(t));
+  let species = ts.filter((t) => furry && SPECIES.test(t) && !named.includes(t));
+  if (furry)
+    species = [...new Set([...["furry", "anthro", furryGenderTag(member.gender), speciesName(member.identity), "muzzle"].filter(Boolean), ...species])];
+  const hair = ts.filter((t) => HAIR.test(t) && !species.includes(t) && !named.includes(t));
+  const rest = ts.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
+  const out = [...gender, ...named];
+  if (species.length)
+    out.push(`${fmt(ID_WEIGHT_FURRY)}::${species.join(", ")}::`);
+  for (const t of hair)
+    out.push(HAIR_COLOR.test(t) ? `${fmt(ID_WEIGHT_HAIR)}::${t}::` : t);
+  return [...out, ...rest].join(", ");
+}
+var identityNegative = (identity) => isFurry(identity) ? "human, kemonomimi mode, human face, human skin" : "";
 function countTags(genders) {
   const f = genders.filter((g) => g === "female").length;
   const m = genders.filter((g) => g === "male").length;
@@ -63989,16 +64052,24 @@ function dedupeTags(s) {
 function buildPanelRequest(panel, cast, style) {
   const chars = panel.nai.characters.filter((c) => cast.has(c.name));
   const [baseTags, baseSentence] = splitPrompt(panel.nai.base);
-  const prompt = [countTags(chars.map((c) => cast.get(c.name).gender)), style.style, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
+  const furry = chars.map((c) => cast.get(c.name)).filter((m) => isFurry(m.identity));
+  const species = furry.length && furry.length === chars.length ? `${fmt(ID_WEIGHT_FURRY)}::${[furryGenderTag(furry[0].gender) || "furry", "anthro", speciesName(furry[0].identity)].join(", ")}::` : "";
+  const prompt = [countTags(chars.map((c) => cast.get(c.name).gender)), species, style.style, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
 ${baseSentence}` : "");
   const keyTags = {};
   const characters = chars.map((c) => {
     const member = cast.get(c.name);
     const [poseTags, sentence] = splitPrompt(c.prompt);
-    const outfit = outfitPrompt(member.outfit, c.framing, style.framingWeights, c.shoes_off);
+    const outfit = outfitPrompt(member.outfit, c.framing, style.framingWeights, c.shoes_off === true, c.drop_outfit ?? []);
     keyTags[c.name] = outfit.keyTags;
-    return { name: c.name, prompt: [member.identity, poseTags, outfit.prompt].filter(Boolean).join(", ") + (sentence ? `
-${sentence}` : ""), x: c.x, y: c.y };
+    return {
+      name: c.name,
+      prompt: [identityPrompt(member), poseTags, outfit.prompt].filter(Boolean).join(", ") + (sentence ? `
+${sentence}` : ""),
+      uc: identityNegative(member.identity),
+      x: c.x,
+      y: c.y
+    };
   });
   const [width, height] = panel.size.split("x").map(Number);
   return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags };
@@ -64020,7 +64091,7 @@ function engineImageRequest(request, style, seed) {
       useOrder: true,
       useCoords: true,
       forceCharacterCoordinates: true,
-      characterPrompts: request.characters.map((c) => ({ prompt: c.prompt, uc: "", centerX: c.x, centerY: c.y, coordinateMode: "fixed" }))
+      characterPrompts: request.characters.map((c) => ({ prompt: c.prompt, uc: c.uc, centerX: c.x, centerY: c.y, coordinateMode: "fixed" }))
     },
     references: [],
     queueMeta: { kind: "generation", source: "webtoon", sourceImageToken: `webtoon:panel:${request.panelId}` }
@@ -64030,7 +64101,7 @@ function engineImageRequest(request, style, seed) {
 // src/backend/webtoon/roster.ts
 var rec3 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str3 = (v) => v == null ? "" : String(v).trim();
-var PARTS2 = ["head", "top", "bottom", "legs", "feet"];
+var PARTS3 = ["head", "top", "bottom", "legs", "feet"];
 var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 function mentions(text, names) {
   return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text));
@@ -64041,8 +64112,7 @@ function rosterEntry(candidate, currentOutfitId) {
   if (!form)
     return null;
   const gender = str3(form.gender) || str3(candidate.gender);
-  const outfits = (form.outfits ?? []).map((o) => ({ ...rec3(o), id: str3(rec3(o).outfitId ?? rec3(o).id), label: str3(o.label) })).filter((o) => o.id && PARTS2.some((p) => str3(o[p])));
-  const outfitParts = Object.fromEntries(outfits.map((o) => [o.id, Object.fromEntries(PARTS2.map((p) => [p, str3(o[p])]))]));
+  const outfits = (form.outfits ?? []).map((o) => ({ ...rec3(o), id: str3(rec3(o).outfitId ?? rec3(o).id), label: str3(o.label) })).filter((o) => o.id && PARTS3.some((p) => str3(o[p])));
   const ids = outfits.map((o) => o.id);
   const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str3(form.defaultOutfitId)) ? str3(form.defaultOutfitId) : ids[0] ?? "";
   const main = compileMainPrompt(form.basePromptGroups, gender);
@@ -64050,17 +64120,22 @@ function rosterEntry(candidate, currentOutfitId) {
     key: candidate.key,
     name: candidate.characterName.trim(),
     gender,
-    label: str3(form.label),
-    outfits: outfits.map((o) => ({ id: o.id, label: o.label })),
+    formLabel: str3(form.label),
+    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS3.flatMap((p) => str3(o[p]) ? [[p, str3(o[p])]] : [])) })),
     currentOutfitId: current,
-    identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", "),
-    outfitParts
+    identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", ")
   };
+}
+function validationRoster(roster, outfits) {
+  return roster.map((r) => {
+    const o = r.outfits.find((x) => x.id === (outfits[r.name] ?? r.currentOutfitId));
+    return { name: r.name, gender: r.gender, formLabel: r.formLabel, outfitLabel: o?.label ?? "", outfit: o?.outfit ?? {} };
+  });
 }
 function castFor(roster, outfits) {
   return new Map(roster.map((r) => {
     const outfitId = outfits[r.name] ?? r.currentOutfitId;
-    return [r.name, { name: r.name, gender: r.gender, identity: r.identity, outfitId, outfit: r.outfitParts[outfitId] ?? {} }];
+    return [r.name, { name: r.name, gender: r.gender, identity: r.identity, outfitId, outfit: r.outfits.find((o) => o.id === outfitId)?.outfit ?? {} }];
   }));
 }
 function personaRecord2(p) {
@@ -64146,733 +64221,923 @@ async function loadWebtoonContext(services, input) {
 }
 
 // src/backend/webtoon/storyboard-schema.ts
-var WEBTOON_GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
-var WEBTOON_SIZES = ["832x1216", "1216x832", "1024x1024", "704x1472", "1472x704"];
-var WEBTOON_ANCHORS = ["top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge", "gutter-above", "gutter-below"];
-var WEBTOON_FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full body", "hands only"];
-var WEBTOON_MIN_PANELS = 6;
-var WEBTOON_MAX_PANELS = 8;
-var NON_FULL = new Set(["wide_band", "inset_left", "inset_right", "fade_white", "tight_crop"]);
-var MAX_BALLOON_WORDS = 12;
-var QUOTE_REPAIR_RATIO = 0.85;
-var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str4 = (v) => typeof v === "string" ? v : v == null ? "" : String(v);
-function normWords(s) {
-  const t = s.replace(/[\u2018\u2019]/gu, "'").replace(/[\u201c\u201d]/gu, '"').replace(/[\u2013\u2014]/gu, " ").replace(/\u2026/gu, " ... ").replace(/[*_]/gu, "").toLowerCase();
-  return (t.match(/[a-z0-9']+/gu) ?? []).map((w) => w.replace(/^'+|'+$/gu, "")).filter(Boolean);
-}
-function quoteFragments(text) {
-  return text.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/u).map((f) => f.trim()).filter((f) => normWords(f).length > 0);
-}
-function sequenceRatio(a, b) {
-  const total = a.length + b.length;
-  if (!total)
-    return 1;
-  const matches = (alo, ahi, blo, bhi) => {
-    let besti = alo;
-    let bestj = blo;
-    let bestk = 0;
-    let lengths = new Map;
-    for (let i = alo;i < ahi; i += 1) {
-      const next = new Map;
-      for (let j = blo;j < bhi; j += 1) {
-        if (a[i] !== b[j])
-          continue;
-        const k = (lengths.get(j - 1) ?? 0) + 1;
-        next.set(j, k);
-        if (k > bestk) {
-          besti = i - k + 1;
-          bestj = j - k + 1;
-          bestk = k;
-        }
+var IMAGE_SIZES = ["832x1216", "704x1472", "1024x1024", "1216x832", "1472x704"];
+var PORTRAIT_SIZES = ["832x1216", "704x1472"];
+var LAYOUTS = ["title", "full_width", "inset_left", "inset_right", "wide_band", "tight_crop", "fade_white", "text_on_white"];
+var BEATS = ["title", "establishing", "action", "dialogue", "reaction", "insert", "quiet"];
+var ANCHORS = ["top-left", "top-right", "top", "left", "right", "bottom-left", "bottom-right", "over-top-edge", "over-bottom-edge"];
+var FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full body", "hands only"];
+var TEXT_TYPES = ["speech", "thought", "narration", "sfx"];
+var GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
+var str4 = { type: "string" };
+var num = { type: "number" };
+var textItem = {
+  type: "object",
+  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str4, anchor: { type: "string", enum: [...ANCHORS] } },
+  required: ["type", "text", "anchor"]
+};
+var STORYBOARD_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    title: str4,
+    key_props: { type: "array", items: str4 },
+    panels: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          kind: { type: "string", enum: ["image", "text_beat"] },
+          beat: { type: "string", enum: [...BEATS] },
+          moment: str4,
+          shot: str4,
+          size: { type: "string", enum: [...IMAGE_SIZES] },
+          layout: { type: "string", enum: [...LAYOUTS] },
+          scene_change: { type: "boolean" },
+          pause: { type: "boolean" },
+          balloon_space: str4,
+          nai: {
+            type: "object",
+            properties: {
+              base: str4,
+              characters: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: str4,
+                    x: num,
+                    y: num,
+                    framing: { type: "string", enum: [...FRAMINGS] },
+                    shoes_off: { type: "boolean" },
+                    drop_outfit: { type: "array", items: str4 },
+                    prompt: str4
+                  },
+                  required: ["name", "x", "y", "framing", "prompt"]
+                }
+              }
+            },
+            required: ["base", "characters"]
+          },
+          text: { type: "array", items: textItem }
+        },
+        required: ["id", "kind", "beat", "layout", "text"]
       }
-      lengths = next;
     }
-    if (!bestk)
-      return 0;
-    return bestk + matches(alo, besti, blo, bestj) + matches(besti + bestk, ahi, bestj + bestk, bhi);
-  };
-  return 2 * matches(0, a.length, 0, b.length) / total;
+  },
+  required: ["title", "panels"]
+};
+
+// src/backend/webtoon/storyboard-validate.ts
+var LIMITS = { minImages: 6, maxImages: 8, maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
+function normWords(s) {
+  s = s.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
+  return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
 }
-function repairFragment(fragment, source) {
-  const target = normWords(fragment);
-  const n = target.length;
-  let best = [0, null];
-  for (const para of source.split(`
-`)) {
-    if (!para.trim())
-      continue;
-    const toks = [];
-    for (const m of para.matchAll(/[A-Za-z0-9'\u2019]+/gu)) {
-      const w = m[0].replace(/^['\u2019]+|['\u2019]+$/gu, "").toLowerCase().replace(/\u2019/gu, "'");
-      if (w)
-        toks.push({ w, start: m.index, end: m.index + m[0].length });
+function fragments(text) {
+  return text.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/).map((f) => f.trim()).filter((f) => normWords(f).length);
+}
+function speechStream(para) {
+  const segs = [];
+  for (const m of para.matchAll(/["\u201c]([^"\u201d]*)["\u201d]|\*([^*]+)\*/g))
+    segs.push((m[1] ?? m[2] ?? "").trim());
+  return segs.join(" ");
+}
+function buildQuoteIndex(source) {
+  const paras = source.split(`
+`).filter((p) => p.trim());
+  const streams = paras.map(speechStream).filter((s) => s.trim());
+  const texts = [...paras, ...streams];
+  return { texts, hay: [" " + normWords(source).join(" ") + " ", ...streams.map((s) => " " + normWords(s).join(" ") + " ")] };
+}
+function lcs(a, b) {
+  const dp = new Array(b.length + 1).fill(0);
+  for (let i = 1;i <= a.length; i++) {
+    let prev = 0;
+    for (let j = 1;j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
+      prev = tmp;
     }
-    const words = toks.map((t) => t.w);
-    for (const len of new Set([Math.max(1, n - 1), n, n + 1])) {
-      for (let i = 0;i < Math.max(1, words.length - len + 1); i += 1) {
-        if (i + len > toks.length)
-          continue;
-        const r = sequenceRatio(target, words.slice(i, i + len));
+  }
+  return dp[b.length];
+}
+function repairFragment(frag, idx) {
+  const tw = normWords(frag);
+  const n = tw.length;
+  let best = [0, null];
+  for (const text of idx.texts) {
+    const toks = [...text.matchAll(/[A-Za-z0-9'\u2019]+/g)].map((m) => ({ w: m[0].replace(/^['\u2019]+|['\u2019]+$/g, "").toLowerCase().replace(/\u2019/g, "'"), a: m.index, b: m.index + m[0].length })).filter((t) => t.w);
+    for (const L of new Set([Math.max(1, n - 1), n, n + 1])) {
+      for (let i = 0;i + L <= toks.length; i++) {
+        const win = toks.slice(i, i + L);
+        const r = 2 * lcs(tw, win.map((t) => t.w)) / (n + L);
         if (r > best[0])
-          best = [r, para.slice(toks[i].start, toks[i + len - 1].end)];
+          best = [r, text.slice(win[0].a, win[L - 1].b)];
       }
     }
   }
   return best;
 }
-function checkQuote(text, source, sourceWords = ` ${normWords(source).join(" ")} `) {
+function checkQuote(text, idx) {
   const keep = [];
   const notes = [];
-  for (const fragment of quoteFragments(text)) {
-    if (sourceWords.includes(` ${normWords(fragment).join(" ")} `)) {
-      keep.push(fragment);
+  for (const f of fragments(text)) {
+    const w = " " + normWords(f).join(" ") + " ";
+    const hit = idx.hay.findIndex((h) => h.includes(w));
+    if (hit === 0) {
+      keep.push(f);
       continue;
     }
-    const [ratio, candidate] = repairFragment(fragment, source);
-    if (ratio >= QUOTE_REPAIR_RATIO && candidate) {
-      const last = fragment.trimEnd().slice(-1);
-      const replacement = candidate + ("!?.".includes(last) && last ? last : "");
-      keep.push(replacement);
-      notes.push({ kind: "repaired", fragment, replacement, ratio });
+    if (hit > 0) {
+      keep.push(f);
+      notes.push({ kind: "joined", fragment: f, replacement: null, ratio: 1 });
+      continue;
+    }
+    const [r, cand] = repairFragment(f, idx);
+    if (r >= LIMITS.repairRatio && cand) {
+      const end = /[!?.]$/.test(f.trimEnd()) ? f.trimEnd().slice(-1) : "";
+      keep.push(cand + end);
+      notes.push({ kind: "repaired", fragment: f, replacement: cand + end, ratio: r });
     } else
-      notes.push({ kind: "dropped", fragment, replacement: null, ratio });
+      notes.push({ kind: "dropped", fragment: f, replacement: null, ratio: r });
   }
-  return { text: keep.length ? keep.join(" ") : null, notes };
+  return { text: keep.length ? keep.join(text.includes("...") || text.includes("…") ? "... " : " ").replace(/([.!?])\.\.\. /g, "$1 ") : null, notes };
 }
-function splitLong(text, maxWords = MAX_BALLOON_WORDS) {
-  const words = text.split(/\s+/u).filter(Boolean);
-  if (words.length <= maxWords)
-    return [text];
-  const parts = text.split(/(?<=[.!?])\s+/u);
+function splitLong(t) {
+  const words = t.split(/\s+/);
+  if (words.length <= LIMITS.maxWords)
+    return [t];
+  const parts = t.split(/(?<=[.!?])\s+/);
   if (parts.length < 2)
-    return [text];
-  const a = [];
-  const b = [];
+    return [t];
+  const a = [], b = [];
   let acc = 0;
   for (const p of parts) {
-    (acc + p.split(/\s+/u).length <= Math.floor((words.length + 1) / 2) || !a.length ? a : b).push(p);
-    acc += p.split(/\s+/u).length;
+    (acc + p.split(/\s+/).length <= Math.ceil(words.length / 2) || !a.length ? a : b).push(p);
+    acc += p.split(/\s+/).length;
   }
-  return b.length ? [a.join(" "), b.join(" ")] : [text];
+  return b.length ? [a.join(" "), b.join(" ")] : [t];
 }
 var snap = (v) => {
   const n = Number(v);
   const x = Number.isFinite(n) ? n : 0.5;
-  return WEBTOON_GRID.reduce((best, g) => Math.abs(g - x) < Math.abs(best - x) ? g : best, 0.5);
+  return GRID.reduce((a, g) => Math.abs(g - x) < Math.abs(a - x) ? g : a, GRID[0]);
 };
-function storyboardHardOk(raw) {
-  const panels = Array.isArray(rec4(raw).panels) ? rec4(raw).panels : null;
-  if (!panels)
+function hardOk(raw) {
+  try {
+    const imgs = raw.panels.filter((p) => p?.kind === "image");
+    return imgs.length >= LIMITS.minImages && imgs.length <= LIMITS.maxImages && imgs.every((p) => p.nai?.base);
+  } catch {
     return false;
-  const images = panels.map(rec4).filter((p) => p.kind === "image");
-  return images.length >= WEBTOON_MIN_PANELS && images.length <= WEBTOON_MAX_PANELS && images.every((p) => !!str4(rec4(p.nai).base).trim());
+  }
 }
-function normalizeCharacter(raw) {
-  return {
-    name: str4(raw.name).trim(),
-    x: snap(raw.x),
-    y: snap(raw.y),
-    framing: WEBTOON_FRAMINGS.includes(str4(raw.framing)) ? str4(raw.framing) : "upper body",
-    shoes_off: raw.shoes_off === true,
-    prompt: str4(raw.prompt).trim()
-  };
+function outfitItems(r) {
+  return Object.values(r.outfit).flatMap((v) => (v ?? "").split(",").map((t) => t.trim()).filter(Boolean));
 }
 function validateStoryboard(raw, roster, source) {
   const log = [];
   const stats = {
-    imagePanels: 0,
-    textBeats: 0,
-    balloons: 0,
-    sfx: 0,
-    maxWords: 0,
-    nonFullLayouts: 0,
-    inventedDropped: 0,
-    quoteRepaired: 0,
-    balloonsDropped: 0,
+    invented_dropped: 0,
+    quote_repaired: 0,
+    quote_joined: 0,
+    balloons_dropped: 0,
     split: 0,
-    layoutRepaired: 0,
-    sfxMissingAction: 0,
-    unknownCharacters: 0,
-    anchorFixed: 0
+    layout_repaired: 0,
+    size_repaired: 0,
+    narration_merged: 0,
+    sfx_missing_action: 0,
+    unknown_char: 0,
+    outfit_dropped: []
   };
-  const names = new Set(roster.names);
-  const sourceWords = ` ${normWords(source).join(" ")} `;
-  const r = rec4(raw);
-  const panels = [];
-  const rawPanels = Array.isArray(r.panels) ? r.panels.map(rec4) : [];
-  for (const [i, p] of rawPanels.entries()) {
-    const id = Number.isSafeInteger(Number(p.id)) ? Number(p.id) : i + 1;
-    const kind = p.kind === "image" ? "image" : "text_beat";
-    const panel = {
-      id,
-      kind,
-      beat: str4(p.beat) || (kind === "image" ? "dialogue" : "quiet"),
-      moment: str4(p.moment),
-      shot: str4(p.shot),
-      size: str4(p.size),
-      layout: str4(p.layout),
-      scene_change: p.scene_change === true,
-      balloon_space: str4(p.balloon_space),
-      nai: { base: str4(rec4(p.nai).base).trim(), characters: [] },
-      text: []
-    };
-    if (kind === "image") {
-      if (!WEBTOON_SIZES.includes(panel.size)) {
-        log.push(`p${id}: bad size "${panel.size}" -> 832x1216`);
-        panel.size = "832x1216";
-      }
-      const used = new Set;
-      for (const c of Array.isArray(rec4(p.nai).characters) ? rec4(p.nai).characters.map(rec4) : []) {
-        const ch = normalizeCharacter(c);
-        if (!names.has(ch.name)) {
-          stats.unknownCharacters += 1;
-          log.push(`p${id}: dropped unknown character "${ch.name}"`);
+  const byName = new Map(roster.map((r) => [r.name, r]));
+  const idx = buildQuoteIndex(source);
+  const sb = { title: String(raw.title ?? ""), key_props: raw.key_props ?? [], panels: [] };
+  const panels = (raw.panels ?? []).filter((p) => p && typeof p === "object");
+  for (const p of panels) {
+    const out = [];
+    for (const t0 of p.text ?? []) {
+      if (!t0 || !String(t0.text ?? "").trim())
+        continue;
+      const t = { type: t0.type, speaker: t0.speaker ?? null, text: String(t0.text).trim(), anchor: t0.anchor };
+      if (!["speech", "thought", "narration", "sfx"].includes(t.type))
+        continue;
+      const a = String(t.anchor);
+      t.anchor = a === "gutter-above" ? "over-top-edge" : a === "gutter-below" ? "over-bottom-edge" : ANCHORS.includes(a) ? a : t.type === "narration" ? "top-left" : "top";
+      if (t.type === "speech" || t.type === "thought") {
+        const q = checkQuote(t.text, idx);
+        for (const nt of q.notes) {
+          if (nt.kind === "repaired") {
+            stats.quote_repaired++;
+            log.push(`p${p.id}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`);
+          } else if (nt.kind === "joined") {
+            stats.quote_joined++;
+            log.push(`p${p.id}: quote kept, joined across narration "${nt.fragment}"`);
+          } else {
+            stats.invented_dropped++;
+            log.push(`p${p.id}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`);
+          }
+        }
+        if (!q.text)
+          continue;
+        t.text = q.text;
+        const parts = splitLong(t.text);
+        if (parts.length > 1) {
+          stats.split++;
+          log.push(`p${p.id}: split ${t.text.split(/\s+/).length}-word balloon`);
+          out.push({ ...t, text: parts[0] }, { ...t, text: parts[1] });
           continue;
         }
-        let guard = 0;
-        while (used.has(ch.x) && guard++ < WEBTOON_GRID.length) {
-          ch.x = WEBTOON_GRID[(WEBTOON_GRID.indexOf(ch.x) + 1) % WEBTOON_GRID.length];
-          log.push(`p${id}: moved ${ch.name} x (same column)`);
-        }
-        used.add(ch.x);
-        panel.nai.characters.push(ch);
       }
-    } else
-      panel.layout = "text_on_white";
-    const texts = [];
-    for (const t of Array.isArray(p.text) ? p.text.map(rec4) : []) {
-      const text = str4(t.text).trim();
-      if (!text)
-        continue;
-      const type = t.type === "speech" || t.type === "thought" || t.type === "narration" ? t.type : "sfx";
-      let anchor = str4(t.anchor);
-      if (!WEBTOON_ANCHORS.includes(anchor)) {
-        anchor = "top-left";
-        stats.anchorFixed += 1;
-      }
-      const item = { type, speaker: str4(t.speaker).trim() || null, text, anchor };
-      if (type !== "speech" && type !== "thought") {
-        texts.push(item);
-        continue;
-      }
-      const checked = checkQuote(text, source, sourceWords);
-      for (const note of checked.notes) {
-        if (note.kind === "repaired") {
-          stats.quoteRepaired += 1;
-          log.push(`p${id}: quote repaired (${note.ratio.toFixed(2)}) "${note.fragment}" -> "${note.replacement}"`);
-        } else {
-          stats.inventedDropped += 1;
-          log.push(`p${id}: dropped invented sentence (${note.ratio.toFixed(2)}) "${note.fragment}"`);
-        }
-      }
-      if (!checked.text)
-        continue;
-      const parts = splitLong(checked.text);
-      if (parts.length > 1) {
-        stats.split += 1;
-        log.push(`p${id}: split ${checked.text.split(/\s+/u).length}-word balloon`);
-      }
-      for (const part of parts)
-        texts.push({ ...item, text: part });
+      out.push(t);
     }
-    let balloons = 0;
-    let narrations = 0;
-    for (const t of texts) {
+    p.text = out;
+  }
+  let pauseKept = false;
+  const narrCount = (p) => p.text.filter((t) => t.type === "narration").length;
+  const kept = [];
+  panels.forEach((p, i) => {
+    if (p.kind !== "text_beat") {
+      kept.push(p);
+      return;
+    }
+    if (p.pause && !pauseKept) {
+      pauseKept = true;
+      p.layout = "text_on_white";
+      kept.push(p);
+      return;
+    }
+    const next = panels.slice(i + 1).find((q) => q.kind === "image");
+    const prev = [...kept].reverse().find((q) => q.kind === "image");
+    const items = p.text;
+    const room = (q) => q && narrCount(q) + items.filter((t) => t.type === "narration").length <= LIMITS.maxNarrImage;
+    if (room(next)) {
+      next.text = [...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "top-right" : "top-left" : t.anchor })), ...next.text];
+      if (p.scene_change)
+        next.scene_change = true;
+      stats.narration_merged += items.length;
+      log.push(`p${p.id}: text beat merged into the top of p${next.id}`);
+    } else if (room(prev)) {
+      prev.text = [...prev.text, ...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "bottom-left" : "bottom-right" : t.anchor }))];
+      stats.narration_merged += items.length;
+      log.push(`p${p.id}: text beat merged into the bottom of p${prev.id}`);
+    } else if (!pauseKept) {
+      pauseKept = true;
+      p.pause = true;
+      kept.push(p);
+      log.push(`p${p.id}: text beat kept as the pause (no room to merge)`);
+    } else {
+      stats.balloons_dropped += items.length;
+      log.push(`p${p.id}: text beat dropped (no room)`);
+    }
+  });
+  const imgs = kept.filter((p) => p.kind === "image");
+  imgs.forEach((p, i) => {
+    const nai = p.nai ??= { base: "", characters: [] };
+    if (!IMAGE_SIZES.includes(p.size)) {
+      p.size = "832x1216";
+      log.push(`p${p.id}: bad size -> 832x1216`);
+    }
+    const chars = [];
+    for (const c of nai.characters ?? []) {
+      const r = byName.get(c.name);
+      if (!r) {
+        stats.unknown_char++;
+        log.push(`p${p.id}: dropped unknown character ${c.name}`);
+        continue;
+      }
+      c.x = snap(c.x);
+      c.y = snap(c.y);
+      if (!FRAMINGS.includes(c.framing))
+        c.framing = "upper body";
+      const items = outfitItems(r);
+      const drops = [];
+      for (const d of c.drop_outfit ?? []) {
+        const dl = String(d).toLowerCase().trim();
+        const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
+        if (hit.length === 1) {
+          drops.push(hit[0]);
+          stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`);
+          log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`);
+        } else
+          log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
+      }
+      c.drop_outfit = drops;
+      chars.push(c);
+    }
+    const used = new Set;
+    for (const c of chars) {
+      let k = 0;
+      while (used.has(c.x) && k++ < 5) {
+        c.x = GRID[(GRID.indexOf(c.x) + 1) % 5];
+        log.push(`p${p.id}: moved ${c.name} x (same column)`);
+      }
+      used.add(c.x);
+    }
+    nai.characters = chars;
+    if (!LAYOUTS.includes(p.layout) || p.layout === "text_on_white")
+      p.layout = "full_width";
+    if (p.layout === "title" && i > 0) {
+      p.layout = "full_width";
+      log.push(`p${p.id}: title only on the first panel -> full_width`);
+    }
+    const tallFor = () => chars.length >= 2 && p.size === "1216x832" ? "1216x832" : "832x1216";
+    if (p.layout === "wide_band" && p.beat === "reaction") {
+      p.layout = "tight_crop";
+      log.push(`p${p.id}: wide_band on a reaction beat -> tight_crop`);
+    }
+    if (p.layout === "wide_band" && !["establishing", "insert", "title"].includes(p.beat)) {
+      p.layout = "full_width";
+      p.size = tallFor();
+      stats.layout_repaired++;
+      log.push(`p${p.id}: wide_band on a ${p.beat} beat -> full_width ${p.size}`);
+    }
+    if (p.layout === "wide_band")
+      p.size = "1472x704";
+    if (p.layout === "tight_crop" && !(["reaction", "insert"].includes(p.beat) || chars.every((c) => c.framing === "portrait" || c.framing === "hands only"))) {
+      p.layout = "full_width";
+      p.size = "832x1216";
+      stats.layout_repaired++;
+      log.push(`p${p.id}: tight_crop on a ${p.beat} beat -> full_width 832x1216`);
+    }
+    if (p.layout === "tight_crop" && !["1216x832", "1472x704"].includes(p.size))
+      p.size = "1216x832";
+    if (p.layout.startsWith("inset") && !["832x1216", "1024x1024"].includes(p.size)) {
+      p.size = "832x1216";
+      stats.size_repaired++;
+    }
+    if (p.layout !== "wide_band" && p.size === "1472x704" && chars.length) {
+      p.size = "1216x832";
+      stats.size_repaired++;
+      log.push(`p${p.id}: 1472x704 with characters outside a band -> 1216x832`);
+    }
+    const out = [];
+    let nb = 0, nn = 0;
+    for (const t of p.text) {
       if (t.type === "speech" || t.type === "thought") {
-        balloons += 1;
-        if (balloons > 2) {
-          stats.balloonsDropped += 1;
-          log.push(`p${id}: dropped balloon #${balloons} "${t.text}"`);
+        if (++nb > LIMITS.maxBalloons) {
+          stats.balloons_dropped++;
+          log.push(`p${p.id}: dropped balloon #${nb} "${t.text}"`);
           continue;
         }
       }
       if (t.type === "narration") {
-        narrations += 1;
-        if (narrations > (kind === "image" ? 1 : 3)) {
-          stats.balloonsDropped += 1;
-          log.push(`p${id}: dropped narration #${narrations}`);
+        if (++nn > LIMITS.maxNarrImage) {
+          stats.balloons_dropped++;
+          log.push(`p${p.id}: dropped narration #${nn}`);
           continue;
         }
       }
-      panel.text.push(t);
+      out.push(t);
     }
-    if (panel.beat === "action" && !panel.text.some((t) => t.type === "sfx")) {
-      stats.sfxMissingAction += 1;
-      log.push(`p${id}: action beat without sfx`);
+    p.text = [
+      ...out.filter((t) => t.type === "narration" && !t.anchor.startsWith("bottom") && t.anchor !== "over-bottom-edge"),
+      ...out.filter((t) => !(t.type === "narration" && !t.anchor.startsWith("bottom") && t.anchor !== "over-bottom-edge"))
+    ];
+    if (p.beat === "action" && !p.text.some((t) => t.type === "sfx")) {
+      stats.sfx_missing_action++;
+      log.push(`p${p.id}: action beat without sfx`);
     }
-    panels.push(panel);
-  }
-  const images = panels.filter((p) => p.kind === "image");
-  const nonFull = () => images.filter((p) => NON_FULL.has(p.layout)).length;
-  const hasInset = () => images.some((p) => p.layout.startsWith("inset"));
-  for (const p of images) {
-    if (!NON_FULL.has(p.layout) && p.layout !== "full_width" && p.layout !== "title")
-      p.layout = "full_width";
-    if (p.layout === "wide_band" && p.size !== "1472x704")
-      p.size = "1472x704";
-  }
-  for (const p of images) {
-    if (nonFull() >= 3)
-      break;
-    if (p.layout === "full_width" && p.size === "1472x704") {
-      p.layout = "wide_band";
-      stats.layoutRepaired += 1;
-      log.push(`p${p.id}: full_width 1472x704 -> wide_band`);
-    }
-  }
-  let side = "inset_right";
-  for (const p of images) {
-    if (nonFull() >= 3 && hasInset())
-      break;
-    if (p.layout === "full_width" && (p.size === "832x1216" || p.size === "1024x1024") && p.nai.characters.length <= 1) {
-      p.layout = side;
-      side = side === "inset_right" ? "inset_left" : "inset_right";
-      stats.layoutRepaired += 1;
-      log.push(`p${p.id}: full_width -> ${p.layout} (quota)`);
-    }
-  }
-  const outfits = {};
-  const rawOutfits = rec4(r.outfits);
-  for (const name of roster.names) {
-    const allowed = roster.outfits[name] ?? [];
-    const pick = str4(rawOutfits[name]);
-    if (!allowed.length)
-      continue;
-    outfits[name] = allowed.includes(pick) ? pick : allowed[0];
-    if (pick && !allowed.includes(pick))
-      log.push(`${name}: unknown outfit "${pick}" -> ${allowed[0]}`);
-  }
-  const all = panels.flatMap((p) => p.text);
-  Object.assign(stats, {
-    imagePanels: images.length,
-    textBeats: panels.length - images.length,
-    balloons: all.filter((t) => t.type === "speech" || t.type === "thought").length,
-    sfx: all.filter((t) => t.type === "sfx").length,
-    maxWords: Math.max(0, ...all.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.text.split(/\s+/u).length)),
-    nonFullLayouts: nonFull()
   });
-  return {
-    storyboard: { title: str4(r.title).trim(), key_props: Array.isArray(r.key_props) ? r.key_props.map(str4).filter(Boolean) : [], outfits, panels },
-    log,
-    stats
-  };
+  for (const p of kept)
+    if (p.kind === "text_beat")
+      p.text = p.text.slice(0, LIMITS.maxNarrBeat);
+  const charPanels = () => imgs.filter((p) => p.nai.characters.length && !["wide_band", "tight_crop"].includes(p.layout));
+  const share = () => charPanels().filter((p) => PORTRAIT_SIZES.includes(p.size)).length / Math.max(1, charPanels().length);
+  for (const p of charPanels()) {
+    if (share() >= LIMITS.portraitShare)
+      break;
+    if (!PORTRAIT_SIZES.includes(p.size) && p.nai.characters.length === 1) {
+      log.push(`p${p.id}: ${p.size} -> 832x1216 (portrait bias)`);
+      p.size = "832x1216";
+      stats.size_repaired++;
+    }
+  }
+  if (!imgs.some((p) => p.layout.startsWith("inset"))) {
+    const cand = imgs.find((p, i) => i > 0 && p.layout === "full_width" && p.nai.characters.length === 1 && ["dialogue", "reaction", "quiet"].includes(p.beat) && ["832x1216", "1024x1024"].includes(p.size));
+    if (cand) {
+      const first = cand.text.find((t) => t.type === "speech" || t.type === "thought");
+      cand.layout = first && first.anchor.includes("left") ? "inset_right" : "inset_left";
+      stats.layout_repaired++;
+      log.push(`p${cand.id}: full_width -> ${cand.layout} (inset quota)`);
+    }
+  }
+  const props = sb.key_props ?? [];
+  const inserts = imgs.filter((p) => p.beat === "insert").map((p) => `${p.moment ?? ""} ${p.shot ?? ""} ${p.nai.base}`.toLowerCase()).join(" ");
+  Object.assign(stats, {
+    props_without_insert: props.filter((pr) => !normWords(pr).some((w) => w.length > 3 && inserts.includes(w))).length,
+    image_panels: imgs.length,
+    text_beats: kept.length - imgs.length,
+    layouts: imgs.map((p) => p.layout),
+    sizes: imgs.map((p) => p.size),
+    portrait_share: Number(share().toFixed(2)),
+    balloons: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "speech" || t.type === "thought").length, 0),
+    narration: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "narration").length, 0),
+    sfx: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "sfx").length, 0),
+    max_words: Math.max(0, ...kept.flatMap((p) => p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.text.split(/\s+/).length)))
+  });
+  sb.panels = kept;
+  return { storyboard: sb, log, stats };
 }
-// src/backend/webtoon/font-metrics.json
-var font_metrics_default = {
-  speech: { font: "ComicNeue-Bold", unitsPerEm: 1000, default: 494, ascii: [356, 261, 325, 711, 602, 681, 625, 206, 357, 357, 379, 440, 191, 409, 181, 438, 572, 393, 498, 493, 469, 531, 523, 450, 512, 523, 207, 223, 543, 465, 543, 499, 849, 552, 611, 601, 623, 593, 581, 706, 714, 405, 471, 563, 513, 806, 652, 638, 553, 695, 583, 546, 524, 669, 538, 847, 707, 582, 575, 335, 571, 335, 526, 516, 205, 508, 525, 470, 522, 491, 321, 548, 528, 243, 261, 487, 236, 796, 543, 517, 521, 511, 403, 425, 328, 518, 425, 620, 490, 458, 429, 382, 219, 382, 606], extra: { "’": 204, "‘": 204, "“": 371, "”": 369, "—": 806, "–": 622, "…": 666, " ": 356, é: 491, è: 491, ê: 491, ë: 491, à: 508, á: 508, â: 508, ä: 508, ç: 470, ñ: 543, ö: 517, ó: 517, ô: 517, ü: 518, ú: 518, í: 245, ï: 245, É: 593, "•": 335, "·": 198, "«": 580, "»": 579, "¡": 261, "¿": 499, "°": 269, "×": 387 } },
-  narration: { font: "PatrickHand-Regular", unitsPerEm: 1000, default: 431, ascii: [230, 247, 303, 457, 507, 643, 530, 164, 334, 364, 404, 480, 202, 404, 214, 423, 448, 363, 468, 448, 375, 423, 399, 495, 433, 367, 232, 232, 396, 572, 400, 368, 550, 488, 507, 548, 475, 442, 375, 480, 468, 235, 370, 523, 372, 595, 532, 556, 481, 655, 454, 459, 468, 550, 562, 616, 601, 442, 507, 303, 420, 296, 370, 571, 220, 392, 412, 388, 390, 398, 359, 445, 420, 224, 235, 415, 266, 680, 452, 403, 428, 463, 385, 385, 344, 400, 400, 463, 448, 423, 428, 339, 176, 328, 529], extra: { "’": 220, "‘": 190, "“": 315, "”": 303, "—": 648, "–": 420, "…": 571, " ": 230, é: 398, è: 398, ê: 398, ë: 398, à: 392, á: 392, â: 392, ä: 392, ç: 388, ñ: 452, ö: 403, ó: 403, ô: 403, ü: 400, ú: 400, í: 224, ï: 224, É: 442, "•": 352, "·": 200, "«": 478, "»": 508, "¡": 214, "¿": 375, "°": 232, "×": 490, "♥": 649 } },
-  sfx: { font: "Bangers-Regular", unitsPerEm: 1000, default: 427, ascii: [195, 263, 421, 626, 442, 799, 535, 202, 334, 331, 423, 330, 197, 360, 209, 551, 474, 320, 467, 458, 459, 450, 478, 339, 518, 489, 195, 262, 316, 350, 288, 438, 987, 433, 428, 414, 441, 341, 341, 499, 442, 200, 279, 462, 302, 619, 453, 493, 379, 525, 444, 430, 362, 419, 379, 601, 411, 384, 431, 319, 510, 313, 400, 401, 358, 433, 428, 414, 441, 341, 341, 499, 441, 202, 279, 462, 302, 619, 452, 493, 379, 525, 444, 430, 362, 419, 379, 601, 411, 384, 431, 281, 248, 273, 421], extra: { "’": 202, "‘": 202, "“": 403, "”": 400, "—": 520, "–": 360, "…": 771, " ": 195, é: 341, è: 341, ê: 341, ë: 341, à: 433, á: 433, â: 433, ä: 433, ç: 414, ñ: 452, ö: 493, ó: 493, ô: 493, ü: 419, ú: 419, í: 202, ï: 202, É: 341, "•": 284, "·": 214, "«": 465, "»": 463, "¡": 264, "¿": 439, "°": 238, "×": 475 } }
+
+// src/backend/webtoon/font-metrics.ts
+var FONT_METRICS = {
+  speech: { " ": 356, "!": 261, '"': 325, "#": 711, $: 602, "%": 681, "&": 625, "'": 206, "(": 357, ")": 357, "*": 379, "+": 440, ",": 191, "-": 409, ".": 181, "/": 438, "0": 572, "1": 393, "2": 498, "3": 493, "4": 469, "5": 531, "6": 523, "7": 450, "8": 512, "9": 523, ":": 207, ";": 223, "<": 543, "=": 465, ">": 543, "?": 499, "@": 849, A: 552, B: 611, C: 601, D: 623, E: 593, F: 581, G: 706, H: 714, I: 405, J: 471, K: 563, L: 513, M: 806, N: 652, O: 638, P: 553, Q: 695, R: 583, S: 546, T: 524, U: 669, V: 538, W: 847, X: 707, Y: 582, Z: 575, "[": 335, "\\": 571, "]": 335, "^": 526, _: 516, "`": 205, a: 508, b: 525, c: 470, d: 522, e: 491, f: 321, g: 548, h: 528, i: 243, j: 261, k: 487, l: 236, m: 796, n: 543, o: 517, p: 521, q: 511, r: 403, s: 425, t: 328, u: 518, v: 425, w: 620, x: 490, y: 458, z: 429, "{": 382, "|": 219, "}": 382, "~": 606, "…": 666, "—": 806, "–": 622, "’": 204, "‘": 204, "“": 371, "”": 369, "é": 491 },
+  narration: { " ": 230, "!": 247, '"': 303, "#": 457, $: 507, "%": 643, "&": 530, "'": 164, "(": 334, ")": 364, "*": 404, "+": 480, ",": 202, "-": 404, ".": 214, "/": 423, "0": 448, "1": 363, "2": 468, "3": 448, "4": 375, "5": 423, "6": 399, "7": 495, "8": 433, "9": 367, ":": 232, ";": 232, "<": 396, "=": 572, ">": 400, "?": 368, "@": 550, A: 488, B: 507, C: 548, D: 475, E: 442, F: 375, G: 480, H: 468, I: 235, J: 370, K: 523, L: 372, M: 595, N: 532, O: 556, P: 481, Q: 655, R: 454, S: 459, T: 468, U: 550, V: 562, W: 616, X: 601, Y: 442, Z: 507, "[": 303, "\\": 420, "]": 296, "^": 370, _: 571, "`": 220, a: 392, b: 412, c: 388, d: 390, e: 398, f: 359, g: 445, h: 420, i: 224, j: 235, k: 415, l: 266, m: 680, n: 452, o: 403, p: 428, q: 463, r: 385, s: 385, t: 344, u: 400, v: 400, w: 463, x: 448, y: 423, z: 428, "{": 339, "|": 176, "}": 328, "~": 529, "…": 571, "—": 648, "–": 420, "’": 220, "‘": 190, "“": 315, "”": 303, "é": 398 },
+  sfx: { " ": 195, "!": 263, '"': 421, "#": 626, $: 442, "%": 799, "&": 535, "'": 202, "(": 334, ")": 331, "*": 423, "+": 330, ",": 197, "-": 360, ".": 209, "/": 551, "0": 474, "1": 320, "2": 467, "3": 458, "4": 459, "5": 450, "6": 478, "7": 339, "8": 518, "9": 489, ":": 195, ";": 262, "<": 316, "=": 350, ">": 288, "?": 438, "@": 987, A: 433, B: 428, C: 414, D: 441, E: 341, F: 341, G: 499, H: 442, I: 200, J: 279, K: 462, L: 302, M: 619, N: 453, O: 493, P: 379, Q: 525, R: 444, S: 430, T: 362, U: 419, V: 379, W: 601, X: 411, Y: 384, Z: 431, "[": 319, "\\": 510, "]": 313, "^": 400, _: 401, "`": 358, a: 433, b: 428, c: 414, d: 441, e: 341, f: 341, g: 499, h: 441, i: 202, j: 279, k: 462, l: 302, m: 619, n: 452, o: 493, p: 379, q: 525, r: 444, s: 430, t: 362, u: 419, v: 379, w: 601, x: 411, y: 384, z: 431, "{": 281, "|": 248, "}": 273, "~": 421, "…": 771, "—": 520, "–": 360, "’": 202, "‘": 202, "“": 403, "”": 400, "é": 341 }
 };
 
 // src/backend/webtoon/layout.ts
-var W = 690;
-var LH_SPEECH = 22;
-var LH_NARR = 24;
-var SFX_FONT_PX = 56;
-var SFX_COLORS = ["#ff5c8a", "#ffc93c", "#5ad1ff", "#ff7a3c"];
-var HEAD = {
-  portrait: [0.5, 0.38],
-  "upper body": [0.35, 0.18],
-  "cowboy shot": [0.32, 0.14],
-  "full body": [0.32, 0.1]
+var RULES2 = {
+  insetW: 500,
+  maxPanelH: 1100,
+  maxTitleH: 1050,
+  maxInsetH: 900,
+  maxBandH: 360,
+  tightH: 400,
+  gap: { base: 36, action: 22, reaction: 64, scene: 150, pause: 120 },
+  speech: { size: 19, lh: 22 },
+  narration: { size: 20, lh: 24 },
+  sfx: { action: 88, normal: 64, beat: 72, letterSpacing: 2 },
+  sfxColors: ["#ff4f7f", "#ffc21a", "#38c6ff", "#ff7a2e"],
+  onArtMin: 0.45,
+  tailMax: 48,
+  breakDepth: [60, 140],
+  breakMaxTop: 0.45
 };
-var MAX_PANEL_H = 1100;
-var METRICS = font_metrics_default;
-var FONT_PX = { speech: 19, narration: 20, sfx: SFX_FONT_PX };
-function textWidth(font, text) {
-  const m = METRICS[font];
-  const px = FONT_PX[font];
+var HEAD = { portrait: [0.5, 0.38], "upper body": [0.35, 0.18], "cowboy shot": [0.32, 0.14], "full body": [0.32, 0.1] };
+var inter = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+var area = (a) => Math.max(0, a[2] - a[0]) * Math.max(0, a[3] - a[1]);
+var pad = (r, p) => [r[0] - p, r[1] - p, r[2] + p, r[3] + p];
+var shift = (r, dy) => [r[0], r[1] + dy, r[2], r[3] + dy];
+var clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function defaultMeasure(text, font, size) {
+  const m = FONT_METRICS[font];
   let w = 0;
-  for (const ch of text) {
-    const c = ch.codePointAt(0);
-    const adv = c >= 32 && c <= 126 ? m.ascii[c - 32] : m.extra[ch] ?? m.default;
-    w += Math.round(adv * px / m.unitsPerEm);
-  }
-  return w;
-}
-function wrap(text, font, maxw) {
-  const lines = [];
-  let cur = "";
-  for (const word of text.split(/\s+/).filter(Boolean)) {
-    const t = cur ? `${cur} ${word}` : word;
-    if (textWidth(font, t) <= maxw || !cur)
-      cur = t;
-    else {
-      lines.push(cur);
-      cur = word;
-    }
-  }
-  if (cur)
-    lines.push(cur);
-  return lines;
-}
-function fitText(text, font, lh, aspect = 2, minw = 70, maxw = 250) {
-  const total = textWidth(font, text);
-  const tw = Math.max(minw, Math.min(maxw, Math.sqrt(total * lh * aspect)));
-  const lines = wrap(text, font, tw);
-  return { lines, tw: Math.max(0, ...lines.map((l) => textWidth(font, l))), th: lines.length * lh };
+  for (const ch of text)
+    w += m[ch] ?? m["n"] ?? 500;
+  return w * size / 1000 + (font === "sfx" ? RULES2.sfx.letterSpacing * text.length : 0);
 }
 function isShout(t) {
-  const letters = [...t].filter((c) => /\p{L}/u.test(c));
-  const caps = letters.filter((c) => /\p{Lu}/u.test(c)).length / Math.max(1, letters.length);
+  const letters = [...t].filter((c) => /[a-z]/i.test(c));
+  const caps = letters.filter((c) => c === c.toUpperCase()).length / Math.max(1, letters.length);
   return t.includes("?!") || t.includes("!!") || t.trimEnd().endsWith("!") && caps > 0.5;
 }
-function inter(a, b) {
-  return Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
-}
-function pad(r, p) {
-  return [r[0] - p, r[1] - p, r[2] + p, r[3] + p];
-}
-function pyRound(v) {
-  const r = Math.round(v);
-  return Math.abs(v % 1) === 0.5 && r % 2 !== 0 ? r - 1 : r;
-}
-function search(regions, score, step = 14) {
-  let best = null;
-  for (const [x1, x2, y1, y2] of regions) {
-    const xa = Math.min(x1, x2), xb = Math.max(x1, x2), ya = Math.min(y1, y2), yb = Math.max(y1, y2);
-    const nx = Math.max(1, Math.floor((xb - xa) / step) + 1);
-    const ny = Math.max(1, Math.floor((yb - ya) / step) + 1);
-    for (let i = 0;i < nx; i++) {
-      for (let j = 0;j < ny; j++) {
-        const cx = xa + (xb - xa) * (i / Math.max(1, nx - 1));
-        const cy = ya + (yb - ya) * (j / Math.max(1, ny - 1));
-        const s = score(cx, cy);
-        if (s !== null && (best === null || s < best.s))
-          best = { s, cx, cy };
+function layoutStrip(sb, images, opts = {}) {
+  const W = opts.width ?? 690;
+  const measure = opts.measure ?? defaultMeasure;
+  const log = [];
+  const panelsOut = [];
+  const items = [];
+  let sfxI = 0;
+  const wrap = (text, font, size, maxw) => {
+    const lines = [];
+    let cur = "";
+    for (const w of text.split(/\s+/).filter(Boolean)) {
+      const t = (cur + " " + w).trim();
+      if (measure(t, font, size) <= maxw || !cur)
+        cur = t;
+      else {
+        lines.push(cur);
+        cur = w;
       }
     }
-  }
-  return best;
-}
-function anchorRegion(anchor, x0, w, h, bw, bh) {
-  const L = 6 + bw / 2, R = W - 6 - bw / 2;
-  const mid = x0 + w / 2;
-  const left = [L, mid], right = [mid, R], both = [L, R];
-  const top = [bh * 0.1, h * 0.38], m = [h * 0.3, h * 0.7], bot = [h * 0.62, h + bh * 0.35];
-  const A = {
-    "top-left": [...left, ...top],
-    "top-right": [...right, ...top],
-    top: [...both, ...top],
-    left: [...left, ...m],
-    right: [...right, ...m],
-    "bottom-left": [...left, ...bot],
-    "bottom-right": [...right, ...bot],
-    "over-top-edge": [...both, -bh * 0.15, bh * 0.15],
-    "over-bottom-edge": [...both, h - bh * 0.15, h + bh * 0.15],
-    "gutter-above": [...both, -bh / 2 - 14, -bh / 2 - 14],
-    "gutter-below": [...both, h + bh / 2 + 14, h + bh / 2 + 14]
+    if (cur)
+      lines.push(cur);
+    return lines;
   };
-  return [A[anchor] ?? A.top];
-}
-function panelBox(layout, iw, ih) {
-  const w = layout === "inset_left" || layout === "inset_right" ? 470 : W;
-  const x = layout === "inset_right" ? W - w : 0;
-  let h = pyRound(w * ih / iw);
-  if (layout === "tight_crop")
-    h = 300;
-  else if (layout === "wide_band")
-    h = Math.min(h, 340);
-  h = Math.min(h, layout !== "title" ? MAX_PANEL_H : 1050);
-  const vis = w / iw * ih;
-  return { x, w, h, cropFrac: h < vis - 1 ? h / vis : null };
-}
-function placeCrop(frac, focusY) {
-  if (frac === null)
-    return [0, 0, 1, 1];
-  const top = Math.min(Math.max(0, focusY - frac / 2), 1 - frac);
-  return [0, top, 1, top + frac];
-}
-function charGeometry(c, iw, ih) {
-  const fr = c.framing ?? "upper body";
-  const hf = HEAD[fr];
-  if (!hf)
-    return { head: [c.x, Math.max(0.05, c.y - 0.25)], face: null };
-  let [half, fh] = hf;
-  if (fr !== "portrait")
-    half = Math.min(half, c.y, 1 - c.y);
-  const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
-  const fw = fh * ih / iw * 1.3;
-  return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] };
-}
-function gap(p, prev) {
-  if (prev === null)
-    return 0;
-  if (p.scene_change)
-    return 230;
-  if (p.beat === "quiet" || p.beat === "reaction" || p.kind === "text_beat")
-    return 130;
-  if (p.beat === "action")
-    return 50;
-  return 80;
-}
-function imageSize(p, sizes) {
-  const s = sizes[String(p.id)];
-  if (s)
-    return [s.width, s.height];
-  const m = /^(\d+)x(\d+)$/.exec(p.size ?? "");
-  if (!m)
-    throw new Error(`panel ${p.id}: no image size`);
-  return [Number(m[1]), Number(m[2])];
-}
-function splitTitle(t) {
-  const i = t.indexOf(":");
-  const a = i < 0 ? t : t.slice(0, i);
-  const b = i < 0 ? "" : t.slice(i + 1);
-  return b ? { small: a.trim().toUpperCase(), big: b.trim() } : { small: "", big: a.trim() };
-}
-function placeBalloon(t, i, ctx, prevCy) {
-  const { p, x0, w, h, facePx, faces, placed } = ctx;
-  const shout = t.type === "speech" && isShout(t.text);
-  const { lines, tw, th } = fitText(t.text, "speech", LH_SPEECH, 3.4, 96, 270);
-  const k = shout ? 1.25 : 1;
-  const rx = tw / 2 * 1.32 * k + 12, ry = th / 2 * 1.38 * k + 10;
-  const bw = 2 * rx, bh = 2 * ry;
-  let sp = t.speaker != null ? facePx.get(t.speaker) : undefined;
-  if (sp && !sp.face)
-    sp = undefined;
-  const target = sp ? sp.head : null;
-  const nballoons = p.text.filter((q) => q.type === "speech" || q.type === "thought").length;
-  const anchor = t.anchor ?? "top";
-  const score = (cx, cy) => {
-    const rect = [cx - rx * 0.92, cy - ry * 0.92, cx + rx * 0.92, cy + ry * 0.92];
-    if (rect[0] < 4 || rect[2] > W - 4)
-      return null;
-    if (faces.some((f) => inter(rect, pad(f, 6)) > 0))
-      return null;
-    if (placed.some((q) => inter(rect, pad(q, 8)) > 0))
-      return null;
-    if (cy < prevCy + 30)
-      return null;
-    let s = 0;
-    if (target) {
-      const d = Math.hypot(cx - target[0], cy - target[1]) - Math.max(rx, ry);
-      s += Math.max(0, 30 - d, d - 160) * 1.5;
-      s += cy * (nballoons > 1 ? 0.4 : 0.1);
-      if (cy > target[1] + 40)
-        s += 400;
-    } else {
-      s += Math.abs(cy - h * 0.15) * 0.3;
+  const fitText = (text, font, size, lh, aspect, minw, maxw) => {
+    const total = measure(text, font, size);
+    const tw = clamp(Math.sqrt(total * lh * aspect), minw, maxw);
+    const lines = wrap(text, font, size, tw);
+    return { lines, w: Math.max(...lines.map((l) => measure(l, font, size))), h: lines.length * lh };
+  };
+  function shape(p, iw, ih) {
+    const lay = p.layout;
+    let x = 0, w = W;
+    if (lay === "inset_left" || lay === "inset_right") {
+      w = RULES2.insetW;
+      x = lay === "inset_left" ? 0 : W - w;
     }
-    if (cy - ry < -bh * 0.6 || cy + ry > h + bh * 0.6)
-      s += 150;
-    return s;
+    let h = Math.round(w * ih / iw);
+    if (lay === "tight_crop")
+      h = Math.min(h, RULES2.tightH);
+    else if (lay === "wide_band")
+      h = Math.min(h, RULES2.maxBandH);
+    h = Math.min(h, lay === "title" ? RULES2.maxTitleH : lay.startsWith("inset") ? RULES2.maxInsetH : RULES2.maxPanelH);
+    const vis = w / iw * ih;
+    return { x, w, h, frac: h < vis - 1 ? h / vis : 1 };
+  }
+  function charGeometry(c, iw, ih, faces) {
+    const f = faces?.[c.name];
+    if (f)
+      return { head: [(f.left + f.right) / 2, (f.top + f.bottom) / 2], face: [f.left, f.top, f.right, f.bottom] };
+    const hd = HEAD[c.framing];
+    if (!hd)
+      return { head: [c.x, Math.max(0.05, c.y - 0.25)], face: null };
+    let [half, fh] = hd;
+    if (c.framing !== "portrait")
+      half = Math.min(half, c.y, 1 - c.y);
+    const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
+    const fw = fh * ih / iw * 1.3;
+    return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] };
+  }
+  function search(regions, score, step = 14) {
+    let best = null;
+    for (let [xa, xb, ya, yb] of regions) {
+      [xa, xb] = [Math.min(xa, xb), Math.max(xa, xb)];
+      [ya, yb] = [Math.min(ya, yb), Math.max(ya, yb)];
+      const nx = Math.max(1, Math.floor((xb - xa) / step) + 1), ny = Math.max(1, Math.floor((yb - ya) / step) + 1);
+      for (let i = 0;i < nx; i++)
+        for (let j = 0;j < ny; j++) {
+          const cx = xa + (xb - xa) * (i / Math.max(1, nx - 1)), cy = ya + (yb - ya) * (j / Math.max(1, ny - 1));
+          const s = score(cx, cy);
+          if (s !== null && (!best || s < best[0]))
+            best = [s, cx, cy];
+        }
+    }
+    return best;
+  }
+  let y = 0;
+  let prevKind = null;
+  const gapBefore = (p) => {
+    if (prevKind === null)
+      return 0;
+    if (p.kind === "text_beat" || prevKind === "text_beat")
+      return RULES2.gap.pause;
+    if (p.scene_change)
+      return RULES2.gap.scene;
+    if (p.beat === "reaction" || p.beat === "quiet")
+      return RULES2.gap.reaction;
+    if (p.beat === "action")
+      return RULES2.gap.action;
+    return RULES2.gap.base;
   };
-  let best = search(anchorRegion(anchor, x0, w, h, bw, bh), score);
-  let fallback = null;
-  if (best === null && target) {
-    fallback = "side";
-    const side = anchor.includes("left") ? [6 + rx, x0 + w / 2] : anchor.includes("right") ? [x0 + w / 2, W - 6 - rx] : [6 + rx, W - 6 - rx];
-    best = search([[...side, bh * 0.1, target[1] + 20]], score);
-  }
-  if (best === null) {
-    fallback = "anywhere";
-    best = search([[6 + rx, W - 6 - rx, -bh, h + bh]], score);
-  }
-  if (best === null) {
-    fallback = "gutter";
-    best = { s: 0, cx: W / 2, cy: prevCy > -1e8 ? prevCy + bh + 20 : -bh / 2 - 14 };
-  }
-  const { cx, cy } = best;
-  let tail = null;
-  if (target && sp?.face) {
-    const fb = sp.face;
-    const aim = [target[0], target[1] + (fb[3] - fb[1]) * 0.18];
-    const dx = aim[0] - cx, dy = aim[1] - cy;
-    const dist = Math.hypot(dx, dy) || 1;
-    const edge = Math.hypot(rx * dx / dist, ry * dy / dist);
-    let stop = dist - 14;
-    while (stop > edge && fb[0] - 4 < cx + dx / dist * stop && cx + dx / dist * stop < fb[2] + 4 && fb[1] - 4 < cy + dy / dist * stop && cy + dy / dist * stop < fb[3] + 4)
-      stop -= 4;
-    const len = Math.min(edge + 48, Math.max(edge + 14, stop));
-    tail = [cx + dx / dist * len, cy + dy / dist * len];
-  } else if (t.speaker) {
-    tail = [cx + (rx + 24) * (cx < W / 2 ? -1 : 1) * 0.6, cy < h / 2 ? cy - ry - 20 : cy + ry + 20];
-  }
-  const kind = t.type === "thought" ? "thought" : "speech";
-  return { kind, i, cx, cy, rx, ry, tw, th, lines, tail, shout, rect: [cx - rx, cy - ry, cx + rx, cy + ry], fallback };
-}
-function placeNarr(t, i, ctx) {
-  const { x0, w, h, faces, placed } = ctx;
-  const { lines, tw, th } = fitText(t.text, "narration", LH_NARR, 3.4, 70, 300);
-  const bw = tw + 36, bh = th + 24;
-  const a = t.anchor ?? "top-left";
-  const left = !a.includes("right") ? [x0 + 14, Math.max(6, x0 - 30)] : [];
-  const right = !a.includes("left") ? [x0 + w - bw - 14, Math.min(W - 6 - bw, x0 + w - bw + 30)] : [];
-  const xs = left.length + right.length ? [...left, ...right] : [x0 + 14, x0 + w - bw - 14];
-  const topYs = [-bh / 2, 14], botYs = [h - bh / 2, h - bh - 14];
-  let ys = a.includes("bottom") ? botYs : a.includes("top") ? topYs : [...topYs, ...botYs];
-  if (a === "over-top-edge")
-    ys = [-bh / 2];
-  if (a === "over-bottom-edge")
-    ys = [h - bh / 2];
-  const cands = [
-    ...ys.flatMap((y) => xs.map((x) => [x, y])),
-    ...[...topYs, ...botYs].flatMap((y) => [x0 + 14, x0 + w - bw - 14].map((x) => [x, y]))
-  ];
-  for (const [x, y] of cands) {
-    const r = [x, y, x + bw, y + bh];
-    if (x < 4 || x + bw > W - 4)
-      continue;
-    if (faces.some((f) => inter(r, pad(f, 6)) > 0) || placed.some((q) => inter(r, pad(q, 8)) > 0))
-      continue;
-    return { kind: "narration", i, rect: r, lines, fallback: null };
-  }
-  const y = h + 20;
-  return { kind: "narration", i, rect: [x0 + 14, y, x0 + 14 + bw, y + bh], lines, fallback: "gutter" };
-}
-function placeSfx(t, i, ctx) {
-  const { p, x0, w, h, faces, placed } = ctx;
-  const big = p.beat === "action";
-  const size = big ? 60 : 50;
-  const tw = textWidth("sfx", t.text) * size / SFX_FONT_PX;
-  const bw = tw + 10, bh = size + 10;
-  const a = t.anchor ?? "bottom-left";
-  const off = a === "gutter-above" || a === "gutter-below" || a === "over-top-edge" || a === "over-bottom-edge";
-  const regs = anchorRegion(off ? "left" : a, x0, w, h, bw, bh).map(([xa, xb, ya, yb]) => [
-    Math.max(xa, x0 + bw / 2 + 6),
-    Math.min(xb, x0 + w - bw / 2 - 6),
-    Math.max(ya, bh / 2 + 6),
-    Math.min(yb, h - bh / 2 - 6)
-  ]);
-  const score = (cx, cy) => {
-    const r = [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2];
-    if (faces.some((f) => inter(r, pad(f, 0.3 * (f[2] - f[0]))) > 0) || placed.some((q) => inter(r, pad(q, 6)) > 0))
-      return null;
-    return 0;
-  };
-  const best = search(regs, score, 20) ?? search([[x0 + bw / 2 + 6, x0 + w - bw / 2 - 6, bh / 2 + 6, h - bh / 2 - 6]], score, 20);
-  const [cx, cy] = best ? [best.cx, best.cy] : [x0 + w / 2, h - bh];
-  return { kind: "sfx", i, cx, cy, big, rot: cx < W / 2 ? -10 : 8, rect: [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2] };
-}
-
-class StripBuilder {
-  input;
-  y = 0;
-  sfxCount = 0;
-  panels = [];
-  items = [];
-  constructor(input) {
-    this.input = input;
-  }
-  run() {
-    const panels = this.input.storyboard.panels;
-    panels.forEach((p, i) => {
-      this.y += gap(p, i > 0 ? panels[i - 1] : null);
-      if (p.kind === "image")
-        this.imagePanel(p, i === 0);
-      else
-        this.textBeat(p);
-    });
-    this.y += 120;
-    return { version: 1, width: W, height: Math.trunc(this.y), panels: this.panels, items: this.items };
-  }
-  sfx(panelId, textIndex, text, cx, cy, big, rot) {
-    const size = big ? 60 : 50;
-    const color = SFX_COLORS[this.sfxCount++ % SFX_COLORS.length];
-    const w = textWidth("sfx", text) * size / SFX_FONT_PX;
-    this.items.push({ kind: "sfx", panelId, textIndex, text, lines: [text], rect: [cx - w / 2, cy - size / 2, cx + w / 2, cy + size / 2], cx, cy, size, rot, color });
-  }
-  textBeat(p) {
-    const panelId = String(p.id);
-    let side = 0;
-    p.text.forEach((t, i) => {
-      if (t.type === "sfx") {
-        this.sfx(panelId, i, t.text, W / 2, this.y + 40, true, -10);
-        this.y += 110;
-        return;
-      }
-      const { lines, tw, th } = fitText(t.text, "narration", LH_NARR, 3.2, 70, 330);
-      const bw = tw + 40, bh = th + 28;
-      const x = side === 0 ? 70 : W - 70 - bw;
-      this.items.push({ kind: "narration", panelId, textIndex: i, text: t.text, lines, rect: [x, this.y, x + bw, this.y + bh], fallback: null });
-      this.y += bh + 60;
-      side ^= 1;
-    });
-  }
-  imagePanel(p, first) {
-    const panelId = String(p.id);
-    const layout = p.layout ?? "full_width";
-    const [iw, ih] = imageSize(p, this.input.imageSizes);
-    const { x: x0, w, h, cropFrac } = panelBox(layout, iw, ih);
-    const geo = new Map;
-    for (const c of p.nai?.characters ?? [])
-      geo.set(c.name, charGeometry(c, iw, ih));
+  function imagePanel(p, first) {
+    const img = images[String(p.id)];
+    if (!img) {
+      log.push(`p${p.id}: no image, skipped`);
+      return;
+    }
+    const { width: iw, height: ih } = img;
+    const { x: x0, w, h, frac } = shape(p, iw, ih);
+    const chars = p.nai.characters;
+    const geo = new Map(chars.map((c) => [c.name, charGeometry(c, iw, ih, img.faces)]));
     const speakers = p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.speaker);
-    let heads = speakers.flatMap((n) => n != null && geo.has(n) ? [geo.get(n).head[1]] : []);
-    if (!heads.length)
-      heads = [...geo.values()].map((g) => g.head[1]);
-    if (!heads.length)
-      heads = [0.5];
-    if (layout === "title")
-      heads = [0.62];
-    const crop = placeCrop(cropFrac, heads.reduce((a, b) => a + b, 0) / heads.length);
+    let focusYs = speakers.filter((n) => !!n && geo.has(n)).map((n) => geo.get(n).head[1]);
+    if (!focusYs.length)
+      focusYs = [...geo.values()].map((g) => g.head[1]);
+    if (!focusYs.length)
+      focusYs = [0.5];
+    if (p.layout === "title")
+      focusYs = [0.62];
+    let crop = [0, 0, 1, 1];
+    if (frac < 1) {
+      const fy = focusYs.reduce((a, b) => a + b, 0) / focusYs.length;
+      const top = clamp(fy - frac / 2, 0, 1 - frac);
+      crop = [0, top, 1, top + frac];
+    }
     const toPx = (nx, ny) => [x0 + nx * w, (ny - crop[1]) / (crop[3] - crop[1]) * h];
     const facePx = new Map;
     for (const [n, g] of geo) {
-      const f = g.face;
-      facePx.set(n, { head: toPx(...g.head), face: f ? [...toPx(f[0], f[1]), ...toPx(f[2], f[3])] : null });
+      const fb = g.face ? [...toPx(g.face[0], g.face[1]), ...toPx(g.face[2], g.face[3])] : null;
+      facePx.set(n, { head: toPx(...g.head), face: fb });
     }
-    const ctx = { p, x0, w, h, facePx, faces: [...facePx.values()].flatMap((v) => v.face ? [v.face] : []), placed: [] };
+    const faces = [...facePx.values()].map((v) => v.face).filter((f) => !!f);
+    const bodies = chars.filter((c) => c.framing !== "hands only").map((c) => {
+      const g = facePx.get(c.name);
+      const fwid = g.face ? g.face[2] - g.face[0] : 0.25 * w;
+      return [g.head[0] - fwid, g.head[1], g.head[0] + fwid, toPx(c.x, Math.min(1, c.y + (c.y - geo.get(c.name).head[1])))[1]];
+    });
+    let frame = [x0, 0, x0 + w, h];
+    let frameBreak = null;
+    let cutTop = 0;
+    if (p.beat === "action" && img.cutout && chars.length === 1) {
+      const bb = img.cutout.bbox;
+      const [bl, bt] = toPx(bb.left, bb.top);
+      const [br] = toPx(bb.right, bb.bottom);
+      const depth = clamp(0.1 * h, RULES2.breakDepth[0], RULES2.breakDepth[1]);
+      const sideDepth = Math.min(depth, 0.12 * w);
+      if (bt > 0.03 * h && bt <= RULES2.breakMaxTop * h) {
+        frame = [x0, bt + depth, x0 + w, h];
+        frameBreak = "top";
+        cutTop = bt;
+      } else if (p.layout === "inset_right" && bl - x0 > 0.03 * w && bl - x0 <= 0.15 * w) {
+        frame = [bl + sideDepth, 0, x0 + w, h];
+        frameBreak = "left";
+      } else if (p.layout === "inset_left" && x0 + w - br > 0.03 * w && x0 + w - br <= 0.15 * w) {
+        frame = [x0, 0, br - sideDepth, h];
+        frameBreak = "right";
+      }
+      log.push(`p${p.id}: frame-break ${frameBreak ?? "none (character not near a frame edge)"}`);
+    }
+    const [fx0, ft, fx1, fb] = frame;
+    const fw = fx1 - fx0;
+    const col = p.layout === "inset_left" ? [x0 + w, ft, W, fb] : p.layout === "inset_right" ? [0, ft, x0, fb] : null;
+    const onArt = (r) => (inter(r, frame) + (col ? inter(r, col) : 0)) / Math.max(1, area(r));
+    const placed = [];
     const local = [];
     let prevCy = -1e9;
-    p.text.forEach((t, i) => {
-      if (layout === "title" && t.type === "speech")
-        return;
-      let r;
-      if (t.type === "speech" || t.type === "thought") {
-        r = placeBalloon(t, i, ctx, prevCy);
-        prevCy = r.kind === "speech" || r.kind === "thought" ? r.cy : prevCy;
-      } else if (t.type === "narration")
-        r = placeNarr(t, i, ctx);
-      else
-        r = placeSfx(t, i, ctx);
-      ctx.placed.push(r.rect);
-      local.push(r);
-    });
-    let top = Math.min(0, ...local.map((r) => r.rect[1] - 10));
-    const bottom = Math.max(h, ...local.map((r) => r.rect[3] + 10));
-    if (first && layout === "title")
-      top = 0;
-    const oy = this.y - top;
-    const mask = layout === "fade_white" || layout === "title" ? "fade-bottom" : layout === "wide_band" && p.beat === "insert" ? "fade-sides" : null;
-    const panel = { panelId, x: x0, y: oy, w, h, crop, mask };
-    if (layout === "title")
-      panel.title = { ...splitTitle(this.input.storyboard.title ?? ""), y: oy + h * 0.13 };
-    this.panels.push(panel);
-    for (const r of local)
-      this.emit(panelId, p.text[r.i], r, oy);
-    this.y = oy + bottom;
-  }
-  emit(panelId, t, r, oy) {
-    const base = { panelId, textIndex: r.i, text: t.text };
-    if (r.kind === "sfx") {
-      this.sfx(panelId, r.i, t.text, r.cx, r.cy + oy, r.big, r.rot);
-    } else if (r.kind === "narration") {
-      this.items.push({ ...base, kind: "narration", lines: r.lines, rect: [r.rect[0], r.rect[1] + oy, r.rect[2], r.rect[3] + oy], fallback: r.fallback });
-    } else {
-      const cy = r.cy + oy;
-      this.items.push({
-        ...base,
-        kind: r.kind,
-        lines: r.lines,
-        rect: [r.rect[0], r.rect[1] + oy, r.rect[2], r.rect[3] + oy],
-        fallback: r.fallback,
-        cx: r.cx,
+    const nBalloons = p.text.filter((t) => t.type === "speech" || t.type === "thought").length;
+    let sfxInPanel = 0;
+    const anchorRegion = (anchor, rx, ry) => {
+      const L = 6 + rx, R = W - 6 - rx, mid = fx0 + fw / 2, fh = fb - ft;
+      const xs = { left: [L, mid], right: [mid, R], both: [L, R] };
+      const ys = { top: [ft + ry * 0.2, ft + fh * 0.38], mid: [ft + fh * 0.3, ft + fh * 0.7], bot: [ft + fh * 0.62, fb + ry * 0.35] };
+      const A = {
+        "top-left": [...xs.left, ...ys.top],
+        "top-right": [...xs.right, ...ys.top],
+        top: [...xs.both, ...ys.top],
+        left: [...xs.left, ...ys.mid],
+        right: [...xs.right, ...ys.mid],
+        "bottom-left": [...xs.left, ...ys.bot],
+        "bottom-right": [...xs.right, ...ys.bot],
+        "over-top-edge": [...xs.both, ft - ry * 0.15, ft + ry * 0.15],
+        "over-bottom-edge": [...xs.both, fb - ry * 0.15, fb + ry * 0.15]
+      };
+      return [A[anchor] ?? A.top];
+    };
+    const placeBalloon = (t) => {
+      const shout = t.type === "speech" && isShout(t.text);
+      const { lines, w: tw, h: th } = fitText(t.text, "speech", RULES2.speech.size, RULES2.speech.lh, 3.4, 96, 270);
+      const k = shout ? 1.25 : 1;
+      const rx = tw / 2 * 1.32 * k + 12, ry = th / 2 * 1.38 * k + 10;
+      let sp = t.speaker ? facePx.get(t.speaker) : undefined;
+      if (sp && !sp.face)
+        sp = undefined;
+      const target = sp?.head ?? null;
+      const score = (minArt) => (cx, cy) => {
+        const r = [cx - rx * 0.92, cy - ry * 0.92, cx + rx * 0.92, cy + ry * 0.92];
+        if (r[0] < 4 || r[2] > W - 4)
+          return null;
+        if (faces.some((f) => inter(r, pad(f, 6)) > 0))
+          return null;
+        if (placed.some((q) => inter(r, pad(q, 8)) > 0))
+          return null;
+        if (cy < prevCy + 30)
+          return null;
+        if (onArt(r) < minArt)
+          return null;
+        let s = 0;
+        if (target) {
+          const d = Math.hypot(cx - target[0], cy - target[1]) - Math.max(rx, ry);
+          s += Math.max(0, 30 - d, d - 160) * 1.5;
+          s += cy * (nBalloons > 1 ? 0.4 : 0.1);
+          if (cy > target[1] + 40)
+            s += 400;
+        } else
+          s += Math.abs(cy - (ft + (fb - ft) * 0.15)) * 0.3;
+        s += (1 - onArt(r)) * 120;
+        return s;
+      };
+      let fallback = null;
+      let best = search(anchorRegion(t.anchor, rx, ry), score(RULES2.onArtMin));
+      if (!best && target) {
+        fallback = "side";
+        const side = t.anchor.includes("left") ? [6 + rx, fx0 + fw / 2] : t.anchor.includes("right") ? [fx0 + fw / 2, W - 6 - rx] : [6 + rx, W - 6 - rx];
+        best = search([[...side, ft + ry * 0.2, target[1] + 20]], score(RULES2.onArtMin));
+      }
+      if (!best) {
+        fallback = "anywhere";
+        best = search([[6 + rx, W - 6 - rx, ft - ry, fb + ry]], score(0.2));
+      }
+      if (!best) {
+        fallback = "gutter";
+        best = [0, W / 2, prevCy > -1e8 ? prevCy + 2 * ry + 20 : ft - ry - 14];
+      }
+      const [, cx, cy] = best;
+      let tail = null;
+      if (target && sp) {
+        const fbx = sp.face;
+        const aim = [target[0], target[1] + (fbx[3] - fbx[1]) * 0.18];
+        const dx = aim[0] - cx, dy = aim[1] - cy, dist = Math.hypot(dx, dy) || 1;
+        const edge = Math.hypot(rx * dx / dist, ry * dy / dist);
+        let L = dist - 14;
+        while (L > edge && fbx[0] - 4 < cx + dx / dist * L && cx + dx / dist * L < fbx[2] + 4 && fbx[1] - 4 < cy + dy / dist * L && cy + dy / dist * L < fbx[3] + 4)
+          L -= 4;
+        L = Math.min(edge + RULES2.tailMax, Math.max(edge + 14, L));
+        tail = [cx + dx / dist * L, cy + dy / dist * L];
+      } else if (t.speaker) {
+        tail = [cx + (rx + 24) * (cx < W / 2 ? -1 : 1) * 0.6, cy < (ft + fb) / 2 ? cy - ry - 20 : cy + ry + 20];
+      }
+      return {
+        kind: t.type,
+        panel: p.id,
+        textIndex: p.text.indexOf(t),
+        speaker: t.speaker,
+        text: t.text,
+        lines,
+        cx,
         cy,
-        rx: r.rx,
-        ry: r.ry,
-        tail: r.tail ? [r.tail[0], r.tail[1] + oy] : null,
-        shout: r.shout,
-        speaker: t.speaker ?? null,
-        textBox: { x: r.cx - r.tw / 2 - 4, y: cy - r.th / 2, w: r.tw + 8, h: r.th }
-      });
+        rx,
+        ry,
+        textW: tw,
+        textH: th,
+        tail,
+        shout,
+        rect: [cx - rx, cy - ry, cx + rx, cy + ry],
+        fallback
+      };
+    };
+    const placeNarr = (t) => {
+      const { lines, w: tw, h: th } = fitText(t.text, "narration", RULES2.narration.size, RULES2.narration.lh, 3.4, 60, 300);
+      const bw = tw + 36, bh = th + 24;
+      const a = t.anchor;
+      const wantTop = !(a.startsWith("bottom") || a === "over-bottom-edge");
+      const wantLeft = !a.includes("right");
+      const corner = (top, left) => {
+        const xIn = left ? fx0 : fx1 - bw;
+        const yIn = top ? ft : fb - bh;
+        const out = [[xIn, yIn], [left ? fx0 + 14 : fx1 - bw - 14, top ? ft - bh / 2 : fb - bh / 2]];
+        if (col && (left && p.layout === "inset_right" || !left && p.layout === "inset_left"))
+          out.push([left ? fx0 - bw * 0.5 : fx1 - bw * 0.5, yIn]);
+        return out;
+      };
+      const cands = [...corner(wantTop, wantLeft), ...corner(wantTop, !wantLeft), ...corner(!wantTop, wantLeft), ...corner(!wantTop, !wantLeft)];
+      for (const [x, y0] of cands) {
+        const r = [x, y0, x + bw, y0 + bh];
+        if (r[0] < 0 || r[2] > W)
+          continue;
+        if (faces.some((f) => inter(r, pad(f, 6)) > 0) || placed.some((q) => inter(r, pad(q, 8)) > 0))
+          continue;
+        return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: r, fallback: null };
+      }
+      const y0 = fb + 16;
+      return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [fx0 + 14, y0, fx0 + 14 + bw, y0 + bh], fallback: "gutter" };
+    };
+    const placeSfx = (t) => {
+      const action = p.beat === "action";
+      const size = action ? RULES2.sfx.action : RULES2.sfx.normal;
+      const tw = measure(t.text.toUpperCase(), "sfx", size);
+      const bw = tw + 10, bh = size + 10;
+      const breakEdge = action && sfxInPanel === 0;
+      const score = (cx, cy) => {
+        const r = [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2];
+        if (r[0] < 4 || r[2] > W - 4)
+          return null;
+        if (faces.some((f) => inter(r, pad(f, 0.3 * (f[2] - f[0]))) > 0) || placed.some((q) => inter(r, pad(q, 6)) > 0))
+          return null;
+        return bodies.reduce((s, b) => s + inter(r, b), 0) / area(r) * 100;
+      };
+      const a = t.anchor;
+      const left = a.includes("left"), right = a.includes("right");
+      const xr = [left ? fx0 + bw / 2 + 6 : fx0 + fw / 2, right ? fx1 - bw / 2 - 6 : fx0 + fw / 2];
+      if (!left && !right) {
+        xr[0] = fx0 + bw / 2 + 6;
+        xr[1] = fx1 - bw / 2 - 6;
+      }
+      let best = null;
+      let breaks = false;
+      if (breakEdge) {
+        const edges = [];
+        const bottomFirst = a.startsWith("bottom") || a === "over-bottom-edge" || a === "left" || a === "right";
+        const top = [xr[0], xr[1], ft, ft], bottom = [xr[0], xr[1], fb, fb];
+        edges.push(...bottomFirst ? [bottom, top] : [top, bottom]);
+        if (p.layout === "inset_left")
+          edges.push([fx1, fx1, ft + bh, fb - bh]);
+        if (p.layout === "inset_right")
+          edges.push([fx0, fx0, ft + bh, fb - bh]);
+        best = search(edges, score, 20);
+        breaks = !!best;
+      }
+      if (!best) {
+        const regs = anchorRegion(a.startsWith("over") ? "left" : a, bw / 2, bh / 2).map(([xa, xb, ya, yb]) => [Math.max(xa, fx0 + bw / 2 + 6), Math.min(xb, fx1 - bw / 2 - 6), Math.max(ya, ft + bh / 2 + 6), Math.min(yb, fb - bh / 2 - 6)]);
+        best = search(regs, score, 20) ?? search([[fx0 + bw / 2 + 6, fx1 - bw / 2 - 6, ft + bh / 2 + 6, fb - bh / 2 - 6]], score, 20);
+      }
+      const [cx, cy] = best ? [best[1], best[2]] : [fx0 + fw / 2, fb - bh];
+      const rot = breaks ? cx < W / 2 ? -14 : 12 : cx < W / 2 ? -10 : 8;
+      sfxInPanel++;
+      return {
+        kind: "sfx",
+        panel: p.id,
+        textIndex: p.text.indexOf(t),
+        text: t.text,
+        cx,
+        cy,
+        size,
+        rot,
+        color: RULES2.sfxColors[sfxI++ % RULES2.sfxColors.length],
+        rect: [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2],
+        breaksFrame: breaks
+      };
+    };
+    const texts = p.layout === "title" ? p.text.filter((t) => t.type !== "speech") : p.text;
+    for (const t of texts) {
+      let r = null;
+      if (t.type === "speech" || t.type === "thought") {
+        r = placeBalloon(t);
+        if (r)
+          prevCy = r.cy;
+      } else if (t.type === "narration")
+        r = placeNarr(t);
+      else if (t.type === "sfx")
+        r = placeSfx(t);
+      if (r && "rect" in r) {
+        placed.push(r.rect);
+        local.push(r);
+      }
     }
+    let top = Math.min(frameBreak === "top" ? cutTop : ft, ...local.map((r) => ("rect" in r) ? r.rect[1] - 8 : 0));
+    const bottom = Math.max(h, ...local.map((r) => ("rect" in r) ? r.rect[3] + 8 : 0));
+    if (first && p.layout === "title")
+      top = 0;
+    const oy = y - top;
+    const fade = p.layout === "fade_white" || p.layout === "title" ? "bottom" : p.layout === "wide_band" && p.beat === "insert" ? "sides" : null;
+    const heads = {}, facesOut = {};
+    for (const [n, v] of facePx) {
+      heads[n] = [v.head[0], v.head[1] + oy];
+      facesOut[n] = v.face ? shift(v.face, oy) : null;
+    }
+    panelsOut.push({
+      id: p.id,
+      rect: [x0, oy, x0 + w, oy + h],
+      crop,
+      frame: shift(frame, oy),
+      frameBreak,
+      cutout: frameBreak && img.cutout ? { src: img.cutout.src } : null,
+      fade,
+      heads,
+      faces: facesOut
+    });
+    if (p.layout === "title") {
+      const [a, ...rest] = sb.title.split(":");
+      const b = rest.join(":").trim();
+      items.push({ kind: "title", panel: p.id, small: b ? a.trim().toUpperCase() : "", big: b || a.trim(), y: oy + h * 0.13 });
+    }
+    for (const r of local) {
+      if (r.kind === "speech" || r.kind === "thought")
+        items.push({ ...r, cy: r.cy + oy, rect: shift(r.rect, oy), tail: r.tail ? [r.tail[0], r.tail[1] + oy] : null });
+      else if (r.kind === "narration")
+        items.push({ ...r, rect: shift(r.rect, oy) });
+      else if (r.kind === "sfx")
+        items.push({ ...r, cy: r.cy + oy, rect: shift(r.rect, oy) });
+    }
+    y = oy + bottom;
   }
-}
-function layoutStrip(input) {
-  return new StripBuilder(input).run();
+  function textBeat(p) {
+    let side = 0;
+    for (const t of p.text) {
+      if (t.type === "sfx") {
+        const size = RULES2.sfx.beat, tw = measure(t.text.toUpperCase(), "sfx", size);
+        items.push({
+          kind: "sfx",
+          panel: p.id,
+          textIndex: p.text.indexOf(t),
+          text: t.text,
+          cx: W / 2,
+          cy: y + size / 2,
+          size,
+          rot: -8,
+          color: RULES2.sfxColors[sfxI++ % RULES2.sfxColors.length],
+          rect: [W / 2 - tw / 2, y, W / 2 + tw / 2, y + size],
+          breaksFrame: false
+        });
+        y += size + 30;
+        continue;
+      }
+      if (t.type === "thought" || t.type === "speech") {
+        const { lines, w: tw, h: th } = fitText(t.text, "speech", RULES2.speech.size, RULES2.speech.lh, 3.4, 96, 270);
+        const rx = tw / 2 * 1.32 + 12, ry = th / 2 * 1.38 + 10, cx = side === 0 ? 70 + rx : W - 70 - rx, cy = y + ry;
+        items.push({
+          kind: t.type,
+          panel: p.id,
+          textIndex: p.text.indexOf(t),
+          speaker: t.speaker,
+          text: t.text,
+          lines,
+          cx,
+          cy,
+          rx,
+          ry,
+          textW: tw,
+          textH: th,
+          tail: null,
+          shout: false,
+          rect: [cx - rx, cy - ry, cx + rx, cy + ry],
+          fallback: null
+        });
+        y += 2 * ry + 30;
+        side ^= 1;
+        continue;
+      }
+      const { lines, w: tw, h: th } = fitText(t.text, "narration", RULES2.narration.size, RULES2.narration.lh, 3.2, 60, 330);
+      const bw = tw + 40, bh = th + 28, x = side === 0 ? 70 : W - 70 - bw;
+      items.push({ kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [x, y, x + bw, y + bh], fallback: null });
+      y += bh + 40;
+      side ^= 1;
+    }
+    y -= 40;
+  }
+  sb.panels.forEach((p, i) => {
+    y += gapBefore(p);
+    if (p.kind === "image")
+      imagePanel(p, i === 0);
+    else
+      textBeat(p);
+    prevKind = p.kind;
+  });
+  y += 100;
+  return { width: W, height: Math.round(y), panels: panelsOut, items, log };
 }
 
 // src/backend/webtoon/store.ts
@@ -64948,13 +65213,16 @@ function relayout(doc) {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard)
     return null;
-  const imageSizes = {};
-  for (const [id, panel] of Object.entries(doc.panels)) {
-    const take = panel.takes[panel.selected];
-    if (take?.width && take.height)
-      imageSizes[id] = { width: take.width, height: take.height };
+  const images = {};
+  for (const p of storyboard.panels) {
+    if (p.kind !== "image")
+      continue;
+    const panel = doc.panels[String(p.id)];
+    const take = panel?.takes[panel.selected];
+    const [width, height] = p.size.split("x").map(Number);
+    images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
   }
-  return layoutStrip({ storyboard, imageSizes });
+  return layoutStrip(storyboard, images);
 }
 function stripView(doc) {
   return {
@@ -65011,7 +65279,7 @@ async function plan(deps, prompt, signal) {
     try {
       const result = await deps.services.llm.complete({ purpose: "webtoon-planner", messages: [{ role: "user", content: prompt }], responseMode: "json", settings: { timeoutMs: PLANNER_TIMEOUT_MS }, retries: 0 }, { signal });
       model = result.model;
-      const ok = storyboardHardOk(result.parsed);
+      const ok = hardOk(result.parsed);
       calls.push({ ms: result.latencyMs, finishReason: result.finishReason, parsed: true, hardOk: ok });
       if (ok)
         return { raw: result.parsed, model, calls };
@@ -65067,8 +65335,11 @@ async function runWebtoonStrip(deps, req) {
         throw error;
       }
       await req.assertTarget();
-      const validated = validateStoryboard(planned.raw, { names: context.roster.map((r) => r.name), outfits: Object.fromEntries(context.roster.map((r) => [r.name, [r.currentOutfitId, ...r.outfits.map((o) => o.id).filter((id) => id !== r.currentOutfitId)].filter(Boolean)])) }, req.source);
-      const cast = castFor(context.roster, validated.storyboard.outfits);
+      const outfitLog = [];
+      const outfits = chosenOutfits(planned.raw, context.roster, outfitLog);
+      const validated = validateStoryboard(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
+      validated.log.unshift(...outfitLog);
+      const cast = castFor(context.roster, outfits);
       const planImages = validated.storyboard.panels.filter((p) => p.kind === "image");
       doc = await write((d) => {
         d.planner = { model: planned.model, calls: planned.calls };
@@ -65084,7 +65355,7 @@ async function runWebtoonStrip(deps, req) {
       });
     }
     const requests = doc.requests;
-    const images = (doc.storyboard?.panels ?? []).filter((p) => p.kind === "image" && requests[String(p.id)]);
+    const images = (doc.storyboard?.panels ?? []).filter((p) => p.kind === "image" && !!requests[String(p.id)]);
     const todo = images.filter((p) => doc.panels[String(p.id)]?.status !== "done");
     let failed = 0;
     for (const [index, panel] of todo.entries()) {
@@ -65180,7 +65451,7 @@ async function editWebtoonText(deps, req) {
 }
 
 // src/backend/pipeline/controller.ts
-var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str5 = (v) => v == null ? "" : String(v).trim();
 var sleep = (ms, signal) => new Promise((resolve) => {
   const t = setTimeout(done, ms);
@@ -65369,12 +65640,12 @@ function createChatPipelineController(services, engine, options = {}) {
   const autoRetryable = (error) => {
     if (!error || isCancellation(error))
       return false;
-    const r = rec5(error);
-    const inner = error instanceof RpcFailure ? rec5(error.error) : rec5(r.rpcError);
+    const r = rec4(error);
+    const inner = error instanceof RpcFailure ? rec4(error.error) : rec4(r.rpcError);
     const retryable = r.retryable ?? inner.retryable;
     if (retryable === false)
       return false;
-    const status = Number(r.httpStatus ?? r.status ?? rec5(inner.details).status);
+    const status = Number(r.httpStatus ?? r.status ?? rec4(inner.details).status);
     const code = str5(r.code) || str5(inner.detailCode);
     return retryable === true || error instanceof TypeError || status === 408 || status === 429 || status >= 500 && status < 600 || ["ANALYZER_JSON_PARSE", "ANALYZER_EMPTY_RESPONSE", "ANALYZER_TIMEOUT", "REQUEST_TIMEOUT", "CHAN_SERVER_TIMEOUT", "CHAN_SERVER_NETWORK", "V5_ANALYZER_NO_USABLE_ILLUSTRATION"].includes(code) || error instanceof RpcFailure && error.error.code === "timeout";
   };
@@ -65739,7 +66010,7 @@ function createChatPipelineController(services, engine, options = {}) {
   const charactersOf = (record) => {
     const configChars = Array.isArray(record.novelAIConfig?.characterPrompts) ? record.novelAIConfig.characterPrompts : [];
     return record.characters.map((c, i) => {
-      const cfg = rec5(configChars[i]);
+      const cfg = rec4(configChars[i]);
       return {
         prompt: c.prompt,
         uc: c.negativePrompt,
@@ -65797,10 +66068,10 @@ function createChatPipelineController(services, engine, options = {}) {
         const list = listNovelAIArtists(config.characterPrompt.artistPrompts);
         const next = list.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
         const old = list.find((a) => a.id === record.artistId);
-        const tracked = rec5(rec5(record.novelAIConfig).nonArtistPromptWeightArtist);
+        const tracked = rec4(rec4(record.novelAIConfig).nonArtistPromptWeightArtist);
         out.positive = replaceSegment(out.positive, str5(tracked.positive) || str5(old?.prompt), str5(next.prompt));
         out.negative = replaceSegment(out.negative, str5(tracked.negative) || str5(old?.negativePrompt), str5(next.negativePrompt));
-        const o = rec5(next.novelAIOverrides);
+        const o = rec4(next.novelAIOverrides);
         for (const key of ["steps", "scale", "cfgRescale"])
           if (Number.isFinite(Number(o[key])))
             out.configPatch[key] = Number(o[key]);
@@ -65866,7 +66137,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const provider = record.engineProvider === "comfy-ui" ? "comfy-ui" : record.engineProvider === "chan-server" ? "chan-server" : "novelai";
     if (provider !== "novelai")
       return { provider, prompt: positive, negativePrompt: negative, seed, width, height };
-    const cfg = { ...rec5(record.novelAIConfig) };
+    const cfg = { ...rec4(record.novelAIConfig) };
     delete cfg.nonArtistPromptWeight;
     delete cfg.nonArtistPromptSource;
     delete cfg.nonArtistPromptWeightArtist;
@@ -65943,7 +66214,7 @@ function createChatPipelineController(services, engine, options = {}) {
       if (signal.aborted)
         throw new DOMException("Regeneration was cancelled.", "AbortError");
       await targetGuard(job.target)();
-      const meta = rec5(result.providerMetadata);
+      const meta = rec4(result.providerMetadata);
       const imageId = str5(meta.imageId) || str5(result.requestId);
       if (!imageId)
         throw new Error("The image provider returned no image id.");
@@ -65972,7 +66243,7 @@ function createChatPipelineController(services, engine, options = {}) {
         storePlanAndTree(d, plan, tree);
         return d;
       });
-      const finalized = rec5(result.finalizedPrompt);
+      const finalized = rec4(result.finalizedPrompt);
       await updateSidecar(services.storage, chatId, (s) => {
         s.records[entry.entryId] = {
           ...record,
@@ -65987,7 +66258,7 @@ function createChatPipelineController(services, engine, options = {}) {
           sizeId: overrides?.sizeId ?? record.sizeId,
           positivePrompt: str5(result.effectivePrompt) || str5(finalized.positivePrompt) || String(request.prompt ?? ""),
           negativePrompt: String(request.negativePrompt ?? ""),
-          sentParameters: rec5(meta.sentParameters),
+          sentParameters: rec4(meta.sentParameters),
           generationOrigin: "regenerate",
           parentEntryId: source.entryId,
           actors: rebuilt.actors,
@@ -66142,7 +66413,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const provider = record ? providerOf(record) : entry.kind === "original" ? "original" : "novelai";
     const imageId = imageIdFromResultUrl(entry.savedPath) ?? "";
     const isNovelAI = record?.engineProvider === "novelai";
-    const v5 = isNovelAI && (rec5(record?.novelAIConfig).analysisProfile === "v5-hybrid" || /^nai-diffusion-5/u.test(record?.model ?? ""));
+    const v5 = isNovelAI && (rec4(record?.novelAIConfig).analysisProfile === "v5-hybrid" || /^nai-diffusion-5/u.test(record?.model ?? ""));
     const busy = messageBusy(chatId, resolved.message.messageKey);
     return {
       chatId,
@@ -66245,7 +66516,7 @@ function createChatPipelineController(services, engine, options = {}) {
     emitChanged(chatId, []);
   };
   const handleGenerationEnded = async (raw) => {
-    const payload = rec5(raw);
+    const payload = rec4(raw);
     tracker.ended(payload);
     if (disposed || payload.error)
       return;
@@ -66273,8 +66544,8 @@ function createChatPipelineController(services, engine, options = {}) {
     }
   };
   const handleHostEvent = async (event, raw) => {
-    const payload = rec5(raw);
-    const chatId = str5(payload.chatId) || str5(rec5(payload.message).chat_id);
+    const payload = rec4(raw);
+    const chatId = str5(payload.chatId) || str5(rec4(payload.message).chat_id);
     switch (event) {
       case "GENERATION_STARTED":
         tracker.started(payload);
@@ -66285,14 +66556,14 @@ function createChatPipelineController(services, engine, options = {}) {
       case "GENERATION_ENDED":
         return handleGenerationEnded(raw);
       case "MESSAGE_DELETED": {
-        const ids = [str5(payload.messageId), str5(rec5(payload.message).id), ...Array.isArray(payload.messageIds) ? payload.messageIds.map(str5) : []].filter(Boolean);
+        const ids = [str5(payload.messageId), str5(rec4(payload.message).id), ...Array.isArray(payload.messageIds) ? payload.messageIds.map(str5) : []].filter(Boolean);
         for (const id of ids)
           if (chatId)
             await dropMessageData(chatId, id).catch((e) => log("warn", "Message data cleanup failed", toRpcError(e)));
         return;
       }
       case "MESSAGE_SWIPED": {
-        const message = rec5(payload.message);
+        const message = rec4(payload.message);
         if (payload.action === "deleted" && chatId && str5(message.id) && Number.isSafeInteger(payload.swipeId))
           await dropMessageData(chatId, str5(message.id), Number(payload.swipeId)).catch((e) => log("warn", "Swipe data cleanup failed", toRpcError(e)));
         else if (chatId)
@@ -66300,7 +66571,7 @@ function createChatPipelineController(services, engine, options = {}) {
         return;
       }
       case "CHARACTER_EDITED": {
-        const id = str5(payload.characterId) || str5(payload.id) || str5(rec5(payload.character).id);
+        const id = str5(payload.characterId) || str5(payload.id) || str5(rec4(payload.character).id);
         services.sources.invalidate(id || undefined);
         return;
       }
@@ -66909,9 +67180,9 @@ class ProviderRunRegistry {
     return this.runs.size;
   }
 }
-var rec6 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str6 = (v) => v == null ? "" : String(v).trim();
-var num = (v, fallback, min, max) => {
+var num2 = (v, fallback, min, max) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 };
@@ -66942,7 +67213,7 @@ function toImageBytes(value, fallbackMime = "image/png") {
   }
   if (value instanceof Uint8Array)
     return value.length ? { data: bytesToBase642(value), mimeType: fallbackMime } : null;
-  const r = rec6(value);
+  const r = rec5(value);
   if (typeof r.data === "string" && r.data)
     return { data: r.data, mimeType: str6(r.mimeType) || str6(r.mime_type) || fallbackMime };
   if (r.bytes instanceof Uint8Array && r.bytes.length)
@@ -66955,7 +67226,7 @@ function toProviderError(error) {
   if (isAbortLike(error) || !(error instanceof RpcFailure))
     return error;
   const e = error.error;
-  const details = rec6(e.details);
+  const details = rec5(e.details);
   const status = Number(details.status ?? details.httpStatus);
   return Object.assign(new Error(e.message, { cause: error }), {
     code: e.detailCode || (e.code === "timeout" ? "REQUEST_TIMEOUT" : e.code === "cancelled" ? "REQUEST_ABORTED" : e.code),
@@ -67005,18 +67276,18 @@ function engineResult(provider, result, extra = {}) {
       model: result.model,
       attempts: result.attempts,
       sentParameters: result.sentParameters,
-      ...rec6(extra.providerMetadata)
+      ...rec5(extra.providerMetadata)
     }
   };
 }
 function normalizeCharacterPrompts(value) {
   return (Array.isArray(value) ? value : []).map((raw) => {
-    const r = rec6(raw);
+    const r = rec5(raw);
     return {
       prompt: str6(r.prompt),
       uc: str6(r.uc),
-      centerX: num(r.centerX, 0.5, 0, 1),
-      centerY: num(r.centerY, 0.5, 0, 1),
+      centerX: num2(r.centerX, 0.5, 0, 1),
+      centerY: num2(r.centerY, 0.5, 0, 1),
       actorSlot: str6(r.actorSlot) || undefined,
       coordinateMode: r.coordinateMode === "automatic" ? "automatic" : "fixed"
     };
@@ -67026,7 +67297,7 @@ function buildNovelAIRequest(request, ctx, extras = {}) {
   const rawPrompt = typeof request.prompt === "string" ? request.prompt : "";
   const force = request.forceNsfwPrefix ?? ctx.forceNsfwPrefix();
   const prompt = force && rawPrompt.trim() ? prependNsfwTag2(rawPrompt) : rawPrompt;
-  const config = { ...rec6(request.config), width: request.width, height: request.height, negativePrompt: request.negativePrompt, seed: request.seed };
+  const config = { ...rec5(request.config), width: request.width, height: request.height, negativePrompt: request.negativePrompt, seed: request.seed };
   const input = str6(prompt);
   if (!input)
     throw Object.assign(new Error("NovelAI prompt is empty."), { code: "NOVELAI_PROMPT_EMPTY", retryable: false });
@@ -67052,7 +67323,7 @@ function buildNovelAIRequest(request, ctx, extras = {}) {
   const novelai = {
     sampler: str6(config.sampler) || "k_euler_ancestral",
     noiseSchedule: str6(config.noiseSchedule) || "karras",
-    steps: Math.round(num(config.steps, 28, 1, 50)),
+    steps: Math.round(num2(config.steps, 28, 1, 50)),
     scale: Number(config.scale) || 6,
     cfgRescale: Number.isFinite(Number(config.cfgRescale)) ? Number(config.cfgRescale) : 0.5,
     qualityToggle: config.qualityToggle !== false,
@@ -67090,15 +67361,15 @@ async function prepareReferences(services, refs, signal) {
   const references = [];
   const failures = [];
   for (const raw of refs) {
-    const r = rec6(raw);
-    const asset = rec6(r.asset);
+    const r = rec5(raw);
+    const asset = rec5(r.asset);
     try {
       const prepared = toImageBytes(r.image) ?? await services.imageBytes.getAsset(asset, { signal });
       const type = str6(r.type);
       references.push({
         ...prepared,
-        strength: num(r.strength, 0.6, 0, 1),
-        fidelity: num(r.fidelity, 1, 0, 1),
+        strength: num2(r.strength, 0.6, 0, 1),
+        fidelity: num2(r.fidelity, 1, 0, 1),
         type: type === "style" || type === "character&style" ? type : "character"
       });
     } catch (error) {
@@ -67120,11 +67391,11 @@ function createNovelAIAdapter(services, registry) {
       onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "queued" });
       const refs = Array.isArray(request.references) ? request.references : [];
       const prepared = refs.length ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
-      const i2iRaw = rec6(request.imageToImage);
+      const i2iRaw = rec5(request.imageToImage);
       const i2iImage = request.imageToImage ? toImageBytes(i2iRaw.image) : null;
       const build = buildNovelAIRequest(request, ctx, {
         characterReferences: prepared.references,
-        ...i2iImage ? { imageToImage: { ...i2iImage, strength: num(i2iRaw.strength, 0.4, 0.4, 1), noise: num(i2iRaw.noise, 0, 0, 1) } } : {}
+        ...i2iImage ? { imageToImage: { ...i2iImage, strength: num2(i2iRaw.strength, 0.4, 0.4, 1), noise: num2(i2iRaw.noise, 0, 0, 1) } } : {}
       });
       onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "generating" });
       const result = await generateImage(services, build.request, { signal, onProgress: (p) => emitProgress("novelai", onEvent, ctx, p) });
@@ -67133,7 +67404,7 @@ function createNovelAIAdapter(services, registry) {
         effectivePrompt: build.effectivePrompt,
         finalizedPrompt: build.finalizedPrompt,
         providerMetadata: {
-          nonArtistPromptWeight: rec6(build.finalizedPrompt).weight,
+          nonArtistPromptWeight: rec5(build.finalizedPrompt).weight,
           referenceFailures: prepared.failures,
           requestBody: build.body
         }
@@ -67203,7 +67474,7 @@ function createImageProviderAdapters(services, registry) {
 function createComfyReferencePreparer(services) {
   return {
     async prepare(reference, options = {}) {
-      const asset = rec6(reference.asset);
+      const asset = rec5(reference.asset);
       const bytes = await services.imageBytes.getAsset(asset, { signal: options.signal });
       return { bytes: base64ToBytes2(bytes.data), mimeType: bytes.mimeType, extension: extensionFor(bytes.mimeType) };
     }

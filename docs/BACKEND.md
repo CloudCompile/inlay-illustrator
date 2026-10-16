@@ -39,6 +39,16 @@ Tests use `src/backend/testing/fake-host.ts` (in-memory Spindle host) and `fake-
 `src/shared/contract/chat-dom.ts`), `chat-data.ts` (plans <-> Image History), `records.ts` (sidecar `chats/<chatId>/pipeline.json`:
 generation records + zoom drafts), `host-chat.ts` (messages / swipes), `labels.ts`.
 
+## Webtoon mode (`src/backend/webtoon`, experimental)
+
+When the chat image setting `webtoonMode` is on, a message job runs `run.ts runWebtoonStrip` instead of the analyzer:
+`roster.ts` (cast, outfits, artist / negative / NovelAI parameters from the analyzer context inputs), one planner call
+(`planner-prompt.ts`, `LlmService.complete`, up to 3 calls), `storyboard-validate.ts` (webtoon bench round 2: quotes, limits,
+layout and size repairs, `drop_outfit`), `panel-request.ts` (identity + framing-weighted outfit tags, `use_coords`), one
+`EnginePort.dispatch` per image panel (NovelAI adapter, ImageService queue), `layout.ts` (pure, coordinates only) and
+`store.ts` (`chats/<chatId>/webtoon/<messageId>@<swipe>.json` + `index.json`). Panel rerolls are regenerate jobs with slot id
+`webtoon:<panelId>`; text edits are stored as overrides and re-laid out. Nothing is baked into the message.
+
 ## Asset analysis (`src/backend/analysis`, see its README)
 
 `core/analysis-core.ts` is a generated verbatim slice of the Asset Maid controllers (character prompts, references, persona,

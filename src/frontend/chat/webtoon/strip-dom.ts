@@ -4,7 +4,7 @@
  * 690 px design width and scaled to the message width by the caller (`setStripScale`).
  * Per panel: reroll button; clicking a text item opens a small editor.
  */
-import type { LayoutItem, SfxItem, WebtoonPanelState, WebtoonStripView } from "../../../shared/contract/webtoon.js";
+import type { LaidItem, PanelLayout, SfxItem, TitleItem, WebtoonPanelState, WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import { balloonShapes } from "./svg-shapes.js";
 
 export const STRIP_WIDTH = 690;
@@ -32,15 +32,12 @@ function el<K extends keyof HTMLElementTagNameMap>(doc: Document, tag: K, classN
   return node;
 }
 
-function textKey(item: Pick<LayoutItem, "panelId" | "textIndex">): string {
-  return `${item.panelId}:${item.textIndex}`;
-}
-
-function panelImage(doc: Document, state: WebtoonPanelState | undefined, panel: { w: number; h: number; crop: [number, number, number, number] }, opts: StripRenderOptions): HTMLElement {
+function panelImage(doc: Document, state: WebtoonPanelState | undefined, panel: PanelLayout, opts: StripRenderOptions): HTMLElement {
   const take = state && state.selected >= 0 ? state.takes[state.selected] : undefined;
   if (take) {
-    const visH = panel.h / Math.max(0.0001, panel.crop[3] - panel.crop[1]);
-    const img = el(doc, "img", "ii-wt-img", { width: px(panel.w), height: px(visH), "margin-top": px(-panel.crop[1] * visH) });
+    const w = panel.rect[2] - panel.rect[0];
+    const visH = (panel.rect[3] - panel.rect[1]) / Math.max(0.0001, panel.crop[3] - panel.crop[1]);
+    const img = el(doc, "img", "ii-wt-img", { width: px(w), height: px(visH), "margin-top": px(-panel.crop[1] * visH) });
     img.src = take.url;
     img.alt = "";
     img.draggable = false;
@@ -53,29 +50,34 @@ function panelImage(doc: Document, state: WebtoonPanelState | undefined, panel: 
   return placeholder;
 }
 
-function textNode(doc: Document, item: LayoutItem, handlers: StripHandlers, label: string): HTMLElement {
+type TextItem = Exclude<LaidItem, TitleItem>;
+
+function textNode(doc: Document, item: TextItem, handlers: StripHandlers, label: string): HTMLElement {
   let node: HTMLElement;
   if (item.kind === "speech" || item.kind === "thought") {
-    const box = item.textBox;
-    node = el(doc, "div", item.kind === "thought" ? "ii-wt-bt ii-wt-th" : "ii-wt-bt", { left: px(box.x), top: px(box.y), width: px(box.w), height: px(box.h) });
+    node = el(doc, "div", item.kind === "thought" ? "ii-wt-bt ii-wt-th" : "ii-wt-bt", {
+      left: px(item.cx - item.textW / 2 - 4), top: px(item.cy - item.textH / 2), width: px(item.textW + 8), height: px(item.textH),
+    });
   } else if (item.kind === "narration") {
     const [x0, y0, x1, y1] = item.rect;
     node = el(doc, "div", "ii-wt-narr", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) });
   } else {
     const sfx = item as SfxItem;
-    const [x0, y0] = sfx.rect;
-    node = el(doc, "div", "ii-wt-sfx", { left: px(x0), top: px(y0), "font-size": px(sfx.size), color: sfx.color, transform: `rotate(${sfx.rot}deg)` });
+    const w = sfx.rect[2] - sfx.rect[0];
+    node = el(doc, "div", "ii-wt-sfx", { left: px(sfx.cx - w / 2), top: px(sfx.cy - sfx.size / 2), width: px(w), "font-size": px(sfx.size), color: sfx.color, transform: `rotate(${sfx.rot}deg)` });
   }
-  item.lines.forEach((line, i) => {
+  const lines = item.kind === "sfx" ? [item.text] : item.lines;
+  lines.forEach((line, i) => {
     if (i) node.appendChild(doc.createElement("br"));
     node.appendChild(doc.createTextNode(line));
   });
-  node.setAttribute("data-ii-wt-text", textKey(item));
+  const panelId = String(item.panel);
+  node.setAttribute("data-ii-wt-text", `${panelId}:${item.textIndex}`);
   node.title = label;
   node.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    handlers.onEditText({ panelId: item.panelId, textIndex: item.textIndex, text: item.text });
+    handlers.onEditText({ panelId, textIndex: item.textIndex, text: item.text });
   });
   return node;
 }
@@ -87,10 +89,15 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   const canvas = el(doc, "div", "ii-wt-canvas", { width: px(STRIP_WIDTH), height: px(layout.height) });
   canvas.setAttribute("data-ii-wt-revision", String(view.revision));
   for (const panel of layout.panels) {
-    const box = el(doc, "div", "ii-wt-panel", { left: px(panel.x), top: px(panel.y), width: px(panel.w), height: px(panel.h) });
-    box.setAttribute("data-ii-wt-panel", panel.panelId);
-    if (panel.mask) box.setAttribute("data-ii-wt-mask", panel.mask);
-    box.appendChild(panelImage(doc, view.panels[panel.panelId], panel, opts));
+    const [x0, y0, x1, y1] = panel.rect;
+    const box = el(doc, "div", "ii-wt-panel", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) });
+    box.setAttribute("data-ii-wt-panel", String(panel.id));
+    if (panel.fade) box.setAttribute("data-ii-wt-fade", panel.fade);
+    if (panel.frameBreak) {
+      const [fx0, fy0, fx1, fy1] = panel.frame;
+      box.style.setProperty("clip-path", `inset(${px(fy0 - y0)} ${px(x1 - fx1)} ${px(y1 - fy1)} ${px(fx0 - x0)})`);
+    }
+    box.appendChild(panelImage(doc, view.panels[String(panel.id)], panel, opts));
     canvas.appendChild(box);
   }
   const svg = doc.createElementNS(SVG_NS, "svg");
@@ -108,29 +115,30 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
     }
   }
   canvas.appendChild(svg);
-  for (const panel of layout.panels) {
-    if (!panel.title) continue;
-    const title = el(doc, "div", "ii-wt-title", { top: px(panel.title.y) });
-    if (panel.title.small) title.appendChild(Object.assign(el(doc, "div", "ii-wt-t1"), { textContent: panel.title.small }));
-    title.appendChild(Object.assign(el(doc, "div", "ii-wt-t2"), { textContent: panel.title.big }));
-    title.appendChild(el(doc, "div", "ii-wt-bar"));
-    canvas.appendChild(title);
+  for (const item of layout.items) {
+    if (item.kind === "title") {
+      const title = el(doc, "div", "ii-wt-title", { top: px(item.y) });
+      if (item.small) title.appendChild(Object.assign(el(doc, "div", "ii-wt-t1"), { textContent: item.small }));
+      title.appendChild(Object.assign(el(doc, "div", "ii-wt-t2"), { textContent: item.big }));
+      title.appendChild(el(doc, "div", "ii-wt-bar"));
+      canvas.appendChild(title);
+    } else canvas.appendChild(textNode(doc, item, handlers, opts.labels.edit));
   }
-  for (const item of layout.items) canvas.appendChild(textNode(doc, item, handlers, opts.labels.edit));
   for (const panel of layout.panels) {
-    const busy = opts.busyPanels.has(panel.panelId);
-    const button = el(doc, "button", "ii-wt-reroll", { left: px(panel.x + panel.w - 44), top: px(panel.y + 8) });
+    const panelId = String(panel.id);
+    const busy = opts.busyPanels.has(panelId);
+    const button = el(doc, "button", "ii-wt-reroll", { left: px(panel.frame[2] - 44), top: px(panel.frame[1] + 8) });
     button.type = "button";
     button.title = opts.labels.reroll;
     button.setAttribute("aria-label", opts.labels.reroll);
-    button.setAttribute("data-ii-wt-reroll", panel.panelId);
+    button.setAttribute("data-ii-wt-reroll", panelId);
     if (busy) button.setAttribute("data-ii-wt-busy", "true");
-    button.disabled = busy || opts.stripBusy || !view.panels[panel.panelId];
+    button.disabled = busy || opts.stripBusy || !view.panels[panelId];
     button.textContent = "\u21bb";
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      if (!button.disabled) handlers.onReroll(panel.panelId);
+      if (!button.disabled) handlers.onReroll(panelId);
     });
     canvas.appendChild(button);
   }

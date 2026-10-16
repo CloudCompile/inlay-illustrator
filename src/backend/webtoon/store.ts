@@ -15,9 +15,9 @@ import {
   type WebtoonStripView,
 } from "../../shared/contract/index.js";
 import type { StorageService } from "../services/types.js";
-import { layoutStrip } from "./layout.js";
+import { layoutStrip, type PanelImage } from "./layout.js";
 import type { PanelRequest, WebtoonStyle } from "./panel-request.js";
-import type { Storyboard, StoryboardStats } from "./storyboard-schema.js";
+import type { Storyboard } from "./storyboard-schema.js";
 
 export interface PlannerCall {
   ms: number;
@@ -43,7 +43,7 @@ export interface WebtoonStripDocument {
   planner: { model: string; calls: PlannerCall[] } | null;
   storyboardRaw: unknown;
   storyboard: Storyboard | null;
-  validation: { log: string[]; stats: StoryboardStats } | null;
+  validation: { log: string[]; stats: Record<string, unknown> } | null;
   /** Cast of this strip: name -> prompt key and chosen outfit. */
   cast: Array<{ name: string; key: string; outfitId: string }>;
   style: WebtoonStyle | null;
@@ -142,16 +142,19 @@ export function effectiveStoryboard(doc: Pick<WebtoonStripDocument, "storyboard"
   };
 }
 
-/** Layout from the storyboard + overrides; image sizes from the selected takes (else the planned size). */
+/** Layout from the storyboard + overrides; image sizes from the selected takes, else the planned size. */
 export function relayout(doc: WebtoonStripDocument): StripLayout | null {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard) return null;
-  const imageSizes: Record<string, { width: number; height: number }> = {};
-  for (const [id, panel] of Object.entries(doc.panels)) {
-    const take = panel.takes[panel.selected];
-    if (take?.width && take.height) imageSizes[id] = { width: take.width, height: take.height };
+  const images: Record<string, PanelImage> = {};
+  for (const p of storyboard.panels) {
+    if (p.kind !== "image") continue;
+    const panel = doc.panels[String(p.id)];
+    const take = panel?.takes[panel.selected];
+    const [width, height] = p.size.split("x").map(Number) as [number, number];
+    images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
   }
-  return layoutStrip({ storyboard, imageSizes });
+  return layoutStrip(storyboard, images);
 }
 
 export function stripView(doc: WebtoonStripDocument): WebtoonStripView {

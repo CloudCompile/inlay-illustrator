@@ -169,6 +169,7 @@ Root: Spindle `userStorage` of the extension (`{DATA_DIR}/users/{userId}/extensi
 | `characters/<characterId>/asset-maid.json` | `CharacterDocument` | charx lore entry `asset-maid:data` |
 | `characters/<characterId>/metadata-cache.json` | `assetMetadataAvailability` | `local:metadata-cache:<sourceId>` |
 | `characters/<characterId>/reference-crops/<name>.png` | crop images | `__asset_maid_crop_*` assets |
+| `chats/<chatId>/webtoon/<messageId>@<swipe>.json`, `chats/<chatId>/webtoon/index.json` | Webtoon strip per message swipe (experimental webtoon mode; `webtoon.ts` view types, backend-private document) | - |
 | `chats/<chatId>/chat-data.json` | `ChatDataDocument` | chat localLore `asset-maid:chat-data` + `asset-maid:current-actor-state` |
 | `uploads/<id>.<ext>` | uploaded reference images (when not stored as Lumiverse images) | `saveAsset` |
 

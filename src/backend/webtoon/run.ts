@@ -8,10 +8,11 @@ import { isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
 import type { EnginePort } from "../pipeline/engine-port.js";
 import type { ChatMessageView } from "../pipeline/host-chat.js";
-import { buildPlannerPrompt } from "./planner-prompt.js";
+import { buildPlannerPrompt, chosenOutfits } from "./planner-prompt.js";
 import { buildPanelRequest, engineImageRequest, type PanelRequest, type WebtoonStyle } from "./panel-request.js";
-import { castFor, loadWebtoonContext } from "./roster.js";
-import { storyboardHardOk, validateStoryboard } from "./storyboard-schema.js";
+import { castFor, loadWebtoonContext, validationRoster } from "./roster.js";
+import type { ImagePanel } from "./storyboard-schema.js";
+import { hardOk, validateStoryboard } from "./storyboard-validate.js";
 import { createStripDocument, readStrip, relayout, stripView, takeOf, updateStrip, type PlannerCall, type WebtoonStripDocument } from "./store.js";
 
 const MAX_PLANNER_CALLS = 3;
@@ -104,7 +105,7 @@ async function plan(deps: WebtoonDeps, prompt: string, signal: AbortSignal): Pro
         { signal },
       );
       model = result.model;
-      const ok = storyboardHardOk(result.parsed);
+      const ok = hardOk(result.parsed);
       calls.push({ ms: result.latencyMs, finishReason: result.finishReason, parsed: true, hardOk: ok });
       if (ok) return { raw: result.parsed, model, calls };
     } catch (error) {
@@ -163,13 +164,12 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         throw error;
       }
       await req.assertTarget();
-      const validated = validateStoryboard(
-        planned.raw,
-        { names: context.roster.map((r) => r.name), outfits: Object.fromEntries(context.roster.map((r) => [r.name, [r.currentOutfitId, ...r.outfits.map((o) => o.id).filter((id) => id !== r.currentOutfitId)].filter(Boolean)])) },
-        req.source,
-      );
-      const cast = castFor(context.roster, validated.storyboard.outfits);
-      const planImages = validated.storyboard.panels.filter((p) => p.kind === "image");
+      const outfitLog: string[] = [];
+      const outfits = chosenOutfits(planned.raw, context.roster, outfitLog);
+      const validated = validateStoryboard(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
+      validated.log.unshift(...outfitLog);
+      const cast = castFor(context.roster, outfits);
+      const planImages = validated.storyboard.panels.filter((p): p is ImagePanel => p.kind === "image");
       doc = await write((d) => {
         d.planner = { model: planned.model, calls: planned.calls };
         d.storyboardRaw = planned.raw;
@@ -184,7 +184,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
       });
     }
     const requests = doc.requests;
-    const images = (doc.storyboard?.panels ?? []).filter((p) => p.kind === "image" && requests[String(p.id)]);
+    const images = (doc.storyboard?.panels ?? []).filter((p): p is ImagePanel => p.kind === "image" && !!requests[String(p.id)]);
     const todo = images.filter((p) => doc!.panels[String(p.id)]?.status !== "done");
 
     let failed = 0;

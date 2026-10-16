@@ -16,7 +16,7 @@ const shot = (id: number, extra: Record<string, unknown> = {}) => ({
 
 const STORYBOARD = {
   title: "Chapter 1: Late Again",
-  outfits: { Shouta: "o2" },
+  outfits: [{ name: "Shouta", outfit_id: "o2" }],
   panels: [
     shot(1, { layout: "title", beat: "title" }),
     shot(2, { text: [{ type: "speech", speaker: "Alice", text: "You're late again!", anchor: "top-left" }, { type: "speech", speaker: "Shouta", text: "I overslept, sorry.", anchor: "top-right" }] }),
@@ -66,14 +66,14 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const planner = fx.llmRequests[0]!;
     expect(planner.purpose).toBe("webtoon-planner");
     const prompt = String(planner.messages[0]!.content);
-    expect(prompt).toContain("- Shouta (man/boy): black hair, tall; outfits: o1 = \"Hoodie\" (current); o2 = \"Uniform\".");
-    expect(prompt).not.toContain("grey hoodie");
+    expect(prompt).toContain('- Shouta (man/boy): black hair, tall; wardrobe: o1 (current) = "Hoodie" (items: top: grey hoodie; bottom: jeans); o2 = "Uniform" (items: top: gakuran; bottom: black pants; feet: loafers).');
+    expect(prompt).not.toContain("black hair, male");
     expect(engine.dispatches.length).toBe(6);
     const first = engine.dispatches[1]!.request as Record<string, any>;
     expect(first.prompt).toMatch(/^1boy, /u);
     expect(first.config.useCoords).toBe(true);
     expect(first.config.forceCharacterCoordinates).toBe(true);
-    expect(first.config.characterPrompts).toEqual([{ prompt: "male, black hair, running, looking at viewer, 1.2::gakuran::, black pants\nHe runs.", uc: "", centerX: 0.7, centerY: 0.7, coordinateMode: "fixed" }]);
+    expect(first.config.characterPrompts).toEqual([{ prompt: "male, 1.1::black hair::, running, looking at viewer, 1.2::gakuran::, black pants\nHe runs.", uc: "", centerX: 0.7, centerY: 0.7, coordinateMode: "fixed" }]);
     expect(String(first.negativePrompt)).toContain("speech bubble, text");
     expect((engine.dispatches[2]!.request as Record<string, any>).prompt).toMatch(/^no humans, /u);
 
@@ -83,7 +83,7 @@ describe("webtoon mode (controller over a fake engine)", () => {
     expect(strip.cast).toEqual([{ name: "Shouta", key: "persona::persona-1", outfitId: "o2" }]);
     expect(Object.values(strip.panels).map((p) => [p.status, p.takes.length, p.selected])).toEqual(Array(6).fill(["done", 1, 0]));
     expect(strip.layout!.panels.length).toBe(6);
-    expect(strip.layout!.items.map((i) => i.text)).toEqual(["You're late again!", "Mr. Bob watched them from the window.", "tug"]);
+    expect(strip.layout!.items.map((i) => (i.kind === "title" ? `title:${i.big}` : i.text))).toEqual(["title:Late Again", "You're late again!", "Mr. Bob watched them from the window.", "tug"]);
     expect(strip.validation!.log.some((l) => l.includes("I overslept"))).toBe(true);
     expect(fx.message("m1").content).toBe(STORY);
 
@@ -108,10 +108,11 @@ describe("webtoon mode (controller over a fake engine)", () => {
     expect(view.panels["2"]!.selected).toBe(1);
 
     const edited = (await pipeline.editWebtoonText({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", textIndex: 0, text: "Late. Again." })).strip;
-    expect(edited.layout!.items[0]!.text).toBe("Late. Again.");
+    const balloon = (s: typeof edited) => s.layout!.items.flatMap((i) => (i.kind === "speech" ? [i.text] : []))[0];
+    expect(balloon(edited)).toBe("Late. Again.");
     expect(edited.revision).toBeGreaterThan(view.revision);
     const reverted = (await pipeline.editWebtoonText({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", textIndex: 0, text: "You're late again!" })).strip;
-    expect(reverted.layout!.items[0]!.text).toBe("You're late again!");
+    expect(balloon(reverted)).toBe("You're late again!");
     expect((await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.textOverrides).toEqual({});
     pipeline.dispose();
   });

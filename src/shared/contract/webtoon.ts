@@ -1,53 +1,31 @@
 /**
- * Webtoon strip layout as stored and rendered: output of the backend layout engine (src/backend/webtoon/layout.ts),
- * input of the live-DOM renderer. All coordinates are strip pixels (690 px wide) unless noted.
+ * Webtoon strip layout as stored and rendered: output of the backend layout engine (src/backend/webtoon/layout.ts, round 2
+ * of the webtoon bench), input of the live-DOM renderer. Coordinates are strip pixels (690 px design width) unless noted.
  */
-export type Rect = [number, number, number, number];
+export type Rect = [number, number, number, number]; // x0, y0, x1, y1 in strip px
 export type Point = [number, number];
 
-export interface LayoutPanel {
-  panelId: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  /** Normalized sx0, sy0, sx1, sy1 of the source image shown in the box. */
-  crop: Rect;
-  mask: "fade-bottom" | "fade-sides" | null;
-  title?: { small: string; big: string; y: number };
+export interface PanelLayout {
+  id: number;
+  rect: Rect; // where the whole (cropped) image is drawn
+  crop: [number, number, number, number]; // normalized source window shown in rect
+  frame: Rect; // visible panel frame (equals rect unless the panel breaks its frame)
+  frameBreak: "top" | "left" | "right" | null;
+  cutout: { src: string } | null; // drawn over the image inside rect, unclipped by frame
+  fade: "bottom" | "sides" | null;
+  heads: Record<string, Point>;
+  faces: Record<string, Rect | null>;
 }
-export interface LayoutItemBase {
-  panelId: string;
-  /** Index into the panel's text[]. */
-  textIndex: number;
-  text: string;
-  lines: string[];
-  /** Strip coords x0, y0, x1, y1. */
-  rect: Rect;
-  fallback?: string | null;
+/** `textIndex`: index into the storyboard panel's text list (the text edit target). */
+export interface BalloonItem {
+  kind: "speech" | "thought"; panel: number; textIndex: number; speaker: string | null; text: string; lines: string[]; cx: number; cy: number; rx: number; ry: number;
+  textW: number; textH: number; tail: Point | null; shout: boolean; rect: Rect; fallback: string | null;
 }
-export interface BalloonItem extends LayoutItemBase {
-  kind: "speech" | "thought";
-  cx: number;
-  cy: number;
-  rx: number;
-  ry: number;
-  tail: Point | null;
-  shout: boolean;
-  speaker: string | null;
-  textBox: { x: number; y: number; w: number; h: number };
-}
-export interface NarrationItem extends LayoutItemBase { kind: "narration" }
-export interface SfxItem extends LayoutItemBase { kind: "sfx"; cx: number; cy: number; size: number; rot: number; color: string }
-export type LayoutItem = BalloonItem | NarrationItem | SfxItem;
-
-export interface StripLayout {
-  version: 1;
-  width: 690;
-  height: number;
-  panels: LayoutPanel[];
-  items: LayoutItem[];
-}
+export interface NarrationItem { kind: "narration"; panel: number; textIndex: number; text: string; lines: string[]; rect: Rect; fallback: string | null }
+export interface SfxItem { kind: "sfx"; panel: number; textIndex: number; text: string; cx: number; cy: number; size: number; rot: number; color: string; rect: Rect; breaksFrame: boolean }
+export interface TitleItem { kind: "title"; panel: number; small: string; big: string; y: number }
+export type LaidItem = BalloonItem | NarrationItem | SfxItem | TitleItem;
+export interface StripLayout { width: number; height: number; panels: PanelLayout[]; items: LaidItem[]; log: string[] }
 
 /* ------------------------------------------------------------------------------------------------
  * Strip state per message swipe (experimental webtoon mode), as the chat view reads it (`webtoon.get`)

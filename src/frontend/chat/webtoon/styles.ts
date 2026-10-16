@@ -15,8 +15,8 @@ export const WEBTOON_CSS = [
 .ii-wt-strip { position: relative; width: 100%; max-width: 690px; margin: 14px auto 6px; background: #fff; overflow: hidden; border-radius: 4px; color: #111; }
 .ii-wt-canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #fff; }
 .ii-wt-panel { position: absolute; overflow: hidden; background: #f3f1ee; }
-.ii-wt-panel[data-ii-wt-mask="fade-bottom"] { -webkit-mask-image: linear-gradient(#000 62%, transparent 98%); mask-image: linear-gradient(#000 62%, transparent 98%); }
-.ii-wt-panel[data-ii-wt-mask="fade-sides"] { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%); }
+.ii-wt-panel[data-ii-wt-fade="bottom"] { -webkit-mask-image: linear-gradient(#000 62%, transparent 98%); mask-image: linear-gradient(#000 62%, transparent 98%); }
+.ii-wt-panel[data-ii-wt-fade="sides"] { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%); }
 .ii-wt-img { display: block; max-width: none; user-select: none; }
 .ii-wt-placeholder { display: grid; place-items: center; width: 100%; height: 100%; padding: 12px; box-sizing: border-box; font: 600 15px/1.3 system-ui, sans-serif; color: #8a8178; text-align: center; background: repeating-linear-gradient(135deg, #f5f2ee 0 14px, #ece8e2 14px 28px); }
 .ii-wt-placeholder[data-ii-wt-state="error"] { color: #b4463c; }
@@ -25,7 +25,7 @@ export const WEBTOON_CSS = [
 .ii-wt-bt { display: flex; align-items: center; justify-content: center; text-align: center; font-family: "II Webtoon Comic Neue", "Comic Neue", "Comic Sans MS", sans-serif; font-weight: 700; font-size: 19px; line-height: 22px; color: #111; }
 .ii-wt-bt.ii-wt-th { font-style: italic; color: #333; }
 .ii-wt-narr { box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center; font-family: "II Webtoon Patrick Hand", "Patrick Hand", sans-serif; font-size: 20px; line-height: 24px; color: #111; background: #fff; border: 2px solid #111; padding: 6px 10px; }
-.ii-wt-sfx { font-family: "II Webtoon Bangers", Bangers, Impact, sans-serif; line-height: 1; letter-spacing: 2px; -webkit-text-stroke: 6px #fff; paint-order: stroke fill; text-shadow: 3px 4px 0 #2a1a2a; white-space: nowrap; }
+.ii-wt-sfx { font-family: "II Webtoon Bangers", Bangers, Impact, sans-serif; line-height: 1; letter-spacing: 2px; text-align: center; text-transform: uppercase; -webkit-text-stroke: 8px #fff; paint-order: stroke fill; text-shadow: 4px 5px 0 #2a1a2a; white-space: nowrap; }
 .ii-wt-bt:hover, .ii-wt-narr:hover, .ii-wt-sfx:hover { outline: 2px dashed rgba(215, 140, 60, .7); outline-offset: 2px; }
 .ii-wt-title { position: absolute; left: 0; width: 690px; text-align: center; font-family: "II Webtoon Patrick Hand", "Patrick Hand", sans-serif; color: #fff; text-shadow: 0 2px 10px rgba(30, 20, 40, .65); pointer-events: none; }
 .ii-wt-title .ii-wt-t1 { font-size: 26px; letter-spacing: 6px; }
