@@ -69,6 +69,15 @@ export const PIPELINE_TEXT = Object.freeze({
   },
 } satisfies Record<string, Label>);
 
+/** Experimental webtoon mode progress (no Asset Maid original; Korean added for the ko locale). */
+export const WEBTOON_TEXT = Object.freeze({
+  planning: { en: "Webtoon: planning the storyboard", ko: "웹툰: 스토리보드 구성 중" },
+  panel: { en: "Webtoon: drawing panel {n} of {total}", ko: "웹툰: {total}컷 중 {n}컷 그리는 중" },
+  finishing: { en: "Webtoon: finishing", ko: "웹툰: 마무리 중" },
+  reroll: { en: "Webtoon: redrawing panel {n}", ko: "웹툰: {n}컷 다시 그리는 중" },
+  busy: { en: "This panel is already being redrawn.", ko: "이 컷은 이미 다시 그리는 중입니다." },
+} satisfies Record<string, Label>);
+
 export function formatLabel(label: Label, values: Record<string, string | number> = {}): Label {
   const fill = (s: string) => s.replace(/\{(\w+)\}/gu, (_m, k: string) => String(values[k] ?? `{${k}}`));
   return { en: fill(label.en), ko: fill(label.ko) };

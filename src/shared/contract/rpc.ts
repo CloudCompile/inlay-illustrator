@@ -28,6 +28,7 @@ import type { AnalyzerSettings, ChatImageGenerationSettings, CharxSettingsPatch,
 import type { CharxSettingField } from "./character.js";
 import type { GenerationOrigin, HistoryTree } from "./history.js";
 import type { ChatMessageUiState } from "./chat-dom.js";
+import type { WebtoonStripView } from "./webtoon.js";
 
 export const RPC_PROTOCOL_VERSION = 1;
 /** Message `type` used on the Spindle frontend/backend channel. */
@@ -525,6 +526,13 @@ export interface RpcMethods {
    * Without `messageIds`: every eligible assistant message of the chat (with or without data).
    */
   "chatDom.getMessageStates": { params: { chatId: string; messageIds?: string[] }; result: { messages: ChatMessageUiState[] } };
+
+  /* experimental webtoon mode (strip per message swipe, see webtoon.ts) */
+  "webtoon.get": { params: { chatId: string; messageKey: string }; result: { strip: WebtoonStripView | null } };
+  /** New image for one panel (new seed), as a regenerate job; the strip is laid out again when it finishes. */
+  "webtoon.rerollPanel": { params: { chatId: string; messageKey: string; panelId: string }; result: { jobId: string } };
+  /** Replace the text of one text item (`textIndex` into the panel's text list) and lay the strip out again. */
+  "webtoon.editText": { params: { chatId: string; messageKey: string; panelId: string; textIndex: number; text: string }; result: { strip: WebtoonStripView } };
 }
 
 export type RpcMethod = keyof RpcMethods;
@@ -605,6 +613,7 @@ export const RPC_METHODS = [
   "zoom.getDetails", "zoom.saveDraft", "zoom.clearDraft", "zoom.importViewed", "zoom.requestAiPromptEdit", "zoom.applyAiPromptEdit",
   "chatState.get", "chatState.clear", "chatState.set",
   "chatDom.getMessageStates",
+  "webtoon.get", "webtoon.rerollPanel", "webtoon.editText",
 ] as const satisfies readonly RpcMethod[];
 
 export const RPC_EVENTS = [

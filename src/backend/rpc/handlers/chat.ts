@@ -1,5 +1,5 @@
 /**
- * RPC handlers owned by the `pipeline` module: generation.*, history.*, zoom.*, chatState.*, chatDom.* (see ./index.ts).
+ * RPC handlers owned by the `pipeline` module: generation.*, history.*, zoom.*, chatState.*, chatDom.*, webtoon.* (see ./index.ts).
  * Every handler delegates to `ctx.modules.pipeline` (src/backend/pipeline/controller.ts).
  */
 import { fail } from "../errors.js";
@@ -83,4 +83,19 @@ export const chatHandlers: HandlerGroup = {
 
   /* chat DOM */
   "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
+
+  /* webtoon (experimental) */
+  "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey")),
+  "webtoon.rerollPanel": (params, ctx) => pipelineOf(ctx).rerollWebtoonPanel(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), need(params.panelId, "panelId")),
+  "webtoon.editText": (params, ctx) => {
+    if (!Number.isSafeInteger(params.textIndex) || params.textIndex < 0) fail("bad-request", "textIndex is required.");
+    if (typeof params.text !== "string") fail("bad-request", "text is required.");
+    return pipelineOf(ctx).editWebtoonText({
+      chatId: need(params.chatId, "chatId"),
+      messageKey: need(params.messageKey, "messageKey"),
+      panelId: need(params.panelId, "panelId"),
+      textIndex: params.textIndex,
+      text: params.text,
+    });
+  },
 };

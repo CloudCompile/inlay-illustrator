@@ -117,6 +117,23 @@ export const RETRY_STAGE_LABELS: Record<string, string> = {
 export const RETRY_DETAIL_STAGE_LABEL = "Detail {n} analysis";
 
 /** Generation-count panel (spec/ui.md §6.2.4). */
+/** Webtoon strip in the chat (experimental; no Asset Maid original). */
+export const WEBTOON_LABELS = {
+  reroll: "Redraw this panel",
+  drawing: "Drawing…",
+  pending: "Not drawn yet",
+  failed: "Webtoon failed",
+  panelFailed: "This panel failed",
+  planning: "Planning the webtoon storyboard…",
+  cancelled: "Webtoon generation was cancelled.",
+  edit: "Click to edit the text",
+  editText: "Text",
+  save: "Save",
+  cancel: "Cancel",
+  editFailed: "Could not save the text",
+  rerollFailed: "Could not redraw the panel",
+} as const;
+
 export const COUNT_LABELS = {
   section: "Global chat image generation settings", // 전역 채팅 이미지 생성 설정
   expand: "Expand global image generation settings", // 전역 이미지 생성 설정 펼치기
@@ -133,6 +150,9 @@ export const COUNT_LABELS = {
   fixed: "Fixed", // 고정
   range: "Range", // 범위
   split: "Split", // 분할
+  webtoon: "Webtoon", // 웹툰
+  webtoonNote: "6–8 panels", // 6~8컷 (webtoon mode: follows the message length)
+  webtoonNoteTitle: "Webtoon mode: one strip per message, 6 to 8 panels by message length.", // 웹툰 모드: 메시지마다 웹툰 한 편, 길이에 따라 6~8컷.
   splitUnsupported: "Split analysis is supported on V5. Select fixed or range.", // 분할 분석은 V5에서 지원합니다. 고정 또는 범위를 선택하세요.
   count: "Generation count", // 생성 장수
   countDecrease: "Decrease generation count", // 생성 장수 감소

@@ -410,7 +410,9 @@ export const CHAT_SIDE_CSS = String.raw`
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 314px; }
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"][data-ii-scene-available="true"],
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 400px; }
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="webtoon"] { --ii-am-floating-panel-width: 300px; }
 @media (max-width: 640px) {
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="webtoon"] { --ii-am-floating-panel-width: 340px; }
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"] { --ii-am-floating-panel-width: 296px; }
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"],
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"] { --ii-am-floating-panel-width: 412px; }
@@ -471,6 +473,7 @@ export const CHAT_SIDE_CSS = String.raw`
 .ii-am-root .ii-am-chat-count__step-button:disabled { color: rgba(241, 229, 207, .24); cursor: default; }
 .ii-am-root .ii-am-chat-count__step-output { display: grid; min-width: 23px; height: 32px; place-items: center; font: var(--ii-am-chat-font); font-variant-numeric: tabular-nums; }
 .ii-am-root .ii-am-chat-count__separator { color: var(--ii-am-chat-muted); }
+.ii-am-root .ii-am-chat-count__note { padding: 0 8px; color: var(--ii-am-chat-muted); font-size: 12px; white-space: nowrap; }
 .ii-am-root .ii-am-chat-count__option:hover,
 .ii-am-root .ii-am-chat-count__scene-button:hover,
 .ii-am-root .ii-am-chat-count__step-button:hover:not(:disabled) { background: color-mix(in oklab, var(--ii-am-chat-control-bg) 90%, white 10%); color: var(--ii-am-chat-hover); }

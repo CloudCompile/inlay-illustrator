@@ -61,6 +61,7 @@ import {
   type RpcError,
   type SlotDeletionPreview,
   type ZoomDetails,
+  type WebtoonStripView,
   type ZoomPromptSection,
 } from "../../shared/contract/index.js";
 import { resolveImageSize } from "../../engine/compose/index.js";
@@ -93,9 +94,11 @@ import {
   type RevisionInput,
 } from "./generate.js";
 import { HostGenerationTracker, isIllustratableMessage, loadMessages, swipeContent, writeSwipeContent, type ChatMessageView } from "./host-chat.js";
-import { formatLabel, labelError, phaseProgress, PIPELINE_TEXT, type Label } from "./labels.js";
+import { formatLabel, labelError, phaseProgress, PIPELINE_TEXT, WEBTOON_TEXT, type Label } from "./labels.js";
 import { bakeMessage, messageSlots, stripForInterceptor, type InterceptorMessage } from "./markup.js";
 import { readSidecar, sidecarPath, updateSidecar } from "./records.js";
+import { editWebtoonText, rerollWebtoonPanel, runWebtoonStrip, type WebtoonProgress } from "../webtoon/run.js";
+import { readStrip, stripSummaries, stripView } from "../webtoon/store.js";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : {});
@@ -162,6 +165,11 @@ export interface ChatPipeline {
 
   /** Re-bake one message from its History (publish). */
   publish(chatId: string, messageKey: string): Promise<PublishResult>;
+
+  /* webtoon.* (experimental webtoon mode) */
+  getWebtoon(chatId: string, messageKey: string): Promise<{ strip: WebtoonStripView | null }>;
+  rerollWebtoonPanel(chatId: string, messageKey: string, panelId: string): Promise<{ jobId: string }>;
+  editWebtoonText(params: { chatId: string; messageKey: string; panelId: string; textIndex: number; text: string }): Promise<{ strip: WebtoonStripView }>;
 }
 
 export type PublishResult = "published" | "missing" | "streaming";
@@ -176,6 +184,8 @@ interface JobRecord {
   /** Re-run inputs (retry / restart). */
   regenerate?: { entryId?: string; overrides?: RegenerationOverrides };
   revision?: RevisionInput;
+  /** Webtoon panel reroll: panel id. */
+  webtoonPanel?: string;
   /** Failed attempts: whole-run auto retries (AM `fail` 115606, stage "분석·생성") and the current engine run. */
   retryErrors?: { run: readonly GenerationRetryError[]; engine: readonly GenerationRetryError[] };
   done: Promise<void>;
@@ -475,6 +485,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const settings =
       opts.settings ?? (attemptKind === "retry" && settingsSnapshots.has(skey) ? settingsSnapshots.get(skey)! : await services.storage.loadChatImageGenerationSettings());
     const runSettings: ChatImageGenerationSettings = opts.countPolicy ? { ...settings, countPolicy: opts.countPolicy } : settings;
+    if (runSettings.webtoonMode && !opts.revision) return runWebtoonOnce(job, { config, chat, messages, target, view, content, historyId, attemptKind, chatData: doc0 });
     const split = runSettings.analysisMode === "split" && !opts.revision;
     const countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
     if (attemptKind !== "retry") analyzerCompleted.delete(skey);
@@ -668,6 +679,76 @@ export function createChatPipelineController(services: BackendServices, engine: 
     }
   };
 
+  /** Toast label + fraction for a webtoon step (planner, then one step per panel). */
+  const webtoonProgress = (job: JobRecord, p: WebtoonProgress) => {
+    const total = Math.max(1, p.total ?? 1);
+    if (p.stage === "planning") setPhase(job, "analyzing-preset", { imageCount: total });
+    else setPhase(job, p.stage, { imageIndex: p.done ?? 0, imageCount: total });
+    const label = p.stage === "planning" ? WEBTOON_TEXT.planning : p.stage === "generating" ? formatLabel(WEBTOON_TEXT.panel, { n: (p.done ?? 0) + 1, total }) : WEBTOON_TEXT.finishing;
+    job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
+    job.snapshot.requestedCount = total;
+    emitProgress(job);
+  };
+
+  /** Webtoon mode: one strip for the message instead of the analyzer run (no plan / History / bake changes). */
+  const runWebtoonOnce = async (
+    job: JobRecord,
+    input: { config: InlayConfig; chat: ChatInfo; messages: ChatMessageView[]; target: number; view: ChatMessageView; content: string; historyId: string; attemptKind: AttemptKind; chatData: ChatDataDocument },
+  ): Promise<Outcome> => {
+    const { chatId } = job.target;
+    const characterId = await speakingCharacterId(services, input.chat, input.view);
+    const document = await services.storage.loadCharacterDocument(characterId);
+    const clean = messageSlots(job.planKey, input.content, nativeDetectorsFor(characterId, "", document)).clean;
+    const result = await runWebtoonStrip(
+      { services, engine, now },
+      {
+        chatId,
+        chat: input.chat,
+        messages: input.messages,
+        target: input.target,
+        historyId: input.historyId,
+        planKey: job.planKey,
+        source: clean,
+        config: input.config,
+        chatData: input.chatData,
+        signal: job.controller.signal,
+        assertTarget: targetGuard(job.target),
+        resume: input.attemptKind === "retry",
+        onProgress: (p) => webtoonProgress(job, p),
+        onChanged: () => emitChanged(chatId, [job.planKey]),
+      },
+    );
+    if (result.status === "cancelled") return { kind: "cancelled" };
+    if (result.status === "complete") return { kind: "completed" };
+    job.snapshot.failedSlots = result.failedPanels;
+    return { kind: "failed", error: result.error ?? rpcError("provider-error", PIPELINE_TEXT.generationIncomplete.en), autoRetryable: false, partial: result.failedPanels > 0 };
+  };
+
+  const runWebtoonReroll = async (job: JobRecord, config: InlayConfig): Promise<void> => {
+    const { chatId } = job.target;
+    try {
+      setPhase(job, "generating", { imageIndex: 0, imageCount: 1 });
+      const label = formatLabel(WEBTOON_TEXT.reroll, { n: job.webtoonPanel! });
+      job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
+      emitProgress(job);
+      const historyId = job.planKey.replace(/^illustration:/u, "");
+      await rerollWebtoonPanel({ services, engine, now }, { chatId, historyId, panelId: job.webtoonPanel!, config, signal: job.controller.signal, onChanged: () => emitChanged(chatId, [job.planKey]) });
+      job.snapshot.completedSlots = 1;
+      finishJob(job, "completed", "success");
+    } catch (e) {
+      if (job.controller.signal.aborted || isCancellation(e)) finishJob(job, "cancelled", "cancelled");
+      else {
+        const error = errorOf(e);
+        finishJob(job, "failed", "error", error);
+        log("warn", "Webtoon panel reroll failed", error);
+      }
+    } finally {
+      const key = k(chatId, job.slotId!);
+      if (slotJobs.get(key) === job) slotJobs.delete(key);
+      emitChanged(chatId, [job.planKey]);
+    }
+  };
+
   const runMessageJob = async (job: JobRecord, opts: RunOptions): Promise<void> => {
     const key = k(job.target.chatId, job.planKey);
     let current = opts;
@@ -716,6 +797,11 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const parsed = parseHistoryMessageId(planKey.replace(/^illustration:/u, ""));
     if (!parsed || !planKey.startsWith("illustration:")) fail("bad-request", `Not an illustration message key: ${planKey}`);
     return { chatId, messageId: parsed.messageId, swipeIndex: parsed.swipeIndex };
+  };
+
+  const targetHistoryId = (chatId: string, planKey: string): string => {
+    const t = targetOfKey(chatId, planKey);
+    return toHistoryMessageId(t.messageId, t.swipeIndex);
   };
 
   /* ---------------------------------------------------------------- single-slot regeneration (AM `$bt` 122319) */
@@ -1380,6 +1466,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
       const job = jobs.get(jobId) ?? fail("not-found", `Job not found: ${jobId}`);
       if (job.snapshot.status === "queued" || job.snapshot.status === "running") throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
       job.dismissed = true;
+      if (job.webtoonPanel) return api.rerollWebtoonPanel(job.target.chatId, job.planKey, job.webtoonPanel);
       if (job.kind === "regenerate") return api.regenerateSlot({ chatId: job.target.chatId, messageKey: job.planKey, slotId: job.slotId!, ...(job.regenerate?.entryId ? { entryId: job.regenerate.entryId } : {}), ...(job.regenerate?.overrides ? { overrides: job.regenerate.overrides } : {}) });
       if (messageBusy(job.target.chatId, job.planKey)) throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
       const next = job.kind === "revision" && job.revision
@@ -1718,7 +1805,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     },
 
     async getMessageStates(chatId, messageIds) {
-      const [messages, doc] = await Promise.all([loadMessages(services.host, chatId), services.storage.loadChatData(chatId)]);
+      const [messages, doc, strips] = await Promise.all([loadMessages(services.host, chatId), services.storage.loadChatData(chatId), stripSummaries(services.storage, chatId)]);
       const wanted = messageIds?.length ? new Set(messageIds) : null;
       const regenerating = new Set([...slotJobs.values()].filter((j) => j.target.chatId === chatId).map((j) => j.slotId!));
       const out: ChatMessageUiState[] = [];
@@ -1742,8 +1829,39 @@ export function createChatPipelineController(services: BackendServices, engine: 
             ...(lastError ? { lastError } : {}),
           }),
         );
+        const strip = strips[toHistoryMessageId(m.id, m.swipeId)];
+        if (strip) out[out.length - 1]!.webtoon = strip;
       }
       return { messages: out };
+    },
+
+    async getWebtoon(chatId, messageKey) {
+      const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
+      return { strip: doc ? stripView(doc) : null };
+    },
+
+    async rerollWebtoonPanel(chatId, messageKey, panelId) {
+      const target = targetOfKey(chatId, messageKey);
+      const slotId = `webtoon:${panelId}`;
+      const slotKey = k(chatId, slotId);
+      if (slotJobs.has(slotKey)) throw new RpcFailure(labelError("busy", WEBTOON_TEXT.busy));
+      if (messageJobs.has(k(chatId, messageKey))) throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
+      const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
+      if (!doc?.requests[panelId]) fail("not-found", `Webtoon panel not found: ${panelId}`);
+      const config = await services.storage.loadConfig();
+      const job = createJob({ target, planKey: messageKey, kind: "regenerate", attemptKind: "regenerate", slotId, requestedCount: 1 });
+      job.webtoonPanel = panelId;
+      slotJobs.set(slotKey, job);
+      emitProgress(job);
+      job.done = runWebtoonReroll(job, config);
+      return { jobId: job.snapshot.jobId };
+    },
+
+    async editWebtoonText(params) {
+      const historyId = targetHistoryId(params.chatId, params.messageKey);
+      const result = await editWebtoonText({ services, engine, now }, { chatId: params.chatId, historyId, panelId: params.panelId, textIndex: params.textIndex, text: params.text });
+      emitChanged(params.chatId, [params.messageKey]);
+      return { strip: result };
     },
   };
   return api;

@@ -1,0 +1,173 @@
+/**
+ * Webtoon strip storage: one document per message swipe, `chats/<chatId>/webtoon/<messageId>@<swipe>.json`, plus
+ * `chats/<chatId>/webtoon/index.json` (revision + status per swipe, read by `chatDom.getMessageStates`).
+ * The document keeps the planner output (raw + validated storyboard, validation log), the exact panel requests, every
+ * take (image id + seed), the selected take, text overrides and the layout computed from all of that.
+ */
+import {
+  STORAGE_PATHS,
+  imageResultUrl,
+  safePathSegment,
+  type StripLayout,
+  type WebtoonPanelState,
+  type WebtoonStripStatus,
+  type WebtoonStripSummary,
+  type WebtoonStripView,
+} from "../../shared/contract/index.js";
+import type { StorageService } from "../services/types.js";
+import { layoutStrip } from "./layout.js";
+import type { PanelRequest, WebtoonStyle } from "./panel-request.js";
+import type { Storyboard, StoryboardStats } from "./storyboard-schema.js";
+
+export interface PlannerCall {
+  ms: number;
+  finishReason: string;
+  parsed: boolean;
+  hardOk: boolean;
+  error?: string;
+}
+
+export interface WebtoonStripDocument {
+  schema: "inlay-illustrator.webtoon";
+  version: 1;
+  chatId: string;
+  messageKey: string;
+  historyId: string;
+  characterId: string;
+  status: WebtoonStripStatus;
+  error?: string;
+  revision: number;
+  createdAt: number;
+  updatedAt: number;
+  sourceLength: number;
+  planner: { model: string; calls: PlannerCall[] } | null;
+  storyboardRaw: unknown;
+  storyboard: Storyboard | null;
+  validation: { log: string[]; stats: StoryboardStats } | null;
+  /** Cast of this strip: name -> prompt key and chosen outfit. */
+  cast: Array<{ name: string; key: string; outfitId: string }>;
+  style: WebtoonStyle | null;
+  /** Panel id -> exact request (prompts, size, centers). */
+  requests: Record<string, PanelRequest>;
+  panels: Record<string, WebtoonPanelState>;
+  /** `<panelId>:<textIndex>` -> edited text. */
+  textOverrides: Record<string, string>;
+  layout: StripLayout | null;
+}
+
+type Index = Record<string, WebtoonStripSummary>;
+
+export const webtoonDir = (chatId: string) => `${STORAGE_PATHS.chatDir(chatId)}webtoon/`;
+export const webtoonPath = (chatId: string, historyId: string) => `${webtoonDir(chatId)}${safePathSegment(historyId)}.json`;
+const indexPath = (chatId: string) => `${webtoonDir(chatId)}index.json`;
+
+export function createStripDocument(input: { chatId: string; messageKey: string; historyId: string; characterId: string; sourceLength: number; now: number; revision?: number }): WebtoonStripDocument {
+  return {
+    schema: "inlay-illustrator.webtoon",
+    version: 1,
+    chatId: input.chatId,
+    messageKey: input.messageKey,
+    historyId: input.historyId,
+    characterId: input.characterId,
+    status: "planning",
+    revision: input.revision ?? 1,
+    createdAt: input.now,
+    updatedAt: input.now,
+    sourceLength: input.sourceLength,
+    planner: null,
+    storyboardRaw: null,
+    storyboard: null,
+    validation: null,
+    cast: [],
+    style: null,
+    requests: {},
+    panels: {},
+    textOverrides: {},
+    layout: null,
+  };
+}
+
+export async function readStrip(storage: StorageService, chatId: string, historyId: string): Promise<WebtoonStripDocument | null> {
+  const raw = await storage.readJson<WebtoonStripDocument | null>(webtoonPath(chatId, historyId), null);
+  return raw && raw.schema === "inlay-illustrator.webtoon" && raw.version === 1 ? raw : null;
+}
+
+async function writeIndex(storage: StorageService, doc: WebtoonStripDocument | null, chatId: string, historyId: string): Promise<void> {
+  await storage.updateJson<Index>(indexPath(chatId), {}, (index) => {
+    const next = { ...index };
+    if (doc) next[historyId] = { revision: doc.revision, status: doc.status };
+    else delete next[historyId];
+    return next;
+  });
+}
+
+/** Serialized read-modify-write of one strip; bumps `revision` / `updatedAt` and the index. */
+export async function updateStrip(
+  storage: StorageService,
+  chatId: string,
+  historyId: string,
+  mutate: (doc: WebtoonStripDocument | null) => WebtoonStripDocument,
+  now: () => number = Date.now,
+): Promise<WebtoonStripDocument> {
+  const written = await storage.updateJson<WebtoonStripDocument | null>(webtoonPath(chatId, historyId), null, (current) => {
+    const valid = current && current.schema === "inlay-illustrator.webtoon" && current.version === 1 ? current : null;
+    const next = mutate(valid ? structuredClone(valid) : null);
+    return { ...next, revision: (valid?.revision ?? next.revision - 1) + 1, updatedAt: now() };
+  });
+  await writeIndex(storage, written!, chatId, historyId);
+  return written!;
+}
+
+export async function deleteStrip(storage: StorageService, chatId: string, historyId: string): Promise<void> {
+  await storage.delete(webtoonPath(chatId, historyId));
+  await writeIndex(storage, null, chatId, historyId);
+}
+
+export async function stripSummaries(storage: StorageService, chatId: string): Promise<Index> {
+  return storage.readJson<Index>(indexPath(chatId), {});
+}
+
+/** Storyboard with the text overrides applied, as the layout engine reads it. */
+export function effectiveStoryboard(doc: Pick<WebtoonStripDocument, "storyboard" | "textOverrides">): Storyboard | null {
+  if (!doc.storyboard) return null;
+  return {
+    ...doc.storyboard,
+    panels: doc.storyboard.panels.map((p) => ({
+      ...p,
+      text: p.text.map((t, i) => {
+        const edited = doc.textOverrides[`${p.id}:${i}`];
+        return edited === undefined ? t : { ...t, text: edited };
+      }),
+    })),
+  };
+}
+
+/** Layout from the storyboard + overrides; image sizes from the selected takes (else the planned size). */
+export function relayout(doc: WebtoonStripDocument): StripLayout | null {
+  const storyboard = effectiveStoryboard(doc);
+  if (!storyboard) return null;
+  const imageSizes: Record<string, { width: number; height: number }> = {};
+  for (const [id, panel] of Object.entries(doc.panels)) {
+    const take = panel.takes[panel.selected];
+    if (take?.width && take.height) imageSizes[id] = { width: take.width, height: take.height };
+  }
+  return layoutStrip({ storyboard, imageSizes });
+}
+
+export function stripView(doc: WebtoonStripDocument): WebtoonStripView {
+  return {
+    chatId: doc.chatId,
+    messageKey: doc.messageKey,
+    status: doc.status,
+    ...(doc.error ? { error: doc.error } : {}),
+    revision: doc.revision,
+    title: doc.storyboard?.title ?? "",
+    layout: doc.layout,
+    panels: doc.panels,
+    updatedAt: doc.updatedAt,
+  };
+}
+
+export function takeOf(imageId: string, seed: string, width: number, height: number, createdAt: number) {
+  return { imageId, url: imageResultUrl(imageId), seed, width, height, createdAt };
+}

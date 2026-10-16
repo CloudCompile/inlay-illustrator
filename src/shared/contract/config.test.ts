@@ -172,8 +172,9 @@ describe("per-character override resolution parity (ki/xE/ONe/jNe/NNe/ENe/RNe)",
 describe("chat image generation settings (Km parity)", () => {
   for (const [i, item] of (parity.chatImageSettings as AnyRec[]).entries()) {
     test(`case ${i}`, () => {
-      expect(normalizeChatImageGenerationSettings(item.input)).toEqual(item.max7);
-      expect(normalizeChatImageGenerationSettings(item.input, undefined, UNLIMITED_IMAGE_COUNT)).toEqual(item.unlimited);
+      // webtoonMode is a port addition (off unless stored).
+      expect(normalizeChatImageGenerationSettings(item.input)).toEqual({ ...item.max7, webtoonMode: false });
+      expect(normalizeChatImageGenerationSettings(item.input, undefined, UNLIMITED_IMAGE_COUNT)).toEqual({ ...item.unlimited, webtoonMode: false });
     });
   }
   test("legacy migration", () => {

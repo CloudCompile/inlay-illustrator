@@ -23,6 +23,7 @@
 import type { IllustrationPlanStatus } from "./chat.js";
 import type { GenerationOrigin, HistoryEntryKind } from "./history.js";
 import type { GenerationJobSnapshot, RpcError, RpcMethod } from "./rpc.js";
+import type { WebtoonStripSummary } from "./webtoon.js";
 
 /* ------------------------------------------------------------------------------------------------
  * Baked block
@@ -398,4 +399,6 @@ export interface ChatMessageUiState {
   allSlotsDeleted: boolean;
   /** Last failure of the plan (for the retry tooltip / toast). */
   lastError?: RpcError;
+  /** Webtoon strip of this swipe (experimental webtoon mode). */
+  webtoon?: WebtoonStripSummary;
 }
