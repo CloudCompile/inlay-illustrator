@@ -16,6 +16,11 @@ import { hardOk, validateStoryboard } from "./storyboard-validate.js";
 import { createStripDocument, readStrip, relayout, stripView, takeOf, updateStrip, type PlannerCall, type WebtoonStripDocument } from "./store.js";
 
 const MAX_PLANNER_CALLS = 3;
+/** NovelAI Opus allows one generation at a time per account: "429 Concurrent generation is locked" while another client
+ * (another tab, another app) draws. The dispatcher's quick retries are not enough; wait like the bench did. */
+const LOCK_WAIT_MS = 4000;
+const LOCK_RETRIES = 8;
+const CONCURRENT_LOCK = /\b429\b|concurrent generation/iu;
 /** One planner call may take 2 minutes (bench source c: 132 s). */
 const PLANNER_TIMEOUT_MS = 300_000;
 
@@ -23,6 +28,8 @@ export interface WebtoonDeps {
   services: BackendServices;
   engine: EnginePort;
   now?: () => number;
+  /** Wait between attempts while NovelAI reports a concurrent generation (tests). */
+  lockWaitMs?: number;
 }
 
 export interface WebtoonProgress {
@@ -72,20 +79,32 @@ async function requireNovelAI(services: BackendServices) {
 /** One panel image through the engine dispatcher (NovelAI adapter, ImageService queue, dispatcher retries). */
 async function generatePanel(deps: WebtoonDeps, input: { request: PanelRequest; style: WebtoonStyle; seed: string; chatId: string; characterId: string; config: InlayConfig; signal: AbortSignal }) {
   const target = await requireNovelAI(deps.services);
-  const result = await deps.engine.dispatch(
-    engineImageRequest(input.request, input.style, input.seed),
-    {
-      engineProvider: "novelai",
-      purpose: "chat",
-      connectionId: target.connectionId,
-      model: target.model,
-      ownerChatId: input.chatId,
-      ownerCharacterId: input.characterId,
-      forceNsfwPrefix: () => false,
-    },
-    input.config,
-    { signal: input.signal },
-  );
+  const dispatch = () =>
+    deps.engine.dispatch(
+      engineImageRequest(input.request, input.style, input.seed),
+      {
+        engineProvider: "novelai",
+        purpose: "chat",
+        connectionId: target.connectionId,
+        model: target.model,
+        ownerChatId: input.chatId,
+        ownerCharacterId: input.characterId,
+        forceNsfwPrefix: () => false,
+      },
+      input.config,
+      { signal: input.signal },
+    );
+  let result: Record<string, unknown>;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      result = await dispatch();
+      break;
+    } catch (error) {
+      if (input.signal.aborted || attempt >= LOCK_RETRIES || !CONCURRENT_LOCK.test(toRpcError(error).message)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, deps.lockWaitMs ?? LOCK_WAIT_MS));
+      if (input.signal.aborted) throw aborted();
+    }
+  }
   const meta = (result.providerMetadata ?? {}) as Record<string, unknown>;
   const imageId = String(meta.imageId ?? result.requestId ?? "").trim();
   if (!imageId) throw new Error("The image provider returned no image id.");
@@ -213,7 +232,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         services.log.append("warn", "webtoon", `Panel ${id} failed`, { chatId: req.chatId, historyId: req.historyId, error: message });
       }
     }
-    req.onProgress({ stage: "committing" });
+    req.onProgress({ stage: "committing", done: images.length - failed, total: images.length });
     const error = failed ? rpcError("provider-error", `${failed} webtoon panel(s) failed to generate.`, { retryable: true }) : undefined;
     await write((d) => {
       d.status = failed ? "error" : "complete";

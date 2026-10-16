@@ -65243,6 +65243,9 @@ function takeOf(imageId, seed, width, height, createdAt) {
 
 // src/backend/webtoon/run.ts
 var MAX_PLANNER_CALLS = 3;
+var LOCK_WAIT_MS = 4000;
+var LOCK_RETRIES = 8;
+var CONCURRENT_LOCK = /\b429\b|concurrent generation/iu;
 var PLANNER_TIMEOUT_MS = 300000;
 var aborted = () => new DOMException("Webtoon generation was cancelled.", "AbortError");
 async function requireNovelAI(services) {
@@ -65253,7 +65256,7 @@ async function requireNovelAI(services) {
 }
 async function generatePanel(deps, input) {
   const target = await requireNovelAI(deps.services);
-  const result = await deps.engine.dispatch(engineImageRequest(input.request, input.style, input.seed), {
+  const dispatch = () => deps.engine.dispatch(engineImageRequest(input.request, input.style, input.seed), {
     engineProvider: "novelai",
     purpose: "chat",
     connectionId: target.connectionId,
@@ -65262,6 +65265,19 @@ async function generatePanel(deps, input) {
     ownerCharacterId: input.characterId,
     forceNsfwPrefix: () => false
   }, input.config, { signal: input.signal });
+  let result;
+  for (let attempt = 0;; attempt += 1) {
+    try {
+      result = await dispatch();
+      break;
+    } catch (error) {
+      if (input.signal.aborted || attempt >= LOCK_RETRIES || !CONCURRENT_LOCK.test(toRpcError(error).message))
+        throw error;
+      await new Promise((resolve) => setTimeout(resolve, deps.lockWaitMs ?? LOCK_WAIT_MS));
+      if (input.signal.aborted)
+        throw aborted();
+    }
+  }
   const meta = result.providerMetadata ?? {};
   const imageId = String(meta.imageId ?? result.requestId ?? "").trim();
   if (!imageId)
@@ -65385,7 +65401,7 @@ async function runWebtoonStrip(deps, req) {
         services.log.append("warn", "webtoon", `Panel ${id} failed`, { chatId: req.chatId, historyId: req.historyId, error: message });
       }
     }
-    req.onProgress({ stage: "committing" });
+    req.onProgress({ stage: "committing", done: images.length - failed, total: images.length });
     const error = failed ? rpcError("provider-error", `${failed} webtoon panel(s) failed to generate.`, { retryable: true }) : undefined;
     await write((d) => {
       d.status = failed ? "error" : "complete";
@@ -65887,6 +65903,8 @@ function createChatPipelineController(services, engine, options = {}) {
       setPhase(job, "analyzing-preset", { imageCount: total });
     else
       setPhase(job, p.stage, { imageIndex: p.done ?? 0, imageCount: total });
+    if (p.stage !== "planning")
+      job.snapshot.completedSlots = p.done ?? 0;
     const label = p.stage === "planning" ? WEBTOON_TEXT.planning : p.stage === "generating" ? formatLabel(WEBTOON_TEXT.panel, { n: (p.done ?? 0) + 1, total }) : WEBTOON_TEXT.finishing;
     job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
     job.snapshot.requestedCount = total;

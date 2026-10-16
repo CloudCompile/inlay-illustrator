@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createPipelineModule } from "../pipeline/index.js";
 import { CHAT_ID, createFakeEngine, createPipelineFixture, finished, STORY, waitFor } from "../pipeline/testing/fixtures.js";
+import { rerollWebtoonPanel } from "./run.js";
 import { readStrip, webtoonPath } from "./store.js";
 
 const shot = (id: number, extra: Record<string, unknown> = {}) => ({
@@ -114,6 +115,24 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const reverted = (await pipeline.editWebtoonText({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", textIndex: 0, text: "You're late again!" })).strip;
     expect(balloon(reverted)).toBe("You're late again!");
     expect((await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.textOverrides).toEqual({});
+    pipeline.dispose();
+  });
+
+  test("a panel waits while NovelAI reports a concurrent generation (429 lock)", async () => {
+    const { fx, engine, pipeline } = await setup();
+    fx.llmReplies.push(STORYBOARD);
+    const run = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, run.jobId).length > 0);
+    const dispatch = engine.dispatch.bind(engine);
+    let locked = 2;
+    engine.dispatch = async (...args) => {
+      if (locked-- > 0) throw new Error("NovelAI image generate failed (429): Concurrent generation is locked");
+      return dispatch(...args);
+    };
+    const config = await fx.services.storage.loadConfig();
+    const view = await rerollWebtoonPanel({ services: fx.services, engine, lockWaitMs: 1 }, { chatId: CHAT_ID, historyId: "m1@0", panelId: "3", config, signal: new AbortController().signal, onChanged: () => {} });
+    expect(view.panels["3"]!.takes.length).toBe(2);
+    expect(locked).toBe(-1);
     pipeline.dispose();
   });
 

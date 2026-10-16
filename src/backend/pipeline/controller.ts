@@ -684,6 +684,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const total = Math.max(1, p.total ?? 1);
     if (p.stage === "planning") setPhase(job, "analyzing-preset", { imageCount: total });
     else setPhase(job, p.stage, { imageIndex: p.done ?? 0, imageCount: total });
+    if (p.stage !== "planning") job.snapshot.completedSlots = p.done ?? 0;
     const label = p.stage === "planning" ? WEBTOON_TEXT.planning : p.stage === "generating" ? formatLabel(WEBTOON_TEXT.panel, { n: (p.done ?? 0) + 1, total }) : WEBTOON_TEXT.finishing;
     job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
     job.snapshot.requestedCount = total;
