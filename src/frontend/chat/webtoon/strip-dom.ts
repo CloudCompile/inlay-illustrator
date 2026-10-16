@@ -3,7 +3,7 @@
  * positioned panels, one SVG layer of balloon shapes, and real text on top (selectable, editable). Drawn at the
  * layout width (`layout.width`, laid out for the shown width) and scaled to the frame width by the caller (`setStripScale`).
  * Per panel, shown while the pointer is over that panel: reroll button and, when the panel has older takes, previous /
- * next take arrows (on the left edge in the phone layout). Frame-break panels draw their character cut-out over the frame line.
+ * next take arrows, in one row placed clear of text boxes (left edge first in the phone layout). Frame-break panels draw their character cut-out over the frame line.
  * Clicking a text item opens a small editor.
  */
 import { STRIP_WIDTH, type LaidItem, type PanelLayout, type SfxItem, type TitleItem, type WebtoonPanelState, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
@@ -87,13 +87,29 @@ function textNode(doc: Document, item: TextItem, handlers: StripHandlers, label:
   return node;
 }
 
+/** Panel tool buttons, strip px (scaled with the strip). */
+export const TOOL_SIZE = { desktop: 36, narrow: 48, gap: 6, inset: 8 };
+
+type Box = [number, number, number, number];
+const overlaps = (a: Box, b: Box, pad: number) => a[0] < b[2] + pad && b[0] < a[2] + pad && a[1] < b[3] + pad && b[1] < a[3] + pad;
+
+/** Top-left of the tool row in strip px: the first spot inside the frame that touches no text box (else the first spot). */
+export function toolsSpot(frame: Box, count: number, size: number, narrow: boolean, textRects: readonly Box[]): [number, number] {
+  const w = count * size + (count - 1) * TOOL_SIZE.gap, h = size, m = TOOL_SIZE.inset;
+  const [x0, y0, x1, y1] = frame;
+  const left = x0 + m, right = x1 - m - w, top = y0 + m, bottom = y1 - m - h, mid = (y0 + y1 - h) / 2;
+  const spots: Array<[number, number]> = narrow
+    ? [[left, mid], [left, top], [left, bottom], [right, top], [right, bottom]]
+    : [[right, top], [left, top], [right, bottom], [left, bottom], [right, mid], [left, mid]];
+  return spots.find(([x, y]) => !textRects.some((r) => overlaps([x, y, x + w, y + h], r, 6))) ?? spots[0]!;
+}
+
 /** Build the strip at design size (690 x layout.height). Returns null while the storyboard is not planned. */
 export function renderStrip(doc: Document, view: WebtoonStripView, handlers: StripHandlers, opts: StripRenderOptions): HTMLElement | null {
   const layout = view.layout;
   if (!layout) return null;
   const canvas = el(doc, "div", "ii-wt-canvas", { width: px(layout.width), height: px(layout.height) });
   canvas.setAttribute("data-ii-wt-revision", String(view.revision));
-  // Phone layout: the panel controls move to the left edge (Lumiverse's fixed side tabs cover the right edge there).
   if (layout.width < STRIP_WIDTH) canvas.setAttribute("data-ii-wt-narrow", "true");
   for (const panel of layout.panels) {
     const [x0, y0, x1, y1] = panel.rect;
@@ -140,12 +156,18 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
       canvas.appendChild(title);
     } else canvas.appendChild(textNode(doc, item, handlers, opts.labels.edit));
   }
+  // Panel tools (reroll, take arrows) in one row, at the first frame spot clear of text boxes; the phone layout tries the left
+  // edge first (Lumiverse's fixed side tabs cover the right edge there).
+  const narrow = layout.width < STRIP_WIDTH;
+  const size = narrow ? TOOL_SIZE.narrow : TOOL_SIZE.desktop;
+  const textRects = layout.items.flatMap((item) => ("rect" in item ? [item.rect] : []));
   for (const panel of layout.panels) {
     const panelId = String(panel.id);
     const state = view.panels[panelId];
     const [fx0, fy0, fx1, fy1] = panel.frame;
     const controls = el(doc, "div", "ii-wt-controls", { left: px(fx0), top: px(fy0), width: px(fx1 - fx0), height: px(fy1 - fy0) });
     controls.setAttribute("data-ii-wt-controls", panelId);
+    const tools = el(doc, "div", "ii-wt-tools");
     const button = (className: string, label: string, text: string, disabled: boolean, onClick: () => void) => {
       const node = el(doc, "button", className);
       node.type = "button";
@@ -158,7 +180,7 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
         event.stopPropagation();
         if (!node.disabled) onClick();
       });
-      return controls.appendChild(node);
+      return tools.appendChild(node);
     };
     const busy = opts.busyPanels.has(panelId);
     const reroll = button("ii-wt-reroll", opts.labels.reroll, "\u21bb", busy || opts.stripBusy || !state, () => handlers.onReroll(panelId));
@@ -173,6 +195,9 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
       button("ii-wt-take ii-wt-take--next", `${opts.labels.nextTake} (${at})`, "\u203a", locked || state.selected >= takes - 1, () => handlers.onSelectTake(panelId, state.selected + 1))
         .setAttribute("data-ii-wt-take", "next");
     }
+    const [x, y] = toolsSpot([fx0, fy0, fx1, fy1], tools.children.length, size, narrow, textRects);
+    for (const [k, v] of Object.entries({ left: px(x - fx0), top: px(y - fy0) })) tools.style.setProperty(k, v);
+    controls.appendChild(tools);
     canvas.appendChild(controls);
   }
   // Controls of the panel under the pointer (panel image, its text items, or the controls themselves).

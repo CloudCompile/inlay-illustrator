@@ -5,6 +5,7 @@
  * - the inpainting source is the cut-out over a soft fill of its own colours (a flat fill gives the inpainting model a grey rim),
  * - the mask repaints everything with alpha < 200, widened to whole 8 px blocks,
  * - the inpainted background is flattened to opaque and the cut-out is drawn over it again (the panel image),
+ * - above the frame only the head's columns are drawn (a held prop or a door post next to the head would cross the frame alone),
  * - a coarse grid of the cut-out's alpha marks where the character is (balloons keep off it).
  * PNG decode/encode use the platform's deflate streams (8-bit RGB/RGBA, not interlaced: what NovelAI returns).
  */
@@ -24,6 +25,11 @@ export const FRAME_BREAK = {
   maskAlpha: 200,
   /** The mask covers whole blocks of this size (px). */
   maskBlock: 8,
+  /** Head crop over the frame: top share of the character, a column counts at this solid share, gaps and margin (share of the width). */
+  headBand: 0.25,
+  headColumn: 0.15,
+  headGap: 0.01,
+  headMargin: 0.02,
   /** Detached parts smaller than this share of the largest part are dropped (motion lines, emotion marks). */
   minPart: 0.15,
   /** A cut-out needs at least this share of fully transparent pixels, else the transparency did not happen. */
@@ -223,6 +229,36 @@ export function keepMainParts(image: RgbaImage): RgbaImage {
   return { width, height, data: out };
 }
 
+/**
+ * The cut-out as drawn over the frame: in the top quarter of the character (`headBand`), only the widest run of solid columns
+ * (the head) is kept, so a held prop or a door post next to the head does not cross the frame on its own. Inside the frame the
+ * panel image under it has the same pixels, so only the part above the frame line changes.
+ */
+export function cropToHead(image: RgbaImage, bbox: CutoutBox): RgbaImage {
+  const { width, height, data } = image;
+  const y0 = Math.floor(bbox.top * height);
+  const y1 = Math.min(height, y0 + Math.max(1, Math.round((bbox.bottom - bbox.top) * height * FRAME_BREAK.headBand)));
+  const counts = new Array<number>(width).fill(0);
+  for (let y = y0; y < y1; y += 1) for (let x = 0; x < width; x += 1) if (data[(y * width + x) * 4 + 3]! > FRAME_BREAK.solidAlpha) counts[x]! += 1;
+  const min = FRAME_BREAK.headColumn * (y1 - y0), gap = Math.round(FRAME_BREAK.headGap * width);
+  let best: [number, number] | null = null, start = -1, last = -1;
+  for (let x = 0; x <= width; x += 1) {
+    const on = x < width && counts[x]! >= min;
+    if (on && start < 0) start = x;
+    if (on) last = x;
+    if (start >= 0 && (x === width || (!on && x - last > gap))) {
+      if (!best || last - start > best[1] - best[0]) best = [start, last];
+      start = -1;
+    }
+  }
+  if (!best) return image;
+  const margin = Math.round(FRAME_BREAK.headMargin * width);
+  const [a, b] = [best[0] - margin, best[1] + margin];
+  const out = new Uint8Array(data);
+  for (let y = 0; y < y1; y += 1) for (let x = 0; x < width; x += 1) if (x < a || x > b) out[(y * width + x) * 4 + 3] = 0;
+  return { width, height, data: out };
+}
+
 /** Rows moved down by `dy` px (the top becomes transparent, the bottom rows fall off). */
 export function shiftDown(image: RgbaImage, dy: number): RgbaImage {
   const stride = image.width * 4;
@@ -351,8 +387,10 @@ export function characterGrid(image: RgbaImage): string[] {
 }
 
 export interface FrameBreakInputs {
-  /** The cut-out after the head shift. */
+  /** The cut-out after the head shift (infill source, panel composite, character area). */
   cutout: RgbaImage;
+  /** The cut-out drawn over the frame (`cropToHead`); `info` describes it. */
+  display: RgbaImage;
   /** Infill source (cut-out over the soft fill) and mask, PNG bytes. */
   source: Uint8Array;
   mask: Uint8Array;
@@ -368,5 +406,6 @@ export async function frameBreakInputs(generated: RgbaImage): Promise<FrameBreak
   const shift = headShift(first, transparent.height);
   const cutout = shift ? shiftDown(transparent, shift) : transparent;
   const mask = maskImage(backgroundMask(cutout), cutout.width, cutout.height);
-  return { cutout, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(cutout) };
+  const display = cropToHead(cutout, alphaInfo(cutout).bbox!);
+  return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(display) };
 }

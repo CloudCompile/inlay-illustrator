@@ -3,6 +3,7 @@ import { createPipelineModule } from "../pipeline/index.js";
 import { CHAT_ID, createFakeEngine, createPipelineFixture, finished, STORY, waitFor } from "../pipeline/testing/fixtures.js";
 import { bytesToBase64 } from "../pipeline/providers.js";
 import { encodePng } from "./cutout.js";
+import { cutoutPose } from "./panel-request.js";
 import { rerollWebtoonPanel } from "./run.js";
 import { readStrip, webtoonPath } from "./store.js";
 
@@ -145,6 +146,7 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const [cutReq, fillReq] = fx.imageRequests as Array<Record<string, any>>;
     expect(cutReq!.prompt).toMatch(/^1boy, .*upper body, transparent background, has alpha$/u);
     expect(cutReq!.prompt).not.toContain("school gate");
+    expect(cutReq!.novelai.characters[0].prompt).toBe("male, 1.1::black hair::, running, looking at viewer, 1.2::gakuran::, black pants");
     expect([fillReq!.model, fillReq!.prompt]).toEqual(["nai-diffusion-5-full-inpainting", expect.stringContaining("school gate")]);
     expect(fillReq!.novelai.rawOverride).toMatchObject({ action: "infill", parameters: { mask: expect.any(String), image: expect.any(String), add_original_image: true, inpaintImg2ImgStrength: 1 } });
     expect(fx.deletedImageIds).toEqual(["raw-cut", "raw-bg"]);
@@ -160,6 +162,12 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const second = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.panels["5"]!.takes[1]!;
     expect(second.cutout).toBeUndefined();
     pipeline.dispose();
+  });
+
+  test("cut-out pose: scene objects and place tags dropped, postures, held items and body-relative poses kept", () => {
+    const place = ["indoors", "japanese apartment", "hallway", "shoji screen", "tatami room"];
+    expect(cutoutPose("from behind, looking over shoulder, sliding door closed, hand on shoji screen", place)).toBe("from behind, looking over shoulder");
+    expect(cutoutPose("sitting on bed, holding bag, hand on hip, leaning against wall, holding door handle", place)).toBe("sitting, holding bag, hand on hip, leaning");
   });
 
   test("a panel waits while NovelAI reports a concurrent generation (429 lock)", async () => {

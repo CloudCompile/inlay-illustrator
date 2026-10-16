@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { characterGrid, decodePng, encodePng, frameBreakInputs, type RgbaImage } from "./cutout.js";
+import { alphaInfo, characterGrid, cropToHead, decodePng, encodePng, frameBreakInputs, type RgbaImage } from "./cutout.js";
 
 /** 64 x 96, transparent except a solid red block x 16..47, y from `top` down. */
 function syntheticCutout(top = 2, width = 64, height = 96): RgbaImage {
@@ -34,6 +34,15 @@ describe("frame-break cut-out", () => {
     for (let y = 2; y < 6; y += 1) for (let x = 2; x < 8; x += 1) image.data.set([255, 255, 255, 255], (y * 64 + x) * 4);
     const fb = await frameBreakInputs(image);
     expect(fb.info.bbox!.top).toBe(40 / 96);
+  });
+
+  test("above the frame only the head's columns stay (a post beside the head is cut in the top quarter)", () => {
+    const image = syntheticCutout(10);
+    for (let y = 4; y < 96; y += 1) for (let x = 54; x < 57; x += 1) image.data.set([90, 60, 30, 255], (y * 64 + x) * 4);
+    const cropped = cropToHead(image, alphaInfo(image).bbox!);
+    const alpha = (x: number, y: number) => cropped.data[(y * 64 + x) * 4 + 3];
+    expect([alpha(55, 6), alpha(55, 20), alpha(55, 60), alpha(30, 12)]).toEqual([0, 0, 255, 255]);
+    expect(alphaInfo(cropped).bbox!.top).toBe(10 / 96);
   });
 
   test("an image without a transparent background is refused", async () => {

@@ -33,21 +33,16 @@ export const WEBTOON_CSS = [
 .ii-wt-title .ii-wt-t2 { font-size: 62px; line-height: 1.05; margin: 6px 40px 0; }
 .ii-wt-title .ii-wt-bar { width: 60px; height: 2px; background: #fff; margin: 20px auto 0; }
 .ii-wt-controls { position: absolute; pointer-events: none; }
-.ii-wt-reroll, .ii-wt-take { position: absolute; pointer-events: auto; border: 0; border-radius: 50%; background: rgba(20, 16, 12, .62); color: #fff; text-align: center; cursor: pointer; opacity: 0; transition: opacity .15s; padding: 0; }
-.ii-wt-reroll { right: 8px; top: 8px; width: 36px; height: 36px; font: 700 22px/36px system-ui, sans-serif; }
-.ii-wt-take { top: 50%; width: 30px; height: 44px; margin-top: -22px; border-radius: 15px; font: 700 28px/40px system-ui, sans-serif; }
-.ii-wt-take--prev { left: 6px; }
-.ii-wt-take--next { right: 6px; }
-.ii-wt-controls[data-ii-wt-hover] > button, .ii-wt-controls > button:focus-visible, .ii-wt-reroll[data-ii-wt-busy="true"] { opacity: 1; }
+.ii-wt-tools { position: absolute; display: flex; gap: 6px; }
+.ii-wt-reroll, .ii-wt-take { pointer-events: auto; flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(20, 16, 12, .62); color: #fff; text-align: center; cursor: pointer; opacity: 0; transition: opacity .15s; padding: 0; font: 700 22px/36px system-ui, sans-serif; }
+.ii-wt-take { font: 700 28px/32px system-ui, sans-serif; }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-reroll, .ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take { width: 48px; height: 48px; font: 700 28px/48px system-ui, sans-serif; }
+.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take { font: 700 34px/44px system-ui, sans-serif; }
+.ii-wt-controls[data-ii-wt-hover] button, .ii-wt-controls button:focus-visible, .ii-wt-reroll[data-ii-wt-busy="true"] { opacity: 1; }
 .ii-wt-reroll:disabled, .ii-wt-take:disabled { cursor: default; background: rgba(20, 16, 12, .35); }
-.ii-wt-controls[data-ii-wt-hover] > .ii-wt-take:disabled { opacity: .45; }
+.ii-wt-controls[data-ii-wt-hover] .ii-wt-take:disabled { opacity: .45; }
 .ii-wt-reroll[data-ii-wt-busy="true"] { animation: ii-wt-spin 1s linear infinite; }
 @keyframes ii-wt-spin { to { transform: rotate(360deg); } }
-.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-reroll, .ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take { left: 8px; right: auto; top: 50%; width: 48px; height: 48px; border-radius: 50%; }
-.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-reroll { margin-top: -84px; font: 700 28px/48px system-ui, sans-serif; }
-.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take { font: 700 34px/44px system-ui, sans-serif; }
-.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take--prev { margin-top: -24px; }
-.ii-wt-canvas[data-ii-wt-narrow] .ii-wt-take--next { margin-top: 36px; }
 @media (pointer: coarse) { .ii-wt-reroll, .ii-wt-take { opacity: .85; } .ii-wt-take:disabled { opacity: .4; } }
 .ii-wt-note { padding: 18px; font: 600 14px/1.4 system-ui, sans-serif; color: #6f665c; text-align: center; }
 .ii-wt-strip[data-ii-wt-status="error"] .ii-wt-note { color: #b4463c; }

@@ -4,7 +4,7 @@ import type { WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import { layoutStrip, type PanelImage } from "../../../backend/webtoon/layout.js";
 import type { Storyboard } from "../../../backend/webtoon/storyboard-schema.js";
 import fixture from "../../../backend/webtoon/__fixtures__/storyboard-a2.json" with { type: "json" };
-import { renderStrip } from "./strip-dom.js";
+import { renderStrip, TOOL_SIZE, toolsSpot } from "./strip-dom.js";
 
 const win = new Window({ url: "http://localhost/" });
 const doc = win.document as unknown as Document;
@@ -83,6 +83,14 @@ describe("webtoon strip DOM", () => {
     expect(cut[0]!.querySelector("img")!.getAttribute("src")).toBe("/api/v1/image-gen/results/cut-1");
     expect(parseFloat((cut[0] as HTMLElement).style.top)).toBeCloseTo(panel.rect[1], 1);
     expect(renderStrip(doc, view(), { onReroll() {}, onSelectTake() {}, onEditText() {} }, { busyPanels: new Set(), stripBusy: false, labels })!.hasAttribute("data-ii-wt-narrow")).toBe(false);
+  });
+
+  test("panel tools go to the first frame spot clear of text boxes (phone layout: left edge first)", () => {
+    const frame: [number, number, number, number] = [0, 100, 690, 1100];
+    const row = 36 + TOOL_SIZE.gap + 36;
+    expect(toolsSpot(frame, 2, 36, false, [])).toEqual([690 - 8 - row, 108]);
+    expect(toolsSpot(frame, 2, 36, false, [[400, 100, 690, 200]])).toEqual([8, 108]);
+    expect(toolsSpot([0, 0, 506, 800], 1, 48, true, [])).toEqual([8, 376]);
   });
 
   test("no layout yet -> nothing to draw", () => {

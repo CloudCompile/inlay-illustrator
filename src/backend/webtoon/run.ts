@@ -153,8 +153,13 @@ async function generateFrameBreakPanel(deps: WebtoonDeps, input: PanelInput): Pr
   if (!target.connectionDefaultsReadable) throw new Error("The NovelAI connection's saved parameters could not be read, so a saved raw override would be replaced.");
   const generated: string[] = [];
   try {
-    const cutRequest = { ...input.request, negativePrompt: `${input.request.negativePrompt}, ${CUTOUT_NEGATIVE}` };
-    const cut = await drawDirect(deps, { ...input, request: cutRequest, prompt: input.request.cutoutPrompt!, model: target.model, connectionId: target.connectionId });
+    const { cutout } = input.request;
+    const cutRequest = {
+      ...input.request,
+      negativePrompt: `${input.request.negativePrompt}, ${CUTOUT_NEGATIVE}`,
+      characters: input.request.characters.map((c, i) => ({ ...c, prompt: cutout!.characters[i] ?? c.prompt })),
+    };
+    const cut = await drawDirect(deps, { ...input, request: cutRequest, prompt: cutout!.prompt, model: target.model, connectionId: target.connectionId });
     generated.push(cut.result.imageId);
     const fb = await frameBreakInputs(await decodePng(cut.bytes));
     const rawOverride = { action: "infill", parameters: { image: bytesToBase64(fb.source), mask: bytesToBase64(fb.mask), add_original_image: true, inpaintImg2ImgStrength: 1, noise: 0 } };
@@ -167,7 +172,7 @@ async function generateFrameBreakPanel(deps: WebtoonDeps, input: PanelInput): Pr
         services.userId,
       )).id;
     const panelId = await upload(panel, `webtoon-panel-${input.request.panelId}`);
-    const cutoutId = await upload(fb.cutout, `webtoon-cutout-${input.request.panelId}`);
+    const cutoutId = await upload(fb.display, `webtoon-cutout-${input.request.panelId}`);
     // Uploads are served by the session route only (the public results route serves image-gen files).
     const url = (id: string) => `/api/v1/images/${encodeURIComponent(id)}`;
     return {
@@ -182,7 +187,7 @@ async function generateFrameBreakPanel(deps: WebtoonDeps, input: PanelInput): Pr
 
 /** A frame-break panel falls back to the plain panel when either step fails. */
 async function drawPanel(deps: WebtoonDeps, input: PanelInput): Promise<WebtoonPanelTake> {
-  if (input.request.cutoutPrompt) {
+  if (input.request.cutout) {
     try {
       return await generateFrameBreakPanel(deps, input);
     } catch (error) {

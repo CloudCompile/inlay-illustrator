@@ -46,8 +46,11 @@ export interface PanelRequest {
   characters: Array<{ name: string; prompt: string; uc: string; x: number; y: number }>;
   /** Weighted key outfit tags per character (for a later identity / outfit check). */
   keyTags: Record<string, string[]>;
-  /** Frame-break panel: base prompt of the transparent cut-out (camera tags only, no place, plus the transparency tags). */
-  cutoutPrompt?: string;
+  /**
+   * Frame-break panel: the transparent cut-out's prompts. Base = camera tags + the transparency tags (no place); characters (same order) =
+   * identity + pose without scene objects + outfit, no sentence. Props in the scene come from the inpainting step.
+   */
+  cutout?: { prompt: string; characters: string[] };
 }
 
 /** NovelAI V5 draws a real alpha channel with these (nai-alpha bench, route 1). */
@@ -56,6 +59,31 @@ export const TRANSPARENT_TAGS = "transparent background, has alpha";
 export const CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
 /** Camera / framing tags of the planner's base; everything else there is place, light or props (left out of a cut-out). */
 const CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
+
+/** Furniture and fixtures: a cut-out pose tag naming one is left out (the cut-out would carry it over the frame). */
+const SCENE_OBJECT = /\b(?:door|doorway|screen|shoji|wall|window|fence|railing|table|desk|chair|bench|bed|futon|couch|sofa|counter|shelf|cabinet|locker|car|tree|floor|ground|stairs|gate|pillar|post|sink|stove|fridge|refrigerator|mirror|curtain)s?\b/iu;
+const HELD = /^(?:holding|carrying|hugging|grabbing|clutching|wielding|lifting|raising)\b/iu;
+const BODY = /\b(?:shoulders?|hips?|chest|face|head|cheeks?|mouth|chin|knees?|back|hair|lap|waist|arms?|hands?|legs?|eyes?|ears?|neck|stomach|thighs?)\b/iu;
+const RELATION = /^(.*?)\s+(?:on|against|at|behind|beside|near|by|into|through|under|over|across|onto|toward|towards|in front of|inside|out of)\s+(.+)$/iu;
+const POSTURE = /^(?:sitting|standing|kneeling|lying|leaning|crouching|squatting|reclining)$/iu;
+
+/**
+ * Pose tags for a cut-out: tags that tie the character to the scene ("hand on shoji screen", "sliding door closed") are left out,
+ * a posture keeps its verb ("sitting on bed" -> "sitting"); held items, gaze, body-relative poses and camera tags stay.
+ */
+export function cutoutPose(poseTags: string, placeTags: readonly string[]): string {
+  const place = placeTags.map((t) => t.toLowerCase()).filter((t) => t.length > 3);
+  const scene = (s: string) => SCENE_OBJECT.test(s) || place.some((p) => s.toLowerCase().includes(p));
+  return tags(poseTags)
+    .flatMap((t) => {
+      if (CAMERA.test(t)) return [t];
+      if (HELD.test(t) || /^looking\b/iu.test(t)) return scene(t) ? [] : [t];
+      const relation = RELATION.exec(t);
+      if (relation) return BODY.test(relation[2]!) && !scene(relation[2]!) ? [t] : POSTURE.test(relation[1]!.trim()) ? [relation[1]!.trim()] : [];
+      return scene(t) ? [] : [t];
+    })
+    .join(", ");
+}
 
 const tags = (s: string | undefined) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 const fmt = (n: number) => String(Math.round(n * 100) / 100);
@@ -149,11 +177,14 @@ export function buildPanelRequest(panel: ImagePanel, cast: ReadonlyMap<string, W
   const head = [countTags(chars.map((c) => cast.get(c.name)!.gender)), species, style.style];
   const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `\n${baseSentence}` : "");
   const keyTags: Record<string, string[]> = {};
+  const cutoutCharacters: string[] = [];
+  const placeTags = tags(baseTags).filter((t) => !CAMERA.test(t));
   const characters = chars.map((c: StoryCharacter) => {
     const member = cast.get(c.name)!;
     const [poseTags, sentence] = splitPrompt(c.prompt);
     const outfit = outfitPrompt(member.outfit, c.framing, style.framingWeights, c.shoes_off === true, c.drop_outfit ?? []);
     keyTags[c.name] = outfit.keyTags;
+    cutoutCharacters.push([identityPrompt(member), cutoutPose(poseTags, placeTags), outfit.prompt].filter(Boolean).join(", "));
     return {
       name: c.name,
       prompt: [identityPrompt(member), poseTags, outfit.prompt].filter(Boolean).join(", ") + (sentence ? `\n${sentence}` : ""),
@@ -163,8 +194,10 @@ export function buildPanelRequest(panel: ImagePanel, cast: ReadonlyMap<string, W
     };
   });
   const [width, height] = panel.size.split("x").map(Number) as [number, number];
-  const cutoutPrompt = panel.frame_break ? [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", ") : undefined;
-  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...(cutoutPrompt ? { cutoutPrompt } : {}) };
+  const cutout = panel.frame_break
+    ? { prompt: [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", "), characters: cutoutCharacters }
+    : undefined;
+  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...(cutout ? { cutout } : {}) };
 }
 
 /** Engine `ImageRequest` (provider "novelai") for the dispatcher: fixed centers, `use_coords` forced on, no NSFW prefix. */

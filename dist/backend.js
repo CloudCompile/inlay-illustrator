@@ -64320,6 +64320,25 @@ var WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panel
 var TRANSPARENT_TAGS = "transparent background, has alpha";
 var CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
 var CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
+var SCENE_OBJECT = /\b(?:door|doorway|screen|shoji|wall|window|fence|railing|table|desk|chair|bench|bed|futon|couch|sofa|counter|shelf|cabinet|locker|car|tree|floor|ground|stairs|gate|pillar|post|sink|stove|fridge|refrigerator|mirror|curtain)s?\b/iu;
+var HELD = /^(?:holding|carrying|hugging|grabbing|clutching|wielding|lifting|raising)\b/iu;
+var BODY = /\b(?:shoulders?|hips?|chest|face|head|cheeks?|mouth|chin|knees?|back|hair|lap|waist|arms?|hands?|legs?|eyes?|ears?|neck|stomach|thighs?)\b/iu;
+var RELATION = /^(.*?)\s+(?:on|against|at|behind|beside|near|by|into|through|under|over|across|onto|toward|towards|in front of|inside|out of)\s+(.+)$/iu;
+var POSTURE = /^(?:sitting|standing|kneeling|lying|leaning|crouching|squatting|reclining)$/iu;
+function cutoutPose(poseTags, placeTags) {
+  const place = placeTags.map((t) => t.toLowerCase()).filter((t) => t.length > 3);
+  const scene = (s) => SCENE_OBJECT.test(s) || place.some((p) => s.toLowerCase().includes(p));
+  return tags(poseTags).flatMap((t) => {
+    if (CAMERA.test(t))
+      return [t];
+    if (HELD.test(t) || /^looking\b/iu.test(t))
+      return scene(t) ? [] : [t];
+    const relation = RELATION.exec(t);
+    if (relation)
+      return BODY.test(relation[2]) && !scene(relation[2]) ? [t] : POSTURE.test(relation[1].trim()) ? [relation[1].trim()] : [];
+    return scene(t) ? [] : [t];
+  }).join(", ");
+}
 var tags = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 var fmt = (n) => String(Math.round(n * 100) / 100);
 function outfitPrompt(outfit, framing, weights, shoesOff, drop = []) {
@@ -64402,11 +64421,14 @@ function buildPanelRequest(panel, cast, style) {
   const prompt = [...head, baseTags].filter(Boolean).join(", ") + (baseSentence ? `
 ${baseSentence}` : "");
   const keyTags = {};
+  const cutoutCharacters = [];
+  const placeTags = tags(baseTags).filter((t) => !CAMERA.test(t));
   const characters = chars.map((c) => {
     const member = cast.get(c.name);
     const [poseTags, sentence] = splitPrompt(c.prompt);
     const outfit = outfitPrompt(member.outfit, c.framing, style.framingWeights, c.shoes_off === true, c.drop_outfit ?? []);
     keyTags[c.name] = outfit.keyTags;
+    cutoutCharacters.push([identityPrompt(member), cutoutPose(poseTags, placeTags), outfit.prompt].filter(Boolean).join(", "));
     return {
       name: c.name,
       prompt: [identityPrompt(member), poseTags, outfit.prompt].filter(Boolean).join(", ") + (sentence ? `
@@ -64417,8 +64439,8 @@ ${sentence}` : ""),
     };
   });
   const [width, height] = panel.size.split("x").map(Number);
-  const cutoutPrompt = panel.frame_break ? [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", ") : undefined;
-  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...cutoutPrompt ? { cutoutPrompt } : {} };
+  const cutout = panel.frame_break ? { prompt: [...head, ...tags(baseTags).filter((t) => CAMERA.test(t)), TRANSPARENT_TAGS].filter(Boolean).join(", "), characters: cutoutCharacters } : undefined;
+  return { panelId: panel.id, width, height, prompt, negativePrompt: style.negative, characters, keyTags, ...cutout ? { cutout } : {} };
 }
 function engineImageRequest(request, style, seed) {
   return {
@@ -64571,6 +64593,10 @@ var FRAME_BREAK = {
   solidAlpha: 128,
   maskAlpha: 200,
   maskBlock: 8,
+  headBand: 0.25,
+  headColumn: 0.15,
+  headGap: 0.01,
+  headMargin: 0.02,
   minPart: 0.15,
   minTransparent: 0.1,
   headTop: 0.1,
@@ -64761,6 +64787,40 @@ function keepMainParts(image) {
       out[i * 4 + 3] = 0;
   return { width, height, data: out };
 }
+function cropToHead(image, bbox) {
+  const { width, height, data } = image;
+  const y0 = Math.floor(bbox.top * height);
+  const y1 = Math.min(height, y0 + Math.max(1, Math.round((bbox.bottom - bbox.top) * height * FRAME_BREAK.headBand)));
+  const counts = new Array(width).fill(0);
+  for (let y = y0;y < y1; y += 1)
+    for (let x = 0;x < width; x += 1)
+      if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
+        counts[x] += 1;
+  const min = FRAME_BREAK.headColumn * (y1 - y0), gap = Math.round(FRAME_BREAK.headGap * width);
+  let best = null, start = -1, last = -1;
+  for (let x = 0;x <= width; x += 1) {
+    const on = x < width && counts[x] >= min;
+    if (on && start < 0)
+      start = x;
+    if (on)
+      last = x;
+    if (start >= 0 && (x === width || !on && x - last > gap)) {
+      if (!best || last - start > best[1] - best[0])
+        best = [start, last];
+      start = -1;
+    }
+  }
+  if (!best)
+    return image;
+  const margin = Math.round(FRAME_BREAK.headMargin * width);
+  const [a, b] = [best[0] - margin, best[1] + margin];
+  const out = new Uint8Array(data);
+  for (let y = 0;y < y1; y += 1)
+    for (let x = 0;x < width; x += 1)
+      if (x < a || x > b)
+        out[(y * width + x) * 4 + 3] = 0;
+  return { width, height, data: out };
+}
 function shiftDown(image, dy) {
   const stride = image.width * 4;
   const data = new Uint8Array(image.data.length);
@@ -64893,7 +64953,8 @@ async function frameBreakInputs(generated) {
   const shift = headShift(first, transparent.height);
   const cutout = shift ? shiftDown(transparent, shift) : transparent;
   const mask = maskImage(backgroundMask(cutout), cutout.width, cutout.height);
-  return { cutout, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(cutout) };
+  const display = cropToHead(cutout, alphaInfo(cutout).bbox);
+  return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(display) };
 }
 
 // src/backend/webtoon/storyboard-schema.ts
@@ -66038,8 +66099,13 @@ async function generateFrameBreakPanel(deps, input) {
     throw new Error("The NovelAI connection's saved parameters could not be read, so a saved raw override would be replaced.");
   const generated = [];
   try {
-    const cutRequest = { ...input.request, negativePrompt: `${input.request.negativePrompt}, ${CUTOUT_NEGATIVE}` };
-    const cut = await drawDirect(deps, { ...input, request: cutRequest, prompt: input.request.cutoutPrompt, model: target.model, connectionId: target.connectionId });
+    const { cutout } = input.request;
+    const cutRequest = {
+      ...input.request,
+      negativePrompt: `${input.request.negativePrompt}, ${CUTOUT_NEGATIVE}`,
+      characters: input.request.characters.map((c, i) => ({ ...c, prompt: cutout.characters[i] ?? c.prompt }))
+    };
+    const cut = await drawDirect(deps, { ...input, request: cutRequest, prompt: cutout.prompt, model: target.model, connectionId: target.connectionId });
     generated.push(cut.result.imageId);
     const fb = await frameBreakInputs(await decodePng(cut.bytes));
     const rawOverride = { action: "infill", parameters: { image: bytesToBase642(fb.source), mask: bytesToBase642(fb.mask), add_original_image: true, inpaintImg2ImgStrength: 1, noise: 0 } };
@@ -66048,7 +66114,7 @@ async function generateFrameBreakPanel(deps, input) {
     const panel = flattenOver(await decodePng(bg.bytes), fb.cutout);
     const upload = async (image, name) => (await services.host.images.upload({ data: await encodePng(image), filename: `${name}.png`, mime_type: "image/png", owner_chat_id: input.chatId, ...input.characterId ? { owner_character_id: input.characterId } : {} }, services.userId)).id;
     const panelId = await upload(panel, `webtoon-panel-${input.request.panelId}`);
-    const cutoutId = await upload(fb.cutout, `webtoon-cutout-${input.request.panelId}`);
+    const cutoutId = await upload(fb.display, `webtoon-cutout-${input.request.panelId}`);
     const url = (id) => `/api/v1/images/${encodeURIComponent(id)}`;
     return {
       ...takeOf(panelId, cut.result.seed, panel.width, panel.height, (deps.now ?? Date.now)()),
@@ -66063,7 +66129,7 @@ async function generateFrameBreakPanel(deps, input) {
   }
 }
 async function drawPanel(deps, input) {
-  if (input.request.cutoutPrompt) {
+  if (input.request.cutout) {
     try {
       return await generateFrameBreakPanel(deps, input);
     } catch (error) {
