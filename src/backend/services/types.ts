@@ -48,8 +48,8 @@ export interface CharacterGalleryItem {
 
 /**
  * The Spindle backend API (global `spindle` in production, a fake in tests).
- * `characters.getGallery` / `connections.getModels` are pending in lumiverse-spindle-types (Lumiverse PR #465, types
- * PR #62). They are optional because older hosts lack them; callers fall back to the frontend fetch bridge.
+ * `characters.getGallery` / `connections.getModels` (Lumiverse PR #465, merged into staging) are optional here because hosts
+ * without that change lack them; callers fall back to the frontend fetch bridge until a Lumiverse release ships them.
  */
 export type SpindleHost = SpindleAPI & {
   characters: SpindleAPI["characters"] & { getGallery?(characterId: string, userId?: string): Promise<CharacterGalleryItem[]> };
