@@ -9,7 +9,7 @@ import { BEATS, type Beat, type ImagePanel, type Importance, type PlannerCharact
 import { buildQuoteIndex, checkedQuote, fragments, normWords, validateCharacters } from "./storyboard-validate.js";
 import { mangaPagePlan } from "./manga-layout.js";
 
-export const MANGA_LIMITS = { words: 8, maxWords: 12, balloons: { small: 2, normal: 3, big: 3 } as Record<Importance, number>, narration: 2, joinGapWords: 60 };
+export const MANGA_LIMITS = { words: 8, balloons: { small: 2, normal: 3, big: 3 } as Record<Importance, number>, narration: 2, joinGapWords: 60 };
 const IMPORTANCE: readonly Importance[] = ["small", "normal", "big"];
 const SUGGESTIVE = /^(?:panting|heavy breathing|spread legs|straddling|seductive smile|bedroom eyes)$/iu;
 const EMPTY_BAND = /^head out of frame$/iu;
@@ -130,14 +130,23 @@ export function validateMangaStoryboard(raw: any, roster: PlannerCharacter[], so
     return p;
   });
 
+  // a small cell holds one short balloon: a small panel with more text gets a normal cell
+  for (const p of panels) {
+    const lines = p.text.filter((t) => t.type === "speech" || t.type === "thought");
+    if (p.importance === "small" && (lines.length > 1 || lines.reduce((n, t) => n + wordCount(t.text), 0) > MANGA_LIMITS.words)) {
+      p.importance = "normal";
+      log.push(`p${p.id}: small -> normal (${lines.length} balloons)`);
+    }
+  }
+
   // pages and image sizes (the image size follows the page cell)
   const plan = mangaPagePlan(panels);
   for (const p of panels) p.size = plan.sizes[p.id] as ImagePanel["size"];
 
   // frame-breaks: at most one per page, on an action beat with one character, not in a small or wide cell; none marked -> the first eligible panel
+  // (the lowered frame top leaves less room for text: at most 2 balloons)
   const breakable = (p: ImagePanel) => p.beat === "action" && p.nai.characters.length === 1 && p.importance !== "small" && !WIDE.has(p.size)
-    && !["hands only", "lower body"].includes(p.nai.characters[0]!.framing);
-  const marked = panels.some((p) => p.frame_break);
+    && !["hands only", "lower body"].includes(p.nai.characters[0]!.framing) && p.text.filter((t) => t.type === "speech" || t.type === "thought").length <= 2;
   for (const page of plan.pages) {
     let used = false;
     for (const id of page.panels) {
@@ -148,9 +157,9 @@ export function validateMangaStoryboard(raw: any, roster: PlannerCharacter[], so
       used = true;
     }
   }
-  if (!marked) {
+  if (!panels.some((p) => p.frame_break)) {
     const auto = panels.find(breakable);
-    if (auto) { auto.frame_break = true; log.push(`p${auto.id}: frame_break added (the planner marked none)`); }
+    if (auto) { auto.frame_break = true; log.push(`p${auto.id}: frame_break added (none of the planner's marks was usable)`); }
   }
   for (const p of panels) {
     const c = p.frame_break ? p.nai.characters[0]! : null;

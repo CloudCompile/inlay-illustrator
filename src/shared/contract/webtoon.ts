@@ -16,8 +16,8 @@ export const STRIP_MIN_TEXT_PX = 12;
 export type ComicFormat = "webtoon" | "manga";
 /** Manga page width in layout px (pages are 1:1.414). */
 export const MANGA_PAGE_WIDTH = 1100;
-/** Manga balloon text size on a page, layout px. */
-export const MANGA_SPEECH_PX = 22;
+/** Manga balloon text size on a page, layout px (12.5 px on screen at the 690 px desktop frame). */
+export const MANGA_SPEECH_PX = 20;
 
 /**
  * Layout width for a strip shown `renderWidth` CSS px wide: 690 when the scaled balloon text stays at least 12 px,

@@ -4705,7 +4705,7 @@ var STRIP_WIDTH = 690;
 var STRIP_MIN_LAYOUT_WIDTH = 360;
 var STRIP_SPEECH_PX = 19;
 var MANGA_PAGE_WIDTH = 1100;
-var MANGA_SPEECH_PX = 22;
+var MANGA_SPEECH_PX = 20;
 // src/backend/rpc/errors.ts
 class RpcFailure extends Error {
   error;
@@ -65652,7 +65652,8 @@ var COST = {
   big: { small: 4, normal: 2, big: 0 }
 };
 var PAGE_COST = 0.6;
-function choosePages(imps, templates = TEMPLATES) {
+var CROWD_COST = 3;
+function choosePages(imps, balloons = [], templates = TEMPLATES) {
   const n = imps.length;
   const best = Array.from({ length: n + 1 }, () => ({ cost: Infinity, prev: -1, t: null }));
   best[0].cost = 0;
@@ -65663,7 +65664,7 @@ function choosePages(imps, templates = TEMPLATES) {
       const seq = templateSeq(t);
       if (i + seq.length > n)
         continue;
-      const c = seq.reduce((sum, imp, k) => sum + COST[imps[i + k]][imp], PAGE_COST);
+      const c = seq.reduce((sum, imp, k) => sum + COST[imps[i + k]][imp] + (imp === "small" ? CROWD_COST * Math.max(0, (balloons[i + k] ?? 0) - 1) : 0), PAGE_COST);
       const j = i + seq.length;
       if (best[i].cost + c < best[j].cost)
         best[j] = { cost: best[i].cost + c, prev: i, t };
@@ -65712,7 +65713,8 @@ function naiSizeFor(bbox) {
   return NAI_SIZES.reduce((b, s) => Math.abs(Math.log(s[0] / s[1]) - a) < Math.abs(Math.log(b[0] / b[1]) - a) ? s : b);
 }
 function mangaPagePlan(panels) {
-  const split = choosePages(panels.map((p) => p.importance ?? "normal"));
+  const balloons = panels.map((p) => (p.text ?? []).filter((t) => t.type === "speech" || t.type === "thought").length);
+  const split = choosePages(panels.map((p) => p.importance ?? "normal"), balloons);
   const sizes = {};
   const cells = {};
   const pages = split.map(({ template, start }) => {
@@ -65726,13 +65728,14 @@ function mangaPagePlan(panels) {
   return { pages, sizes, cells };
 }
 var TEXT = {
-  speech: { size: MANGA_SPEECH_PX, lh: 26 },
-  narration: { size: 21, lh: 25 },
+  speech: { size: MANGA_SPEECH_PX, lh: 23 },
+  narration: { size: 19, lh: 23 },
   title: { size: 38, small: 20 },
   sfx: { big: 84, normal: 62, small: 46 }
 };
-var PHONE = { margin: 10, top: 14, gutter: 16, minH: 0.42, maxH: 1.3, gap: 28 };
+var PHONE = { margin: 10, top: 14, gutter: 16, minH: 0.42, maxH: 1.3, gap: 28, artPerText: 3.5 };
 var BREAK = { depth: 0.1, min: 40, max: 110, maxTop: 0.45 };
+var BURST_SPIKE = 1.18;
 var inter2 = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
 var area2 = (a) => Math.max(0, a[2] - a[0]) * Math.max(0, a[3] - a[1]);
 var pad2 = (r, p) => [r[0] - p, r[1] - p, r[2] + p, r[3] + p];
@@ -65780,11 +65783,11 @@ function layoutManga(sb, images, opts = {}) {
     } else {
       const top = y;
       const cells = [];
-      let cy = y + PHONE.top;
       const w = W - 2 * PHONE.margin;
+      let cy = y + PHONE.top + (!pageRects.length && sb.title.trim() ? chapterBox(sb.title, ts, Math.min(380 * ts, w * 0.6), measure).bh + PHONE.gutter : 0);
       for (const panel of list) {
         const [iw, ih] = imageSize(panel, images);
-        const h = Math.round(clamp2(w * ih / iw, PHONE.minH * w, PHONE.maxH * w));
+        const h = Math.round(clamp2(Math.max(w * ih / iw, textArea(panel, measure, ts) * PHONE.artPerText / w), PHONE.minH * w, PHONE.maxH * w));
         const bbox = [PHONE.margin, cy, W - PHONE.margin, cy + h];
         cells.push({ poly: [[bbox[0], bbox[1]], [bbox[2], bbox[1]], [bbox[2], bbox[3]], [bbox[0], bbox[3]]], bbox, imp: panel.importance ?? "normal" });
         cy += h + PHONE.gutter;
@@ -65798,8 +65801,37 @@ function layoutManga(sb, images, opts = {}) {
   const out = { panels: [], items: [] };
   const first = slots[0]?.[0]?.panel.id;
   for (const page of slots)
-    layoutPage(page, images, { measure, ts, sfxScale, title: sb.title, titlePanel: first, log, out });
+    layoutPage(page, images, { measure, ts, sfxScale, phone, title: sb.title, titlePanel: first, log, out });
   return { width: W, height: Math.round(y), panels: out.panels, items: out.items, log, format: "manga", pages: pageRects, ...opts.grey ? { grey: true } : {}, ...out.chapter ? { chapter: out.chapter } : {} };
+}
+function textArea(panel, measure, ts) {
+  return panel.text.reduce((sum, t) => {
+    if (t.type === "sfx")
+      return sum;
+    const narr = t.type === "narration";
+    const font = narr ? TEXT.narration : TEXT.speech;
+    const text = measure(narr ? t.text : t.text.toUpperCase(), narr ? "narration" : "speech", font.size * ts) * font.lh * ts;
+    const tw = Math.sqrt(text * 2.2), th = text / tw;
+    const box = narr ? (tw + 36 * ts) * (th + 24 * ts) : (tw * 1.34 + 20 * ts) * (th * 1.38 + 18 * ts);
+    return sum + box * (t.type === "speech" && (t.tone === "shout" || isShout(t.text)) ? BURST_SPIKE ** 2 : 1);
+  }, 0);
+}
+function chapterBox(title, ts, maxw, measure) {
+  const [a, ...rest] = title.split(":");
+  const big = (rest.length ? rest.join(":") : a).trim().toUpperCase();
+  const small = rest.length ? a.trim().toUpperCase() : "";
+  const size = Math.round(TEXT.title.size * ts), smallSize = Math.round(TEXT.title.small * ts);
+  const lines = [];
+  for (const w of big.split(/\s+/u)) {
+    const t = lines.length ? `${lines.at(-1)} ${w}` : w;
+    if (lines.length && measure(t, "sfx", size) <= maxw)
+      lines[lines.length - 1] = t;
+    else
+      lines.push(w);
+  }
+  const bw = Math.max(...lines.map((l) => measure(l, "sfx", size)), small ? measure(small, "narration", smallSize) : 0) + 40 * ts;
+  const bh = lines.length * size * 1.05 + (small ? smallSize * 1.3 : 0) + 26 * ts;
+  return { small, big, size, bw, bh };
 }
 function imageSize(panel, images) {
   const img = images[String(panel.id)];
@@ -65813,10 +65845,71 @@ function lowerTop(poly, top) {
   const at = (a, b) => [a[0] + (b[0] - a[0]) * (top - a[1]) / Math.max(1, b[1] - a[1]), top];
   return [at(tl, bl), at(tr, br), br, bl];
 }
+function headBoxes(faces, iw, ih) {
+  if (!faces)
+    return faces;
+  return Object.fromEntries(Object.entries(faces).map(([name, f]) => {
+    const w = (f.right - f.left) * iw, h = (f.bottom - f.top) * ih;
+    return [name, h > 1.6 * w ? { ...f, bottom: f.top + 1.3 * w / ih } : f];
+  }));
+}
+function panelGeometry(slot, index, images, ctx) {
+  const { panel: p, cell } = slot;
+  const img = images[String(p.id)];
+  const [iw, ih] = imageSize(p, images);
+  const [x0, y0, x1, y1] = cell.bbox;
+  const fw = x1 - x0, fh = y1 - y0;
+  const geo = new Map(p.nai.characters.map((c) => [c.name, charGeometry(c, iw, ih, headBoxes(img?.faces, iw, ih))]));
+  const withFace = [...geo.values()].filter((g) => g.face);
+  const s = Math.max(fw / iw, fh / ih);
+  const dw = iw * s, dh = ih * s;
+  const hx = withFace.length ? withFace.reduce((a, g) => a + g.head[0], 0) / withFace.length : 0.5;
+  const hy = withFace.length ? Math.min(...withFace.map((g) => g.head[1])) : 0.4;
+  const dx = clamp2(x0 + fw / 2 - hx * dw, x1 - dw, x0), dy = clamp2(y0 + fh * 0.4 - hy * dh, y1 - dh, y0);
+  const crop = [(x0 - dx) / dw, (y0 - dy) / dh, (x1 - dx) / dw, (y1 - dy) / dh];
+  const toPx = (nx, ny) => [dx + nx * dw, dy + ny * dh];
+  const heads = {}, faces = {};
+  const bodies = [];
+  for (const c of p.nai.characters) {
+    const g = geo.get(c.name);
+    heads[c.name] = toPx(...g.head);
+    faces[c.name] = g.face ? [...toPx(g.face[0], g.face[1]), ...toPx(g.face[2], g.face[3])] : null;
+    const f = faces[c.name];
+    if (f) {
+      const bw = (f[2] - f[0]) * 1.6;
+      bodies.push([heads[c.name][0] - bw, f[3], heads[c.name][0] + bw, toPx(0, Math.min(1, c.y + 0.35))[1]]);
+    }
+  }
+  let poly = cell.poly;
+  let frame = cell.bbox;
+  let frameBreak = null;
+  if (img?.cutout && p.beat === "action" && p.nai.characters.length === 1) {
+    const bt = toPx(0, img.cutout.bbox.top)[1];
+    if (bt > y0 + 0.03 * fh && bt <= y0 + BREAK.maxTop * fh) {
+      const top = Math.min(bt + clamp2(BREAK.depth * fh, BREAK.min * ctx.ts, BREAK.max * ctx.ts), y0 + 0.5 * fh);
+      poly = lowerTop(cell.poly, top);
+      frame = [x0, top, x1, y1];
+      frameBreak = "top";
+    }
+    ctx.log.push(`p${p.id}: frame-break ${frameBreak ?? "none (character not near the top)"}`);
+  }
+  ctx.out.panels.push({ id: p.id, rect: cell.bbox, crop, frame, frameBreak, cutout: frameBreak && img?.cutout ? { src: img.cutout.src } : null, fade: null, heads, faces, clip: poly });
+  return { slot, index, frame, faces, heads, bodies };
+}
 function layoutPage(slots, images, ctx) {
   const { measure, ts, log } = ctx;
   const allCells = slots.map((s) => s.cell.bbox);
-  const blocked = [];
+  const geoms = slots.map((slot, i) => panelGeometry(slot, i, images, ctx));
+  const faceBlocks = geoms.flatMap((g) => Object.values(g.faces).flatMap((f) => f ? [pad2(f, 4)] : []));
+  const textBlocks = [];
+  const onFace = (r) => {
+    const inner = shrink(r, 0.9);
+    return faceBlocks.some((b) => inter2(inner, b) > 0);
+  };
+  const onText = (r, taken) => {
+    const inner = shrink(r, 0.97);
+    return textBlocks.some((b) => inter2(inner, b) > 0) || taken.some((b) => inter2(inner, b) > 0);
+  };
   const wrap = (text, font, size, maxw) => {
     const lines = [];
     let cur = "";
@@ -65833,133 +65926,70 @@ function layoutPage(slots, images, ctx) {
       lines.push(cur);
     return lines;
   };
-  slots.forEach(({ panel: p, cell, page }, i) => {
-    const img = images[String(p.id)];
-    const [iw, ih] = imageSize(p, images);
-    const [x0, y0, x1, y1] = cell.bbox;
-    const fw = x1 - x0, fh = y1 - y0;
-    const geo = new Map(p.nai.characters.map((c) => [c.name, charGeometry(c, iw, ih, img?.faces)]));
-    const withFace = [...geo.values()].filter((g) => g.face);
-    const s = Math.max(fw / iw, fh / ih);
-    const dw = iw * s, dh = ih * s;
-    const hx = withFace.length ? withFace.reduce((a, g) => a + g.head[0], 0) / withFace.length : 0.5;
-    const hy = withFace.length ? Math.min(...withFace.map((g) => g.head[1])) : 0.4;
-    const dx = clamp2(x0 + fw / 2 - hx * dw, x1 - dw, x0), dy = clamp2(y0 + fh * 0.4 - hy * dh, y1 - dh, y0);
-    const crop = [(x0 - dx) / dw, (y0 - dy) / dh, (x1 - dx) / dw, (y1 - dy) / dh];
-    const toPx = (nx, ny) => [dx + nx * dw, dy + ny * dh];
-    const heads = {}, faces = {};
-    const bodies = [];
-    for (const c of p.nai.characters) {
-      const g = geo.get(c.name);
-      heads[c.name] = toPx(...g.head);
-      faces[c.name] = g.face ? [...toPx(g.face[0], g.face[1]), ...toPx(g.face[2], g.face[3])] : null;
-      if (faces[c.name]) {
-        blocked.push(pad2(faces[c.name], 4));
-        const f = faces[c.name], bw = (f[2] - f[0]) * 1.6;
-        bodies.push([heads[c.name][0] - bw, f[3], heads[c.name][0] + bw, toPx(0, Math.min(1, c.y + 0.35))[1]]);
-      }
-    }
-    let poly = cell.poly;
-    let frame = cell.bbox;
-    let frameBreak = null;
-    if (img?.cutout && p.beat === "action" && p.nai.characters.length === 1) {
-      const bt = toPx(0, img.cutout.bbox.top)[1];
-      if (bt > y0 + 0.03 * fh && bt <= y0 + BREAK.maxTop * fh) {
-        const top = Math.min(bt + clamp2(BREAK.depth * fh, BREAK.min * ts, BREAK.max * ts), y0 + 0.5 * fh);
-        poly = lowerTop(cell.poly, top);
-        frame = [x0, top, x1, y1];
-        frameBreak = "top";
-      }
-      log.push(`p${p.id}: frame-break ${frameBreak ?? "none (character not near the top)"}`);
-    }
-    ctx.out.panels.push({ id: p.id, rect: cell.bbox, crop, frame, frameBreak, cutout: frameBreak && img?.cutout ? { src: img.cutout.src } : null, fade: null, heads, faces, clip: poly });
-    const local = [];
+  const fitLines = (text, font, size, lh, aspect, minw, maxw) => wrap(text, font, size, clamp2(Math.sqrt(measure(text, font, size) * lh * aspect), minw, maxw));
+  for (const { slot: { panel: p, cell, page }, index: i, frame, faces, heads, bodies } of geoms) {
+    const [x0, , x1, y1] = cell.bbox;
+    const fw = x1 - x0, fh = y1 - cell.bbox[1];
+    const top = frame[1];
     const inPage = (r) => r[0] >= page[0] + 4 && r[1] >= page[1] + 4 && r[2] <= page[2] - 4 && r[3] <= page[3] - 4;
     const otherShare = (r) => allCells.reduce((sum, b, k) => sum + (k === i ? 0 : inter2(r, b)), 0) / area2(r);
+    const bodyShare = (r) => bodies.reduce((sum, b) => sum + inter2(r, b), 0) / area2(r);
     if (p.id === ctx.titlePanel && ctx.title.trim()) {
-      const [a, ...rest] = ctx.title.split(":");
-      const big = (rest.length ? rest.join(":") : a).trim().toUpperCase();
-      const small = rest.length ? a.trim().toUpperCase() : "";
-      const size = Math.round(TEXT.title.size * ts), smallSize = Math.round(TEXT.title.small * ts);
-      const lines = wrap(big, "sfx", size, Math.min(380 * ts, fw * 0.6));
-      const bw = Math.max(...lines.map((l) => measure(l, "sfx", size)), small ? measure(small, "narration", smallSize) : 0) + 40 * ts;
-      const bh = lines.length * size * 1.05 + (small ? smallSize * 1.3 : 0) + 26 * ts;
+      const box = chapterBox(ctx.title, ts, Math.min(380 * ts, fw * 0.6), measure);
+      const { bw, bh } = box;
       const m = 12 * ts;
-      const spot = [[x1 - bw - m, frame[1] + m], [x0 + m, frame[1] + m], [x0 + m, y1 - bh - m], [x1 - bw - m, y1 - bh - m]].map(([x, yy]) => [x, yy, x + bw, yy + bh]).find((r) => inPage(r) && !blocked.some((b) => inter2(r, b) > 0)) ?? [x1 - bw - m, frame[1] + m, x1 - m, frame[1] + m + bh];
-      blocked.push(pad2(spot, 4));
-      ctx.out.chapter = { panel: p.id, small, big, rect: spot, fontSize: size };
+      const spot = ctx.phone ? [x0 + (fw - bw) / 2, cell.bbox[1] - bh - PHONE.gutter / 2, x0 + (fw + bw) / 2, cell.bbox[1] - PHONE.gutter / 2] : [[x1 - bw - m, top + m], [x0 + m, top + m], [x0 + m, y1 - bh - m], [x1 - bw - m, y1 - bh - m]].map(([x, yy]) => [x, yy, x + bw, yy + bh]).find((r) => inPage(r) && !faceBlocks.some((b) => inter2(r, b) > 0)) ?? [x1 - bw - m, top + m, x1 - m, top + m + bh];
+      textBlocks.push(pad2(spot, 4));
+      ctx.out.chapter = { panel: p.id, small: box.small, big: box.big, rect: spot, fontSize: box.size };
     }
-    const texts = p.text.map((t, k) => ({ t, k }));
-    const balloonsTotal = texts.filter(({ t }) => t.type === "speech" || t.type === "thought").length;
-    const placeTexts = (bias, aspect) => {
-      const taken = [];
-      const items = [];
-      const balloons = [];
-      let violations = 0;
-      let nth = 0;
-      for (const [j, { t, k }] of texts.entries()) {
-        if (t.type === "sfx")
-          continue;
-        const next = texts.slice(j + 1).find((x) => x.t.type === "speech" || x.t.type === "thought")?.t;
-        const placed = t.type === "narration" ? { item: placeNarration(t, k, taken), violates: false } : placeBalloon(t, k, next, balloonsTotal - 1 - nth++, taken, balloons, bias, aspect);
-        if (placed.violates)
-          violations++;
-        if (placed.item.kind !== "narration")
-          balloons.push(placed.item.rect);
-        items.push(placed.item);
-        taken.push(pad2(placed.item.rect, 4));
-      }
-      return { items, violations };
-    };
     const placeNarration = (t, k, taken) => {
       const size = Math.round(TEXT.narration.size * ts), lh = Math.round(TEXT.narration.lh * ts);
       const lines = fitLines(t.text, "narration", size, lh, 3.4, 60 * ts, Math.min(300 * ts, fw * 0.7));
       const tw = Math.max(...lines.map((l) => measure(l, "narration", size)));
       const bw = tw + 36 * ts, bh = lines.length * lh + 24 * ts;
-      const corners = [[x1 - bw, frame[1]], [x0, frame[1]], [x0, y1 - bh], [x1 - bw, y1 - bh]];
-      const straddle = [[x1 - bw - 14 * ts, frame[1] - bh / 2], [x0 + 14 * ts, frame[1] - bh / 2], [x0 + 14 * ts, y1 - bh / 2], [x1 - bw - 14 * ts, y1 - bh / 2]];
-      const free = (r) => inPage(r) && !blocked.some((b) => inter2(r, b) > 0) && !taken.some((b) => inter2(r, b) > 0);
+      const corners = [[x1 - bw, top], [x0, top], [x0, y1 - bh], [x1 - bw, y1 - bh]];
+      const straddle = [[x1 - bw - 14 * ts, top - bh / 2], [x0 + 14 * ts, top - bh / 2], [x0 + 14 * ts, y1 - bh / 2], [x1 - bw - 14 * ts, y1 - bh / 2]];
+      const free = (r) => inPage(r) && !faceBlocks.some((b) => inter2(r, b) > 0) && !onText(r, taken);
       const rects = [...corners, ...straddle].map(([x, yy]) => [x, yy, x + bw, yy + bh]);
       let rect = rects.slice(0, 4).find(free) ?? rects.slice(4).find((r) => free(r) && otherShare(r) < 0.05) ?? null;
       let fallback = null;
       if (!rect) {
-        rect = rects[0];
+        rect = rects.find((r) => !faceBlocks.some((b) => inter2(r, b) > 0)) ?? rects[0];
         fallback = "corner";
         log.push(`p${p.id}: narration "${t.text.slice(0, 24)}" has no free corner`);
       }
       return { kind: "narration", panel: p.id, textIndex: k, text: t.text, lines, rect, fallback, fontSize: size, lineHeight: lh };
     };
-    const fitLines = (text, font, size, lh, aspect, minw, maxw) => {
-      const total = measure(text, font, size);
-      return wrap(text, font, size, clamp2(Math.sqrt(total * lh * aspect), minw, maxw));
-    };
     const tiers = [
-      { own: 0.6, other: 0.06, order: true },
-      { own: 0.4, other: 0.18, order: true },
-      { own: 0.25, other: 0.3, order: true },
-      { own: 0.12, other: 0.5, order: false }
+      { own: 0.6, other: 0.06, order: true, out: 0.28 },
+      { own: 0.4, other: 0.18, order: true, out: 0.28 },
+      { own: 0.25, other: 0.3, order: true, out: 0.4 },
+      { own: 0.2, other: 0.5, order: true, out: 0.6 },
+      { own: 0.3, other: 0.6, order: false, out: 0.6 }
     ];
+    const ORDER_TIERS = 3;
     const balloonShape = (t, aspect) => {
       const whisper = t.type === "speech" && t.tone === "whisper";
       const shout = t.type === "speech" && !whisper && (t.tone === "shout" || isShout(t.text));
       const size = Math.round(TEXT.speech.size * ts), lh = Math.round(TEXT.speech.lh * ts);
       const lines = fitLines(t.text.toUpperCase(), "speech", size, lh, aspect, 90 * ts, Math.min(250 * ts, fw * 0.8));
       const tw = Math.max(...lines.map((l) => measure(l, "speech", size))), th = lines.length * lh;
-      const grow = shout ? 1.22 : 1;
-      return { whisper, shout, size, lh, lines, tw, th, rx: (tw / 2 * 1.34 + 10 * ts) * grow, ry: (th / 2 * 1.38 + 9 * ts) * grow };
+      const rx = tw / 2 * 1.34 + 10 * ts, ry = th / 2 * 1.38 + 9 * ts;
+      const out = shout ? BURST_SPIKE : 1;
+      return { whisper, shout, size, lh, lines, tw, th, rx, ry, ex: rx * out, ey: ry * out };
     };
     const balloonSpots = (t, shape, later, taken, prevBalloons, bias, maxTier = tiers.length - 1) => {
-      const { rx, ry } = shape;
+      const { ex, ey } = shape;
       const head = t.speaker && faces[t.speaker] ? heads[t.speaker] : undefined;
-      const ox = rx * 2 * 0.28, oy = ry * 2 * 0.28;
       const spots = [];
       for (const [ti, tier] of tiers.entries()) {
         if (ti > maxTier)
           break;
+        const ox = ex * 2 * tier.out, oy = ey * 2 * tier.out;
         for (let gx = 0;gx <= 14; gx++)
           for (let gy = 0;gy <= 14; gy++) {
-            const cx = x0 - ox + rx + (fw + 2 * ox - 2 * rx) * gx / 14, cy = frame[1] - oy + ry + (y1 - frame[1] + 2 * oy - 2 * ry) * gy / 14;
-            const r = [cx - rx, cy - ry, cx + rx, cy + ry];
+            const cx = x0 - ox + ex + (fw + 2 * ox - 2 * ex) * gx / 14, cy = top - oy + ey + (y1 - top + 2 * oy - 2 * ey) * gy / 14;
+            const r = [cx - ex, cy - ey, cx + ex, cy + ey];
             if (!inPage(r))
               continue;
             const a = area2(r);
@@ -65967,23 +65997,20 @@ function layoutPage(slots, images, ctx) {
             if (own < tier.own)
               continue;
             const other = otherShare(r);
-            if (other > tier.other)
-              continue;
-            const inner = shrink(r, 0.9);
-            if (blocked.some((b) => inter2(inner, b) > 0) || taken.some((b) => inter2(inner, b) > 0))
+            if (other > tier.other || onFace(r) || onText(r, taken))
               continue;
             const before = prevBalloons.some((q) => readBefore(r, q));
             if (before && tier.order)
               continue;
-            let sc = bodies.reduce((sum, b) => sum + inter2(r, b), 0) / a * 3 + (cy - frame[1]) / (y1 - frame[1]) * 1.2;
+            let sc = bodyShare(r) * 3 + (cy - top) / (y1 - top) * 1.2;
             if (head) {
               sc += Math.hypot(cx - head[0], cy - head[1]) / Math.hypot(fw, fh) * 2.5;
-              if (cy > head[1] + ry * 0.6)
+              if (cy > head[1] + ey * 0.6)
                 sc += 1.5;
             } else
               sc += (x1 - cx) / fw * 0.8;
             if (later > 0)
-              sc += ((cy - frame[1]) / (y1 - frame[1]) * 0.8 + (x1 - cx) / fw * 0.6) * (1 + 3 * bias);
+              sc += ((cy - top) / (y1 - top) * 0.8 + (x1 - cx) / fw * 0.6) * (1 + 3 * bias);
             sc += (1 - own) * 0.8 + other * 4 + (before ? 6 : 0);
             spots.push({ r, s: sc, before, tier: ti });
           }
@@ -65994,16 +66021,31 @@ function layoutPage(slots, images, ctx) {
     };
     const placeBalloon = (t, k, next, later, taken, prevBalloons, bias, aspect) => {
       const shape = balloonShape(t, aspect);
-      const { whisper, shout, size, lh, lines, tw, th, rx, ry } = shape;
       const spots = balloonSpots(t, shape, later, taken, prevBalloons, bias);
+      const { whisper, shout, size, lh, lines, tw, th, rx, ry, ex, ey } = shape;
       const nextShape = next ? balloonShape(next, aspect) : null;
-      const fits = (sp) => !nextShape || balloonSpots(next, nextShape, later - 1, [...taken, pad2(sp.r, 4)], [...prevBalloons, sp.r], bias, 2).length > 0;
-      let best = spots.slice(0, 40).find((sp) => sp.tier === spots[0].tier && !sp.before && fits(sp)) ?? spots[0] ?? null;
+      const fits = (sp) => !nextShape || balloonSpots(next, nextShape, later - 1, [...taken, pad2(sp.r, 4)], [...prevBalloons, sp.r], bias, ORDER_TIERS).length > 0;
+      let best = spots.find((sp) => sp.tier === spots[0].tier && !sp.before && fits(sp)) ?? spots[0] ?? null;
       let fallback = null;
       if (!best) {
-        fallback = "corner";
-        log.push(`p${p.id}: no free place for "${t.text.slice(0, 30)}", put at the top right`);
-        best = { r: [x1 - 2 * rx - 6, frame[1] + 6, x1 - 6, frame[1] + 6 + 2 * ry], s: 99, before: true, tier: 4 };
+        fallback = "overlap";
+        let r = [x1 - 2 * ex - 6, top + 6, x1 - 6, top + 6 + 2 * ey];
+        let least = Infinity;
+        for (let gx = 0;gx <= 10; gx++)
+          for (let gy = 0;gy <= 10; gy++) {
+            const cx = x0 + ex + (fw - 2 * ex) * gx / 10, cy = top + ey + (y1 - top - 2 * ey) * gy / 10;
+            const c = [cx - ex, cy - ey, cx + ex, cy + ey];
+            if (!inPage(c))
+              continue;
+            const inner = shrink(c, 0.9);
+            const cost = faceBlocks.reduce((sum, b) => sum + inter2(inner, b), 0) * 10 + [...textBlocks, ...taken].reduce((sum, b) => sum + inter2(inner, b), 0);
+            if (cost < least) {
+              least = cost;
+              r = c;
+            }
+          }
+        log.push(`p${p.id}: no free place for "${t.text.slice(0, 30)}"${onFace(r) ? ", placed on a face" : ", placed over other text"}`);
+        best = { r, s: 99, before: true, tier: tiers.length };
       } else if (best.tier > 0) {
         fallback = `tier ${best.tier + 1}`;
         log.push(`p${p.id}: "${t.text.slice(0, 24)}" placed with relaxed tier ${best.tier + 1}`);
@@ -66047,22 +66089,43 @@ function layoutPage(slots, images, ctx) {
         lineHeight: lh,
         ...whisper ? { whisper: true } : {}
       };
-      return { item, violates: best.before || fallback === "corner" };
+      return { item, violates: best.before };
+    };
+    const texts = p.text.map((t, k) => ({ t, k }));
+    const balloonsTotal = texts.filter(({ t }) => t.type === "speech" || t.type === "thought").length;
+    const placeTexts = (bias, aspect) => {
+      const taken = [];
+      const items = [];
+      const balloons = [];
+      let violations = 0;
+      let nth = 0;
+      for (const [j, { t, k }] of texts.entries()) {
+        if (t.type === "sfx")
+          continue;
+        const next = texts.slice(j + 1).find((x) => x.t.type === "speech" || x.t.type === "thought")?.t;
+        const placed = t.type === "narration" ? { item: placeNarration(t, k, taken), violates: false } : placeBalloon(t, k, next, balloonsTotal - 1 - nth++, taken, balloons, bias, aspect);
+        if (placed.violates || placed.item.fallback === "overlap")
+          violations++;
+        if (placed.item.kind !== "narration")
+          balloons.push(placed.item.rect);
+        items.push(placed.item);
+        taken.push(pad2(placed.item.rect, 4));
+      }
+      return { items, violations };
     };
     let placed = placeTexts(0, 2.2);
     for (const [bias, aspect] of [[1, 2.2], [1, 1]]) {
       if (!placed.violations)
         break;
       const retry = placeTexts(bias, aspect);
-      log.push(`p${p.id}: reading order retried (${placed.violations} -> ${retry.violations} out of order)`);
+      log.push(`p${p.id}: reading order retried (${placed.violations} -> ${retry.violations} out of order or overlapping)`);
       if (retry.violations < placed.violations)
         placed = retry;
     }
-    for (const item of placed.items) {
-      local.push(item);
+    const local = [...placed.items];
+    for (const item of placed.items)
       if ("rect" in item)
-        blocked.push(pad2(item.rect, 4));
-    }
+        textBlocks.push(pad2(item.rect, 4));
     let n = 0;
     for (const [k, t] of p.text.entries()) {
       if (t.type !== "sfx")
@@ -66073,16 +66136,16 @@ function layoutPage(slots, images, ctx) {
       let best = null;
       for (let gx = 0;gx <= 10; gx++)
         for (let gy = 0;gy <= 10; gy++) {
-          const cx = x0 + w / 2 - w * 0.15 + (fw - w * 0.7) * gx / 10, cy = frame[1] + h / 2 - h * 0.3 + (y1 - frame[1] - h * 0.4) * gy / 10;
+          const cx = x0 + w / 2 - w * 0.15 + (fw - w * 0.7) * gx / 10, cy = top + h / 2 - h * 0.3 + (y1 - top - h * 0.4) * gy / 10;
           const r = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2];
-          if (!inPage(r))
+          if (!inPage([r[0], r[1] - 0.08 * w, r[2], r[3] + 0.08 * w]))
             continue;
           const a = area2(r);
           if (inter2(r, cell.bbox) / a < 0.65 || otherShare(r) > 0.03)
             continue;
-          if (blocked.some((b) => inter2(r, pad2(b, 2)) > 0))
+          if (faceBlocks.some((b) => inter2(r, pad2(b, 0.3 * (b[2] - b[0]))) > 0) || textBlocks.some((b) => inter2(r, pad2(b, 2)) > 0))
             continue;
-          const sc = bodies.reduce((sum, b) => sum + inter2(r, b), 0) / a + (p.beat === "action" ? Math.abs((r[1] - frame[1]) / fh - 0.15) * 0.3 : 0);
+          const sc = bodyShare(r) + (p.beat === "action" ? Math.abs((r[1] - top) / fh - 0.15) * 0.3 : 0);
           if (!best || sc < best.s)
             best = { r, s: sc };
         }
@@ -66090,16 +66153,16 @@ function layoutPage(slots, images, ctx) {
         log.push(`p${p.id}: sfx "${t.text}" skipped (no room)`);
         continue;
       }
-      blocked.push(best.r);
+      textBlocks.push(best.r);
       const [cx, cy] = centre(best.r);
       local.push({ kind: "sfx", panel: p.id, textIndex: k, text: t.text, cx, cy, size, rot: n++ % 2 ? 7 : -8, color: "#111", rect: best.r, breaksFrame: false });
     }
     ctx.out.items.push(...local);
-  });
+  }
 }
 
 // src/backend/webtoon/manga-validate.ts
-var MANGA_LIMITS = { words: 8, maxWords: 12, balloons: { small: 2, normal: 3, big: 3 }, narration: 2, joinGapWords: 60 };
+var MANGA_LIMITS = { words: 8, balloons: { small: 2, normal: 3, big: 3 }, narration: 2, joinGapWords: 60 };
 var IMPORTANCE = ["small", "normal", "big"];
 var SUGGESTIVE = /^(?:panting|heavy breathing|spread legs|straddling|seductive smile|bedroom eyes)$/iu;
 var EMPTY_BAND = /^head out of frame$/iu;
@@ -66255,11 +66318,17 @@ function validateMangaStoryboard(raw, roster, source) {
     }
     return p;
   });
+  for (const p of panels) {
+    const lines = p.text.filter((t) => t.type === "speech" || t.type === "thought");
+    if (p.importance === "small" && (lines.length > 1 || lines.reduce((n, t) => n + wordCount(t.text), 0) > MANGA_LIMITS.words)) {
+      p.importance = "normal";
+      log.push(`p${p.id}: small -> normal (${lines.length} balloons)`);
+    }
+  }
   const plan = mangaPagePlan(panels);
   for (const p of panels)
     p.size = plan.sizes[p.id];
-  const breakable = (p) => p.beat === "action" && p.nai.characters.length === 1 && p.importance !== "small" && !WIDE.has(p.size) && !["hands only", "lower body"].includes(p.nai.characters[0].framing);
-  const marked = panels.some((p) => p.frame_break);
+  const breakable = (p) => p.beat === "action" && p.nai.characters.length === 1 && p.importance !== "small" && !WIDE.has(p.size) && !["hands only", "lower body"].includes(p.nai.characters[0].framing) && p.text.filter((t) => t.type === "speech" || t.type === "thought").length <= 2;
   for (const page of plan.pages) {
     let used = false;
     for (const id of page.panels) {
@@ -66279,11 +66348,11 @@ function validateMangaStoryboard(raw, roster, source) {
       used = true;
     }
   }
-  if (!marked) {
+  if (!panels.some((p) => p.frame_break)) {
     const auto = panels.find(breakable);
     if (auto) {
       auto.frame_break = true;
-      log.push(`p${auto.id}: frame_break added (the planner marked none)`);
+      log.push(`p${auto.id}: frame_break added (none of the planner's marks was usable)`);
     }
   }
   for (const p of panels) {

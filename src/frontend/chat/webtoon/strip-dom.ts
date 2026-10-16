@@ -102,15 +102,23 @@ export const TOOL_SIZE = { desktop: 36, narrow: 48, pages: 56, gap: 6, inset: 8 
 type Box = [number, number, number, number];
 const overlaps = (a: Box, b: Box, pad: number) => a[0] < b[2] + pad && b[0] < a[2] + pad && a[1] < b[3] + pad && b[1] < a[3] + pad;
 
-/** Top-left of the tool row in strip px: the first spot inside the frame that touches no text box (else the first spot). */
-export function toolsSpot(frame: Box, count: number, size: number, narrow: boolean, textRects: readonly Box[]): [number, number] {
+/**
+ * Top-left of the tool row in strip px: the first spot inside the frame that touches no text box (else the first spot).
+ * `scan` (manga cells, often small and full of text): when no corner or edge spot is clear, any clear spot on a grid over the frame.
+ */
+export function toolsSpot(frame: Box, count: number, size: number, narrow: boolean, textRects: readonly Box[], scan = false): [number, number] {
   const w = count * size + (count - 1) * TOOL_SIZE.gap, h = size, m = TOOL_SIZE.inset;
   const [x0, y0, x1, y1] = frame;
   const left = x0 + m, right = x1 - m - w, top = y0 + m, bottom = y1 - m - h, mid = (y0 + y1 - h) / 2;
   const spots: Array<[number, number]> = narrow
     ? [[left, mid], [left, top], [left, bottom], [right, top], [right, bottom]]
     : [[right, top], [left, top], [right, bottom], [left, bottom], [right, mid], [left, mid]];
-  return spots.find(([x, y]) => !textRects.some((r) => overlaps([x, y, x + w, y + h], r, 6))) ?? spots[0]!;
+  if (scan) for (let j = 0; j <= 6; j++) for (let i = 6; i >= 0; i--) spots.push([left + ((right - left) * i) / 6, top + ((bottom - top) * j) / 6]);
+  const clear = spots.find(([x, y]) => !textRects.some((r) => overlaps([x, y, x + w, y + h], r, 6)));
+  if (clear || !scan) return clear ?? spots[0]!;
+  const covered = ([x, y]: [number, number]) =>
+    textRects.reduce((sum, r) => sum + Math.max(0, Math.min(x + w, r[2]) - Math.max(x, r[0])) * Math.max(0, Math.min(y + h, r[3]) - Math.max(y, r[1])), 0);
+  return spots.reduce((best, s) => (covered(s) < covered(best) ? s : best));
 }
 
 /** Build the strip at design size (690 x layout.height). Returns null while the storyboard is not planned. */
@@ -230,7 +238,7 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
       button("ii-wt-take ii-wt-take--next", `${opts.labels.nextTake} (${at})`, "\u203a", locked || state.selected >= takes - 1, () => handlers.onSelectTake(panelId, state.selected + 1))
         .setAttribute("data-ii-wt-take", "next");
     }
-    const [x, y] = toolsSpot([fx0, fy0, fx1, fy1], tools.children.length, size, narrow, textRects);
+    const [x, y] = toolsSpot([fx0, fy0, fx1, fy1], tools.children.length, size, narrow, textRects, manga);
     for (const [k, v] of Object.entries({ left: px(x - fx0), top: px(y - fy0) })) tools.style.setProperty(k, v);
     controls.appendChild(tools);
     canvas.appendChild(controls);

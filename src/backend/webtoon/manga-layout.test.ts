@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mangaLayoutWidth, MANGA_PAGE_WIDTH, type Rect } from "../../shared/contract/webtoon.js";
+import { mangaLayoutWidth, MANGA_PAGE_WIDTH, type BalloonItem, type Rect } from "../../shared/contract/webtoon.js";
 import { choosePages, layoutManga, mangaPagePlan, pageCells, readingOrderErrors, TEMPLATES } from "./manga-layout.js";
 import type { ImagePanel, Importance, Storyboard } from "./storyboard-schema.js";
 
@@ -51,7 +51,7 @@ describe("manga pages", () => {
     expect([layout.width, layout.pages?.length, layout.format]).toEqual([MANGA_PAGE_WIDTH, 3, "manga"]);
     expect(readingOrderErrors(layout)).toEqual([]);
     const p8 = layout.panels.find((p) => p.id === 8)!;
-    const balloons = layout.items.filter((i) => i.kind === "speech" && i.panel === 8);
+    const balloons = layout.items.filter((i): i is BalloonItem => i.kind === "speech" && i.panel === 8);
     expect(balloons.length).toBe(2);
     for (const b of balloons) for (const face of Object.values(p8.faces)) expect(inter(b.rect, face!)).toBe(0);
     expect(layout.chapter?.big).toBe("HALF-PACKED BAGS");
