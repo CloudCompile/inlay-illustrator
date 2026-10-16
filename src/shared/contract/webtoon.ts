@@ -12,6 +12,13 @@ export const STRIP_SPEECH_PX = 19;
 /** Smallest balloon text on screen, CSS px. */
 export const STRIP_MIN_TEXT_PX = 12;
 
+/** Comic format of a strip: a vertical webtoon strip, or manga pages (read right to left). */
+export type ComicFormat = "webtoon" | "manga";
+/** Manga page width in layout px (pages are 1:1.414). */
+export const MANGA_PAGE_WIDTH = 1100;
+/** Manga balloon text size on a page, layout px. */
+export const MANGA_SPEECH_PX = 22;
+
 /**
  * Layout width for a strip shown `renderWidth` CSS px wide: 690 when the scaled balloon text stays at least 12 px,
  * else narrower, so text keeps its size and the panels get smaller around it.
@@ -19,6 +26,13 @@ export const STRIP_MIN_TEXT_PX = 12;
 export function stripLayoutWidth(renderWidth: number): number {
   const width = Math.floor((renderWidth * STRIP_SPEECH_PX) / STRIP_MIN_TEXT_PX);
   return Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, width));
+}
+/**
+ * Layout width for manga shown `renderWidth` CSS px wide: whole pages (MANGA_PAGE_WIDTH) when the page text stays at least
+ * 12 px, else the phone layout (one panel per line) at the webtoon width rule.
+ */
+export function mangaLayoutWidth(renderWidth: number): number {
+  return renderWidth * MANGA_SPEECH_PX >= MANGA_PAGE_WIDTH * STRIP_MIN_TEXT_PX ? MANGA_PAGE_WIDTH : stripLayoutWidth(renderWidth);
 }
 export type Rect = [number, number, number, number]; // x0, y0, x1, y1 in strip px
 export type Point = [number, number];
@@ -33,17 +47,27 @@ export interface PanelLayout {
   fade: "bottom" | "sides" | null;
   heads: Record<string, Point>;
   faces: Record<string, Rect | null>;
+  /** Manga: the visible frame as a polygon (slanted cuts), strip px; drawn with a black border. */
+  clip?: Point[];
 }
 /** `textIndex`: index into the storyboard panel's text list (the text edit target). */
 export interface BalloonItem {
   kind: "speech" | "thought"; panel: number; textIndex: number; speaker: string | null; text: string; lines: string[]; cx: number; cy: number; rx: number; ry: number;
   textW: number; textH: number; tail: Point | null; shout: boolean; rect: Rect; fallback: string | null;
+  /** Manga: dashed whisper balloon; text size / line height in layout px (else the webtoon CSS size). */
+  whisper?: boolean; fontSize?: number; lineHeight?: number;
 }
-export interface NarrationItem { kind: "narration"; panel: number; textIndex: number; text: string; lines: string[]; rect: Rect; fallback: string | null }
+export interface NarrationItem { kind: "narration"; panel: number; textIndex: number; text: string; lines: string[]; rect: Rect; fallback: string | null; fontSize?: number; lineHeight?: number }
 export interface SfxItem { kind: "sfx"; panel: number; textIndex: number; text: string; cx: number; cy: number; size: number; rot: number; color: string; rect: Rect; breaksFrame: boolean }
 export interface TitleItem { kind: "title"; panel: number; small: string; big: string; y: number }
+/** Manga chapter box: the chapter title boxed in a corner of the first panel (`fontSize` of the big line, layout px). */
+export interface ChapterBox { panel: number; small: string; big: string; rect: Rect; fontSize: number }
 export type LaidItem = BalloonItem | NarrationItem | SfxItem | TitleItem;
-export interface StripLayout { width: number; height: number; panels: PanelLayout[]; items: LaidItem[]; log: string[] }
+export interface StripLayout {
+  width: number; height: number; panels: PanelLayout[]; items: LaidItem[]; log: string[];
+  /** Manga: white page sheets (whole pages, or the pages' panels stacked one per line on phones); panels drawn in greyscale when `grey`. */
+  format?: "manga"; pages?: Rect[]; grey?: boolean; chapter?: ChapterBox;
+}
 
 /* ------------------------------------------------------------------------------------------------
  * Strip state per message swipe (experimental webtoon mode), as the chat view reads it (`webtoon.get`)
@@ -108,6 +132,8 @@ export interface WebtoonStripView {
   messageKey: string;
   status: WebtoonStripStatus;
   error?: string;
+  /** Manga pages (absent: webtoon strip). */
+  format?: "manga";
   /** Increments on every write (the chat view refetches when it changes). */
   revision: number;
   title: string;
@@ -121,4 +147,6 @@ export interface WebtoonStripView {
 export interface WebtoonStripSummary {
   revision: number;
   status: WebtoonStripStatus;
+  /** Manga pages (absent: webtoon strip); the chat view picks the layout width rule from it. */
+  format?: "manga";
 }

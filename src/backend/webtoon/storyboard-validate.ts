@@ -2,7 +2,7 @@
 // Code validation + repair of the planner output (pure module: no IO). Every change is logged.
 import {
   ANCHORS, FRAMINGS, GRID, IMAGE_SIZES, LAYOUTS, PORTRAIT_SIZES,
-  type Anchor, type ImagePanel, type Panel, type PlannerCharacter, type Storyboard, type TextBeatPanel, type TextItem,
+  type Anchor, type ImagePanel, type Panel, type PlannerCharacter, type StoryCharacter, type Storyboard, type TextBeatPanel, type TextItem,
 } from "./storyboard-schema.js";
 
 export const LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6, maxFrameBreaks: 2 };
@@ -13,7 +13,7 @@ export function normWords(s: string): string[] {
   return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
 }
 
-function fragments(text: string): string[] {
+export function fragments(text: string): string[] {
   return text.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/).map((f) => f.trim()).filter((f) => normWords(f).length);
 }
 
@@ -24,7 +24,7 @@ function speechStream(para: string): string {
   return segs.join(" ");
 }
 
-interface QuoteIndex { hay: string[]; texts: string[] }
+export interface QuoteIndex { hay: string[]; texts: string[] }
 
 export function buildQuoteIndex(source: string): QuoteIndex {
   const paras = source.split("\n").filter((p) => p.trim());
@@ -106,6 +106,45 @@ function outfitItems(r: PlannerCharacter): string[] {
   return Object.values(r.outfit).flatMap((v) => (v ?? "").split(",").map((t) => t.trim()).filter(Boolean));
 }
 
+/** Quote check of a speech / thought text (repairs and drops logged and counted); null when nothing verbatim is left. */
+export function checkedQuote(panelId: number, text: string, idx: QuoteIndex, log: string[], stats: Record<string, any>): string | null {
+  const q = checkQuote(text, idx);
+  for (const nt of q.notes) {
+    if (nt.kind === "repaired") { stats.quote_repaired++; log.push(`p${panelId}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`); }
+    else if (nt.kind === "joined") { stats.quote_joined++; log.push(`p${panelId}: quote kept, joined across narration "${nt.fragment}"`); }
+    else { stats.invented_dropped++; log.push(`p${panelId}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`); }
+  }
+  return q.text;
+}
+
+/** Known characters only, centres snapped to the grid and in different columns, framing checked, `drop_outfit` matched to one outfit item. */
+export function validateCharacters(p: ImagePanel, byName: ReadonlyMap<string, PlannerCharacter>, log: string[], stats: Record<string, any>): StoryCharacter[] {
+  const chars: StoryCharacter[] = [];
+  for (const c of p.nai.characters ?? []) {
+    const r = byName.get(c.name);
+    if (!r) { stats.unknown_char++; log.push(`p${p.id}: dropped unknown character ${c.name}`); continue; }
+    c.x = snap(c.x); c.y = snap(c.y);
+    if (!FRAMINGS.includes(c.framing)) c.framing = "upper body";
+    const items = outfitItems(r);
+    const drops: string[] = [];
+    for (const d of c.drop_outfit ?? []) {
+      const dl = String(d).toLowerCase().trim();
+      const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || (dl.includes(it.toLowerCase()) && it.length > 3));
+      if (hit.length === 1) { drops.push(hit[0]); stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`); log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`); }
+      else log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
+    }
+    c.drop_outfit = drops;
+    chars.push(c);
+  }
+  const used = new Set<number>();
+  for (const c of chars) {
+    let k = 0;
+    while (used.has(c.x) && k++ < 5) { c.x = GRID[(GRID.indexOf(c.x) + 1) % 5]; log.push(`p${p.id}: moved ${c.name} x (same column)`); }
+    used.add(c.x);
+  }
+  return chars;
+}
+
 export function validateStoryboard(raw: any, roster: PlannerCharacter[], source: string) {
   const log: string[] = [];
   const stats: Record<string, any> = { invented_dropped: 0, quote_repaired: 0, quote_joined: 0, balloons_dropped: 0, split: 0, layout_repaired: 0,
@@ -125,14 +164,9 @@ export function validateStoryboard(raw: any, roster: PlannerCharacter[], source:
       const a = String(t.anchor);
       t.anchor = (a === "gutter-above" ? "over-top-edge" : a === "gutter-below" ? "over-bottom-edge" : ANCHORS.includes(a as Anchor) ? a : t.type === "narration" ? "top-left" : "top") as Anchor;
       if (t.type === "speech" || t.type === "thought") {
-        const q = checkQuote(t.text, idx);
-        for (const nt of q.notes) {
-          if (nt.kind === "repaired") { stats.quote_repaired++; log.push(`p${p.id}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`); }
-          else if (nt.kind === "joined") { stats.quote_joined++; log.push(`p${p.id}: quote kept, joined across narration "${nt.fragment}"`); }
-          else { stats.invented_dropped++; log.push(`p${p.id}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`); }
-        }
-        if (!q.text) continue;
-        t.text = q.text;
+        const text = checkedQuote(p.id, t.text, idx, log, stats);
+        if (!text) continue;
+        t.text = text;
         const parts = splitLong(t.text);
         if (parts.length > 1) { stats.split++; log.push(`p${p.id}: split ${t.text.split(/\s+/).length}-word balloon`); out.push({ ...t, text: parts[0] }, { ...t, text: parts[1] }); continue; }
       }
@@ -168,30 +202,8 @@ export function validateStoryboard(raw: any, roster: PlannerCharacter[], source:
   const imgs = kept.filter((p): p is ImagePanel => p.kind === "image");
   imgs.forEach((p, i) => {
     const nai = (p.nai ??= { base: "", characters: [] });
-    if (!IMAGE_SIZES.includes(p.size)) { p.size = "832x1216"; log.push(`p${p.id}: bad size -> 832x1216`); }
-    const chars = [];
-    for (const c of nai.characters ?? []) {
-      const r = byName.get(c.name);
-      if (!r) { stats.unknown_char++; log.push(`p${p.id}: dropped unknown character ${c.name}`); continue; }
-      c.x = snap(c.x); c.y = snap(c.y);
-      if (!FRAMINGS.includes(c.framing)) c.framing = "upper body";
-      const items = outfitItems(r);
-      const drops: string[] = [];
-      for (const d of c.drop_outfit ?? []) {
-        const dl = String(d).toLowerCase().trim();
-        const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || (dl.includes(it.toLowerCase()) && it.length > 3));
-        if (hit.length === 1) { drops.push(hit[0]); stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`); log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`); }
-        else log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
-      }
-      c.drop_outfit = drops;
-      chars.push(c);
-    }
-    const used = new Set<number>();
-    for (const c of chars) {
-      let k = 0;
-      while (used.has(c.x) && k++ < 5) { c.x = GRID[(GRID.indexOf(c.x) + 1) % 5]; log.push(`p${p.id}: moved ${c.name} x (same column)`); }
-      used.add(c.x);
-    }
+    if (!(IMAGE_SIZES as readonly string[]).includes(p.size)) { p.size = "832x1216"; log.push(`p${p.id}: bad size -> 832x1216`); }
+    const chars = validateCharacters(p, byName, log, stats);
     nai.characters = chars;
     // layout rules
     if (!LAYOUTS.includes(p.layout) || (p.layout as string) === "text_on_white") p.layout = "full_width";

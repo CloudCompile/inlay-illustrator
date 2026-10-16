@@ -44,6 +44,18 @@ export const WEBTOON_CSS = [
 .ii-wt-reroll[data-ii-wt-busy="true"] { animation: ii-wt-spin 1s linear infinite; }
 @keyframes ii-wt-spin { to { transform: rotate(360deg); } }
 @media (pointer: coarse) { .ii-wt-reroll, .ii-wt-take { opacity: .85; } .ii-wt-take:disabled { opacity: .4; } }
+.ii-wt-canvas[data-ii-wt-format^="manga"] { background: #d4cfc8; }
+.ii-wt-page { position: absolute; background: #fff; }
+.ii-wt-canvas[data-ii-wt-format^="manga"] .ii-wt-panel { background: #ececec; }
+.ii-wt-canvas[data-ii-wt-grey] .ii-wt-img { filter: grayscale(1); }
+.ii-wt-frames { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.ii-wt-frames polygon { fill: none; stroke: #000; stroke-width: 3; stroke-linejoin: miter; }
+.ii-wt-canvas[data-ii-wt-format^="manga"] .ii-wt-sfx { text-shadow: none; -webkit-text-stroke: 9px #fff; }
+.ii-wt-chapter { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 12px; background: #fff; border: 3px solid #111; color: #111; text-align: center; pointer-events: none; }
+.ii-wt-chapter .ii-wt-c1 { font-family: "II Webtoon Patrick Hand", "Patrick Hand", sans-serif; font-size: .53em; letter-spacing: 3px; line-height: 1.2; }
+.ii-wt-chapter .ii-wt-c2 { font-family: "II Webtoon Bangers", Bangers, Impact, sans-serif; line-height: 1.05; letter-spacing: 1px; }
+.ii-wt-canvas[data-ii-wt-format="manga-pages"] .ii-wt-reroll, .ii-wt-canvas[data-ii-wt-format="manga-pages"] .ii-wt-take { width: 56px; height: 56px; font: 700 34px/56px system-ui, sans-serif; }
+.ii-wt-canvas[data-ii-wt-format="manga-pages"] .ii-wt-take { font: 700 42px/50px system-ui, sans-serif; }
 .ii-wt-note { padding: 18px; font: 600 14px/1.4 system-ui, sans-serif; color: #6f665c; text-align: center; }
 .ii-wt-strip[data-ii-wt-status="error"] .ii-wt-note { color: #b4463c; }
 .ii-wt-editor { position: absolute; left: 8px; right: 8px; z-index: 2; display: grid; gap: 6px; padding: 8px; background: #1d1a17; border-radius: 8px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }

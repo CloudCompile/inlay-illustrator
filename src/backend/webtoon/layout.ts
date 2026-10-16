@@ -54,7 +54,7 @@ const pad = (r: Rect, p: number): Rect => [r[0] - p, r[1] - p, r[2] + p, r[3] + 
 const shift = (r: Rect, dy: number): Rect => [r[0], r[1] + dy, r[2], r[3] + dy];
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
-function defaultMeasure(text: string, font: FontKind, size: number): number {
+export function defaultMeasure(text: string, font: FontKind, size: number): number {
   const m = FONT_METRICS[font];
   let w = 0;
   for (const ch of text) w += m[ch] ?? m["n"] ?? 500;
@@ -65,6 +65,19 @@ export function isShout(t: string): boolean {
   const letters = [...t].filter((c) => /[a-z]/i.test(c));
   const caps = letters.filter((c) => c === c.toUpperCase()).length / Math.max(1, letters.length);
   return t.includes("?!") || t.includes("!!") || (t.trimEnd().endsWith("!") && caps > 0.5);
+}
+
+/** Head point and face box of a character in normalized image coords: the detected face box, else estimated from the NovelAI centre and framing (no face for hands only / lower body). */
+export function charGeometry(c: StoryCharacter, iw: number, ih: number, faces?: Record<string, NBox>): { head: [number, number]; face: Rect | null } {
+  const f = faces?.[c.name];
+  if (f) return { head: [(f.left + f.right) / 2, (f.top + f.bottom) / 2], face: [f.left, f.top, f.right, f.bottom] };
+  const hd = HEAD[c.framing];
+  if (!hd) return { head: [c.x, Math.max(0.05, c.y - 0.25)], face: null };
+  let [half, fh] = hd;
+  if (c.framing !== "portrait") half = Math.min(half, c.y, 1 - c.y);
+  const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
+  const fw = ((fh * ih) / iw) * 1.3;
+  return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] };
 }
 
 export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, opts: LayoutOptions = {}): StripLayout {
@@ -103,18 +116,6 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
     h = Math.round(Math.min(h, (lay === "title" ? RULES.maxTitleH : lay.startsWith("inset") ? RULES.maxInsetH : RULES.maxPanelH) * k));
     const vis = (w / iw) * ih;
     return { x, w, h, frac: h < vis - 1 ? h / vis : 1 };
-  }
-
-  function charGeometry(c: StoryCharacter, iw: number, ih: number, faces?: Record<string, NBox>) {
-    const f = faces?.[c.name];
-    if (f) return { head: [(f.left + f.right) / 2, (f.top + f.bottom) / 2] as [number, number], face: [f.left, f.top, f.right, f.bottom] as Rect };
-    const hd = HEAD[c.framing];
-    if (!hd) return { head: [c.x, Math.max(0.05, c.y - 0.25)] as [number, number], face: null };
-    let [half, fh] = hd;
-    if (c.framing !== "portrait") half = Math.min(half, c.y, 1 - c.y);
-    const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
-    const fw = ((fh * ih) / iw) * 1.3;
-    return { head: [c.x, hy] as [number, number], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] as Rect };
   }
 
   // ---------- grid search ----------

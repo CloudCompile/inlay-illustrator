@@ -9,6 +9,7 @@ import {
   compileMainPrompt,
   type CharacterDocument,
   type ChatDataDocument,
+  type ComicFormat,
   type InlayConfig,
 } from "../../shared/contract/index.js";
 import { mergeLocalLoreActorState, rebuildContinuityAtMessage, type ContinuityChatStore } from "../../engine/continuity/index.js";
@@ -26,7 +27,7 @@ import { cleanMessageContent } from "../pipeline/markup.js";
 import { speakingCharacterId } from "../pipeline/generate.js";
 import type { PlannerRosterEntry } from "./planner-prompt.js";
 import type { PlannerCharacter } from "./storyboard-schema.js";
-import { dedupeTags, WEBTOON_NEGATIVE, type OutfitPart, type WebtoonCastMember, type WebtoonStyle } from "./panel-request.js";
+import { dedupeTags, MANGA_NEGATIVE, WEBTOON_NEGATIVE, type OutfitPart, type WebtoonCastMember, type WebtoonStyle } from "./panel-request.js";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : {});
@@ -95,7 +96,7 @@ function personaRecord(p: PersonaInfo): PersonaRecord {
 
 export async function loadWebtoonContext(
   services: BackendServices,
-  input: { chatId: string; chat: ChatInfo; messages: ChatMessageView[]; target: number; historyId: string; source: string; config: InlayConfig; chatData: ChatDataDocument },
+  input: { chatId: string; chat: ChatInfo; messages: ChatMessageView[]; target: number; historyId: string; source: string; config: InlayConfig; chatData: ChatDataDocument; format?: ComicFormat },
 ): Promise<WebtoonContext> {
   const { config } = input;
   const view = input.messages[input.target];
@@ -161,7 +162,7 @@ export async function loadWebtoonContext(
     roster,
     style: {
       style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str).filter(Boolean).join(", "),
-      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, WEBTOON_NEGATIVE].map(str).filter(Boolean).join(", ")),
+      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, input.format === "manga" ? MANGA_NEGATIVE : WEBTOON_NEGATIVE].map(str).filter(Boolean).join(", ")),
       params,
       framingWeights: rec(cp.outfitPartFramingWeights) as WebtoonStyle["framingWeights"],
     },

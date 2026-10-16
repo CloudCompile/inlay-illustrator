@@ -18,6 +18,8 @@ const OUTER_TOP = /jacket|blazer|coat|hoodie|cardigan|gakuran|sweater|uniform|ap
 const HANDS_ONLY: Record<OutfitPart, number> = { head: 0, top: 0.5, bottom: 0, legs: 0, feet: 0 };
 /** Added to every webtoon negative: all text is lettered on top of the image. */
 export const WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panels, border";
+/** Manga: the same without "comic" and "border" (manga artist styles ask for "manga (style)"; manga prototype). */
+export const MANGA_NEGATIVE = "speech bubble, text, english text, multiple panels, panel border";
 
 export interface WebtoonCastMember {
   name: string;

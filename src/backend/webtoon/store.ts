@@ -6,6 +6,7 @@
  * width the chat shows the strip (older documents also carry a stored 690 px `layout`; it is not read).
  */
 import {
+  MANGA_PAGE_WIDTH,
   STORAGE_PATHS,
   STRIP_MIN_LAYOUT_WIDTH,
   STRIP_WIDTH,
@@ -19,6 +20,7 @@ import {
 } from "../../shared/contract/index.js";
 import type { StorageService } from "../services/types.js";
 import { layoutStrip, type PanelImage } from "./layout.js";
+import { layoutManga } from "./manga-layout.js";
 import type { PanelRequest, WebtoonStyle } from "./panel-request.js";
 import type { Storyboard } from "./storyboard-schema.js";
 
@@ -39,6 +41,10 @@ export interface WebtoonStripDocument {
   characterId: string;
   status: WebtoonStripStatus;
   error?: string;
+  /** Manga pages (absent: webtoon strip). */
+  format?: "manga";
+  /** Manga in greyscale (the artist style asks for monochrome): prompts without colour words, panels drawn grey. */
+  mono?: boolean;
   revision: number;
   createdAt: number;
   updatedAt: number;
@@ -96,7 +102,7 @@ export async function readStrip(storage: StorageService, chatId: string, history
 async function writeIndex(storage: StorageService, doc: WebtoonStripDocument | null, chatId: string, historyId: string): Promise<void> {
   await storage.updateJson<Index>(indexPath(chatId), {}, (index) => {
     const next = { ...index };
-    if (doc) next[historyId] = { revision: doc.revision, status: doc.status };
+    if (doc) next[historyId] = { revision: doc.revision, status: doc.status, ...(doc.format === "manga" ? { format: "manga" as const } : {}) };
     else delete next[historyId];
     return next;
   });
@@ -143,8 +149,11 @@ export function effectiveStoryboard(doc: Pick<WebtoonStripDocument, "storyboard"
   };
 }
 
-/** Layout from the storyboard + overrides at `width`; image sizes, cut-out and face boxes from the selected takes, else the planned size. */
-export function relayout(doc: WebtoonStripDocument, width: number = STRIP_WIDTH): StripLayout | null {
+/**
+ * Layout from the storyboard + overrides at `width`; image sizes, cut-out and face boxes from the selected takes, else the planned size.
+ * Manga: pages at MANGA_PAGE_WIDTH, the phone layout below it.
+ */
+export function relayout(doc: WebtoonStripDocument, width: number = doc.format === "manga" ? MANGA_PAGE_WIDTH : STRIP_WIDTH): StripLayout | null {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard) return null;
   const images: Record<string, PanelImage> = {};
@@ -157,19 +166,25 @@ export function relayout(doc: WebtoonStripDocument, width: number = STRIP_WIDTH)
     if (take?.cutout) images[String(p.id)]!.cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
     if (take?.check && Object.keys(take.check.faces).length) images[String(p.id)]!.faces = take.check.faces;
   }
-  return layoutStrip(storyboard, images, { width });
+  return doc.format === "manga" ? layoutManga(storyboard, images, { width, grey: !!doc.mono }) : layoutStrip(storyboard, images, { width });
 }
 
-/** The chat view of a strip, laid out at `width` (strip px, `stripLayoutWidth` of the shown width). */
-export function stripView(doc: WebtoonStripDocument, width: number = STRIP_WIDTH): WebtoonStripView {
+/**
+ * The chat view of a strip, laid out at `width` (strip px: `stripLayoutWidth` of the shown width; manga: `mangaLayoutWidth`,
+ * MANGA_PAGE_WIDTH = pages, the default).
+ */
+export function stripView(doc: WebtoonStripDocument, width?: number): WebtoonStripView {
+  const manga = doc.format === "manga";
+  const w = Math.round(width ?? 0) || (manga ? MANGA_PAGE_WIDTH : STRIP_WIDTH);
   return {
     chatId: doc.chatId,
     messageKey: doc.messageKey,
     status: doc.status,
     ...(doc.error ? { error: doc.error } : {}),
+    ...(manga ? { format: "manga" as const } : {}),
     revision: doc.revision,
     title: doc.storyboard?.title ?? "",
-    layout: relayout(doc, Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, Math.round(width) || STRIP_WIDTH))),
+    layout: relayout(doc, manga && w >= MANGA_PAGE_WIDTH ? MANGA_PAGE_WIDTH : Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, w))),
     panels: doc.panels,
     updatedAt: doc.updatedAt,
   };

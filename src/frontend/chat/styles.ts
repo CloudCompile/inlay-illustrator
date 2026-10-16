@@ -410,9 +410,11 @@ export const CHAT_SIDE_CSS = String.raw`
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 314px; }
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"][data-ii-scene-available="true"],
 .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"][data-ii-scene-available="true"] { --ii-am-floating-panel-width: 400px; }
-.ii-am-root .ii-am-chat-count[data-ii-count-mode="webtoon"] { --ii-am-floating-panel-width: 300px; }
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="webtoon"],
+.ii-am-root .ii-am-chat-count[data-ii-count-mode="manga"] { --ii-am-floating-panel-width: 300px; }
 @media (max-width: 640px) {
-  .ii-am-root .ii-am-chat-count[data-ii-count-mode="webtoon"] { --ii-am-floating-panel-width: 340px; }
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="webtoon"],
+  .ii-am-root .ii-am-chat-count[data-ii-count-mode="manga"] { --ii-am-floating-panel-width: 340px; }
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="fixed"] { --ii-am-floating-panel-width: 296px; }
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="range"],
   .ii-am-root .ii-am-chat-count[data-ii-count-mode="split"] { --ii-am-floating-panel-width: 412px; }

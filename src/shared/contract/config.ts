@@ -1168,6 +1168,8 @@ export interface ChatImageGenerationSettings {
   splitAnalysis: { totalCount: number | null; batchSize: number };
   /** Experimental: a message generation makes one webtoon strip instead of inline illustrations. */
   webtoonMode: boolean;
+  /** With `webtoonMode`: "manga" makes manga pages instead of the webtoon strip (absent = webtoon). */
+  comicFormat?: "manga";
 }
 export const SPLIT_ANALYSIS_MAX_TOTAL = 20;
 export function createDefaultChatImageGenerationSettings(): ChatImageGenerationSettings {
@@ -1194,6 +1196,7 @@ export function normalizeChatImageGenerationSettings(value: unknown, fallback: C
     autoGenerationEnabled: typeof r.autoGenerationEnabled === "boolean" ? r.autoGenerationEnabled : fallback.autoGenerationEnabled,
     countPolicy: normalizeCountPolicy(r.countPolicy, fallback.countPolicy, maxCount),
     webtoonMode: typeof r.webtoonMode === "boolean" ? r.webtoonMode : fallback.webtoonMode,
+    ...(r.comicFormat === "manga" ? { comicFormat: "manga" as const } : {}),
   };
 }
 /** Load-time normalization with the AM notices (157887-157901, English; Korean in `noticeKo`). */

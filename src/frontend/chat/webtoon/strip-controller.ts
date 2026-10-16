@@ -8,7 +8,7 @@
 import type { SpindleFrontendContext } from "lumiverse-spindle-types";
 import type { ChatMessageUiState } from "../../../shared/contract/chat-dom.js";
 import type { GenerationJobSnapshot } from "../../../shared/contract/rpc.js";
-import { STRIP_WIDTH, stripLayoutWidth, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
+import { mangaLayoutWidth, STRIP_WIDTH, stripLayoutWidth, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import type { AppController } from "../../state/app-state.js";
 import { historyIdOfKey, jobForMessage } from "../dom.js";
 import { WEBTOON_LABELS } from "../labels.js";
@@ -20,6 +20,8 @@ const RELAYOUT_DELAY_MS = 250;
 
 interface StripEntry {
   messageKey: string;
+  /** Manga pages: whole pages when the frame is wide enough (`mangaLayoutWidth`), else one panel per line. */
+  manga: boolean;
   wrapper: Element;
   frame: HTMLElement;
   view: WebtoonStripView | null;
@@ -62,7 +64,7 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
     entries.delete(id);
   }
 
-  const layoutWidth = (entry: StripEntry) => stripLayoutWidth(entry.frame.clientWidth || STRIP_WIDTH);
+  const layoutWidth = (entry: StripEntry) => (entry.manga ? mangaLayoutWidth : stripLayoutWidth)(entry.frame.clientWidth || STRIP_WIDTH);
   /** The shown layout is for another width (a resize while it was fetched). */
   const staleWidth = (entry: StripEntry) => !!entry.view?.layout && entry.view.layout.width !== layoutWidth(entry);
 
@@ -212,7 +214,7 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
           const frame = doc.createElement("div");
           frame.className = "ii-wt-strip";
           wrapper.appendChild(frame);
-          entry = { messageKey: state.messageKey, wrapper, frame, view: null, fetched: -1, fetching: false, signature: "", editing: null };
+          entry = { messageKey: state.messageKey, manga: false, wrapper, frame, view: null, fetched: -1, fetching: false, signature: "", editing: null };
           const Observer = (doc.defaultView as unknown as { ResizeObserver?: typeof ResizeObserver } | null)?.ResizeObserver;
           if (Observer) {
             const e = entry;
@@ -229,6 +231,7 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
           entries.set(messageId, entry);
         }
         live.add(messageId);
+        entry.manga = state.webtoon.format === "manga";
         if (entry.fetched < state.webtoon.revision) void fetchStrip(entry, state.webtoon.revision);
         render(entry, jobs, state);
       }

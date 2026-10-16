@@ -4271,7 +4271,8 @@ function normalizeChatImageGenerationSettings(value, fallback = DEFAULT_CHAT_IMA
     splitAnalysis: { totalCount: total, batchSize: Math.min(batch, total === null ? 7 : maxSplitBatchSize(total)) },
     autoGenerationEnabled: typeof r.autoGenerationEnabled === "boolean" ? r.autoGenerationEnabled : fallback.autoGenerationEnabled,
     countPolicy: normalizeCountPolicy(r.countPolicy, fallback.countPolicy, maxCount),
-    webtoonMode: typeof r.webtoonMode === "boolean" ? r.webtoonMode : fallback.webtoonMode
+    webtoonMode: typeof r.webtoonMode === "boolean" ? r.webtoonMode : fallback.webtoonMode,
+    ...r.comicFormat === "manga" ? { comicFormat: "manga" } : {}
   };
 }
 function loadChatImageGenerationSettings(stored, legacy = {}) {
@@ -4703,6 +4704,8 @@ function isAllowedBridgeUrl(url) {
 var STRIP_WIDTH = 690;
 var STRIP_MIN_LAYOUT_WIDTH = 360;
 var STRIP_SPEECH_PX = 19;
+var MANGA_PAGE_WIDTH = 1100;
+var MANGA_SPEECH_PX = 22;
 // src/backend/rpc/errors.ts
 class RpcFailure extends Error {
   error;
@@ -63132,6 +63135,12 @@ var WEBTOON_TEXT = Object.freeze({
   reroll: { en: "Webtoon: redrawing panel {n}", ko: "웹툰: {n}컷 다시 그리는 중" },
   busy: { en: "This panel is already being redrawn.", ko: "이 컷은 이미 다시 그리는 중입니다." }
 });
+var MANGA_TEXT = Object.freeze({
+  planning: { en: "Manga: planning the pages", ko: "만화: 페이지 구성 중" },
+  panel: { en: "Manga: drawing panel {n} of {total}", ko: "만화: {total}컷 중 {n}컷 그리는 중" },
+  finishing: { en: "Manga: finishing", ko: "만화: 마무리 중" },
+  reroll: { en: "Manga: redrawing panel {n}", ko: "만화: {n}컷 다시 그리는 중" }
+});
 function formatLabel(label, values = {}) {
   const fill = (s) => s.replace(/\{(\w+)\}/gu, (_m, k) => String(values[k] ?? `{${k}}`));
   return { en: fill(label.en), ko: fill(label.ko) };
@@ -64317,6 +64326,7 @@ var PARTS2 = ["head", "top", "bottom", "legs", "feet"];
 var OUTER_TOP = /jacket|blazer|coat|hoodie|cardigan|gakuran|sweater|uniform|apron|undershirt/iu;
 var HANDS_ONLY = { head: 0, top: 0.5, bottom: 0, legs: 0, feet: 0 };
 var WEBTOON_NEGATIVE = "speech bubble, text, english text, comic, multiple panels, border";
+var MANGA_NEGATIVE = "speech bubble, text, english text, multiple panels, panel border";
 var TRANSPARENT_TAGS = "transparent background, has alpha";
 var CUTOUT_NEGATIVE = "motion lines, speed lines, emphasis lines";
 var CAMERA = /^(?:(?:extreme )?close-up|portrait|upper body|cowboy shot|full body|lower body|(?:very )?wide shot|medium shot|from (?:below|above|side|behind)|(?:low|high)[- ]angle|pov(?: hands)?|dutch angle|[a-z]+ focus|profile|straight-on|head out of frame)$/iu;
@@ -64469,495 +64479,173 @@ function engineImageRequest(request, style, seed) {
   };
 }
 
-// src/backend/webtoon/roster.ts
-var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-var str4 = (v) => v == null ? "" : String(v).trim();
-var PARTS3 = ["head", "top", "bottom", "legs", "feet"];
-var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-function mentions(text, names) {
-  return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text));
+// src/backend/webtoon/manga-planner-prompt.ts
+var MANGA_PLANNER_TEMPLATE = String.raw`You are the storyboard artist ("name" / thumbnail artist) for a Japanese manga. You adapt ONE chat reply (below) into a short manga chapter of about {{PAGES}} pages. Pages are read right to left: panels in a row from right to left, rows from top to bottom. Code builds the pages from a small library of page templates and letters your text on top of the images, so you decide WHAT each panel shows and how IMPORTANT it is; code decides the exact panel shapes.
+
+How the target manga are built:
+- Every panel is ONE single illustration with ONE camera. Never ask the image model for a manga page, panels, borders, text or speech bubbles.
+- Rhythm: a page has 4-7 panels. Each page has one big panel (the strongest beat of the page: a reveal, an emotional peak, an establishing view), several normal panels, and small panels for quick beats (a reaction face, an insert of hands/objects/feet, a pause).
+- Vary the camera hard like a manga artist: extreme close-ups of eyes, insert shots of hands/objects/feet, low angle, high angle, back view, over-the-shoulder, a wide establishing shot of the street or room. Never more than two medium shots in a row. The chapter opens with an establishing panel.
+- Outbursts are the best manga beats: a shouted line, a sudden reaction or a punchline ("You don't have a hand mixer?!") gets its own panel (a head snap, a close-up reaction) instead of sharing a panel with calm lines.
+- Speech balloons sit in the empty part of the panel next to the speaker's head; they may cross the panel border into the white gutter. Narration sits in rectangular boxes at a panel corner. Sound effects (SFX) are hand-lettered over the art.
+
+Hard rules (checked by code; violations are removed or repaired automatically):
+1. {{PANELS}} panels in reading order ({{MIN}} to {{MAX}} accepted).
+2. "importance" per panel: "big" (about 1 per page), "small" (quick reaction, insert, pause: about 1/3 of the panels), "normal" (the rest).
+3. At most 2 speech/thought balloons per panel, each ONE short beat of at most 8 words (12 is the absolute maximum): split a long line into two balloons at a sentence break. A "small" panel gets at most 1 balloon.
+4. Up to 1 narration box per panel (at most 12 words). Narration reuses the source's own narration wording, shortened.
+5. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag. Never join two different lines (from different moments) into one balloon. Never add, change or invent words.
+6. "tone" of a speech balloon: "shout" when the line is yelled or snapped (an exclamation, "she yelled"), "whisper" when it is whispered, muttered or said under the breath; leave it out otherwise.
+7. Sound effects: short English onomatopoeia. When the source writes a sound ("*click*", "bzzt", "thud", a door that slams, a phone that buzzes), use that sound: copy the source's sound word, or write the sound the source describes (a silent text alert is "bzzt", not "ring"; loafers on stairs "click click"; a pillow hit "fwump"). Every "action" panel gets 1 sfx; quiet panels may get an ambient one. Aim for 5-8 sfx in the chapter.
+8. List the story's key props in "key_props" and give the most important ones an "insert" panel (hands/feet/object close-up, framing "hands only" or no characters).
+9. Keep it non-explicit: clothed, no sexual framing, no suggestive tags.
+
+Image model: NovelAI V5, one image per panel (code picks the size from the panel shape).{{STYLE}}
+
+Character placement (NovelAI V5 coordinates, the image model follows them): for each visible character give x and y, each one of 0.1, 0.3, 0.5, 0.7, 0.9 (x: 0.1 = left edge, 0.9 = right edge; y: 0.1 = top, 0.9 = bottom). The point is the CENTER of that character's visible body in the frame. Leave room for balloons: with a speaker at x 0.3 the right side stays empty for the balloon (manga balloons are read first at the top RIGHT). Two characters must not share the same x. In a two-shot, put the character who speaks FIRST on the RIGHT.
+Frame-break: set "frame_break": true on 1 "action" panel per page at most, where ONE character makes a strong move (framing "portrait", "upper body" or "cowboy shot", character y 0.5 so the head sits in the upper half). Code cuts that character out and draws the head over the panel's top frame line. Leave "frame_break" false on every other panel.
+
+Prompt format:
+- "base": camera/framing tags (e.g. "close-up", "eye focus", "from below", "from above", "from behind", "pov", "upper body", "cowboy shot", "full body", "wide shot", "dutch angle"), then location/lighting tags (e.g. "indoors, kitchen, evening"), then a newline and 1-2 plain English sentences describing the shot. Do NOT write count tags (1girl, 1boy: code adds them), artist, style or quality tags, "speech bubble" or "text".
+- "characters": one entry per visible character (empty list for object-only or no-human shots). "prompt" = ONLY pose, expression, gaze and action tags for this shot (e.g. "walking, from side, looking away, pout, holding bag"), then a newline and one short English sentence of what the character does. Do NOT write hair, eye, body, species or clothing tags: identity and outfit tags are added by code. "framing" = "portrait" | "upper body" | "cowboy shot" | "lower body" | "full body" | "hands only". "shoes_off": true when indoors at home without shoes.
+- "drop_outfit": when an outfit item clearly contradicts THIS panel's scene (e.g. indoor "uwabaki" school slippers on the street, shoes indoors), list it here, copied exactly from the character's item list; otherwise leave it empty.
+
+Characters (identity and outfit tags are injected by code; you only pick an outfit, place and pose them):
+{{ROSTER}}
+Outfit: for every character you draw, pick the wardrobe outfit that fits this scene (field "outfits": [{"name", "outfit_id"}]); the one marked (current) is what they wore last. "drop_outfit" items refer to the picked outfit.
+
+Output: JSON only, this shape (example values):
+{"title": "Chapter 1: Example",
+ "key_props": ["canvas tote bag"],
+ "outfits": [{"name": "A", "outfit_id": "school_uniform"}, {"name": "B", "outfit_id": "default"}],
+ "panels": [
+  {"id": 1, "importance": "big", "beat": "establishing", "shot": "wide shot from below, the bridge and evening sky", "moment": "They walk onto the bridge.", "frame_break": false,
+   "nai": {"base": "wide shot, from below, full body, outdoors, bridge, sky, sunset\nTwo students walk onto a long bridge under a wide evening sky.",
+           "characters": [{"name": "A", "x": 0.7, "y": 0.7, "framing": "full body", "shoes_off": false, "drop_outfit": [], "prompt": "walking, arms crossed, pout\nShe walks ahead, sulking."},
+                          {"name": "B", "x": 0.3, "y": 0.7, "framing": "full body", "shoes_off": false, "drop_outfit": [], "prompt": "walking, hand in pocket, half-closed eyes\nHe follows her."}]},
+   "text": [{"type": "narration", "speaker": null, "text": "The bridge was empty."},
+            {"type": "speech", "speaker": "A", "text": "You're late!", "tone": "shout"},
+            {"type": "sfx", "speaker": null, "text": "tap tap"}]},
+  {"id": 2, "importance": "small", "beat": "insert", "shot": "close-up of her hand on the bag strap", "moment": "...", "nai": {"base": "...", "characters": []}, "text": []}
+ ]}
+Field values: importance "small"|"normal"|"big"; beat "establishing"|"action"|"dialogue"|"reaction"|"insert"|"quiet"; text type "speech"|"thought"|"narration"|"sfx"; tone "shout"|"whisper" (speech only, optional); speaker = a character name (may be off-panel) or null for narration/sfx; text items in reading order.
+All text in the language of the chat reply.
+
+The chat reply:
+<<<
+{{SOURCE}}
+>>>
+`;
+function mangaPagesHint(panels) {
+  const lo = Math.max(1, Math.ceil(panels / 6)), hi = Math.max(1, Math.ceil(panels / 4));
+  return lo === hi ? String(lo) : `${lo}-${hi}`;
 }
-function rosterEntry(candidate, currentOutfitId) {
-  const forms = candidate.appearanceForms ?? [];
-  const form = forms.find((f) => f.formId === candidate.defaultFormId) ?? forms[0];
-  if (!form)
-    return null;
-  const gender = str4(form.gender) || str4(candidate.gender);
-  const outfits = (form.outfits ?? []).map((o) => ({ ...rec4(o), id: str4(rec4(o).outfitId ?? rec4(o).id), label: str4(o.label) })).filter((o) => o.id && PARTS3.some((p) => str4(o[p])));
-  const ids = outfits.map((o) => o.id);
-  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str4(form.defaultOutfitId)) ? str4(form.defaultOutfitId) : ids[0] ?? "";
-  const main = compileMainPrompt(form.basePromptGroups, gender);
-  return {
-    key: candidate.key,
-    name: candidate.characterName.trim(),
-    gender,
-    formLabel: str4(form.label),
-    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS3.flatMap((p) => str4(o[p]) ? [[p, str4(o[p])]] : [])) })),
-    currentOutfitId: current,
-    identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", ")
+function buildMangaPlannerPrompt(args) {
+  const range = webtoonPanelRange(args.panels);
+  const style = args.mono ? " The art style is black-and-white manga (greyscale): do not rely on colours to tell characters or things apart; use pose, framing, props and light, and write no colour words." : "";
+  const fill = {
+    "{{PANELS}}": String(args.panels),
+    "{{MIN}}": String(range.min),
+    "{{MAX}}": String(range.max),
+    "{{PAGES}}": mangaPagesHint(args.panels),
+    "{{STYLE}}": style,
+    "{{ROSTER}}": rosterLines(args.roster),
+    "{{SOURCE}}": args.source
   };
-}
-function validationRoster(roster, outfits) {
-  return roster.map((r) => {
-    const o = r.outfits.find((x) => x.id === (outfits[r.name] ?? r.currentOutfitId));
-    return { name: r.name, gender: r.gender, formLabel: r.formLabel, outfitLabel: o?.label ?? "", outfit: o?.outfit ?? {} };
-  });
-}
-function castFor(roster, outfits) {
-  return new Map(roster.map((r) => {
-    const outfitId = outfits[r.name] ?? r.currentOutfitId;
-    return [r.name, { name: r.name, gender: r.gender, identity: r.identity, outfitId, outfit: r.outfits.find((o) => o.id === outfitId)?.outfit ?? {} }];
-  }));
-}
-function personaRecord2(p) {
-  return { key: p.personaId, id: p.personaId, name: p.name, ...p.avatarImageId ? { imageAsset: { key: p.avatarImageId, name: p.name, sourceType: "persona" } } : {} };
-}
-async function loadWebtoonContext(services, input) {
-  const { config } = input;
-  const view = input.messages[input.target];
-  const primaryId = await speakingCharacterId(services, input.chat, view);
-  const memberIds = [...new Set([primaryId, ...input.chat.groupCharacterIds].filter(Boolean))];
-  const docs = new Map;
-  for (const id of memberIds)
-    docs.set(id, await services.storage.loadCharacterDocument(id));
-  const sources = [];
-  for (const id of memberIds)
-    sources.push(await services.sources.buildSource(id, docs.get(id), { chatId: input.chatId }));
-  const seen = new Set;
-  const source = { ...sources[0], members: sources.flatMap((s) => s.members).filter((m) => seen.has(m.key) ? false : (seen.add(m.key), true)) };
-  const custom = [...docs.values()].flatMap((d) => d.customCharacters);
-  const target = await services.images.resolveTarget();
-  const runtime = buildRuntimeConfig(config, docs.get(primaryId) ?? null, { resolvedImageModel: target.model });
-  const cp = rec4(runtime.characterPrompt);
-  const forms = { ...rec4(cp.characterForms) };
-  for (const id of memberIds.slice(1))
-    for (const [k, v] of Object.entries(rec4(rec4(docs.get(id)?.characterPrompt).characterForms)))
-      if (!(k in forms))
-        forms[k] = v;
-  runtime.characterPrompt = { ...cp, characterForms: forms };
-  const amConfig = runtime;
-  const character = await services.sources.getCharacter(primaryId);
-  const personas = await services.sources.listPersonas();
-  const active = await services.sources.getActivePersona(input.chatId);
-  const chatKey = chatKeyForChat(input.chatId);
-  const liveIds = input.messages.map((m, i) => i === input.target ? input.historyId : `${m.id}@${m.swipeId}`);
-  const continuity = rebuildContinuityAtMessage2(input.chatData.store, chatKey, liveIds, input.historyId);
-  continuity.characters[chatKey] = mergeLocalLoreActorState2(continuity.characters[chatKey] ?? {}, input.chatData.actorState);
-  const requestMessages = input.messages.slice(0, input.target).flatMap((m) => {
-    const content = m.role === "system" ? "" : cleanMessageContent(m.content);
-    return content.trim() ? [{ role: m.role === "assistant" ? "assistant" : "user", content }] : [];
-  });
-  const ft = buildAnalyzerContextInputs2({
-    config: amConfig,
-    continuity,
-    chatKey,
-    messages: requestMessages,
-    content: input.source,
-    imageTokens: [],
-    character: { name: character.name, description: character.description },
-    source: withCustomCharacterMembers(source, custom),
-    activePersona: active ? personaRecord2(active) : null,
-    personaRecords: personas.map(personaRecord2)
-  });
-  const previous = new Map;
-  for (const ref of Object.values(ft.visualContinuity.previous_outfit_refs.actors))
-    if (ref?.lorebook_prompt_key && ref.outfit_id)
-      previous.set(ref.lorebook_prompt_key, ref.outfit_id);
-  const candidates = [...ft.analyzerIdentityCandidates, ...ft.analyzerPersonaCandidates];
-  const all = candidates.flatMap((c) => {
-    const entry = rosterEntry(c, previous.get(str4(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
-    return entry && entry.name ? [{ entry, names: [c.characterName, ...c.aliases ?? []] }] : [];
-  });
-  let roster = all.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
-  if (!roster.length)
-    roster = all.filter((a) => a.entry.key.startsWith(primaryId)).map((a) => a.entry).slice(0, 1);
-  const names = new Set;
-  roster = roster.filter((r) => names.has(r.name) ? false : (names.add(r.name), true));
-  const prompts = ft.promptInputs({ actors: {} });
-  const nai = resolveNovelAIRunConfig2(amConfig, { sourceId: primaryId });
-  const params = {};
-  for (const key of ["sampler", "noiseSchedule", "steps", "scale", "cfgRescale", "qualityToggle"])
-    if (nai[key] !== undefined)
-      params[key] = nai[key];
-  return {
-    characterId: primaryId,
-    roster,
-    style: {
-      style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str4).filter(Boolean).join(", "),
-      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, WEBTOON_NEGATIVE].map(str4).filter(Boolean).join(", ")),
-      params,
-      framingWeights: rec4(cp.outfitPartFramingWeights)
-    }
-  };
+  return MANGA_PLANNER_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|PAGES|STYLE|ROSTER|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
 }
 
-// src/backend/webtoon/cutout.ts
-var FRAME_BREAK = {
-  solidAlpha: 128,
-  maskAlpha: 200,
-  maskBlock: 8,
-  headBand: 0.25,
-  headColumn: 0.15,
-  headGap: 0.01,
-  headMargin: 0.02,
-  minPart: 0.15,
-  minTransparent: 0.1,
-  headTop: 0.1,
-  maxShift: 0.12,
-  gridCols: 40,
-  gridFill: 0.3,
-  fillBlock: 8,
-  fillRadius: 4
-};
-var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
-async function zlib(data, mode) {
-  const transform = mode === "compress" ? new CompressionStream("deflate") : new DecompressionStream("deflate");
-  const stream = new Blob([data]).stream().pipeThrough(transform);
-  return new Uint8Array(await new Response(stream).arrayBuffer());
+// src/backend/webtoon/manga-style.ts
+var MONO_TAGS = "monochrome, greyscale";
+var MONO = new Set(["greyscale", "grayscale", "monochrome"]);
+function weightedRuns(prompt) {
+  const parts = prompt.split("::");
+  const runs = [];
+  let weight = null;
+  parts.forEach((part, i) => {
+    if (weight !== null) {
+      runs.push([part, weight]);
+      weight = null;
+      return;
+    }
+    const opener = i < parts.length - 1 ? /(-?\d*\.?\d+)\s*$/u.exec(part) : null;
+    runs.push([opener ? part.slice(0, opener.index) : part, 1]);
+    if (opener)
+      weight = Number(opener[1]);
+  });
+  return runs;
 }
-var CRC_TABLE = (() => {
-  const table = new Uint32Array(256);
-  for (let n = 0;n < 256; n += 1) {
-    let c = n;
-    for (let k = 0;k < 8; k += 1)
-      c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
-    table[n] = c >>> 0;
-  }
-  return table;
-})();
-function crc32(bytes) {
-  let c = 4294967295;
-  for (const b of bytes)
-    c = CRC_TABLE[(c ^ b) & 255] ^ c >>> 8;
-  return (c ^ 4294967295) >>> 0;
+function isMonochromeStyle(positive) {
+  return weightedRuns(positive).some(([text, weight]) => weight > 0 && text.split(/[,\n]/u).some((tag) => MONO.has(tag.replace(/[{}[\]()]/gu, "").trim().toLowerCase())));
 }
-async function decodePng(bytes) {
-  if (SIGNATURE.some((b, i) => bytes[i] !== b))
-    throw new Error("Not a PNG image.");
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let width = 0, height = 0, colorType = -1;
-  const idat = [];
-  for (let at = 8;at + 8 <= bytes.length; ) {
-    const length = view.getUint32(at);
-    const type = String.fromCharCode(...bytes.subarray(at + 4, at + 8));
-    const body = bytes.subarray(at + 8, at + 8 + length);
-    if (type === "IHDR") {
-      width = view.getUint32(at + 8);
-      height = view.getUint32(at + 12);
-      colorType = body[9];
-      if (body[8] !== 8 || colorType !== 6 && colorType !== 2 || body[12] !== 0)
-        throw new Error(`Unsupported PNG (bit depth ${body[8]}, colour type ${colorType}, interlace ${body[12]}).`);
-    } else if (type === "IDAT")
-      idat.push(body);
-    else if (type === "IEND")
-      break;
-    at += 12 + length;
-  }
-  if (!width || !height || !idat.length)
-    throw new Error("The PNG has no image data.");
-  const joined = new Uint8Array(idat.reduce((n, c) => n + c.length, 0));
-  idat.reduce((at, c) => (joined.set(c, at), at + c.length), 0);
-  const raw = await zlib(joined, "decompress");
-  const channels = colorType === 6 ? 4 : 3;
-  const stride = width * channels;
-  if (raw.length < height * (stride + 1))
-    throw new Error("The PNG image data is truncated.");
-  const rows = new Uint8Array(height * stride);
-  for (let y = 0;y < height; y += 1) {
-    const filter = raw[y * (stride + 1)];
-    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
-    const out = y * stride;
-    for (let x = 0;x < stride; x += 1) {
-      const a = x >= channels ? rows[out + x - channels] : 0;
-      const b = y ? rows[out - stride + x] : 0;
-      const c = y && x >= channels ? rows[out - stride + x - channels] : 0;
-      let v = line[x];
-      if (filter === 1)
-        v += a;
-      else if (filter === 2)
-        v += b;
-      else if (filter === 3)
-        v += a + b >> 1;
-      else if (filter === 4) {
-        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
-        v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+var COLOUR = "red|orange|yellow|green|blue|purple|violet|pink|brown|grey|gray|silver|gold|golden|blonde|blond|platinum|teal|cyan|magenta|beige|navy|maroon|crimson|scarlet|amber|aqua|aquamarine|turquoise|lavender|lilac|indigo|khaki|olive|peach|emerald|ruby|sapphire|azure|multicolou?red|colou?rful|rainbow|two-tone";
+var COLOUR_WORD = new RegExp(`\\b(?:(?:light|dark|pale|bright|deep|pastel|neon|hot|baby|sky|dusty|vivid)[\\s-]+)?(?:${COLOUR})(?:[\\s-]*(?:colou?red|tinted|ish))?\\b`, "giu");
+var BARE = /^(?:hair|eyes?|pupils|irises|skin|hair and eyes|and|&)?$/iu;
+function stripPiece(piece) {
+  if (piece.includes("("))
+    return piece;
+  const lead = /^\s*/u.exec(piece)[0];
+  const out = piece.replace(COLOUR_WORD, " ").replace(/(?:\s*(?:-|\/|&|\band\b))+\s*$/iu, "").replace(/^(?:\s*(?:-|\/|&|and\b))+\s*/iu, "").replace(/\s{2,}/gu, " ").trim();
+  return BARE.test(out) ? "" : lead + out;
+}
+function stripColours(prompt) {
+  const tokens = [];
+  prompt.split(/(-?\d*\.?\d+::|::|,|\n)/u).forEach((t, i) => {
+    if (i % 2 === 0) {
+      const tag = stripPiece(t).trim();
+      if (tag)
+        tokens.push({ tag });
+    } else if (t === `
+`)
+      tokens.push({ nl: true });
+    else if (t === "::")
+      tokens.push({ close: true });
+    else if (t !== ",")
+      tokens.push({ open: t });
+  });
+  let out = "";
+  let comma = false;
+  for (let i = 0;i < tokens.length; i++) {
+    const t = tokens[i];
+    if ("tag" in t) {
+      out += (comma ? ", " : "") + t.tag;
+      comma = true;
+    } else if ("nl" in t) {
+      out += `
+`;
+      comma = false;
+    } else if ("open" in t) {
+      const next = tokens[i + 1];
+      if (next && "close" in next)
+        i++;
+      else {
+        out += (comma ? ", " : "") + t.open;
+        comma = false;
       }
-      rows[out + x] = v & 255;
+    } else {
+      out += "::";
+      comma = true;
     }
   }
-  if (channels === 4)
-    return { width, height, data: rows };
-  const data = new Uint8Array(width * height * 4);
-  for (let i = 0, j = 0;i < rows.length; i += 3, j += 4) {
-    data[j] = rows[i];
-    data[j + 1] = rows[i + 1];
-    data[j + 2] = rows[i + 2];
-    data[j + 3] = 255;
-  }
-  return { width, height, data };
-}
-function chunk(type, body) {
-  const out = new Uint8Array(12 + body.length);
-  const view = new DataView(out.buffer);
-  view.setUint32(0, body.length);
-  for (let i = 0;i < 4; i += 1)
-    out[4 + i] = type.charCodeAt(i);
-  out.set(body, 8);
-  view.setUint32(8 + body.length, crc32(out.subarray(4, 8 + body.length)));
   return out;
 }
-async function encodePng(image) {
-  const { width, height, data } = image;
-  const stride = width * 4;
-  const raw = new Uint8Array(height * (stride + 1));
-  for (let y = 0;y < height; y += 1) {
-    const at = y * (stride + 1);
-    raw[at] = 2;
-    for (let x = 0;x < stride; x += 1)
-      raw[at + 1 + x] = data[y * stride + x] - (y ? data[(y - 1) * stride + x] : 0) & 255;
-  }
-  const header = new Uint8Array(13);
-  const hv = new DataView(header.buffer);
-  hv.setUint32(0, width);
-  hv.setUint32(4, height);
-  header.set([8, 6, 0, 0, 0], 8);
-  const parts = [Uint8Array.from(SIGNATURE), chunk("IHDR", header), chunk("IDAT", await zlib(raw, "compress")), chunk("IEND", new Uint8Array)];
-  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
-  parts.reduce((at, p) => (out.set(p, at), at + p.length), 0);
-  return out;
+function monoCast(cast) {
+  return new Map([...cast].map(([name, m]) => [name, {
+    ...m,
+    identity: stripColours(m.identity),
+    outfit: Object.fromEntries(Object.entries(m.outfit).map(([part, tags]) => [part, stripColours(tags ?? "")]))
+  }]));
 }
-function alphaInfo(image) {
-  const { width, height, data } = image;
-  let clear = 0, solid = 0, x0 = width, y0 = height, x1 = -1, y1 = -1;
-  for (let y = 0;y < height; y += 1) {
-    for (let x = 0;x < width; x += 1) {
-      const a = data[(y * width + x) * 4 + 3];
-      if (a === 0)
-        clear += 1;
-      if (a <= FRAME_BREAK.solidAlpha)
-        continue;
-      solid += 1;
-      if (x < x0)
-        x0 = x;
-      if (x > x1)
-        x1 = x;
-      if (y < y0)
-        y0 = y;
-      y1 = y;
-    }
-  }
-  const n = width * height;
-  return { transparent: clear / n, coverage: solid / n, bbox: x1 < 0 ? null : { left: x0 / width, top: y0 / height, right: (x1 + 1) / width, bottom: (y1 + 1) / height } };
+function monoPanel(panel) {
+  return { ...panel, nai: { base: stripColours(panel.nai.base), characters: panel.nai.characters.map((c) => ({ ...c, prompt: stripColours(c.prompt) })) } };
 }
-function keepMainParts(image) {
-  const { width, height, data } = image;
-  const n = width * height;
-  const label = new Int32Array(n);
-  const sizes = [0];
-  const stack = new Int32Array(n);
-  for (let start = 0;start < n; start += 1) {
-    if (label[start] || data[start * 4 + 3] <= 32)
-      continue;
-    const id = sizes.length;
-    let top = 0, size = 0;
-    stack[top++] = start;
-    label[start] = id;
-    while (top) {
-      const i = stack[--top];
-      size += 1;
-      const x = i % width, y = (i - x) / width;
-      for (let dy = -1;dy <= 1; dy += 1) {
-        const yy = y + dy;
-        if (yy < 0 || yy >= height)
-          continue;
-        for (let dx = -1;dx <= 1; dx += 1) {
-          const xx = x + dx, j = yy * width + xx;
-          if (xx < 0 || xx >= width || label[j] || data[j * 4 + 3] <= 32)
-            continue;
-          label[j] = id;
-          stack[top++] = j;
-        }
-      }
-    }
-    sizes.push(size);
-  }
-  const largest = Math.max(0, ...sizes);
-  if (sizes.every((s) => s === largest || s >= FRAME_BREAK.minPart * largest))
-    return image;
-  const out = new Uint8Array(data);
-  for (let i = 0;i < n; i += 1)
-    if (label[i] && sizes[label[i]] < FRAME_BREAK.minPart * largest)
-      out[i * 4 + 3] = 0;
-  return { width, height, data: out };
-}
-function cropToHead(image, bbox) {
-  const { width, height, data } = image;
-  const y0 = Math.floor(bbox.top * height);
-  const y1 = Math.min(height, y0 + Math.max(1, Math.round((bbox.bottom - bbox.top) * height * FRAME_BREAK.headBand)));
-  const counts = new Array(width).fill(0);
-  for (let y = y0;y < y1; y += 1)
-    for (let x = 0;x < width; x += 1)
-      if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
-        counts[x] += 1;
-  const min = FRAME_BREAK.headColumn * (y1 - y0), gap = Math.round(FRAME_BREAK.headGap * width);
-  let best = null, start = -1, last = -1;
-  for (let x = 0;x <= width; x += 1) {
-    const on = x < width && counts[x] >= min;
-    if (on && start < 0)
-      start = x;
-    if (on)
-      last = x;
-    if (start >= 0 && (x === width || !on && x - last > gap)) {
-      if (!best || last - start > best[1] - best[0])
-        best = [start, last];
-      start = -1;
-    }
-  }
-  if (!best)
-    return image;
-  const margin = Math.round(FRAME_BREAK.headMargin * width);
-  const [a, b] = [best[0] - margin, best[1] + margin];
-  const out = new Uint8Array(data);
-  for (let y = 0;y < y1; y += 1)
-    for (let x = 0;x < width; x += 1)
-      if (x < a || x > b)
-        out[(y * width + x) * 4 + 3] = 0;
-  return { width, height, data: out };
-}
-function shiftDown(image, dy) {
-  const stride = image.width * 4;
-  const data = new Uint8Array(image.data.length);
-  data.set(image.data.subarray(0, Math.max(0, image.height - dy) * stride), dy * stride);
-  return { ...image, data };
-}
-function headShift(info, height) {
-  if (!info.bbox)
-    return 0;
-  return Math.round(Math.min(FRAME_BREAK.maxShift, Math.max(0, FRAME_BREAK.headTop - info.bbox.top)) * height);
-}
-function backgroundMask(image, block = FRAME_BREAK.maskBlock) {
-  const { width, height, data } = image;
-  const mask = new Uint8Array(width * height);
-  for (let by = 0;by < height; by += block) {
-    for (let bx = 0;bx < width; bx += block) {
-      const ys = Math.min(height, by + block), xs = Math.min(width, bx + block);
-      let any = false;
-      for (let y = by;y < ys && !any; y += 1)
-        for (let x = bx;x < xs; x += 1)
-          if (data[(y * width + x) * 4 + 3] < FRAME_BREAK.maskAlpha) {
-            any = true;
-            break;
-          }
-      if (any)
-        for (let y = by;y < ys; y += 1)
-          mask.fill(1, y * width + bx, y * width + xs);
-    }
-  }
-  return mask;
-}
-function maskImage(mask, width, height) {
-  const data = new Uint8Array(width * height * 4);
-  for (let i = 0;i < mask.length; i += 1) {
-    const v = mask[i] ? 255 : 0;
-    data.set([v, v, v, 255], i * 4);
-  }
-  return { width, height, data };
-}
-function softFill(image) {
-  const { width, height, data } = image;
-  const b = FRAME_BREAK.fillBlock;
-  const bw = Math.ceil(width / b), bh = Math.ceil(height / b);
-  let sums = [new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh)];
-  const total = [0, 0, 0, 0];
-  for (let y = 0;y < height; y += 1) {
-    for (let x = 0;x < width; x += 1) {
-      const i = (y * width + x) * 4, cell = Math.floor(y / b) * bw + Math.floor(x / b), a = data[i + 3] / 255;
-      for (let c = 0;c < 3; c += 1) {
-        sums[c][cell] += data[i + c] * a;
-        total[c] += data[i + c] * a;
-      }
-      sums[3][cell] += a;
-      total[3] += a;
-    }
-  }
-  const r = FRAME_BREAK.fillRadius;
-  const blur = (src, horizontal) => {
-    const out = new Float64Array(src.length);
-    const [lines, len] = horizontal ? [bh, bw] : [bw, bh];
-    for (let l = 0;l < lines; l += 1) {
-      const at = (i) => horizontal ? l * bw + i : i * bw + l;
-      for (let i = 0;i < len; i += 1) {
-        let s = 0;
-        for (let k = Math.max(0, i - r);k <= Math.min(len - 1, i + r); k += 1)
-          s += src[at(k)];
-        out[at(i)] = s;
-      }
-    }
-    return out;
+function withMonoTags(request) {
+  const mono = (prompt) => `${MONO_TAGS}, ${prompt}`;
+  return {
+    ...request,
+    characters: request.characters.map((c) => ({ ...c, prompt: mono(c.prompt) })),
+    ...request.cutout ? { cutout: { ...request.cutout, characters: request.cutout.characters.map(mono) } } : {}
   };
-  for (let pass = 0;pass < 3; pass += 1)
-    sums = sums.map((s) => blur(blur(s, true), false));
-  const mean = total[3] > 0 ? [0, 1, 2].map((c) => total[c] / total[3]) : [128, 128, 128];
-  const peak = Math.max(...sums[3]);
-  const colour = (cell, c) => sums[3][cell] > peak * 0.001 ? sums[c][cell] / sums[3][cell] : mean[c];
-  const out = new Uint8Array(data.length);
-  for (let y = 0;y < height; y += 1) {
-    const fy = Math.min(bh - 1, Math.max(0, (y + 0.5) / b - 0.5)), y0 = Math.floor(fy), y1 = Math.min(bh - 1, y0 + 1), ty = fy - y0;
-    for (let x = 0;x < width; x += 1) {
-      const fx = Math.min(bw - 1, Math.max(0, (x + 0.5) / b - 0.5)), x0 = Math.floor(fx), x1 = Math.min(bw - 1, x0 + 1), tx = fx - x0;
-      const i = (y * width + x) * 4, a = data[i + 3] / 255;
-      for (let c = 0;c < 3; c += 1) {
-        const top = colour(y0 * bw + x0, c) * (1 - tx) + colour(y0 * bw + x1, c) * tx;
-        const bottom = colour(y1 * bw + x0, c) * (1 - tx) + colour(y1 * bw + x1, c) * tx;
-        out[i + c] = Math.round(data[i + c] * a + (top * (1 - ty) + bottom * ty) * (1 - a));
-      }
-      out[i + 3] = 255;
-    }
-  }
-  return { width, height, data: out };
-}
-function flattenOver(base, top) {
-  if (base.width !== top.width || base.height !== top.height)
-    throw new Error(`Image sizes differ (${base.width}x${base.height} / ${top.width}x${top.height}).`);
-  const out = new Uint8Array(base.data.length);
-  for (let i = 0;i < out.length; i += 4) {
-    const a = top.data[i + 3] / 255;
-    for (let c = 0;c < 3; c += 1)
-      out[i + c] = Math.round(top.data[i + c] * a + base.data[i + c] * (1 - a));
-    out[i + 3] = 255;
-  }
-  return { width: base.width, height: base.height, data: out };
-}
-function characterGrid(image) {
-  const { width, height, data } = image;
-  const cols = FRAME_BREAK.gridCols, rows = Math.max(1, Math.round(cols * height / width));
-  const out = [];
-  for (let r = 0;r < rows; r += 1) {
-    let line = "";
-    const ya = Math.floor(r * height / rows), yb = Math.floor((r + 1) * height / rows);
-    for (let c = 0;c < cols; c += 1) {
-      const xa = Math.floor(c * width / cols), xb = Math.floor((c + 1) * width / cols);
-      let solid = 0;
-      for (let y = ya;y < yb; y += 1)
-        for (let x = xa;x < xb; x += 1)
-          if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
-            solid += 1;
-      line += solid >= FRAME_BREAK.gridFill * Math.max(1, (yb - ya) * (xb - xa)) ? "1" : "0";
-    }
-    out.push(line);
-  }
-  return out;
-}
-async function frameBreakInputs(generated) {
-  const transparent = keepMainParts(generated);
-  const first = alphaInfo(transparent);
-  if (first.transparent < FRAME_BREAK.minTransparent || !first.bbox)
-    throw new Error(`The cut-out has no transparent background (${Math.round(first.transparent * 100)}% clear).`);
-  const shift = headShift(first, transparent.height);
-  const cutout = shift ? shiftDown(transparent, shift) : transparent;
-  const mask = maskImage(backgroundMask(cutout), cutout.width, cutout.height);
-  const display = cropToHead(cutout, alphaInfo(cutout).bbox);
-  return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(display) };
 }
 
 // src/backend/webtoon/storyboard-schema.ts
@@ -64969,18 +64657,18 @@ var ANCHORS = ["top-left", "top-right", "top", "left", "right", "bottom-left", "
 var FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full body", "hands only"];
 var TEXT_TYPES = ["speech", "thought", "narration", "sfx"];
 var GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
-var str5 = { type: "string" };
+var str4 = { type: "string" };
 var num2 = { type: "number" };
 var textItem = {
   type: "object",
-  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str5, anchor: { type: "string", enum: [...ANCHORS] } },
+  properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str4, anchor: { type: "string", enum: [...ANCHORS] } },
   required: ["type", "text", "anchor"]
 };
 var STORYBOARD_JSON_SCHEMA = {
   type: "object",
   properties: {
-    title: str5,
-    key_props: { type: "array", items: str5 },
+    title: str4,
+    key_props: { type: "array", items: str4 },
     panels: {
       type: "array",
       items: {
@@ -64989,30 +64677,30 @@ var STORYBOARD_JSON_SCHEMA = {
           id: { type: "integer" },
           kind: { type: "string", enum: ["image", "text_beat"] },
           beat: { type: "string", enum: [...BEATS] },
-          moment: str5,
-          shot: str5,
+          moment: str4,
+          shot: str4,
           size: { type: "string", enum: [...IMAGE_SIZES] },
           layout: { type: "string", enum: [...LAYOUTS] },
           scene_change: { type: "boolean" },
           pause: { type: "boolean" },
           frame_break: { type: "boolean" },
-          balloon_space: str5,
+          balloon_space: str4,
           nai: {
             type: "object",
             properties: {
-              base: str5,
+              base: str4,
               characters: {
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
-                    name: str5,
+                    name: str4,
                     x: num2,
                     y: num2,
                     framing: { type: "string", enum: [...FRAMINGS] },
                     shoes_off: { type: "boolean" },
-                    drop_outfit: { type: "array", items: str5 },
-                    prompt: str5
+                    drop_outfit: { type: "array", items: str4 },
+                    prompt: str4
                   },
                   required: ["name", "x", "y", "framing", "prompt"]
                 }
@@ -65136,6 +64824,61 @@ function hardOk(raw, images) {
 function outfitItems(r) {
   return Object.values(r.outfit).flatMap((v) => (v ?? "").split(",").map((t) => t.trim()).filter(Boolean));
 }
+function checkedQuote(panelId, text, idx, log, stats) {
+  const q = checkQuote(text, idx);
+  for (const nt of q.notes) {
+    if (nt.kind === "repaired") {
+      stats.quote_repaired++;
+      log.push(`p${panelId}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`);
+    } else if (nt.kind === "joined") {
+      stats.quote_joined++;
+      log.push(`p${panelId}: quote kept, joined across narration "${nt.fragment}"`);
+    } else {
+      stats.invented_dropped++;
+      log.push(`p${panelId}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`);
+    }
+  }
+  return q.text;
+}
+function validateCharacters(p, byName, log, stats) {
+  const chars = [];
+  for (const c of p.nai.characters ?? []) {
+    const r = byName.get(c.name);
+    if (!r) {
+      stats.unknown_char++;
+      log.push(`p${p.id}: dropped unknown character ${c.name}`);
+      continue;
+    }
+    c.x = snap(c.x);
+    c.y = snap(c.y);
+    if (!FRAMINGS.includes(c.framing))
+      c.framing = "upper body";
+    const items = outfitItems(r);
+    const drops = [];
+    for (const d of c.drop_outfit ?? []) {
+      const dl = String(d).toLowerCase().trim();
+      const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
+      if (hit.length === 1) {
+        drops.push(hit[0]);
+        stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`);
+        log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`);
+      } else
+        log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
+    }
+    c.drop_outfit = drops;
+    chars.push(c);
+  }
+  const used = new Set;
+  for (const c of chars) {
+    let k = 0;
+    while (used.has(c.x) && k++ < 5) {
+      c.x = GRID[(GRID.indexOf(c.x) + 1) % 5];
+      log.push(`p${p.id}: moved ${c.name} x (same column)`);
+    }
+    used.add(c.x);
+  }
+  return chars;
+}
 function validateStoryboard(raw, roster, source) {
   const log = [];
   const stats = {
@@ -65166,22 +64909,10 @@ function validateStoryboard(raw, roster, source) {
       const a = String(t.anchor);
       t.anchor = a === "gutter-above" ? "over-top-edge" : a === "gutter-below" ? "over-bottom-edge" : ANCHORS.includes(a) ? a : t.type === "narration" ? "top-left" : "top";
       if (t.type === "speech" || t.type === "thought") {
-        const q = checkQuote(t.text, idx);
-        for (const nt of q.notes) {
-          if (nt.kind === "repaired") {
-            stats.quote_repaired++;
-            log.push(`p${p.id}: quote repaired (${nt.ratio.toFixed(2)}) "${nt.fragment}" -> "${nt.replacement}"`);
-          } else if (nt.kind === "joined") {
-            stats.quote_joined++;
-            log.push(`p${p.id}: quote kept, joined across narration "${nt.fragment}"`);
-          } else {
-            stats.invented_dropped++;
-            log.push(`p${p.id}: dropped invented sentence (${nt.ratio.toFixed(2)}) "${nt.fragment}"`);
-          }
-        }
-        if (!q.text)
+        const text = checkedQuote(p.id, t.text, idx, log, stats);
+        if (!text)
           continue;
-        t.text = q.text;
+        t.text = text;
         const parts = splitLong(t.text);
         if (parts.length > 1) {
           stats.split++;
@@ -65239,42 +64970,7 @@ function validateStoryboard(raw, roster, source) {
       p.size = "832x1216";
       log.push(`p${p.id}: bad size -> 832x1216`);
     }
-    const chars = [];
-    for (const c of nai.characters ?? []) {
-      const r = byName.get(c.name);
-      if (!r) {
-        stats.unknown_char++;
-        log.push(`p${p.id}: dropped unknown character ${c.name}`);
-        continue;
-      }
-      c.x = snap(c.x);
-      c.y = snap(c.y);
-      if (!FRAMINGS.includes(c.framing))
-        c.framing = "upper body";
-      const items = outfitItems(r);
-      const drops = [];
-      for (const d of c.drop_outfit ?? []) {
-        const dl = String(d).toLowerCase().trim();
-        const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
-        if (hit.length === 1) {
-          drops.push(hit[0]);
-          stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`);
-          log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`);
-        } else
-          log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
-      }
-      c.drop_outfit = drops;
-      chars.push(c);
-    }
-    const used = new Set;
-    for (const c of chars) {
-      let k = 0;
-      while (used.has(c.x) && k++ < 5) {
-        c.x = GRID[(GRID.indexOf(c.x) + 1) % 5];
-        log.push(`p${p.id}: moved ${c.name} x (same column)`);
-      }
-      used.add(c.x);
-    }
+    const chars = validateCharacters(p, byName, log, stats);
     nai.characters = chars;
     if (!LAYOUTS.includes(p.layout) || p.layout === "text_on_white")
       p.layout = "full_width";
@@ -65456,6 +65152,20 @@ function isShout(t) {
   const caps = letters.filter((c) => c === c.toUpperCase()).length / Math.max(1, letters.length);
   return t.includes("?!") || t.includes("!!") || t.trimEnd().endsWith("!") && caps > 0.5;
 }
+function charGeometry(c, iw, ih, faces) {
+  const f = faces?.[c.name];
+  if (f)
+    return { head: [(f.left + f.right) / 2, (f.top + f.bottom) / 2], face: [f.left, f.top, f.right, f.bottom] };
+  const hd = HEAD[c.framing];
+  if (!hd)
+    return { head: [c.x, Math.max(0.05, c.y - 0.25)], face: null };
+  let [half, fh] = hd;
+  if (c.framing !== "portrait")
+    half = Math.min(half, c.y, 1 - c.y);
+  const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
+  const fw = fh * ih / iw * 1.3;
+  return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] };
+}
 function layoutStrip(sb, images, opts = {}) {
   const W = opts.width ?? STRIP_WIDTH;
   const k = W / STRIP_WIDTH;
@@ -65501,20 +65211,6 @@ function layoutStrip(sb, images, opts = {}) {
     h = Math.round(Math.min(h, (lay === "title" ? RULES2.maxTitleH : lay.startsWith("inset") ? RULES2.maxInsetH : RULES2.maxPanelH) * k));
     const vis = w / iw * ih;
     return { x, w, h, frac: h < vis - 1 ? h / vis : 1 };
-  }
-  function charGeometry(c, iw, ih, faces) {
-    const f = faces?.[c.name];
-    if (f)
-      return { head: [(f.left + f.right) / 2, (f.top + f.bottom) / 2], face: [f.left, f.top, f.right, f.bottom] };
-    const hd = HEAD[c.framing];
-    if (!hd)
-      return { head: [c.x, Math.max(0.05, c.y - 0.25)], face: null };
-    let [half, fh] = hd;
-    if (c.framing !== "portrait")
-      half = Math.min(half, c.y, 1 - c.y);
-    const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
-    const fw = fh * ih / iw * 1.3;
-    return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] };
   }
   function search(regions, score, step = 14) {
     let best = null;
@@ -65932,6 +65628,1177 @@ function layoutStrip(sb, images, opts = {}) {
   return { width: W, height: Math.round(y), panels: panelsOut, items, log };
 }
 
+// src/backend/webtoon/manga-layout.ts
+var S = (w) => ({ w, imp: "small" });
+var N = (w) => ({ w, imp: "normal" });
+var B = (w) => ({ w, imp: "big" });
+var TEMPLATES = [
+  { id: "4a", rows: [{ h: 0.44, cells: [B(1)] }, { h: 0.28, cells: [N(0.5), N(0.5)], slant: 0.06 }, { h: 0.28, cells: [N(1)] }] },
+  { id: "4b", rows: [{ h: 0.3, cells: [N(0.55), N(0.45)] }, { h: 0.24, cells: [N(1)] }, { h: 0.46, cells: [B(1)] }] },
+  { id: "4c", rows: [{ h: 0.52, cells: [B(0.64), S(0.36)] }, { h: 0.48, cells: [N(0.5), N(0.5)], slant: -0.08 }] },
+  { id: "4d", rows: [{ h: 0.3, cells: [N(0.62), S(0.38)] }, { h: 0.48, cells: [B(1)] }, { h: 0.22, cells: [S(1)] }] },
+  { id: "5a", rows: [{ h: 0.26, cells: [N(0.6), S(0.4)] }, { h: 0.44, cells: [B(1)] }, { h: 0.3, cells: [N(0.5), N(0.5)], slant: 0.06 }] },
+  { id: "5b", rows: [{ h: 0.42, cells: [B(1)] }, { h: 0.22, cells: [S(0.34), S(0.33), S(0.33)] }, { h: 0.36, cells: [N(1)] }] },
+  { id: "5c", rows: [{ h: 0.28, cells: [N(0.5), N(0.5)] }, { h: 0.24, cells: [N(1)] }, { h: 0.48, cells: [S(0.34), B(0.66)] }] },
+  { id: "5d", rows: [{ h: 0.28, cells: [N(0.6), S(0.4)] }, { h: 0.26, cells: [N(0.5), N(0.5)], slant: 0.06 }, { h: 0.46, cells: [B(1)] }] },
+  { id: "6a", rows: [{ h: 0.3, cells: [N(0.5), N(0.5)], slant: -0.05 }, { h: 0.22, cells: [S(0.34), S(0.33), S(0.33)] }, { h: 0.48, cells: [B(1)] }] },
+  { id: "7a", rows: [{ h: 0.25, cells: [N(0.5), N(0.5)] }, { h: 0.19, cells: [S(0.34), S(0.33), S(0.33)] }, { h: 0.56, cells: [N(0.38), B(0.62)] }] }
+];
+var templateById = new Map(TEMPLATES.map((t) => [t.id, t]));
+var templateSeq = (t) => t.rows.flatMap((r) => r.cells.map((c) => c.imp));
+var COST = {
+  small: { small: 0, normal: 1, big: 3 },
+  normal: { small: 1, normal: 0, big: 1.5 },
+  big: { small: 4, normal: 2, big: 0 }
+};
+var PAGE_COST = 0.6;
+function choosePages(imps, templates = TEMPLATES) {
+  const n = imps.length;
+  const best = Array.from({ length: n + 1 }, () => ({ cost: Infinity, prev: -1, t: null }));
+  best[0].cost = 0;
+  for (let i = 0;i < n; i++) {
+    if (!Number.isFinite(best[i].cost))
+      continue;
+    for (const t of templates) {
+      const seq = templateSeq(t);
+      if (i + seq.length > n)
+        continue;
+      const c = seq.reduce((sum, imp, k) => sum + COST[imps[i + k]][imp], PAGE_COST);
+      const j = i + seq.length;
+      if (best[i].cost + c < best[j].cost)
+        best[j] = { cost: best[i].cost + c, prev: i, t };
+    }
+  }
+  if (!Number.isFinite(best[n].cost))
+    throw new Error(`No page split for ${n} panels.`);
+  const out = [];
+  for (let j = n;j > 0; j = best[j].prev)
+    out.unshift({ template: best[j].t, start: best[j].prev, cost: best[j].cost - best[best[j].prev].cost });
+  return out;
+}
+var PAGE = { W: MANGA_PAGE_WIDTH, H: 1556, marginX: 56, marginTop: 60, marginBottom: 70, gutterX: 14, gutterY: 24, gap: 40 };
+function rowCells(rows, x0, x1, gutterX) {
+  const cells = [];
+  for (const { y, h, row } of rows) {
+    const W = x1 - x0;
+    const sl = (row.slant ?? 0) * W;
+    let right = x1;
+    row.cells.forEach((c, k) => {
+      const last = k === row.cells.length - 1;
+      const cut = right - c.w * W;
+      const rTop = k === 0 ? x1 : right + sl / 2 - gutterX / 2, rBot = k === 0 ? x1 : right - sl / 2 - gutterX / 2;
+      const lTop = last ? x0 : cut + sl / 2 + gutterX / 2, lBot = last ? x0 : cut - sl / 2 + gutterX / 2;
+      const poly = [[lTop, y], [rTop, y], [rBot, y + h], [lBot, y + h]];
+      const xs = poly.map((p) => p[0]);
+      cells.push({ poly, bbox: [Math.min(...xs), y, Math.max(...xs), y + h], imp: c.imp });
+      right = cut;
+    });
+  }
+  return cells;
+}
+function pageCells(t, top = 0) {
+  const avail = PAGE.H - PAGE.marginTop - PAGE.marginBottom - PAGE.gutterY * (t.rows.length - 1);
+  let y = top + PAGE.marginTop;
+  const rows = t.rows.map((row) => {
+    const r = { y, h: row.h * avail, row };
+    y += r.h + PAGE.gutterY;
+    return r;
+  });
+  return rowCells(rows, PAGE.marginX, PAGE.W - PAGE.marginX, PAGE.gutterX);
+}
+var NAI_SIZES = [[1600, 640], [1472, 704], [1216, 832], [1024, 1024], [832, 1216], [704, 1472], [640, 1600]];
+function naiSizeFor(bbox) {
+  const a = Math.log((bbox[2] - bbox[0]) / (bbox[3] - bbox[1]));
+  return NAI_SIZES.reduce((b, s) => Math.abs(Math.log(s[0] / s[1]) - a) < Math.abs(Math.log(b[0] / b[1]) - a) ? s : b);
+}
+function mangaPagePlan(panels) {
+  const split = choosePages(panels.map((p) => p.importance ?? "normal"));
+  const sizes = {};
+  const cells = {};
+  const pages = split.map(({ template, start }) => {
+    const ids = panels.slice(start, start + templateSeq(template).length).map((p) => p.id);
+    pageCells(template).forEach((cell, k) => {
+      sizes[ids[k]] = naiSizeFor(cell.bbox).join("x");
+      cells[ids[k]] = cell;
+    });
+    return { template: template.id, panels: ids };
+  });
+  return { pages, sizes, cells };
+}
+var TEXT = {
+  speech: { size: MANGA_SPEECH_PX, lh: 26 },
+  narration: { size: 21, lh: 25 },
+  title: { size: 38, small: 20 },
+  sfx: { big: 84, normal: 62, small: 46 }
+};
+var PHONE = { margin: 10, top: 14, gutter: 16, minH: 0.42, maxH: 1.3, gap: 28 };
+var BREAK = { depth: 0.1, min: 40, max: 110, maxTop: 0.45 };
+var inter2 = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+var area2 = (a) => Math.max(0, a[2] - a[0]) * Math.max(0, a[3] - a[1]);
+var pad2 = (r, p) => [r[0] - p, r[1] - p, r[2] + p, r[3] + p];
+var clamp2 = (v, a, b) => Math.min(b, Math.max(a, v));
+var centre = (r) => [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+var shrink = (r, k) => {
+  const [cx, cy] = centre(r);
+  return [cx - (r[2] - r[0]) / 2 * k, cy - (r[3] - r[1]) / 2 * k, cx + (r[2] - r[0]) / 2 * k, cy + (r[3] - r[1]) / 2 * k];
+};
+function readBefore(next, prev) {
+  const overlap = Math.min(next[3], prev[3]) - Math.max(next[1], prev[1]);
+  const sameBand = overlap > Math.min(next[3] - next[1], prev[3] - prev[1]) / 3;
+  return sameBand ? centre(next)[0] > centre(prev)[0] : centre(next)[1] < centre(prev)[1];
+}
+function layoutManga(sb, images, opts = {}) {
+  const measure = opts.measure ?? defaultMeasure;
+  const panels = sb.panels.filter((p) => p.kind === "image");
+  const byId = new Map(panels.map((p) => [p.id, p]));
+  const pages = sb.pages?.length ? sb.pages : mangaPagePlan(panels).pages;
+  const phone = (opts.width ?? MANGA_PAGE_WIDTH) < MANGA_PAGE_WIDTH;
+  const W = phone ? clamp2(Math.round(opts.width), STRIP_MIN_LAYOUT_WIDTH, STRIP_WIDTH) : MANGA_PAGE_WIDTH;
+  const ts = phone ? STRIP_SPEECH_PX / MANGA_SPEECH_PX : 1;
+  const sfxScale = phone ? clamp2(W / 760, 0.6, 0.9) : 1;
+  const log = [];
+  const slots = [];
+  const pageRects = [];
+  let y = 0;
+  for (const page of pages) {
+    const list = page.panels.flatMap((id) => byId.has(id) ? [byId.get(id)] : []);
+    if (!list.length)
+      continue;
+    if (pageRects.length)
+      y += phone ? PHONE.gap : PAGE.gap;
+    if (!phone) {
+      const template = templateById.get(page.template);
+      const cells = template && templateSeq(template).length === list.length ? pageCells(template, y) : null;
+      if (!cells) {
+        log.push(`page ${pageRects.length + 1}: unknown template ${page.template}`);
+        continue;
+      }
+      const rect = [0, y, W, y + PAGE.H];
+      slots.push(list.map((panel, k) => ({ panel, cell: cells[k], page: rect })));
+      pageRects.push(rect);
+      y += PAGE.H;
+    } else {
+      const top = y;
+      const cells = [];
+      let cy = y + PHONE.top;
+      const w = W - 2 * PHONE.margin;
+      for (const panel of list) {
+        const [iw, ih] = imageSize(panel, images);
+        const h = Math.round(clamp2(w * ih / iw, PHONE.minH * w, PHONE.maxH * w));
+        const bbox = [PHONE.margin, cy, W - PHONE.margin, cy + h];
+        cells.push({ poly: [[bbox[0], bbox[1]], [bbox[2], bbox[1]], [bbox[2], bbox[3]], [bbox[0], bbox[3]]], bbox, imp: panel.importance ?? "normal" });
+        cy += h + PHONE.gutter;
+      }
+      y = cy - PHONE.gutter + PHONE.top;
+      const rect = [0, top, W, y];
+      slots.push(list.map((panel, k) => ({ panel, cell: cells[k], page: rect })));
+      pageRects.push(rect);
+    }
+  }
+  const out = { panels: [], items: [] };
+  const first = slots[0]?.[0]?.panel.id;
+  for (const page of slots)
+    layoutPage(page, images, { measure, ts, sfxScale, title: sb.title, titlePanel: first, log, out });
+  return { width: W, height: Math.round(y), panels: out.panels, items: out.items, log, format: "manga", pages: pageRects, ...opts.grey ? { grey: true } : {}, ...out.chapter ? { chapter: out.chapter } : {} };
+}
+function imageSize(panel, images) {
+  const img = images[String(panel.id)];
+  if (img?.width && img.height)
+    return [img.width, img.height];
+  const [w, h] = String(panel.size).split("x").map(Number);
+  return [w || 1024, h || 1024];
+}
+function lowerTop(poly, top) {
+  const [tl, tr, br, bl] = poly;
+  const at = (a, b) => [a[0] + (b[0] - a[0]) * (top - a[1]) / Math.max(1, b[1] - a[1]), top];
+  return [at(tl, bl), at(tr, br), br, bl];
+}
+function layoutPage(slots, images, ctx) {
+  const { measure, ts, log } = ctx;
+  const allCells = slots.map((s) => s.cell.bbox);
+  const blocked = [];
+  const wrap = (text, font, size, maxw) => {
+    const lines = [];
+    let cur = "";
+    for (const w of text.split(/\s+/u).filter(Boolean)) {
+      const t = `${cur} ${w}`.trim();
+      if (measure(t, font, size) <= maxw || !cur)
+        cur = t;
+      else {
+        lines.push(cur);
+        cur = w;
+      }
+    }
+    if (cur)
+      lines.push(cur);
+    return lines;
+  };
+  slots.forEach(({ panel: p, cell, page }, i) => {
+    const img = images[String(p.id)];
+    const [iw, ih] = imageSize(p, images);
+    const [x0, y0, x1, y1] = cell.bbox;
+    const fw = x1 - x0, fh = y1 - y0;
+    const geo = new Map(p.nai.characters.map((c) => [c.name, charGeometry(c, iw, ih, img?.faces)]));
+    const withFace = [...geo.values()].filter((g) => g.face);
+    const s = Math.max(fw / iw, fh / ih);
+    const dw = iw * s, dh = ih * s;
+    const hx = withFace.length ? withFace.reduce((a, g) => a + g.head[0], 0) / withFace.length : 0.5;
+    const hy = withFace.length ? Math.min(...withFace.map((g) => g.head[1])) : 0.4;
+    const dx = clamp2(x0 + fw / 2 - hx * dw, x1 - dw, x0), dy = clamp2(y0 + fh * 0.4 - hy * dh, y1 - dh, y0);
+    const crop = [(x0 - dx) / dw, (y0 - dy) / dh, (x1 - dx) / dw, (y1 - dy) / dh];
+    const toPx = (nx, ny) => [dx + nx * dw, dy + ny * dh];
+    const heads = {}, faces = {};
+    const bodies = [];
+    for (const c of p.nai.characters) {
+      const g = geo.get(c.name);
+      heads[c.name] = toPx(...g.head);
+      faces[c.name] = g.face ? [...toPx(g.face[0], g.face[1]), ...toPx(g.face[2], g.face[3])] : null;
+      if (faces[c.name]) {
+        blocked.push(pad2(faces[c.name], 4));
+        const f = faces[c.name], bw = (f[2] - f[0]) * 1.6;
+        bodies.push([heads[c.name][0] - bw, f[3], heads[c.name][0] + bw, toPx(0, Math.min(1, c.y + 0.35))[1]]);
+      }
+    }
+    let poly = cell.poly;
+    let frame = cell.bbox;
+    let frameBreak = null;
+    if (img?.cutout && p.beat === "action" && p.nai.characters.length === 1) {
+      const bt = toPx(0, img.cutout.bbox.top)[1];
+      if (bt > y0 + 0.03 * fh && bt <= y0 + BREAK.maxTop * fh) {
+        const top = Math.min(bt + clamp2(BREAK.depth * fh, BREAK.min * ts, BREAK.max * ts), y0 + 0.5 * fh);
+        poly = lowerTop(cell.poly, top);
+        frame = [x0, top, x1, y1];
+        frameBreak = "top";
+      }
+      log.push(`p${p.id}: frame-break ${frameBreak ?? "none (character not near the top)"}`);
+    }
+    ctx.out.panels.push({ id: p.id, rect: cell.bbox, crop, frame, frameBreak, cutout: frameBreak && img?.cutout ? { src: img.cutout.src } : null, fade: null, heads, faces, clip: poly });
+    const local = [];
+    const inPage = (r) => r[0] >= page[0] + 4 && r[1] >= page[1] + 4 && r[2] <= page[2] - 4 && r[3] <= page[3] - 4;
+    const otherShare = (r) => allCells.reduce((sum, b, k) => sum + (k === i ? 0 : inter2(r, b)), 0) / area2(r);
+    if (p.id === ctx.titlePanel && ctx.title.trim()) {
+      const [a, ...rest] = ctx.title.split(":");
+      const big = (rest.length ? rest.join(":") : a).trim().toUpperCase();
+      const small = rest.length ? a.trim().toUpperCase() : "";
+      const size = Math.round(TEXT.title.size * ts), smallSize = Math.round(TEXT.title.small * ts);
+      const lines = wrap(big, "sfx", size, Math.min(380 * ts, fw * 0.6));
+      const bw = Math.max(...lines.map((l) => measure(l, "sfx", size)), small ? measure(small, "narration", smallSize) : 0) + 40 * ts;
+      const bh = lines.length * size * 1.05 + (small ? smallSize * 1.3 : 0) + 26 * ts;
+      const m = 12 * ts;
+      const spot = [[x1 - bw - m, frame[1] + m], [x0 + m, frame[1] + m], [x0 + m, y1 - bh - m], [x1 - bw - m, y1 - bh - m]].map(([x, yy]) => [x, yy, x + bw, yy + bh]).find((r) => inPage(r) && !blocked.some((b) => inter2(r, b) > 0)) ?? [x1 - bw - m, frame[1] + m, x1 - m, frame[1] + m + bh];
+      blocked.push(pad2(spot, 4));
+      ctx.out.chapter = { panel: p.id, small, big, rect: spot, fontSize: size };
+    }
+    const texts = p.text.map((t, k) => ({ t, k }));
+    const balloonsTotal = texts.filter(({ t }) => t.type === "speech" || t.type === "thought").length;
+    const placeTexts = (bias, aspect) => {
+      const taken = [];
+      const items = [];
+      const balloons = [];
+      let violations = 0;
+      let nth = 0;
+      for (const [j, { t, k }] of texts.entries()) {
+        if (t.type === "sfx")
+          continue;
+        const next = texts.slice(j + 1).find((x) => x.t.type === "speech" || x.t.type === "thought")?.t;
+        const placed = t.type === "narration" ? { item: placeNarration(t, k, taken), violates: false } : placeBalloon(t, k, next, balloonsTotal - 1 - nth++, taken, balloons, bias, aspect);
+        if (placed.violates)
+          violations++;
+        if (placed.item.kind !== "narration")
+          balloons.push(placed.item.rect);
+        items.push(placed.item);
+        taken.push(pad2(placed.item.rect, 4));
+      }
+      return { items, violations };
+    };
+    const placeNarration = (t, k, taken) => {
+      const size = Math.round(TEXT.narration.size * ts), lh = Math.round(TEXT.narration.lh * ts);
+      const lines = fitLines(t.text, "narration", size, lh, 3.4, 60 * ts, Math.min(300 * ts, fw * 0.7));
+      const tw = Math.max(...lines.map((l) => measure(l, "narration", size)));
+      const bw = tw + 36 * ts, bh = lines.length * lh + 24 * ts;
+      const corners = [[x1 - bw, frame[1]], [x0, frame[1]], [x0, y1 - bh], [x1 - bw, y1 - bh]];
+      const straddle = [[x1 - bw - 14 * ts, frame[1] - bh / 2], [x0 + 14 * ts, frame[1] - bh / 2], [x0 + 14 * ts, y1 - bh / 2], [x1 - bw - 14 * ts, y1 - bh / 2]];
+      const free = (r) => inPage(r) && !blocked.some((b) => inter2(r, b) > 0) && !taken.some((b) => inter2(r, b) > 0);
+      const rects = [...corners, ...straddle].map(([x, yy]) => [x, yy, x + bw, yy + bh]);
+      let rect = rects.slice(0, 4).find(free) ?? rects.slice(4).find((r) => free(r) && otherShare(r) < 0.05) ?? null;
+      let fallback = null;
+      if (!rect) {
+        rect = rects[0];
+        fallback = "corner";
+        log.push(`p${p.id}: narration "${t.text.slice(0, 24)}" has no free corner`);
+      }
+      return { kind: "narration", panel: p.id, textIndex: k, text: t.text, lines, rect, fallback, fontSize: size, lineHeight: lh };
+    };
+    const fitLines = (text, font, size, lh, aspect, minw, maxw) => {
+      const total = measure(text, font, size);
+      return wrap(text, font, size, clamp2(Math.sqrt(total * lh * aspect), minw, maxw));
+    };
+    const tiers = [
+      { own: 0.6, other: 0.06, order: true },
+      { own: 0.4, other: 0.18, order: true },
+      { own: 0.25, other: 0.3, order: true },
+      { own: 0.12, other: 0.5, order: false }
+    ];
+    const balloonShape = (t, aspect) => {
+      const whisper = t.type === "speech" && t.tone === "whisper";
+      const shout = t.type === "speech" && !whisper && (t.tone === "shout" || isShout(t.text));
+      const size = Math.round(TEXT.speech.size * ts), lh = Math.round(TEXT.speech.lh * ts);
+      const lines = fitLines(t.text.toUpperCase(), "speech", size, lh, aspect, 90 * ts, Math.min(250 * ts, fw * 0.8));
+      const tw = Math.max(...lines.map((l) => measure(l, "speech", size))), th = lines.length * lh;
+      const grow = shout ? 1.22 : 1;
+      return { whisper, shout, size, lh, lines, tw, th, rx: (tw / 2 * 1.34 + 10 * ts) * grow, ry: (th / 2 * 1.38 + 9 * ts) * grow };
+    };
+    const balloonSpots = (t, shape, later, taken, prevBalloons, bias, maxTier = tiers.length - 1) => {
+      const { rx, ry } = shape;
+      const head = t.speaker && faces[t.speaker] ? heads[t.speaker] : undefined;
+      const ox = rx * 2 * 0.28, oy = ry * 2 * 0.28;
+      const spots = [];
+      for (const [ti, tier] of tiers.entries()) {
+        if (ti > maxTier)
+          break;
+        for (let gx = 0;gx <= 14; gx++)
+          for (let gy = 0;gy <= 14; gy++) {
+            const cx = x0 - ox + rx + (fw + 2 * ox - 2 * rx) * gx / 14, cy = frame[1] - oy + ry + (y1 - frame[1] + 2 * oy - 2 * ry) * gy / 14;
+            const r = [cx - rx, cy - ry, cx + rx, cy + ry];
+            if (!inPage(r))
+              continue;
+            const a = area2(r);
+            const own = inter2(r, cell.bbox) / a;
+            if (own < tier.own)
+              continue;
+            const other = otherShare(r);
+            if (other > tier.other)
+              continue;
+            const inner = shrink(r, 0.9);
+            if (blocked.some((b) => inter2(inner, b) > 0) || taken.some((b) => inter2(inner, b) > 0))
+              continue;
+            const before = prevBalloons.some((q) => readBefore(r, q));
+            if (before && tier.order)
+              continue;
+            let sc = bodies.reduce((sum, b) => sum + inter2(r, b), 0) / a * 3 + (cy - frame[1]) / (y1 - frame[1]) * 1.2;
+            if (head) {
+              sc += Math.hypot(cx - head[0], cy - head[1]) / Math.hypot(fw, fh) * 2.5;
+              if (cy > head[1] + ry * 0.6)
+                sc += 1.5;
+            } else
+              sc += (x1 - cx) / fw * 0.8;
+            if (later > 0)
+              sc += ((cy - frame[1]) / (y1 - frame[1]) * 0.8 + (x1 - cx) / fw * 0.6) * (1 + 3 * bias);
+            sc += (1 - own) * 0.8 + other * 4 + (before ? 6 : 0);
+            spots.push({ r, s: sc, before, tier: ti });
+          }
+        if (spots.length)
+          break;
+      }
+      return spots.sort((a, b) => a.s - b.s);
+    };
+    const placeBalloon = (t, k, next, later, taken, prevBalloons, bias, aspect) => {
+      const shape = balloonShape(t, aspect);
+      const { whisper, shout, size, lh, lines, tw, th, rx, ry } = shape;
+      const spots = balloonSpots(t, shape, later, taken, prevBalloons, bias);
+      const nextShape = next ? balloonShape(next, aspect) : null;
+      const fits = (sp) => !nextShape || balloonSpots(next, nextShape, later - 1, [...taken, pad2(sp.r, 4)], [...prevBalloons, sp.r], bias, 2).length > 0;
+      let best = spots.slice(0, 40).find((sp) => sp.tier === spots[0].tier && !sp.before && fits(sp)) ?? spots[0] ?? null;
+      let fallback = null;
+      if (!best) {
+        fallback = "corner";
+        log.push(`p${p.id}: no free place for "${t.text.slice(0, 30)}", put at the top right`);
+        best = { r: [x1 - 2 * rx - 6, frame[1] + 6, x1 - 6, frame[1] + 6 + 2 * ry], s: 99, before: true, tier: 4 };
+      } else if (best.tier > 0) {
+        fallback = `tier ${best.tier + 1}`;
+        log.push(`p${p.id}: "${t.text.slice(0, 24)}" placed with relaxed tier ${best.tier + 1}`);
+      }
+      const r = best.r;
+      const [cx, cy] = centre(r);
+      const head = t.speaker && faces[t.speaker] ? heads[t.speaker] : undefined;
+      let tail = null;
+      if (head && t.speaker) {
+        const f = faces[t.speaker];
+        const aim = [head[0], head[1] + (f[3] - f[1]) * 0.25];
+        const ddx = aim[0] - cx, ddy = aim[1] - cy, dist = Math.hypot(ddx, ddy) || 1;
+        const edge = Math.hypot(rx * ddx / dist, ry * ddy / dist);
+        let L = Math.min(edge + 52 * ts, Math.max(edge + 14 * ts, dist - 30 * ts));
+        const inFace = (q) => {
+          const px = cx + ddx / dist * q, py = cy + ddy / dist * q;
+          return px > f[0] - 4 && px < f[2] + 4 && py > f[1] - 4 && py < f[3] + 4;
+        };
+        while (L > edge + 6 && inFace(L))
+          L -= 4;
+        tail = [cx + ddx / dist * L, cy + ddy / dist * L];
+      }
+      const item = {
+        kind: t.type,
+        panel: p.id,
+        textIndex: k,
+        speaker: t.speaker,
+        text: t.text,
+        lines,
+        cx,
+        cy,
+        rx,
+        ry,
+        textW: tw,
+        textH: th,
+        tail,
+        shout,
+        rect: r,
+        fallback,
+        fontSize: size,
+        lineHeight: lh,
+        ...whisper ? { whisper: true } : {}
+      };
+      return { item, violates: best.before || fallback === "corner" };
+    };
+    let placed = placeTexts(0, 2.2);
+    for (const [bias, aspect] of [[1, 2.2], [1, 1]]) {
+      if (!placed.violations)
+        break;
+      const retry = placeTexts(bias, aspect);
+      log.push(`p${p.id}: reading order retried (${placed.violations} -> ${retry.violations} out of order)`);
+      if (retry.violations < placed.violations)
+        placed = retry;
+    }
+    for (const item of placed.items) {
+      local.push(item);
+      if ("rect" in item)
+        blocked.push(pad2(item.rect, 4));
+    }
+    let n = 0;
+    for (const [k, t] of p.text.entries()) {
+      if (t.type !== "sfx")
+        continue;
+      const size = Math.round(TEXT.sfx[cell.imp] * (p.beat === "action" ? 1.1 : 1) * ctx.sfxScale);
+      const text = t.text.toUpperCase();
+      const w = measure(text, "sfx", size) + 10, h = size + 10;
+      let best = null;
+      for (let gx = 0;gx <= 10; gx++)
+        for (let gy = 0;gy <= 10; gy++) {
+          const cx = x0 + w / 2 - w * 0.15 + (fw - w * 0.7) * gx / 10, cy = frame[1] + h / 2 - h * 0.3 + (y1 - frame[1] - h * 0.4) * gy / 10;
+          const r = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2];
+          if (!inPage(r))
+            continue;
+          const a = area2(r);
+          if (inter2(r, cell.bbox) / a < 0.65 || otherShare(r) > 0.03)
+            continue;
+          if (blocked.some((b) => inter2(r, pad2(b, 2)) > 0))
+            continue;
+          const sc = bodies.reduce((sum, b) => sum + inter2(r, b), 0) / a + (p.beat === "action" ? Math.abs((r[1] - frame[1]) / fh - 0.15) * 0.3 : 0);
+          if (!best || sc < best.s)
+            best = { r, s: sc };
+        }
+      if (!best) {
+        log.push(`p${p.id}: sfx "${t.text}" skipped (no room)`);
+        continue;
+      }
+      blocked.push(best.r);
+      const [cx, cy] = centre(best.r);
+      local.push({ kind: "sfx", panel: p.id, textIndex: k, text: t.text, cx, cy, size, rot: n++ % 2 ? 7 : -8, color: "#111", rect: best.r, breaksFrame: false });
+    }
+    ctx.out.items.push(...local);
+  });
+}
+
+// src/backend/webtoon/manga-validate.ts
+var MANGA_LIMITS = { words: 8, maxWords: 12, balloons: { small: 2, normal: 3, big: 3 }, narration: 2, joinGapWords: 60 };
+var IMPORTANCE = ["small", "normal", "big"];
+var SUGGESTIVE = /^(?:panting|heavy breathing|spread legs|straddling|seductive smile|bedroom eyes)$/iu;
+var EMPTY_BAND = /^head out of frame$/iu;
+var WIDE = new Set(["1600x640", "1472x704"]);
+function mangaHardOk(raw, range) {
+  try {
+    const panels = raw.panels.filter((p) => p && typeof p === "object");
+    return panels.length >= range.min && panels.length <= range.max && panels.every((p) => typeof p.nai?.base === "string" && p.nai.base.trim());
+  } catch {
+    return false;
+  }
+}
+var wordCount = (s) => s.split(/\s+/u).filter(Boolean).length;
+function splitBalloon(text) {
+  if (wordCount(text) <= MANGA_LIMITS.words)
+    return [text];
+  let parts = text.split(/(?<=[.!?\u2026])\s+/u);
+  if (parts.length < 2)
+    parts = text.split(/(?<=,|\.\.\.)\s+/u);
+  if (parts.length < 2)
+    return [text];
+  const chunks = [];
+  for (const part of parts) {
+    const last = chunks.at(-1);
+    if (last !== undefined && (wordCount(last) + wordCount(part) <= MANGA_LIMITS.words || wordCount(last) < 3))
+      chunks[chunks.length - 1] = `${last} ${part}`;
+    else
+      chunks.push(part);
+  }
+  if (chunks.length > 1 && wordCount(chunks.at(-1)) < 3)
+    chunks.splice(-2, 2, `${chunks.at(-2)} ${chunks.at(-1)}`);
+  return chunks.length > 3 ? [...chunks.slice(0, 2), chunks.slice(2).join(" ")] : chunks;
+}
+function falseJoin(text, source) {
+  const frags = fragments(text);
+  if (frags.length < 2)
+    return { text, dropped: [] };
+  const hay = normWords(source);
+  const find = (words, from) => {
+    for (let i = from;i + words.length <= hay.length; i++)
+      if (words.every((w, k) => hay[i + k] === w))
+        return i;
+    return -1;
+  };
+  let end = -1;
+  for (const [k, f] of frags.entries()) {
+    const words = normWords(f);
+    if (!words.length)
+      continue;
+    const at = find(words, Math.max(0, end));
+    if (end >= 0 && (at < 0 || at - end > MANGA_LIMITS.joinGapWords)) {
+      if (at < 0 && find(words, 0) < 0)
+        return { text, dropped: [] };
+      const kept = frags.slice(0, k).join(" ");
+      return { text: kept, dropped: frags.slice(k) };
+    }
+    if (at >= 0)
+      end = at + words.length;
+  }
+  return { text, dropped: [] };
+}
+function cleanTags(line, panelId, who, log) {
+  const [tagLine, ...rest] = line.split(`
+`);
+  const kept = (tagLine ?? "").split(",").map((t) => t.trim()).filter((t) => {
+    if (!t)
+      return false;
+    if (SUGGESTIVE.test(t) || EMPTY_BAND.test(t)) {
+      log.push(`p${panelId}: ${who} tag "${t}" dropped`);
+      return false;
+    }
+    return true;
+  });
+  return [kept.join(", "), ...rest].join(`
+`);
+}
+function validateMangaStoryboard(raw, roster, source) {
+  const log = [];
+  const stats = { invented_dropped: 0, quote_repaired: 0, quote_joined: 0, false_joins: 0, balloons_dropped: 0, split: 0, unknown_char: 0, outfit_dropped: [], sfx_missing_action: 0 };
+  const byName = new Map(roster.map((r) => [r.name, r]));
+  const idx = buildQuoteIndex(source);
+  const sourceWords = ` ${normWords(source).join(" ")} `;
+  const rawPanels = (raw.panels ?? []).filter((p) => p && typeof p === "object");
+  const panels = rawPanels.map((r, i) => {
+    const id = i + 1;
+    if (r.id !== id)
+      log.push(`p${r.id}: renumbered ${id}`);
+    const importance = IMPORTANCE.includes(r.importance) ? r.importance : "normal";
+    const beat = BEATS.includes(r.beat) && r.beat !== "title" ? r.beat : "dialogue";
+    const p = {
+      id,
+      kind: "image",
+      beat,
+      importance,
+      size: "1024x1024",
+      layout: "full_width",
+      ...typeof r.moment === "string" ? { moment: r.moment } : {},
+      ...typeof r.shot === "string" ? { shot: r.shot } : {},
+      ...r.frame_break === true ? { frame_break: true } : {},
+      nai: { base: cleanTags(String(r.nai?.base ?? ""), id, "base", log), characters: Array.isArray(r.nai?.characters) ? r.nai.characters.filter((c) => c && typeof c === "object") : [] },
+      text: []
+    };
+    p.nai.characters = validateCharacters(p, byName, log, stats).map((c) => ({ ...c, prompt: cleanTags(String(c.prompt ?? ""), id, c.name, log) }));
+    const out = [];
+    for (const t0 of Array.isArray(r.text) ? r.text : []) {
+      if (!t0 || !["speech", "thought", "narration", "sfx"].includes(t0.type) || !String(t0.text ?? "").trim())
+        continue;
+      const t = { type: t0.type, speaker: typeof t0.speaker === "string" ? t0.speaker : null, text: String(t0.text).trim(), anchor: "top" };
+      if (t.type === "speech" || t.type === "thought") {
+        let text = checkedQuote(id, t.text, idx, log, stats);
+        if (!text)
+          continue;
+        const joined = falseJoin(text, source);
+        if (joined.dropped.length) {
+          stats.false_joins++;
+          log.push(`p${id}: dropped "${joined.dropped.join(" ")}" (a different line joined into one balloon)`);
+          text = joined.text;
+        }
+        if (t.type === "speech" && (t0.tone === "shout" || t0.tone === "whisper"))
+          t.tone = t0.tone;
+        const parts = splitBalloon(text);
+        if (parts.length > 1) {
+          stats.split++;
+          log.push(`p${id}: split ${wordCount(text)}-word balloon into ${parts.length}`);
+        }
+        for (const part of parts)
+          out.push({ ...t, text: part });
+        continue;
+      }
+      if (t.type === "sfx")
+        stats.sfx_from_source = (stats.sfx_from_source ?? 0) + (sourceWords.includes(` ${normWords(t.text).join(" ")} `) ? 1 : 0);
+      out.push(t);
+    }
+    let balloons = 0, narration = 0;
+    p.text = out.filter((t) => {
+      if (t.type === "speech" || t.type === "thought") {
+        if (++balloons <= MANGA_LIMITS.balloons[importance])
+          return true;
+        stats.balloons_dropped++;
+        log.push(`p${id}: dropped balloon #${balloons} "${t.text}" (${importance} panel)`);
+        return false;
+      }
+      if (t.type === "narration" && ++narration > MANGA_LIMITS.narration) {
+        stats.balloons_dropped++;
+        log.push(`p${id}: dropped narration #${narration}`);
+        return false;
+      }
+      return true;
+    });
+    if (p.beat === "action" && !p.text.some((t) => t.type === "sfx")) {
+      stats.sfx_missing_action++;
+      log.push(`p${id}: action beat without sfx`);
+    }
+    return p;
+  });
+  const plan = mangaPagePlan(panels);
+  for (const p of panels)
+    p.size = plan.sizes[p.id];
+  const breakable = (p) => p.beat === "action" && p.nai.characters.length === 1 && p.importance !== "small" && !WIDE.has(p.size) && !["hands only", "lower body"].includes(p.nai.characters[0].framing);
+  const marked = panels.some((p) => p.frame_break);
+  for (const page of plan.pages) {
+    let used = false;
+    for (const id of page.panels) {
+      const p = panels.find((q) => q.id === id);
+      if (!p.frame_break)
+        continue;
+      if (!breakable(p)) {
+        delete p.frame_break;
+        log.push(`p${id}: frame_break dropped (needs an action beat with one character in a normal or big cell)`);
+        continue;
+      }
+      if (used) {
+        delete p.frame_break;
+        log.push(`p${id}: frame_break dropped (at most 1 per page)`);
+        continue;
+      }
+      used = true;
+    }
+  }
+  if (!marked) {
+    const auto = panels.find(breakable);
+    if (auto) {
+      auto.frame_break = true;
+      log.push(`p${auto.id}: frame_break added (the planner marked none)`);
+    }
+  }
+  for (const p of panels) {
+    const c = p.frame_break ? p.nai.characters[0] : null;
+    if (c && c.y > 0.5) {
+      log.push(`p${p.id}: ${c.name} y ${c.y} -> 0.5 (frame-break)`);
+      c.y = 0.5;
+    }
+  }
+  const sb = { title: String(raw.title ?? ""), key_props: Array.isArray(raw.key_props) ? raw.key_props : [], panels, pages: plan.pages };
+  Object.assign(stats, {
+    image_panels: panels.length,
+    pages: plan.pages.map((p) => p.template),
+    importance: panels.map((p) => p.importance),
+    sizes: panels.map((p) => p.size),
+    frame_breaks: panels.filter((p) => p.frame_break).map((p) => p.id),
+    balloons: panels.reduce((n, p) => n + p.text.filter((t) => t.type === "speech" || t.type === "thought").length, 0),
+    narration: panels.reduce((n, p) => n + p.text.filter((t) => t.type === "narration").length, 0),
+    sfx: panels.reduce((n, p) => n + p.text.filter((t) => t.type === "sfx").length, 0),
+    max_words: Math.max(0, ...panels.flatMap((p) => p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => wordCount(t.text))))
+  });
+  return { storyboard: sb, log, stats };
+}
+
+// src/backend/webtoon/roster.ts
+var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var str5 = (v) => v == null ? "" : String(v).trim();
+var PARTS3 = ["head", "top", "bottom", "legs", "feet"];
+var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+function mentions(text, names) {
+  return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text));
+}
+function rosterEntry(candidate, currentOutfitId) {
+  const forms = candidate.appearanceForms ?? [];
+  const form = forms.find((f) => f.formId === candidate.defaultFormId) ?? forms[0];
+  if (!form)
+    return null;
+  const gender = str5(form.gender) || str5(candidate.gender);
+  const outfits = (form.outfits ?? []).map((o) => ({ ...rec4(o), id: str5(rec4(o).outfitId ?? rec4(o).id), label: str5(o.label) })).filter((o) => o.id && PARTS3.some((p) => str5(o[p])));
+  const ids = outfits.map((o) => o.id);
+  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str5(form.defaultOutfitId)) ? str5(form.defaultOutfitId) : ids[0] ?? "";
+  const main = compileMainPrompt(form.basePromptGroups, gender);
+  return {
+    key: candidate.key,
+    name: candidate.characterName.trim(),
+    gender,
+    formLabel: str5(form.label),
+    outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS3.flatMap((p) => str5(o[p]) ? [[p, str5(o[p])]] : [])) })),
+    currentOutfitId: current,
+    identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", ")
+  };
+}
+function validationRoster(roster, outfits) {
+  return roster.map((r) => {
+    const o = r.outfits.find((x) => x.id === (outfits[r.name] ?? r.currentOutfitId));
+    return { name: r.name, gender: r.gender, formLabel: r.formLabel, outfitLabel: o?.label ?? "", outfit: o?.outfit ?? {} };
+  });
+}
+function castFor(roster, outfits) {
+  return new Map(roster.map((r) => {
+    const outfitId = outfits[r.name] ?? r.currentOutfitId;
+    return [r.name, { name: r.name, gender: r.gender, identity: r.identity, outfitId, outfit: r.outfits.find((o) => o.id === outfitId)?.outfit ?? {} }];
+  }));
+}
+function personaRecord2(p) {
+  return { key: p.personaId, id: p.personaId, name: p.name, ...p.avatarImageId ? { imageAsset: { key: p.avatarImageId, name: p.name, sourceType: "persona" } } : {} };
+}
+async function loadWebtoonContext(services, input) {
+  const { config } = input;
+  const view = input.messages[input.target];
+  const primaryId = await speakingCharacterId(services, input.chat, view);
+  const memberIds = [...new Set([primaryId, ...input.chat.groupCharacterIds].filter(Boolean))];
+  const docs = new Map;
+  for (const id of memberIds)
+    docs.set(id, await services.storage.loadCharacterDocument(id));
+  const sources = [];
+  for (const id of memberIds)
+    sources.push(await services.sources.buildSource(id, docs.get(id), { chatId: input.chatId }));
+  const seen = new Set;
+  const source = { ...sources[0], members: sources.flatMap((s) => s.members).filter((m) => seen.has(m.key) ? false : (seen.add(m.key), true)) };
+  const custom = [...docs.values()].flatMap((d) => d.customCharacters);
+  const target = await services.images.resolveTarget();
+  const runtime = buildRuntimeConfig(config, docs.get(primaryId) ?? null, { resolvedImageModel: target.model });
+  const cp = rec4(runtime.characterPrompt);
+  const forms = { ...rec4(cp.characterForms) };
+  for (const id of memberIds.slice(1))
+    for (const [k, v] of Object.entries(rec4(rec4(docs.get(id)?.characterPrompt).characterForms)))
+      if (!(k in forms))
+        forms[k] = v;
+  runtime.characterPrompt = { ...cp, characterForms: forms };
+  const amConfig = runtime;
+  const character = await services.sources.getCharacter(primaryId);
+  const personas = await services.sources.listPersonas();
+  const active = await services.sources.getActivePersona(input.chatId);
+  const chatKey = chatKeyForChat(input.chatId);
+  const liveIds = input.messages.map((m, i) => i === input.target ? input.historyId : `${m.id}@${m.swipeId}`);
+  const continuity = rebuildContinuityAtMessage2(input.chatData.store, chatKey, liveIds, input.historyId);
+  continuity.characters[chatKey] = mergeLocalLoreActorState2(continuity.characters[chatKey] ?? {}, input.chatData.actorState);
+  const requestMessages = input.messages.slice(0, input.target).flatMap((m) => {
+    const content = m.role === "system" ? "" : cleanMessageContent(m.content);
+    return content.trim() ? [{ role: m.role === "assistant" ? "assistant" : "user", content }] : [];
+  });
+  const ft = buildAnalyzerContextInputs2({
+    config: amConfig,
+    continuity,
+    chatKey,
+    messages: requestMessages,
+    content: input.source,
+    imageTokens: [],
+    character: { name: character.name, description: character.description },
+    source: withCustomCharacterMembers(source, custom),
+    activePersona: active ? personaRecord2(active) : null,
+    personaRecords: personas.map(personaRecord2)
+  });
+  const previous = new Map;
+  for (const ref of Object.values(ft.visualContinuity.previous_outfit_refs.actors))
+    if (ref?.lorebook_prompt_key && ref.outfit_id)
+      previous.set(ref.lorebook_prompt_key, ref.outfit_id);
+  const candidates = [...ft.analyzerIdentityCandidates, ...ft.analyzerPersonaCandidates];
+  const all = candidates.flatMap((c) => {
+    const entry = rosterEntry(c, previous.get(str5(c.lorebookPromptKey) || c.key) ?? previous.get(c.key));
+    return entry && entry.name ? [{ entry, names: [c.characterName, ...c.aliases ?? []] }] : [];
+  });
+  let roster = all.filter((a) => mentions(input.source, a.names)).map((a) => a.entry);
+  if (!roster.length)
+    roster = all.filter((a) => a.entry.key.startsWith(primaryId)).map((a) => a.entry).slice(0, 1);
+  const names = new Set;
+  roster = roster.filter((r) => names.has(r.name) ? false : (names.add(r.name), true));
+  const prompts = ft.promptInputs({ actors: {} });
+  const nai = resolveNovelAIRunConfig2(amConfig, { sourceId: primaryId });
+  const params = {};
+  for (const key of ["sampler", "noiseSchedule", "steps", "scale", "cfgRescale", "qualityToggle"])
+    if (nai[key] !== undefined)
+      params[key] = nai[key];
+  return {
+    characterId: primaryId,
+    roster,
+    style: {
+      style: [prompts.artistPrompt, prompts.fixedPositivePrompt].map(str5).filter(Boolean).join(", "),
+      negative: dedupeTags([prompts.artistNegativePrompt, prompts.negativePrompt, input.format === "manga" ? MANGA_NEGATIVE : WEBTOON_NEGATIVE].map(str5).filter(Boolean).join(", ")),
+      params,
+      framingWeights: rec4(cp.outfitPartFramingWeights)
+    }
+  };
+}
+
+// src/backend/webtoon/cutout.ts
+var FRAME_BREAK = {
+  solidAlpha: 128,
+  maskAlpha: 200,
+  maskBlock: 8,
+  headBand: 0.25,
+  headColumn: 0.15,
+  headGap: 0.01,
+  headMargin: 0.02,
+  minPart: 0.15,
+  minTransparent: 0.1,
+  headTop: 0.1,
+  maxShift: 0.12,
+  gridCols: 40,
+  gridFill: 0.3,
+  fillBlock: 8,
+  fillRadius: 4
+};
+var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+async function zlib(data, mode) {
+  const transform = mode === "compress" ? new CompressionStream("deflate") : new DecompressionStream("deflate");
+  const stream = new Blob([data]).stream().pipeThrough(transform);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+var CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0;n < 256; n += 1) {
+    let c = n;
+    for (let k = 0;k < 8; k += 1)
+      c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+function crc32(bytes) {
+  let c = 4294967295;
+  for (const b of bytes)
+    c = CRC_TABLE[(c ^ b) & 255] ^ c >>> 8;
+  return (c ^ 4294967295) >>> 0;
+}
+async function decodePng(bytes) {
+  if (SIGNATURE.some((b, i) => bytes[i] !== b))
+    throw new Error("Not a PNG image.");
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let width = 0, height = 0, colorType = -1;
+  const idat = [];
+  for (let at = 8;at + 8 <= bytes.length; ) {
+    const length = view.getUint32(at);
+    const type = String.fromCharCode(...bytes.subarray(at + 4, at + 8));
+    const body = bytes.subarray(at + 8, at + 8 + length);
+    if (type === "IHDR") {
+      width = view.getUint32(at + 8);
+      height = view.getUint32(at + 12);
+      colorType = body[9];
+      if (body[8] !== 8 || colorType !== 6 && colorType !== 2 || body[12] !== 0)
+        throw new Error(`Unsupported PNG (bit depth ${body[8]}, colour type ${colorType}, interlace ${body[12]}).`);
+    } else if (type === "IDAT")
+      idat.push(body);
+    else if (type === "IEND")
+      break;
+    at += 12 + length;
+  }
+  if (!width || !height || !idat.length)
+    throw new Error("The PNG has no image data.");
+  const joined = new Uint8Array(idat.reduce((n, c) => n + c.length, 0));
+  idat.reduce((at, c) => (joined.set(c, at), at + c.length), 0);
+  const raw = await zlib(joined, "decompress");
+  const channels = colorType === 6 ? 4 : 3;
+  const stride = width * channels;
+  if (raw.length < height * (stride + 1))
+    throw new Error("The PNG image data is truncated.");
+  const rows = new Uint8Array(height * stride);
+  for (let y = 0;y < height; y += 1) {
+    const filter = raw[y * (stride + 1)];
+    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    const out = y * stride;
+    for (let x = 0;x < stride; x += 1) {
+      const a = x >= channels ? rows[out + x - channels] : 0;
+      const b = y ? rows[out - stride + x] : 0;
+      const c = y && x >= channels ? rows[out - stride + x - channels] : 0;
+      let v = line[x];
+      if (filter === 1)
+        v += a;
+      else if (filter === 2)
+        v += b;
+      else if (filter === 3)
+        v += a + b >> 1;
+      else if (filter === 4) {
+        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      rows[out + x] = v & 255;
+    }
+  }
+  if (channels === 4)
+    return { width, height, data: rows };
+  const data = new Uint8Array(width * height * 4);
+  for (let i = 0, j = 0;i < rows.length; i += 3, j += 4) {
+    data[j] = rows[i];
+    data[j + 1] = rows[i + 1];
+    data[j + 2] = rows[i + 2];
+    data[j + 3] = 255;
+  }
+  return { width, height, data };
+}
+function chunk(type, body) {
+  const out = new Uint8Array(12 + body.length);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, body.length);
+  for (let i = 0;i < 4; i += 1)
+    out[4 + i] = type.charCodeAt(i);
+  out.set(body, 8);
+  view.setUint32(8 + body.length, crc32(out.subarray(4, 8 + body.length)));
+  return out;
+}
+async function encodePng(image) {
+  const { width, height, data } = image;
+  const stride = width * 4;
+  const raw = new Uint8Array(height * (stride + 1));
+  for (let y = 0;y < height; y += 1) {
+    const at = y * (stride + 1);
+    raw[at] = 2;
+    for (let x = 0;x < stride; x += 1)
+      raw[at + 1 + x] = data[y * stride + x] - (y ? data[(y - 1) * stride + x] : 0) & 255;
+  }
+  const header = new Uint8Array(13);
+  const hv = new DataView(header.buffer);
+  hv.setUint32(0, width);
+  hv.setUint32(4, height);
+  header.set([8, 6, 0, 0, 0], 8);
+  const parts = [Uint8Array.from(SIGNATURE), chunk("IHDR", header), chunk("IDAT", await zlib(raw, "compress")), chunk("IEND", new Uint8Array)];
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((at, p) => (out.set(p, at), at + p.length), 0);
+  return out;
+}
+function alphaInfo(image) {
+  const { width, height, data } = image;
+  let clear = 0, solid = 0, x0 = width, y0 = height, x1 = -1, y1 = -1;
+  for (let y = 0;y < height; y += 1) {
+    for (let x = 0;x < width; x += 1) {
+      const a = data[(y * width + x) * 4 + 3];
+      if (a === 0)
+        clear += 1;
+      if (a <= FRAME_BREAK.solidAlpha)
+        continue;
+      solid += 1;
+      if (x < x0)
+        x0 = x;
+      if (x > x1)
+        x1 = x;
+      if (y < y0)
+        y0 = y;
+      y1 = y;
+    }
+  }
+  const n = width * height;
+  return { transparent: clear / n, coverage: solid / n, bbox: x1 < 0 ? null : { left: x0 / width, top: y0 / height, right: (x1 + 1) / width, bottom: (y1 + 1) / height } };
+}
+function keepMainParts(image) {
+  const { width, height, data } = image;
+  const n = width * height;
+  const label = new Int32Array(n);
+  const sizes = [0];
+  const stack = new Int32Array(n);
+  for (let start = 0;start < n; start += 1) {
+    if (label[start] || data[start * 4 + 3] <= 32)
+      continue;
+    const id = sizes.length;
+    let top = 0, size = 0;
+    stack[top++] = start;
+    label[start] = id;
+    while (top) {
+      const i = stack[--top];
+      size += 1;
+      const x = i % width, y = (i - x) / width;
+      for (let dy = -1;dy <= 1; dy += 1) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= height)
+          continue;
+        for (let dx = -1;dx <= 1; dx += 1) {
+          const xx = x + dx, j = yy * width + xx;
+          if (xx < 0 || xx >= width || label[j] || data[j * 4 + 3] <= 32)
+            continue;
+          label[j] = id;
+          stack[top++] = j;
+        }
+      }
+    }
+    sizes.push(size);
+  }
+  const largest = Math.max(0, ...sizes);
+  if (sizes.every((s) => s === largest || s >= FRAME_BREAK.minPart * largest))
+    return image;
+  const out = new Uint8Array(data);
+  for (let i = 0;i < n; i += 1)
+    if (label[i] && sizes[label[i]] < FRAME_BREAK.minPart * largest)
+      out[i * 4 + 3] = 0;
+  return { width, height, data: out };
+}
+function cropToHead(image, bbox) {
+  const { width, height, data } = image;
+  const y0 = Math.floor(bbox.top * height);
+  const y1 = Math.min(height, y0 + Math.max(1, Math.round((bbox.bottom - bbox.top) * height * FRAME_BREAK.headBand)));
+  const counts = new Array(width).fill(0);
+  for (let y = y0;y < y1; y += 1)
+    for (let x = 0;x < width; x += 1)
+      if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
+        counts[x] += 1;
+  const min = FRAME_BREAK.headColumn * (y1 - y0), gap = Math.round(FRAME_BREAK.headGap * width);
+  let best = null, start = -1, last = -1;
+  for (let x = 0;x <= width; x += 1) {
+    const on = x < width && counts[x] >= min;
+    if (on && start < 0)
+      start = x;
+    if (on)
+      last = x;
+    if (start >= 0 && (x === width || !on && x - last > gap)) {
+      if (!best || last - start > best[1] - best[0])
+        best = [start, last];
+      start = -1;
+    }
+  }
+  if (!best)
+    return image;
+  const margin = Math.round(FRAME_BREAK.headMargin * width);
+  const [a, b] = [best[0] - margin, best[1] + margin];
+  const out = new Uint8Array(data);
+  for (let y = 0;y < y1; y += 1)
+    for (let x = 0;x < width; x += 1)
+      if (x < a || x > b)
+        out[(y * width + x) * 4 + 3] = 0;
+  return { width, height, data: out };
+}
+function shiftDown(image, dy) {
+  const stride = image.width * 4;
+  const data = new Uint8Array(image.data.length);
+  data.set(image.data.subarray(0, Math.max(0, image.height - dy) * stride), dy * stride);
+  return { ...image, data };
+}
+function headShift(info, height) {
+  if (!info.bbox)
+    return 0;
+  return Math.round(Math.min(FRAME_BREAK.maxShift, Math.max(0, FRAME_BREAK.headTop - info.bbox.top)) * height);
+}
+function backgroundMask(image, block = FRAME_BREAK.maskBlock) {
+  const { width, height, data } = image;
+  const mask = new Uint8Array(width * height);
+  for (let by = 0;by < height; by += block) {
+    for (let bx = 0;bx < width; bx += block) {
+      const ys = Math.min(height, by + block), xs = Math.min(width, bx + block);
+      let any = false;
+      for (let y = by;y < ys && !any; y += 1)
+        for (let x = bx;x < xs; x += 1)
+          if (data[(y * width + x) * 4 + 3] < FRAME_BREAK.maskAlpha) {
+            any = true;
+            break;
+          }
+      if (any)
+        for (let y = by;y < ys; y += 1)
+          mask.fill(1, y * width + bx, y * width + xs);
+    }
+  }
+  return mask;
+}
+function maskImage(mask, width, height) {
+  const data = new Uint8Array(width * height * 4);
+  for (let i = 0;i < mask.length; i += 1) {
+    const v = mask[i] ? 255 : 0;
+    data.set([v, v, v, 255], i * 4);
+  }
+  return { width, height, data };
+}
+function softFill(image) {
+  const { width, height, data } = image;
+  const b = FRAME_BREAK.fillBlock;
+  const bw = Math.ceil(width / b), bh = Math.ceil(height / b);
+  let sums = [new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh)];
+  const total = [0, 0, 0, 0];
+  for (let y = 0;y < height; y += 1) {
+    for (let x = 0;x < width; x += 1) {
+      const i = (y * width + x) * 4, cell = Math.floor(y / b) * bw + Math.floor(x / b), a = data[i + 3] / 255;
+      for (let c = 0;c < 3; c += 1) {
+        sums[c][cell] += data[i + c] * a;
+        total[c] += data[i + c] * a;
+      }
+      sums[3][cell] += a;
+      total[3] += a;
+    }
+  }
+  const r = FRAME_BREAK.fillRadius;
+  const blur = (src, horizontal) => {
+    const out = new Float64Array(src.length);
+    const [lines, len] = horizontal ? [bh, bw] : [bw, bh];
+    for (let l = 0;l < lines; l += 1) {
+      const at = (i) => horizontal ? l * bw + i : i * bw + l;
+      for (let i = 0;i < len; i += 1) {
+        let s = 0;
+        for (let k = Math.max(0, i - r);k <= Math.min(len - 1, i + r); k += 1)
+          s += src[at(k)];
+        out[at(i)] = s;
+      }
+    }
+    return out;
+  };
+  for (let pass = 0;pass < 3; pass += 1)
+    sums = sums.map((s) => blur(blur(s, true), false));
+  const mean = total[3] > 0 ? [0, 1, 2].map((c) => total[c] / total[3]) : [128, 128, 128];
+  const peak = Math.max(...sums[3]);
+  const colour = (cell, c) => sums[3][cell] > peak * 0.001 ? sums[c][cell] / sums[3][cell] : mean[c];
+  const out = new Uint8Array(data.length);
+  for (let y = 0;y < height; y += 1) {
+    const fy = Math.min(bh - 1, Math.max(0, (y + 0.5) / b - 0.5)), y0 = Math.floor(fy), y1 = Math.min(bh - 1, y0 + 1), ty = fy - y0;
+    for (let x = 0;x < width; x += 1) {
+      const fx = Math.min(bw - 1, Math.max(0, (x + 0.5) / b - 0.5)), x0 = Math.floor(fx), x1 = Math.min(bw - 1, x0 + 1), tx = fx - x0;
+      const i = (y * width + x) * 4, a = data[i + 3] / 255;
+      for (let c = 0;c < 3; c += 1) {
+        const top = colour(y0 * bw + x0, c) * (1 - tx) + colour(y0 * bw + x1, c) * tx;
+        const bottom = colour(y1 * bw + x0, c) * (1 - tx) + colour(y1 * bw + x1, c) * tx;
+        out[i + c] = Math.round(data[i + c] * a + (top * (1 - ty) + bottom * ty) * (1 - a));
+      }
+      out[i + 3] = 255;
+    }
+  }
+  return { width, height, data: out };
+}
+function flattenOver(base, top) {
+  if (base.width !== top.width || base.height !== top.height)
+    throw new Error(`Image sizes differ (${base.width}x${base.height} / ${top.width}x${top.height}).`);
+  const out = new Uint8Array(base.data.length);
+  for (let i = 0;i < out.length; i += 4) {
+    const a = top.data[i + 3] / 255;
+    for (let c = 0;c < 3; c += 1)
+      out[i + c] = Math.round(top.data[i + c] * a + base.data[i + c] * (1 - a));
+    out[i + 3] = 255;
+  }
+  return { width: base.width, height: base.height, data: out };
+}
+function characterGrid(image) {
+  const { width, height, data } = image;
+  const cols = FRAME_BREAK.gridCols, rows = Math.max(1, Math.round(cols * height / width));
+  const out = [];
+  for (let r = 0;r < rows; r += 1) {
+    let line = "";
+    const ya = Math.floor(r * height / rows), yb = Math.floor((r + 1) * height / rows);
+    for (let c = 0;c < cols; c += 1) {
+      const xa = Math.floor(c * width / cols), xb = Math.floor((c + 1) * width / cols);
+      let solid = 0;
+      for (let y = ya;y < yb; y += 1)
+        for (let x = xa;x < xb; x += 1)
+          if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
+            solid += 1;
+      line += solid >= FRAME_BREAK.gridFill * Math.max(1, (yb - ya) * (xb - xa)) ? "1" : "0";
+    }
+    out.push(line);
+  }
+  return out;
+}
+async function frameBreakInputs(generated) {
+  const transparent = keepMainParts(generated);
+  const first = alphaInfo(transparent);
+  if (first.transparent < FRAME_BREAK.minTransparent || !first.bbox)
+    throw new Error(`The cut-out has no transparent background (${Math.round(first.transparent * 100)}% clear).`);
+  const shift = headShift(first, transparent.height);
+  const cutout = shift ? shiftDown(transparent, shift) : transparent;
+  const mask = maskImage(backgroundMask(cutout), cutout.width, cutout.height);
+  const display = cropToHead(cutout, alphaInfo(cutout).bbox);
+  return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(display) };
+}
+
 // src/backend/webtoon/store.ts
 var webtoonDir = (chatId) => `${STORAGE_PATHS.chatDir(chatId)}webtoon/`;
 var webtoonPath = (chatId, historyId) => `${webtoonDir(chatId)}${safePathSegment(historyId)}.json`;
@@ -65968,7 +66835,7 @@ async function writeIndex(storage, doc, chatId, historyId) {
   await storage.updateJson(indexPath(chatId), {}, (index) => {
     const next = { ...index };
     if (doc)
-      next[historyId] = { revision: doc.revision, status: doc.status };
+      next[historyId] = { revision: doc.revision, status: doc.status, ...doc.format === "manga" ? { format: "manga" } : {} };
     else
       delete next[historyId];
     return next;
@@ -66000,7 +66867,7 @@ function effectiveStoryboard(doc) {
     }))
   };
 }
-function relayout(doc, width = STRIP_WIDTH) {
+function relayout(doc, width = doc.format === "manga" ? MANGA_PAGE_WIDTH : STRIP_WIDTH) {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard)
     return null;
@@ -66017,17 +66884,20 @@ function relayout(doc, width = STRIP_WIDTH) {
     if (take?.check && Object.keys(take.check.faces).length)
       images[String(p.id)].faces = take.check.faces;
   }
-  return layoutStrip(storyboard, images, { width });
+  return doc.format === "manga" ? layoutManga(storyboard, images, { width, grey: !!doc.mono }) : layoutStrip(storyboard, images, { width });
 }
-function stripView(doc, width = STRIP_WIDTH) {
+function stripView(doc, width) {
+  const manga = doc.format === "manga";
+  const w = Math.round(width ?? 0) || (manga ? MANGA_PAGE_WIDTH : STRIP_WIDTH);
   return {
     chatId: doc.chatId,
     messageKey: doc.messageKey,
     status: doc.status,
     ...doc.error ? { error: doc.error } : {},
+    ...manga ? { format: "manga" } : {},
     revision: doc.revision,
     title: doc.storyboard?.title ?? "",
-    layout: relayout(doc, Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, Math.round(width) || STRIP_WIDTH))),
+    layout: relayout(doc, manga && w >= MANGA_PAGE_WIDTH ? MANGA_PAGE_WIDTH : Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, w))),
     panels: doc.panels,
     updatedAt: doc.updatedAt
   };
@@ -66061,7 +66931,7 @@ function describe(member) {
   const appearance = tags2(member.identity).filter((t) => t !== "female" && t !== "male" && !/\\\(|petite|short$|breasts|slender|stocky|build|waist|shoulders|skin$/u.test(t)).slice(0, 8).join(", ");
   return { noun, named: `${noun} (${member.name})${appearance ? ` with ${appearance}` : ""}` };
 }
-function identityQuestions(member, c, count, noun) {
+function identityQuestions(member, c, count, noun, mono) {
   if (!member.identity || NO_FACE.has(c.framing))
     return [];
   const where = count > 1 ? WHERE[String(c.x)] ?? "" : "";
@@ -66070,6 +66940,8 @@ function identityQuestions(member, c, count, noun) {
     return [["species", `Is ${who} in \`image\` drawn as a furry anthropomorphic animal (${speciesName(member.identity)}) with a full animal head, a muzzle and fur over the whole body, rather than a human girl or man with animal ears?`]];
   }
   const out = [];
+  if (mono)
+    return out;
   const colours = tags2(member.identity).filter((t) => HAIR_COLOR.test(t));
   if (colours.length === 1)
     out.push([`hair:${colours[0]}`, `Does ${who} in \`image\` have ${colours[0]}?`]);
@@ -66077,7 +66949,7 @@ function identityQuestions(member, c, count, noun) {
     out.push(["glasses", `Is ${who} in \`image\` wearing glasses?`]);
   return out;
 }
-function panelQuestions(panel, cast) {
+function panelQuestions(panel, cast, mono = false) {
   const members = new Map(cast.map((m) => [m.name, m]));
   const chars = panel.nai.characters.filter((c) => members.has(c.name));
   const out = { questions: {}, faces: [], identity: [] };
@@ -66089,7 +66961,7 @@ function panelQuestions(panel, cast) {
       out.questions[`face${i}`] = { type: "box", instructions: `the face of the ${named} in \`image\`` };
       out.faces.push({ name: c.name, face: `face${i}`, present: `present${i}` });
     }
-    identityQuestions(member, c, chars.length, noun).forEach(([check, text], j) => {
+    identityQuestions(member, c, chars.length, noun, mono).forEach(([check, text], j) => {
       out.questions[`id${i}_${j}`] = { type: "noul", instructions: text };
       out.identity.push({ name: c.name, check, key: `id${i}_${j}` });
     });
@@ -66124,7 +66996,7 @@ function readPanelCheck(q, model, answers) {
   };
 }
 async function checkPanel(services, input) {
-  const q = panelQuestions(input.panel, input.cast);
+  const q = panelQuestions(input.panel, input.cast, input.mono);
   if (!Object.keys(q.questions).length)
     return null;
   try {
@@ -66143,7 +67015,8 @@ function boostedRequest(request, cast) {
     if (!m?.identity)
       return prompt;
     const from = identityPrompt(m);
-    return prompt.startsWith(from) ? identityPrompt(m, ID_BOOST) + prompt.slice(from.length) : prompt;
+    const at = prompt.indexOf(from);
+    return at >= 0 ? prompt.slice(0, at) + identityPrompt(m, ID_BOOST) + prompt.slice(at + from.length) : prompt;
   };
   const visible = request.characters.flatMap((c) => members.get(c.name) ?? []);
   const species = visible.length === request.characters.length ? furryBaseTag(visible) : "";
@@ -66265,7 +67138,7 @@ async function drawPanel(deps, input) {
   }
   return generatePanel(deps, input);
 }
-async function plan(deps, prompt, images, signal) {
+async function plan(deps, prompt, images, signal, manga = false) {
   const calls = [];
   let model = "";
   for (let attempt = 0;attempt < MAX_PLANNER_CALLS; attempt += 1) {
@@ -66275,7 +67148,7 @@ async function plan(deps, prompt, images, signal) {
     try {
       const result = await deps.services.llm.complete({ purpose: "webtoon-planner", messages: [{ role: "user", content: prompt }], responseMode: "json", settings: { timeoutMs: PLANNER_TIMEOUT_MS }, retries: 0 }, { signal });
       model = result.model;
-      const ok = hardOk(result.parsed, images);
+      const ok = manga ? mangaHardOk(result.parsed, images) : hardOk(result.parsed, images);
       calls.push({ ms: result.latencyMs, finishReason: result.finishReason, parsed: true, hardOk: ok });
       if (ok)
         return { raw: result.parsed, model, calls };
@@ -66299,7 +67172,7 @@ async function visionRun(deps, config, run) {
 }
 async function checkTake(v, panel, take, redrawOf) {
   const { services } = v.deps;
-  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal });
+  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal, mono: v.mono });
   if (!check)
     return null;
   const id = String(panel.id);
@@ -66362,13 +67235,17 @@ async function runWebtoonStrip(deps, req) {
     return doc;
   };
   let doc = null;
+  let manga = req.format === "manga";
   try {
     await requireNovelAI(services);
-    req.onProgress({ stage: "planning" });
     const previous = await readStrip(services.storage, req.chatId, req.historyId);
+    const resume = req.resume && previous?.storyboard && previous.style && Object.keys(previous.requests).length;
+    if (resume)
+      manga = previous.format === "manga";
+    req.onProgress({ stage: "planning", manga });
     let style;
     let characterId;
-    if (req.resume && previous?.storyboard && previous.style && Object.keys(previous.requests).length) {
+    if (resume) {
       style = previous.style;
       characterId = previous.characterId;
       doc = await write((d) => {
@@ -66376,16 +67253,20 @@ async function runWebtoonStrip(deps, req) {
         delete d.error;
       });
     } else {
-      const context = await loadWebtoonContext(services, { ...req });
+      const context = await loadWebtoonContext(services, { ...req, format: manga ? "manga" : "webtoon" });
       style = context.style;
       characterId = context.characterId;
+      const mono = manga && isMonochromeStyle(style.style);
       doc = await write((d) => {
         Object.assign(d, createStripDocument({ chatId: req.chatId, messageKey: req.planKey, historyId: req.historyId, characterId, sourceLength: req.source.length, now: now(), revision: previous?.revision ?? 0 }));
+        if (manga)
+          Object.assign(d, { format: "manga", mono });
       });
       let planned;
       try {
         const panels = webtoonPanelTarget(req.source.length);
-        planned = await plan(deps, buildPlannerPrompt({ roster: context.roster, source: req.source, panels }), webtoonPanelRange(panels), req.signal);
+        const prompt = manga ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono }) : buildPlannerPrompt({ roster: context.roster, source: req.source, panels });
+        planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
       } catch (error) {
         const meta = error;
         if (meta.calls)
@@ -66395,18 +67276,20 @@ async function runWebtoonStrip(deps, req) {
       await req.assertTarget();
       const outfitLog = [];
       const outfits = chosenOutfits(planned.raw, context.roster, outfitLog);
-      const validated = validateStoryboard(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
+      const validate = manga ? validateMangaStoryboard : validateStoryboard;
+      const validated = validate(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
       validated.log.unshift(...outfitLog);
-      const cast = castFor(context.roster, outfits);
+      const cast = mono ? monoCast(castFor(context.roster, outfits)) : castFor(context.roster, outfits);
       const planImages = validated.storyboard.panels.filter((p) => p.kind === "image");
+      const request = (p) => mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style);
       doc = await write((d) => {
         d.planner = { model: planned.model, calls: planned.calls };
         d.storyboardRaw = planned.raw;
         d.storyboard = validated.storyboard;
         d.validation = { log: validated.log, stats: validated.stats };
-        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: r.identity }));
+        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity }));
         d.style = context.style;
-        d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), buildPanelRequest(p, cast, context.style)]));
+        d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
         d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
         d.status = "generating";
       });
@@ -66414,7 +67297,7 @@ async function runWebtoonStrip(deps, req) {
     const requests = doc.requests;
     const images = (doc.storyboard?.panels ?? []).filter((p) => p.kind === "image" && !!requests[String(p.id)]);
     const todo = images.filter((p) => doc.panels[String(p.id)]?.status !== "done");
-    const vision = await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged });
+    const vision = await visionRun(deps, req.config, { cast: doc.cast, mono: !!doc.mono, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged });
     const background = new Set;
     const redraws = [];
     const inBackground = (work) => {
@@ -66439,7 +67322,7 @@ async function runWebtoonStrip(deps, req) {
       if (req.signal.aborted)
         throw aborted();
       const id = String(panel.id);
-      req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length });
+      req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length, manga });
       try {
         const input = { request: requests[id], style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal };
         const take = await drawPanel(deps, input);
@@ -66469,7 +67352,7 @@ async function runWebtoonStrip(deps, req) {
       await Promise.all([...background]);
       await drainRedraws();
     }
-    req.onProgress({ stage: "committing", done: images.length - failed, total: images.length });
+    req.onProgress({ stage: "committing", done: images.length - failed, total: images.length, manga });
     const error = failed ? rpcError("provider-error", `${failed} webtoon panel(s) failed to generate.`, { retryable: true }) : undefined;
     await write((d) => {
       d.status = failed ? "error" : "complete";
@@ -66513,7 +67396,7 @@ async function rerollWebtoonPanel(deps, req) {
   }, deps.now);
   req.onChanged();
   const panel = doc.storyboard?.panels.find((p) => p.kind === "image" && String(p.id) === req.panelId);
-  const vision = panel ? await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged }) : null;
+  const vision = panel ? await visionRun(deps, req.config, { cast: doc.cast, mono: !!doc.mono, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged }) : null;
   if (vision && panel) {
     const check = await checkTake(vision, panel, take);
     if (check?.failed.length) {
@@ -66796,7 +67679,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const settings = opts.settings ?? (attemptKind === "retry" && settingsSnapshots.has(skey) ? settingsSnapshots.get(skey) : await services.storage.loadChatImageGenerationSettings());
     const runSettings = opts.countPolicy ? { ...settings, countPolicy: opts.countPolicy } : settings;
     if (runSettings.webtoonMode && !opts.revision)
-      return runWebtoonOnce(job, { config, chat, messages, target, view, content, historyId, attemptKind, chatData: doc0 });
+      return runWebtoonOnce(job, { config, chat, messages, target, view, content, historyId, attemptKind, chatData: doc0, manga: runSettings.comicFormat === "manga" });
     const split = runSettings.analysisMode === "split" && !opts.revision;
     const countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
     if (attemptKind !== "retry")
@@ -66993,7 +67876,8 @@ function createChatPipelineController(services, engine, options = {}) {
       setPhase(job, p.stage, { imageIndex: p.done ?? 0, imageCount: total });
     if (p.stage !== "planning")
       job.snapshot.completedSlots = p.done ?? 0;
-    const label = p.stage === "planning" ? WEBTOON_TEXT.planning : p.stage === "generating" ? formatLabel(WEBTOON_TEXT.panel, { n: (p.done ?? 0) + 1, total }) : WEBTOON_TEXT.finishing;
+    const text = p.manga ? MANGA_TEXT : WEBTOON_TEXT;
+    const label = p.stage === "planning" ? text.planning : p.stage === "generating" ? formatLabel(text.panel, { n: (p.done ?? 0) + 1, total }) : text.finishing;
     job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
     job.snapshot.requestedCount = total;
     emitProgress(job);
@@ -67016,6 +67900,7 @@ function createChatPipelineController(services, engine, options = {}) {
       signal: job.controller.signal,
       assertTarget: targetGuard(job.target),
       resume: input.attemptKind === "retry",
+      format: input.manga ? "manga" : "webtoon",
       onProgress: (p) => webtoonProgress(job, p),
       onChanged: () => emitChanged(chatId, [job.planKey])
     });
@@ -67030,7 +67915,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const { chatId } = job.target;
     try {
       setPhase(job, "generating", { imageIndex: 0, imageCount: 1 });
-      const label = formatLabel(WEBTOON_TEXT.reroll, { n: job.webtoonPanel });
+      const label = formatLabel(job.webtoonManga ? MANGA_TEXT.reroll : WEBTOON_TEXT.reroll, { n: job.webtoonPanel });
       job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
       emitProgress(job);
       const historyId = job.planKey.replace(/^illustration:/u, "");
@@ -68186,6 +69071,8 @@ function createChatPipelineController(services, engine, options = {}) {
       const config = await services.storage.loadConfig();
       const job = createJob({ target, planKey: messageKey, kind: "regenerate", attemptKind: "regenerate", slotId, requestedCount: 1 });
       job.webtoonPanel = panelId;
+      if (doc.format === "manga")
+        job.webtoonManga = true;
       slotJobs.set(slotKey, job);
       emitProgress(job);
       job.done = runWebtoonReroll(job, config);
@@ -70589,7 +71476,7 @@ function createRunLog(options = {}) {
 
 // src/backend/services/sources.ts
 var SOURCES_CACHE_TTL_MS = 30000;
-var PAGE = 200;
+var PAGE2 = 200;
 var IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "avif"]);
 var UUID_RE2 = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu;
 var CHARACTER_WORDS = ["character", "profile", "identity", "persona", "appearance", "personality", "speech", "body", "face", "hair", "eyes"];
@@ -70787,11 +71674,11 @@ function createSourcesService(deps) {
   }
   async function paged(load) {
     const out = [];
-    for (let offset = 0;offset < 1e5; offset += PAGE) {
+    for (let offset = 0;offset < 1e5; offset += PAGE2) {
       const page = await load(offset);
       const data = asArray2(page?.data);
       out.push(...data);
-      if (data.length < PAGE || out.length >= Number(page?.total ?? 0))
+      if (data.length < PAGE2 || out.length >= Number(page?.total ?? 0))
         break;
     }
     return out;
@@ -70860,7 +71747,7 @@ function createSourcesService(deps) {
         const dto = asRecord3(await host.world_books.get(worldBookId, userId));
         if (!str7(dto.id))
           return null;
-        const raw = await paged((offset) => host.world_books.entries.list(worldBookId, { limit: PAGE, offset, ...userId ? { userId } : {} }));
+        const raw = await paged((offset) => host.world_books.entries.list(worldBookId, { limit: PAGE2, offset, ...userId ? { userId } : {} }));
         const entries = raw.map((e) => {
           const r = asRecord3(e);
           return {
@@ -70906,7 +71793,7 @@ function createSourcesService(deps) {
   }
   const service = {
     async listCharacters() {
-      const list = await cached("characters", () => paged((offset) => host.characters.list({ limit: PAGE, offset, ...userId ? { userId } : {} })));
+      const list = await cached("characters", () => paged((offset) => host.characters.list({ limit: PAGE2, offset, ...userId ? { userId } : {} })));
       const rows = list.map((c) => asRecord3(c));
       return mapLimit(rows, 8, async (dto) => {
         const characterId = str7(dto.id);
@@ -70971,7 +71858,7 @@ function createSourcesService(deps) {
       const connected = new Set(document2.characterPrompt.activeModules[characterId] ?? []);
       const out = books.map((b) => ({ worldBookId: b.worldBookId, name: b.name, attached: b.scope === "character", connected: b.scope === "character" || connected.has(b.worldBookId), entryCount: b.entries.length, scope: b.scope }));
       try {
-        const all = await cached("worldbooks", () => paged((offset) => host.world_books.list({ limit: PAGE, offset, ...userId ? { userId } : {} })));
+        const all = await cached("worldbooks", () => paged((offset) => host.world_books.list({ limit: PAGE2, offset, ...userId ? { userId } : {} })));
         for (const raw of all) {
           const dto = asRecord3(raw);
           const id = str7(dto.id);
@@ -71060,7 +71947,7 @@ function createSourcesService(deps) {
     },
     async listPersonas() {
       try {
-        const list = await cached("personas", () => paged((offset) => host.personas.list({ limit: PAGE, offset, ...userId ? { userId } : {} })));
+        const list = await cached("personas", () => paged((offset) => host.personas.list({ limit: PAGE2, offset, ...userId ? { userId } : {} })));
         return list.map((p) => toPersonaInfo(asRecord3(p)));
       } catch (error) {
         throw new RpcFailure({ code: "provider-error", message: `Could not list personas: ${errorMessage(error)}`, retryable: true });
@@ -71126,7 +72013,7 @@ function createSourcesService(deps) {
           add("risu-asset", str7(imageId), assetName);
         if (options.includeGenerated !== false) {
           try {
-            const generated = await paged((offset) => host.images.list({ characterId, onlyOwned: true, limit: PAGE, offset, ...userId ? { userId } : {} }));
+            const generated = await paged((offset) => host.images.list({ characterId, onlyOwned: true, limit: PAGE2, offset, ...userId ? { userId } : {} }));
             for (const raw of generated) {
               const img = asRecord3(raw);
               add("generated", str7(img.id), str7(img.original_filename) || str7(img.id), { mime: str7(img.mime_type), width: Number(img.width) || null, height: Number(img.height) || null, generated: true });

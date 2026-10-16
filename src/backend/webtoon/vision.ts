@@ -52,8 +52,11 @@ function describe(member: CastIdentity) {
   return { noun, named: `${noun} (${member.name})${appearance ? ` with ${appearance}` : ""}` };
 }
 
-/** Bench `identity_questions`: species for anthro characters; a single hair colour (two colours can't be checked one by one) and glasses for humans. */
-function identityQuestions(member: CastIdentity, c: StoryCharacter, count: number, noun: string): Array<[string, string]> {
+/**
+ * Bench `identity_questions`: species for anthro characters; a single hair colour (two colours can't be checked one by one) and glasses for humans.
+ * `mono` (manga pages in greyscale): no hair colour, and no glasses (dark eye shading read as glasses in the manga prototype).
+ */
+function identityQuestions(member: CastIdentity, c: StoryCharacter, count: number, noun: string, mono: boolean): Array<[string, string]> {
   if (!member.identity || NO_FACE.has(c.framing)) return [];
   const where = count > 1 ? WHERE[String(c.x)] ?? "" : "";
   const who = `the ${noun}${where ? ` ${where}` : ""}`;
@@ -61,6 +64,7 @@ function identityQuestions(member: CastIdentity, c: StoryCharacter, count: numbe
     return [["species", `Is ${who} in \`image\` drawn as a furry anthropomorphic animal (${speciesName(member.identity)}) with a full animal head, a muzzle and fur over the whole body, rather than a human girl or man with animal ears?`]];
   }
   const out: Array<[string, string]> = [];
+  if (mono) return out;
   const colours = tags(member.identity).filter((t) => HAIR_COLOR.test(t));
   if (colours.length === 1) out.push([`hair:${colours[0]}`, `Does ${who} in \`image\` have ${colours[0]}?`]);
   if (tags(member.identity).includes("glasses") && ["portrait", "upper body", "cowboy shot"].includes(c.framing)) out.push(["glasses", `Is ${who} in \`image\` wearing glasses?`]);
@@ -73,7 +77,7 @@ interface PanelQuestions {
   identity: Array<{ name: string; check: string; key: string }>;
 }
 
-export function panelQuestions(panel: ImagePanel, cast: readonly CastIdentity[]): PanelQuestions {
+export function panelQuestions(panel: ImagePanel, cast: readonly CastIdentity[], mono = false): PanelQuestions {
   const members = new Map(cast.map((m) => [m.name, m]));
   const chars = panel.nai.characters.filter((c) => members.has(c.name));
   const out: PanelQuestions = { questions: {}, faces: [], identity: [] };
@@ -85,7 +89,7 @@ export function panelQuestions(panel: ImagePanel, cast: readonly CastIdentity[])
       out.questions[`face${i}`] = { type: "box", instructions: `the face of the ${named} in \`image\`` };
       out.faces.push({ name: c.name, face: `face${i}`, present: `present${i}` });
     }
-    identityQuestions(member, c, chars.length, noun).forEach(([check, text], j) => {
+    identityQuestions(member, c, chars.length, noun, mono).forEach(([check, text], j) => {
       out.questions[`id${i}_${j}`] = { type: "noul", instructions: text };
       out.identity.push({ name: c.name, check, key: `id${i}_${j}` });
     });
@@ -124,9 +128,9 @@ export function readPanelCheck(q: PanelQuestions, model: string, answers: Record
 /** One check of a stored panel image. Null when there is nothing to ask or on any error (logged; the layout uses coordinates). */
 export async function checkPanel(
   services: BackendServices,
-  input: { connectionId: string; imageId: string; panel: ImagePanel; cast: readonly CastIdentity[]; signal: AbortSignal },
+  input: { connectionId: string; imageId: string; panel: ImagePanel; cast: readonly CastIdentity[]; signal: AbortSignal; mono?: boolean },
 ): Promise<WebtoonPanelCheck | null> {
-  const q = panelQuestions(input.panel, input.cast);
+  const q = panelQuestions(input.panel, input.cast, input.mono);
   if (!Object.keys(q.questions).length) return null;
   try {
     const res = await services.decisions.evaluateImages(
@@ -148,7 +152,8 @@ export function boostedRequest(request: PanelRequest, cast: readonly CastIdentit
     const m = members.get(name);
     if (!m?.identity) return prompt;
     const from = identityPrompt(m);
-    return prompt.startsWith(from) ? identityPrompt(m, ID_BOOST) + prompt.slice(from.length) : prompt;
+    const at = prompt.indexOf(from); // after "monochrome, greyscale, " on manga pages in greyscale
+    return at >= 0 ? prompt.slice(0, at) + identityPrompt(m, ID_BOOST) + prompt.slice(at + from.length) : prompt;
   };
   const visible = request.characters.flatMap((c) => members.get(c.name) ?? []);
   const species = visible.length === request.characters.length ? furryBaseTag(visible) : "";

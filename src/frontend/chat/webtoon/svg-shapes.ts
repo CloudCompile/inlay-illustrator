@@ -19,7 +19,9 @@ function ellipsePt(cx: number, cy: number, rx: number, ry: number, ang: number):
   return [cx + rx * Math.cos(ang), cy + ry * Math.sin(ang)];
 }
 
-export function speechShapes(cx: number, cy: number, rx: number, ry: number, tail: Point | null, shout: boolean): BalloonShapes {
+/** `whisper`: dashed outline (manga lettering). */
+export function speechShapes(cx: number, cy: number, rx: number, ry: number, tail: Point | null, shout: boolean, whisper = false): BalloonShapes {
+  const stroke: Record<string, string | number> = whisper ? { stroke: "#111", "stroke-width": 3, "stroke-dasharray": "10 7" } : { stroke: "#111", "stroke-width": 5 };
   let body: SvgShape;
   if (shout) {
     // 44-point burst: alternating outer/inner radius
@@ -42,10 +44,10 @@ export function speechShapes(cx: number, cy: number, rx: number, ry: number, tai
     const b1 = ellipsePt(cx, cy, rx * 0.92, ry * 0.92, ang - 0.2);
     const b2 = ellipsePt(cx, cy, rx * 0.92, ry * 0.92, ang + 0.2);
     const points = pts([b1, tail, b2]);
-    outline.push({ tag: "polygon", attrs: { points, fill: "#fff", stroke: "#111", "stroke-width": 5, "stroke-linejoin": "round" } });
+    outline.push({ tag: "polygon", attrs: { points, fill: "#fff", ...stroke, "stroke-linejoin": "round" } });
     fill.push({ tag: "polygon", attrs: { points, fill: "#fff" } });
   }
-  outline.push({ tag: body.tag, attrs: { ...body.attrs, fill: "#fff", stroke: "#111", "stroke-width": 5 } });
+  outline.push({ tag: body.tag, attrs: { ...body.attrs, fill: "#fff", ...stroke } });
   fill.push({ tag: body.tag, attrs: { ...body.attrs, fill: "#fff" } });
   return { outline, fill };
 }
@@ -71,7 +73,7 @@ export function thoughtShapes(cx: number, cy: number, rx: number, ry: number, ta
 export function balloonShapes(item: BalloonItem): BalloonShapes {
   return item.kind === "thought"
     ? thoughtShapes(item.cx, item.cy, item.rx, item.ry, item.tail)
-    : speechShapes(item.cx, item.cy, item.rx, item.ry, item.tail, item.shout);
+    : speechShapes(item.cx, item.cy, item.rx, item.ry, item.tail, item.shout, item.whisper);
 }
 
 /** SVG markup for one shape (attribute values are numbers or fixed strings, nothing to escape). */

@@ -11,8 +11,9 @@ import {
 } from "../../shared/contract/chat.js";
 import { maxSplitBatchSize, SPLIT_ANALYSIS_MAX_TOTAL, type ChatImageGenerationSettings } from "../../shared/contract/config.js";
 
-/** "webtoon": experimental webtoon mode, the backend picks the count from the message length. */
-export type CountMode = "fixed" | "range" | "split" | "webtoon";
+/** "webtoon" / "manga": experimental comic modes, the backend picks the panel count from the message length. */
+export type CountMode = "fixed" | "range" | "split" | "webtoon" | "manga";
+export const isComicMode = (mode: CountMode) => mode === "webtoon" || mode === "manga";
 
 export const COUNT_ACTIONS = [
   "toggle-auto",
@@ -20,6 +21,7 @@ export const COUNT_ACTIONS = [
   "select-range",
   "select-split",
   "select-webtoon",
+  "select-manga",
   "fixed-decrement",
   "fixed-increment",
   "min-decrement",
@@ -65,7 +67,7 @@ function clamp(value: number, min: number, max: number): number {
 export function countView(settings: ChatImageGenerationSettings, limits: CountLimits): CountView {
   const policy = normalizeCountPolicy(settings.countPolicy, 1, limits.maximumCount);
   const values = policy.values ?? { fixed: policy.max, min: policy.min, max: policy.max };
-  const mode: CountMode = settings.webtoonMode ? "webtoon" : settings.analysisMode === "split" && limits.splitSupported ? "split" : policy.mode;
+  const mode: CountMode = settings.webtoonMode ? (settings.comicFormat === "manga" ? "manga" : "webtoon") : settings.analysisMode === "split" && limits.splitSupported ? "split" : policy.mode;
   const totalCap = SPLIT_ANALYSIS_MAX_TOTAL;
   const total = clamp(settings.splitAnalysis.totalCount ?? Math.min(limits.maximumCount, policy.max), 1, totalCap);
   const batchCap = maxSplitBatchSize(total);
@@ -89,9 +91,10 @@ export function countView(settings: ChatImageGenerationSettings, limits: CountLi
   };
 }
 
-/** Text on the collapsed toggle: "N", "min–max", the split total, or "W" (webtoon: automatic count). */
+/** Text on the collapsed toggle: "N", "min–max", the split total, "W" (webtoon) or "M" (manga: automatic count). */
 export function countToggleText(view: CountView): string {
   if (view.mode === "webtoon") return "W";
+  if (view.mode === "manga") return "M";
   if (view.mode === "range") return `${view.min}–${view.max}`;
   if (view.mode === "split") return String(view.total);
   return String(view.fixed);
@@ -129,8 +132,13 @@ export function applyCountAction(settings: ChatImageGenerationSettings, action: 
       const total = view.total;
       return { ...settings, analysisMode: "split", splitAnalysis: { totalCount: total, batchSize: clamp(settings.splitAnalysis.batchSize, 1, maxSplitBatchSize(total)) }, webtoonMode: false };
     }
-    case "select-webtoon":
-      return view.mode === "webtoon" ? null : { ...settings, webtoonMode: true };
+    case "select-webtoon": {
+      if (view.mode === "webtoon") return null;
+      const { comicFormat: _manga, ...rest } = settings;
+      return { ...rest, webtoonMode: true };
+    }
+    case "select-manga":
+      return view.mode === "manga" ? null : { ...settings, webtoonMode: true, comicFormat: "manga" };
     case "fixed-decrement":
     case "fixed-increment": {
       const next = step("fixed", action === "fixed-increment" ? 1 : -1);

@@ -78,6 +78,14 @@ export const WEBTOON_TEXT = Object.freeze({
   busy: { en: "This panel is already being redrawn.", ko: "이 컷은 이미 다시 그리는 중입니다." },
 } satisfies Record<string, Label>);
 
+/** Manga mode progress (same steps as the webtoon). */
+export const MANGA_TEXT = Object.freeze({
+  planning: { en: "Manga: planning the pages", ko: "만화: 페이지 구성 중" },
+  panel: { en: "Manga: drawing panel {n} of {total}", ko: "만화: {total}컷 중 {n}컷 그리는 중" },
+  finishing: { en: "Manga: finishing", ko: "만화: 마무리 중" },
+  reroll: { en: "Manga: redrawing panel {n}", ko: "만화: {n}컷 다시 그리는 중" },
+} satisfies Record<string, Label>);
+
 export function formatLabel(label: Label, values: Record<string, string | number> = {}): Label {
   const fill = (s: string) => s.replace(/\{(\w+)\}/gu, (_m, k: string) => String(values[k] ?? `{${k}}`));
   return { en: fill(label.en), ko: fill(label.ko) };

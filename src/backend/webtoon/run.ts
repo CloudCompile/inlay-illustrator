@@ -7,7 +7,7 @@
  * face boxes are stored on the take, and a failed identity check gets one redraw (new seed, boosted identity tags),
  * drawn in the same sequential queue; the better-scoring take is shown.
  */
-import { rpcError, type ChatDataDocument, type InlayConfig, type RpcError, type WebtoonPanelCheck, type WebtoonPanelTake, type WebtoonStripView } from "../../shared/contract/index.js";
+import { rpcError, type ChatDataDocument, type ComicFormat, type InlayConfig, type RpcError, type WebtoonPanelCheck, type WebtoonPanelTake, type WebtoonStripView } from "../../shared/contract/index.js";
 import { isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
 import type { EnginePort } from "../pipeline/engine-port.js";
@@ -15,6 +15,9 @@ import { base64ToBytes, buildNovelAIRequest, bytesToBase64 } from "../pipeline/p
 import type { ChatMessageView } from "../pipeline/host-chat.js";
 import { buildPlannerPrompt, chosenOutfits, webtoonPanelRange, webtoonPanelTarget } from "./planner-prompt.js";
 import { buildPanelRequest, CUTOUT_NEGATIVE, engineImageRequest, type PanelRequest, type WebtoonStyle } from "./panel-request.js";
+import { buildMangaPlannerPrompt } from "./manga-planner-prompt.js";
+import { isMonochromeStyle, monoCast, monoPanel, stripColours, withMonoTags } from "./manga-style.js";
+import { mangaHardOk, validateMangaStoryboard } from "./manga-validate.js";
 import { castFor, loadWebtoonContext, validationRoster } from "./roster.js";
 import { characterGrid, decodePng, encodePng, flattenOver, frameBreakInputs, type RgbaImage } from "./cutout.js";
 import type { ImagePanel } from "./storyboard-schema.js";
@@ -43,6 +46,8 @@ export interface WebtoonDeps {
 
 export interface WebtoonProgress {
   stage: "planning" | "generating" | "committing";
+  /** Manga pages (toast wording). */
+  manga?: boolean;
   /** Panels finished / total (generating). */
   done?: number;
   total?: number;
@@ -68,6 +73,8 @@ export interface WebtoonRunRequest {
   onChanged: () => void;
   /** Retry: keep the stored storyboard and draw only the panels without an image. */
   resume?: boolean;
+  /** Manga pages instead of the webtoon strip (a retry keeps the stored strip's format). */
+  format?: ComicFormat;
 }
 
 export interface WebtoonRunResult {
@@ -202,7 +209,7 @@ async function drawPanel(deps: WebtoonDeps, input: PanelInput): Promise<WebtoonP
   return generatePanel(deps, input);
 }
 
-async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; max: number }, signal: AbortSignal): Promise<{ raw: unknown; model: string; calls: PlannerCall[] }> {
+async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; max: number }, signal: AbortSignal, manga = false): Promise<{ raw: unknown; model: string; calls: PlannerCall[] }> {
   const calls: PlannerCall[] = [];
   let model = "";
   for (let attempt = 0; attempt < MAX_PLANNER_CALLS; attempt += 1) {
@@ -214,7 +221,7 @@ async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; ma
         { signal },
       );
       model = result.model;
-      const ok = hardOk(result.parsed, images);
+      const ok = manga ? mangaHardOk(result.parsed, images) : hardOk(result.parsed, images);
       calls.push({ ms: result.latencyMs, finishReason: result.finishReason, parsed: true, hardOk: ok });
       if (ok) return { raw: result.parsed, model, calls };
     } catch (error) {
@@ -234,6 +241,8 @@ interface VisionRun {
   deps: WebtoonDeps;
   connectionId: string;
   cast: CastIdentity[];
+  /** Manga in greyscale: no hair colour / glasses checks. */
+  mono: boolean;
   chatId: string;
   historyId: string;
   signal: AbortSignal;
@@ -257,7 +266,7 @@ async function visionRun(deps: WebtoonDeps, config: InlayConfig, run: Omit<Visio
  */
 async function checkTake(v: VisionRun, panel: ImagePanel, take: WebtoonPanelTake, redrawOf?: { imageId: string; score: number }): Promise<WebtoonPanelCheck | null> {
   const { services } = v.deps;
-  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal });
+  const check = await checkPanel(services, { connectionId: v.connectionId, imageId: take.imageId, panel, cast: v.cast, signal: v.signal, mono: v.mono });
   if (!check) return null;
   const id = String(panel.id);
   const chosen = !!redrawOf && check.score > redrawOf.score;
@@ -318,31 +327,38 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
     return doc;
   };
   let doc: WebtoonStripDocument | null = null;
+  let manga = req.format === "manga";
   try {
     await requireNovelAI(services);
-    req.onProgress({ stage: "planning" });
     const previous = await readStrip(services.storage, req.chatId, req.historyId);
+    const resume = req.resume && previous?.storyboard && previous.style && Object.keys(previous.requests).length;
+    if (resume) manga = previous!.format === "manga";
+    req.onProgress({ stage: "planning", manga });
     let style: WebtoonStyle;
     let characterId: string;
-    if (req.resume && previous?.storyboard && previous.style && Object.keys(previous.requests).length) {
+    if (resume) {
       // Retry: keep the storyboard, draw only the panels without an image.
-      style = previous.style;
-      characterId = previous.characterId;
+      style = previous!.style!;
+      characterId = previous!.characterId;
       doc = await write((d) => {
         d.status = "generating";
         delete d.error;
       });
     } else {
-      const context = await loadWebtoonContext(services, { ...req });
+      const context = await loadWebtoonContext(services, { ...req, format: manga ? "manga" : "webtoon" });
       style = context.style;
       characterId = context.characterId;
+      // Manga follows the artist style's colour: a greyscale / monochrome style strips colour words from every prompt part.
+      const mono = manga && isMonochromeStyle(style.style);
       doc = await write((d) => {
         Object.assign(d, createStripDocument({ chatId: req.chatId, messageKey: req.planKey, historyId: req.historyId, characterId, sourceLength: req.source.length, now: now(), revision: previous?.revision ?? 0 }));
+        if (manga) Object.assign(d, { format: "manga", mono });
       });
       let planned: Awaited<ReturnType<typeof plan>>;
       try {
         const panels = webtoonPanelTarget(req.source.length);
-        planned = await plan(deps, buildPlannerPrompt({ roster: context.roster, source: req.source, panels }), webtoonPanelRange(panels), req.signal);
+        const prompt = manga ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono }) : buildPlannerPrompt({ roster: context.roster, source: req.source, panels });
+        planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
       } catch (error) {
         const meta = error as { calls?: PlannerCall[]; model?: string };
         if (meta.calls) await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls! }));
@@ -351,18 +367,20 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
       await req.assertTarget();
       const outfitLog: string[] = [];
       const outfits = chosenOutfits(planned.raw, context.roster, outfitLog);
-      const validated = validateStoryboard(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
+      const validate = manga ? validateMangaStoryboard : validateStoryboard;
+      const validated = validate(structuredClone(planned.raw), validationRoster(context.roster, outfits), req.source);
       validated.log.unshift(...outfitLog);
-      const cast = castFor(context.roster, outfits);
+      const cast = mono ? monoCast(castFor(context.roster, outfits)) : castFor(context.roster, outfits);
       const planImages = validated.storyboard.panels.filter((p): p is ImagePanel => p.kind === "image");
+      const request = (p: ImagePanel) => (mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style));
       doc = await write((d) => {
         d.planner = { model: planned.model, calls: planned.calls };
         d.storyboardRaw = planned.raw;
         d.storyboard = validated.storyboard;
         d.validation = { log: validated.log, stats: validated.stats };
-        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: r.identity }));
+        d.cast = context.roster.map((r) => ({ name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity }));
         d.style = context.style;
-        d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), buildPanelRequest(p, cast, context.style)]));
+        d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
         d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
         d.status = "generating";
       });
@@ -372,7 +390,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
     const todo = images.filter((p) => doc!.panels[String(p.id)]?.status !== "done");
 
     // Vision checks run in the background while the next panel draws; identity redraws join the sequential NovelAI queue.
-    const vision = await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged });
+    const vision = await visionRun(deps, req.config, { cast: doc.cast, mono: !!doc.mono, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged });
     const background = new Set<Promise<unknown>>();
     const redraws: Array<() => Promise<void>> = [];
     const inBackground = (work: Promise<unknown>) => {
@@ -397,7 +415,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
     for (const [index, panel] of todo.entries()) {
       if (req.signal.aborted) throw aborted();
       const id = String(panel.id);
-      req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length });
+      req.onProgress({ stage: "generating", done: images.length - todo.length + index, total: images.length, manga });
       try {
         const input: PanelInput = { request: requests[id]!, style, seed: "", chatId: req.chatId, characterId, config: req.config, signal: req.signal };
         const take = await drawPanel(deps, input);
@@ -425,7 +443,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
       await Promise.all([...background]);
       await drainRedraws();
     }
-    req.onProgress({ stage: "committing", done: images.length - failed, total: images.length });
+    req.onProgress({ stage: "committing", done: images.length - failed, total: images.length, manga });
     const error = failed ? rpcError("provider-error", `${failed} webtoon panel(s) failed to generate.`, { retryable: true }) : undefined;
     await write((d) => {
       d.status = failed ? "error" : "complete";
@@ -468,7 +486,7 @@ export async function rerollWebtoonPanel(
   req.onChanged();
   // Same vision check as a strip run, awaited here (one panel): face boxes, and one identity redraw when the check fails.
   const panel = doc.storyboard?.panels.find((p): p is ImagePanel => p.kind === "image" && String(p.id) === req.panelId);
-  const vision = panel ? await visionRun(deps, req.config, { cast: doc.cast, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged }) : null;
+  const vision = panel ? await visionRun(deps, req.config, { cast: doc.cast, mono: !!doc.mono, chatId: req.chatId, historyId: req.historyId, signal: req.signal, onChanged: req.onChanged }) : null;
   if (vision && panel) {
     const check = await checkTake(vision, panel, take);
     if (check?.failed.length) {

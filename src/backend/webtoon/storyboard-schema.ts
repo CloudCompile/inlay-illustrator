@@ -2,6 +2,8 @@
 // Storyboard schema for the webtoon planner (pure module: types, constants, JSON schema; no IO).
 
 export const IMAGE_SIZES = ["832x1216", "704x1472", "1024x1024", "1216x832", "1472x704"] as const;
+/** Manga: the NovelAI size closest to the page cell (Opus free sizes, area <= 1024 x 1024). */
+export const MANGA_SIZES = ["1600x640", "1472x704", "1216x832", "1024x1024", "832x1216", "704x1472", "640x1600"] as const;
 export const PORTRAIT_SIZES = ["832x1216", "704x1472"];
 export const LAYOUTS = ["title", "full_width", "inset_left", "inset_right", "wide_band", "tight_crop", "fade_white", "text_on_white"] as const;
 export const BEATS = ["title", "establishing", "action", "dialogue", "reaction", "insert", "quiet"] as const;
@@ -10,7 +12,8 @@ export const FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", 
 export const TEXT_TYPES = ["speech", "thought", "narration", "sfx"] as const;
 export const GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
 
-export type ImageSize = (typeof IMAGE_SIZES)[number];
+export type ImageSize = (typeof IMAGE_SIZES)[number] | (typeof MANGA_SIZES)[number];
+export type Importance = "small" | "normal" | "big";
 export type Layout = (typeof LAYOUTS)[number];
 export type Beat = (typeof BEATS)[number];
 export type Anchor = (typeof ANCHORS)[number];
@@ -32,6 +35,8 @@ export interface TextItem {
   speaker: string | null;
   text: string;
   anchor: Anchor;
+  /** Manga: a shouted line (burst balloon) or a whisper (dashed balloon). */
+  tone?: "shout" | "whisper";
 }
 
 export interface ImagePanel {
@@ -46,6 +51,8 @@ export interface ImagePanel {
   balloon_space?: string;
   /** Inlay: the character pops out over the top of the frame (cut-out + inpainted background); kept by the validator on 1-2 eligible panels. */
   frame_break?: boolean;
+  /** Manga: panel size on the page (code picks the page template and the image size from it). */
+  importance?: Importance;
   nai: { base: string; characters: StoryCharacter[] };
   text: TextItem[];
 }
@@ -67,6 +74,13 @@ export interface Storyboard {
   title: string;
   key_props?: string[];
   panels: Panel[];
+  /** Manga: page templates and the image panel ids on each page, in reading order. */
+  pages?: MangaPage[];
+}
+
+export interface MangaPage {
+  template: string;
+  panels: number[];
 }
 
 /** Roster entry the planner sees: names, short labels and outfit items (never identity/body tags). */

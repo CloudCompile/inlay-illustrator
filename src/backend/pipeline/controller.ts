@@ -94,7 +94,7 @@ import {
   type RevisionInput,
 } from "./generate.js";
 import { HostGenerationTracker, isIllustratableMessage, loadMessages, swipeContent, writeSwipeContent, type ChatMessageView } from "./host-chat.js";
-import { formatLabel, labelError, phaseProgress, PIPELINE_TEXT, WEBTOON_TEXT, type Label } from "./labels.js";
+import { formatLabel, labelError, MANGA_TEXT, phaseProgress, PIPELINE_TEXT, WEBTOON_TEXT, type Label } from "./labels.js";
 import { bakeMessage, messageSlots, stripForInterceptor, type InterceptorMessage } from "./markup.js";
 import { readSidecar, sidecarPath, updateSidecar } from "./records.js";
 import { editWebtoonText, rerollWebtoonPanel, runWebtoonStrip, selectWebtoonTake, type WebtoonProgress } from "../webtoon/run.js";
@@ -187,6 +187,8 @@ interface JobRecord {
   revision?: RevisionInput;
   /** Webtoon panel reroll: panel id. */
   webtoonPanel?: string;
+  /** The reroll is a manga panel (toast wording). */
+  webtoonManga?: boolean;
   /** Failed attempts: whole-run auto retries (AM `fail` 115606, stage "분석·생성") and the current engine run. */
   retryErrors?: { run: readonly GenerationRetryError[]; engine: readonly GenerationRetryError[] };
   done: Promise<void>;
@@ -486,7 +488,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const settings =
       opts.settings ?? (attemptKind === "retry" && settingsSnapshots.has(skey) ? settingsSnapshots.get(skey)! : await services.storage.loadChatImageGenerationSettings());
     const runSettings: ChatImageGenerationSettings = opts.countPolicy ? { ...settings, countPolicy: opts.countPolicy } : settings;
-    if (runSettings.webtoonMode && !opts.revision) return runWebtoonOnce(job, { config, chat, messages, target, view, content, historyId, attemptKind, chatData: doc0 });
+    if (runSettings.webtoonMode && !opts.revision) return runWebtoonOnce(job, { config, chat, messages, target, view, content, historyId, attemptKind, chatData: doc0, manga: runSettings.comicFormat === "manga" });
     const split = runSettings.analysisMode === "split" && !opts.revision;
     const countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
     if (attemptKind !== "retry") analyzerCompleted.delete(skey);
@@ -686,7 +688,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
     if (p.stage === "planning") setPhase(job, "analyzing-preset", { imageCount: total });
     else setPhase(job, p.stage, { imageIndex: p.done ?? 0, imageCount: total });
     if (p.stage !== "planning") job.snapshot.completedSlots = p.done ?? 0;
-    const label = p.stage === "planning" ? WEBTOON_TEXT.planning : p.stage === "generating" ? formatLabel(WEBTOON_TEXT.panel, { n: (p.done ?? 0) + 1, total }) : WEBTOON_TEXT.finishing;
+    const text = p.manga ? MANGA_TEXT : WEBTOON_TEXT;
+    const label = p.stage === "planning" ? text.planning : p.stage === "generating" ? formatLabel(text.panel, { n: (p.done ?? 0) + 1, total }) : text.finishing;
     job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
     job.snapshot.requestedCount = total;
     emitProgress(job);
@@ -695,7 +698,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
   /** Webtoon mode: one strip for the message instead of the analyzer run (no plan / History / bake changes). */
   const runWebtoonOnce = async (
     job: JobRecord,
-    input: { config: InlayConfig; chat: ChatInfo; messages: ChatMessageView[]; target: number; view: ChatMessageView; content: string; historyId: string; attemptKind: AttemptKind; chatData: ChatDataDocument },
+    input: { config: InlayConfig; chat: ChatInfo; messages: ChatMessageView[]; target: number; view: ChatMessageView; content: string; historyId: string; attemptKind: AttemptKind; chatData: ChatDataDocument; manga: boolean },
   ): Promise<Outcome> => {
     const { chatId } = job.target;
     const characterId = await speakingCharacterId(services, input.chat, input.view);
@@ -716,6 +719,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
         signal: job.controller.signal,
         assertTarget: targetGuard(job.target),
         resume: input.attemptKind === "retry",
+        format: input.manga ? "manga" : "webtoon",
         onProgress: (p) => webtoonProgress(job, p),
         onChanged: () => emitChanged(chatId, [job.planKey]),
       },
@@ -730,7 +734,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const { chatId } = job.target;
     try {
       setPhase(job, "generating", { imageIndex: 0, imageCount: 1 });
-      const label = formatLabel(WEBTOON_TEXT.reroll, { n: job.webtoonPanel! });
+      const label = formatLabel(job.webtoonManga ? MANGA_TEXT.reroll : WEBTOON_TEXT.reroll, { n: job.webtoonPanel! });
       job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
       emitProgress(job);
       const historyId = job.planKey.replace(/^illustration:/u, "");
@@ -1853,6 +1857,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
       const config = await services.storage.loadConfig();
       const job = createJob({ target, planKey: messageKey, kind: "regenerate", attemptKind: "regenerate", slotId, requestedCount: 1 });
       job.webtoonPanel = panelId;
+      if (doc!.format === "manga") job.webtoonManga = true;
       slotJobs.set(slotKey, job);
       emitProgress(job);
       job.done = runWebtoonReroll(job, config);

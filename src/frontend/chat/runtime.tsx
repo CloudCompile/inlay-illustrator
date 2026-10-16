@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { ChatImageGenerationSettings, InlayConfig } from "../../shared/contract/config.js";
 import type { AppController } from "../state/app-state.js";
 import { useSelector } from "../state/store.js";
-import { applyCountAction, countLimits, countToggleText, countView, floatingStyle, normalizeFloatingPoint, type CountAction, type CountView } from "./count-model.js";
+import { applyCountAction, countLimits, countToggleText, countView, floatingStyle, isComicMode, normalizeFloatingPoint, type CountAction, type CountView } from "./count-model.js";
 import { COUNT_LABELS, ERROR_DIALOG_LABELS, fill, TOAST_LABELS } from "./labels.js";
 import type { ChatRuntimeStore } from "./runtime-store.js";
 import { buildToastStack, errorDetailText, errorLogText, hasErrorDetails, type RuntimeToastModel } from "./toast-model.js";
@@ -260,7 +260,7 @@ export function sceneOptions(config: InlayConfig): SceneOption[] {
   return comic ? [all[0]!, comic, ...all.slice(1).filter((o) => o.value !== "scene-comic")].filter(Boolean) : all;
 }
 
-const MODE_LABEL = { fixed: COUNT_LABELS.fixed, range: COUNT_LABELS.range, split: COUNT_LABELS.split, webtoon: COUNT_LABELS.webtoon } as const;
+const MODE_LABEL = { fixed: COUNT_LABELS.fixed, range: COUNT_LABELS.range, split: COUNT_LABELS.split, webtoon: COUNT_LABELS.webtoon, manga: COUNT_LABELS.manga } as const;
 
 function Stepper({ value, bounds, label, decLabel, incLabel, onStep }: { value: number; bounds: { min: number; max: number }; label: string; decLabel: string; incLabel: string; onStep: (delta: -1 | 1) => void }) {
   return (
@@ -291,8 +291,8 @@ function CountPanel({ app, settings, config, chatId, generateLatest, openOvervie
   const failedValue = useRef<ChatImageGenerationSettings | null>(null);
   const limits = countLimits(config.ui.developerModeEnabled, config.novelai.analysisProfile);
   const view: CountView = countView(settings, limits);
-  // Webtoon mode uses its own scene direction: the scene menu would be ignored.
-  const sceneAvailable = view.mode !== "webtoon" && config.novelai.analysisProfile === "v5-hybrid" && (config.novelai.v5UserDirections.scene.presets?.length ?? 0) > 0;
+  // Webtoon and manga modes use their own scene direction: the scene menu would be ignored.
+  const sceneAvailable = !isComicMode(view.mode) && config.novelai.analysisProfile === "v5-hybrid" && (config.novelai.v5UserDirections.scene.presets?.length ?? 0) > 0;
   const options = sceneAvailable ? sceneOptions(config) : [];
   const scene = config.novelai.v5UserDirections.scene;
   const sceneSelection = scene.selectedPresetId ?? scene.presets?.[0]?.id ?? "";
@@ -449,7 +449,7 @@ function CountPanel({ app, settings, config, chatId, generateLatest, openOvervie
           </button>
           {menu === "count" ? (
             <div class="ii-am-chat-count__menu ii-am-chat-count__mode-menu" role="menu" aria-label={COUNT_LABELS.modeMenu}>
-              {(["fixed", "range", "split", "webtoon"] as const).map((mode) => (
+              {(["fixed", "range", "split", "webtoon", "manga"] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -467,8 +467,8 @@ function CountPanel({ app, settings, config, chatId, generateLatest, openOvervie
           ) : null}
         </span>
         <span class="ii-am-chat-count__values">
-          {view.mode === "webtoon" ? (
-            <span class="ii-am-chat-count__note" title={COUNT_LABELS.webtoonNoteTitle}>{COUNT_LABELS.webtoonNote}</span>
+          {isComicMode(view.mode) ? (
+            <span class="ii-am-chat-count__note" title={view.mode === "manga" ? COUNT_LABELS.mangaNoteTitle : COUNT_LABELS.webtoonNoteTitle}>{COUNT_LABELS.webtoonNote}</span>
           ) : view.mode === "fixed" ? (
             <Stepper value={view.fixed} bounds={view.bounds.fixed} label={COUNT_LABELS.count} decLabel={COUNT_LABELS.countDecrease} incLabel={COUNT_LABELS.countIncrease} onStep={(d) => run(d > 0 ? "fixed-increment" : "fixed-decrement")} />
           ) : view.mode === "range" ? (

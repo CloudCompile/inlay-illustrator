@@ -6,7 +6,7 @@
  * next take arrows, in one row placed clear of text boxes (left edge first in the phone layout). Frame-break panels draw their character cut-out over the frame line.
  * Clicking a text item opens a small editor.
  */
-import { STRIP_WIDTH, type LaidItem, type PanelLayout, type SfxItem, type TitleItem, type WebtoonPanelState, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
+import { MANGA_PAGE_WIDTH, STRIP_WIDTH, type LaidItem, type PanelLayout, type Point, type SfxItem, type TitleItem, type WebtoonPanelState, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import { balloonShapes } from "./svg-shapes.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -36,9 +36,11 @@ function el<K extends keyof HTMLElementTagNameMap>(doc: Document, tag: K, classN
 
 /** The image of a panel (or its cut-out) at the panel's crop, drawn from the top-left of `panel.rect`. */
 function croppedImage(doc: Document, src: string, panel: PanelLayout): HTMLImageElement {
-  const w = panel.rect[2] - panel.rect[0];
+  const visW = (panel.rect[2] - panel.rect[0]) / Math.max(0.0001, panel.crop[2] - panel.crop[0]);
   const visH = (panel.rect[3] - panel.rect[1]) / Math.max(0.0001, panel.crop[3] - panel.crop[1]);
-  const img = el(doc, "img", "ii-wt-img", { width: px(w), height: px(visH), "margin-top": px(-panel.crop[1] * visH) });
+  const style: Record<string, string> = { width: px(visW), height: px(visH), "margin-top": px(-panel.crop[1] * visH) };
+  if (panel.crop[0]) style["margin-left"] = px(-panel.crop[0] * visW);
+  const img = el(doc, "img", "ii-wt-img", style);
   img.src = src;
   img.alt = "";
   img.draggable = false;
@@ -57,15 +59,22 @@ function panelImage(doc: Document, state: WebtoonPanelState | undefined, panel: 
 
 type TextItem = Exclude<LaidItem, TitleItem>;
 
+/** Manga items carry their text size (pages and the phone layout differ); webtoon items use the CSS size. */
+const fontStyle = (item: { fontSize?: number; lineHeight?: number }): Record<string, string> =>
+  item.fontSize ? { "font-size": px(item.fontSize), "line-height": px(item.lineHeight ?? item.fontSize * 1.2) } : {};
+
+/** Polygon (strip px) as a CSS clip-path relative to `rect`'s top-left. */
+const polygonClip = (poly: readonly Point[], rect: readonly number[]) => `polygon(${poly.map(([x, y]) => `${px(x - rect[0]!)} ${px(y - rect[1]!)}`).join(", ")})`;
+
 function textNode(doc: Document, item: TextItem, handlers: StripHandlers, label: string): HTMLElement {
   let node: HTMLElement;
   if (item.kind === "speech" || item.kind === "thought") {
     node = el(doc, "div", item.kind === "thought" ? "ii-wt-bt ii-wt-th" : "ii-wt-bt", {
-      left: px(item.cx - item.textW / 2 - 4), top: px(item.cy - item.textH / 2), width: px(item.textW + 8), height: px(item.textH),
+      left: px(item.cx - item.textW / 2 - 4), top: px(item.cy - item.textH / 2), width: px(item.textW + 8), height: px(item.textH), ...fontStyle(item),
     });
   } else if (item.kind === "narration") {
     const [x0, y0, x1, y1] = item.rect;
-    node = el(doc, "div", "ii-wt-narr", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) });
+    node = el(doc, "div", "ii-wt-narr", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0), ...fontStyle(item) });
   } else {
     const sfx = item as SfxItem;
     const w = sfx.rect[2] - sfx.rect[0];
@@ -88,7 +97,7 @@ function textNode(doc: Document, item: TextItem, handlers: StripHandlers, label:
 }
 
 /** Panel tool buttons, strip px (scaled with the strip). */
-export const TOOL_SIZE = { desktop: 36, narrow: 48, gap: 6, inset: 8 };
+export const TOOL_SIZE = { desktop: 36, narrow: 48, pages: 56, gap: 6, inset: 8 };
 
 type Box = [number, number, number, number];
 const overlaps = (a: Box, b: Box, pad: number) => a[0] < b[2] + pad && b[0] < a[2] + pad && a[1] < b[3] + pad && b[1] < a[3] + pad;
@@ -111,17 +120,36 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   const canvas = el(doc, "div", "ii-wt-canvas", { width: px(layout.width), height: px(layout.height) });
   canvas.setAttribute("data-ii-wt-revision", String(view.revision));
   if (layout.width < STRIP_WIDTH) canvas.setAttribute("data-ii-wt-narrow", "true");
+  const manga = layout.format === "manga";
+  const pages = manga && layout.width >= MANGA_PAGE_WIDTH;
+  if (manga) canvas.setAttribute("data-ii-wt-format", pages ? "manga-pages" : "manga");
+  if (layout.grey) canvas.setAttribute("data-ii-wt-grey", "true");
+  for (const [x0, y0, x1, y1] of layout.pages ?? []) canvas.appendChild(el(doc, "div", "ii-wt-page", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) }));
   for (const panel of layout.panels) {
     const [x0, y0, x1, y1] = panel.rect;
     const box = el(doc, "div", "ii-wt-panel", { left: px(x0), top: px(y0), width: px(x1 - x0), height: px(y1 - y0) });
     box.setAttribute("data-ii-wt-panel", String(panel.id));
     if (panel.fade) box.setAttribute("data-ii-wt-fade", panel.fade);
-    if (panel.frameBreak) {
+    if (panel.clip) box.style.setProperty("clip-path", polygonClip(panel.clip, panel.rect));
+    else if (panel.frameBreak) {
       const [fx0, fy0, fx1, fy1] = panel.frame;
       box.style.setProperty("clip-path", `inset(${px(fy0 - y0)} ${px(x1 - fx1)} ${px(y1 - fy1)} ${px(fx0 - x0)})`);
     }
     box.appendChild(panelImage(doc, view.panels[String(panel.id)], panel, opts));
     canvas.appendChild(box);
+  }
+  // Manga: black panel borders (below the frame-break cut-outs, which cross them)
+  if (manga) {
+    const frames = doc.createElementNS(SVG_NS, "svg");
+    frames.setAttribute("class", "ii-wt-frames");
+    for (const [k, v] of Object.entries({ width: layout.width, height: layout.height, viewBox: `0 0 ${layout.width} ${layout.height}` })) frames.setAttribute(k, String(v));
+    for (const panel of layout.panels) {
+      if (!panel.clip) continue;
+      const polygon = doc.createElementNS(SVG_NS, "polygon");
+      polygon.setAttribute("points", panel.clip.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" "));
+      frames.appendChild(polygon);
+    }
+    canvas.appendChild(frames);
   }
   // Frame-break: the character cut-out over its panel, clipped to the image rect only, so the head crosses the frame line.
   for (const panel of layout.panels) {
@@ -147,6 +175,13 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
     }
   }
   canvas.appendChild(svg);
+  if (layout.chapter) {
+    const { rect, small, big, fontSize } = layout.chapter;
+    const box = el(doc, "div", "ii-wt-chapter", { left: px(rect[0]), top: px(rect[1]), width: px(rect[2] - rect[0]), height: px(rect[3] - rect[1]), "font-size": px(fontSize) });
+    if (small) box.appendChild(Object.assign(el(doc, "div", "ii-wt-c1"), { textContent: small }));
+    box.appendChild(Object.assign(el(doc, "div", "ii-wt-c2"), { textContent: big }));
+    canvas.appendChild(box);
+  }
   for (const item of layout.items) {
     if (item.kind === "title") {
       const title = el(doc, "div", "ii-wt-title", { top: px(item.y), width: px(layout.width) });
@@ -159,8 +194,8 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   // Panel tools (reroll, take arrows) in one row, at the first frame spot clear of text boxes; the phone layout tries the left
   // edge first (Lumiverse's fixed side tabs cover the right edge there).
   const narrow = layout.width < STRIP_WIDTH;
-  const size = narrow ? TOOL_SIZE.narrow : TOOL_SIZE.desktop;
-  const textRects = layout.items.flatMap((item) => ("rect" in item ? [item.rect] : []));
+  const size = pages ? TOOL_SIZE.pages : narrow ? TOOL_SIZE.narrow : TOOL_SIZE.desktop;
+  const textRects = [...layout.items.flatMap((item) => ("rect" in item ? [item.rect] : [])), ...(layout.chapter ? [layout.chapter.rect] : [])];
   for (const panel of layout.panels) {
     const panelId = String(panel.id);
     const state = view.panels[panelId];

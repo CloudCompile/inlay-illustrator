@@ -156,6 +156,8 @@ export const COUNT_LABELS = {
   webtoon: "Webtoon", // 웹툰
   webtoonNote: "4–14 panels", // 4~14컷 (webtoon mode: follows the message length)
   webtoonNoteTitle: "Webtoon mode: one strip per message, about one panel per 1,000 characters (4 to 14).", // 웹툰 모드: 메시지마다 웹툰 한 편, 1,000자당 약 1컷(4~14컷).
+  manga: "Manga", // 만화
+  mangaNoteTitle: "Manga mode: manga pages per message, read right to left, about one panel per 1,000 characters (4 to 14).", // 만화 모드: 메시지마다 만화 페이지, 오른쪽에서 왼쪽으로, 1,000자당 약 1컷(4~14컷).
   splitUnsupported: "Split analysis is supported on V5. Select fixed or range.", // 분할 분석은 V5에서 지원합니다. 고정 또는 범위를 선택하세요.
   count: "Generation count", // 생성 장수
   countDecrease: "Decrease generation count", // 생성 장수 감소
