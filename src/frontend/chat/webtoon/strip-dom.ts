@@ -1,17 +1,18 @@
 /**
  * Live-DOM webtoon strip (experimental webtoon mode): layout JSON (src/backend/webtoon/layout.ts) -> absolutely
  * positioned panels, one SVG layer of balloon shapes, and real text on top (selectable, editable). Drawn at the
- * 690 px design width and scaled to the message width by the caller (`setStripScale`).
- * Per panel: reroll button; clicking a text item opens a small editor.
+ * layout width (`layout.width`, laid out for the shown width) and scaled to the frame width by the caller (`setStripScale`).
+ * Per panel, shown while the pointer is over that panel: reroll button and, when the panel has older takes, previous /
+ * next take arrows. Clicking a text item opens a small editor.
  */
 import type { LaidItem, PanelLayout, SfxItem, TitleItem, WebtoonPanelState, WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import { balloonShapes } from "./svg-shapes.js";
 
-export const STRIP_WIDTH = 690;
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 export interface StripHandlers {
   onReroll(panelId: string): void;
+  onSelectTake(panelId: string, take: number): void;
   onEditText(item: { panelId: string; textIndex: number; text: string }): void;
 }
 
@@ -20,7 +21,7 @@ export interface StripRenderOptions {
   busyPanels: ReadonlySet<string>;
   /** The whole strip job is running (no rerolls). */
   stripBusy: boolean;
-  labels: { reroll: string; drawing: string; failed: string; pending: string; edit: string };
+  labels: { reroll: string; previousTake: string; nextTake: string; drawing: string; failed: string; pending: string; edit: string };
 }
 
 const px = (n: number) => `${Math.round(n * 100) / 100}px`;
@@ -86,7 +87,7 @@ function textNode(doc: Document, item: TextItem, handlers: StripHandlers, label:
 export function renderStrip(doc: Document, view: WebtoonStripView, handlers: StripHandlers, opts: StripRenderOptions): HTMLElement | null {
   const layout = view.layout;
   if (!layout) return null;
-  const canvas = el(doc, "div", "ii-wt-canvas", { width: px(STRIP_WIDTH), height: px(layout.height) });
+  const canvas = el(doc, "div", "ii-wt-canvas", { width: px(layout.width), height: px(layout.height) });
   canvas.setAttribute("data-ii-wt-revision", String(view.revision));
   for (const panel of layout.panels) {
     const [x0, y0, x1, y1] = panel.rect;
@@ -102,9 +103,9 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   }
   const svg = doc.createElementNS(SVG_NS, "svg");
   svg.setAttribute("class", "ii-wt-balloons");
-  svg.setAttribute("width", String(STRIP_WIDTH));
+  svg.setAttribute("width", String(layout.width));
   svg.setAttribute("height", String(layout.height));
-  svg.setAttribute("viewBox", `0 0 ${STRIP_WIDTH} ${layout.height}`);
+  svg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
   for (const item of layout.items) {
     if (item.kind !== "speech" && item.kind !== "thought") continue;
     const shapes = balloonShapes(item);
@@ -117,7 +118,7 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   canvas.appendChild(svg);
   for (const item of layout.items) {
     if (item.kind === "title") {
-      const title = el(doc, "div", "ii-wt-title", { top: px(item.y) });
+      const title = el(doc, "div", "ii-wt-title", { top: px(item.y), width: px(layout.width) });
       if (item.small) title.appendChild(Object.assign(el(doc, "div", "ii-wt-t1"), { textContent: item.small }));
       title.appendChild(Object.assign(el(doc, "div", "ii-wt-t2"), { textContent: item.big }));
       title.appendChild(el(doc, "div", "ii-wt-bar"));
@@ -126,27 +127,58 @@ export function renderStrip(doc: Document, view: WebtoonStripView, handlers: Str
   }
   for (const panel of layout.panels) {
     const panelId = String(panel.id);
+    const state = view.panels[panelId];
+    const [fx0, fy0, fx1, fy1] = panel.frame;
+    const controls = el(doc, "div", "ii-wt-controls", { left: px(fx0), top: px(fy0), width: px(fx1 - fx0), height: px(fy1 - fy0) });
+    controls.setAttribute("data-ii-wt-controls", panelId);
+    const button = (className: string, label: string, text: string, disabled: boolean, onClick: () => void) => {
+      const node = el(doc, "button", className);
+      node.type = "button";
+      node.title = label;
+      node.setAttribute("aria-label", label);
+      node.disabled = disabled;
+      node.textContent = text;
+      node.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!node.disabled) onClick();
+      });
+      return controls.appendChild(node);
+    };
     const busy = opts.busyPanels.has(panelId);
-    const button = el(doc, "button", "ii-wt-reroll", { left: px(panel.frame[2] - 44), top: px(panel.frame[1] + 8) });
-    button.type = "button";
-    button.title = opts.labels.reroll;
-    button.setAttribute("aria-label", opts.labels.reroll);
-    button.setAttribute("data-ii-wt-reroll", panelId);
-    if (busy) button.setAttribute("data-ii-wt-busy", "true");
-    button.disabled = busy || opts.stripBusy || !view.panels[panelId];
-    button.textContent = "\u21bb";
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!button.disabled) handlers.onReroll(panelId);
-    });
-    canvas.appendChild(button);
+    const reroll = button("ii-wt-reroll", opts.labels.reroll, "\u21bb", busy || opts.stripBusy || !state, () => handlers.onReroll(panelId));
+    reroll.setAttribute("data-ii-wt-reroll", panelId);
+    if (busy) reroll.setAttribute("data-ii-wt-busy", "true");
+    const takes = state?.takes.length ?? 0;
+    if (state && takes > 1) {
+      const at = `${state.selected + 1}/${takes}`;
+      const locked = busy || opts.stripBusy;
+      button("ii-wt-take ii-wt-take--prev", `${opts.labels.previousTake} (${at})`, "\u2039", locked || state.selected <= 0, () => handlers.onSelectTake(panelId, state.selected - 1))
+        .setAttribute("data-ii-wt-take", "prev");
+      button("ii-wt-take ii-wt-take--next", `${opts.labels.nextTake} (${at})`, "\u203a", locked || state.selected >= takes - 1, () => handlers.onSelectTake(panelId, state.selected + 1))
+        .setAttribute("data-ii-wt-take", "next");
+    }
+    canvas.appendChild(controls);
   }
+  // Controls of the panel under the pointer (panel image, its text items, or the controls themselves).
+  let hovered: Element | null = null;
+  const hover = (next: Element | null) => {
+    if (next === hovered) return;
+    hovered?.removeAttribute("data-ii-wt-hover");
+    next?.setAttribute("data-ii-wt-hover", "true");
+    hovered = next;
+  };
+  canvas.addEventListener("pointerover", (event) => {
+    const hit = (event.target as Element | null)?.closest?.("[data-ii-wt-panel], [data-ii-wt-text], [data-ii-wt-controls]");
+    const id = hit?.getAttribute("data-ii-wt-panel") ?? hit?.getAttribute("data-ii-wt-controls") ?? hit?.getAttribute("data-ii-wt-text")?.split(":")[0];
+    hover(id ? canvas.querySelector(`[data-ii-wt-controls="${id}"]`) : null);
+  });
+  canvas.addEventListener("pointerleave", () => hover(null));
   return canvas;
 }
 
-/** Scale the 690 px canvas to the frame width (the frame keeps the aspect ratio through CSS). */
-export function setStripScale(frame: HTMLElement, canvas: HTMLElement): void {
-  const width = frame.clientWidth || STRIP_WIDTH;
-  canvas.style.transform = `scale(${Math.min(1.5, width / STRIP_WIDTH)})`;
+/** Scale the canvas (`layoutWidth` strip px) to the frame width (the frame keeps the aspect ratio through CSS). */
+export function setStripScale(frame: HTMLElement, canvas: HTMLElement, layoutWidth: number): void {
+  const width = frame.clientWidth || layoutWidth;
+  canvas.style.transform = `scale(${Math.min(1.5, width / layoutWidth)})`;
 }

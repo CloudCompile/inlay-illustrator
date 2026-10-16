@@ -83,8 +83,9 @@ describe("webtoon mode (controller over a fake engine)", () => {
     expect(strip.status).toBe("complete");
     expect(strip.cast).toEqual([{ name: "Shouta", key: "persona::persona-1", outfitId: "o2" }]);
     expect(Object.values(strip.panels).map((p) => [p.status, p.takes.length, p.selected])).toEqual(Array(6).fill(["done", 1, 0]));
-    expect(strip.layout!.panels.length).toBe(6);
-    expect(strip.layout!.items.map((i) => (i.kind === "title" ? `title:${i.big}` : i.text))).toEqual(["title:Late Again", "You're late again!", "Mr. Bob watched them from the window.", "tug"]);
+    const layout = (await pipeline.getWebtoon(CHAT_ID, "illustration:m1@0")).strip!.layout!;
+    expect([layout.width, layout.panels.length]).toEqual([690, 6]);
+    expect(layout.items.map((i) => (i.kind === "title" ? `title:${i.big}` : i.text))).toEqual(["title:Late Again", "You're late again!", "Mr. Bob watched them from the window.", "tug"]);
     expect(strip.validation!.log.some((l) => l.includes("I overslept"))).toBe(true);
     expect(fx.message("m1").content).toBe(STORY);
 
@@ -93,7 +94,7 @@ describe("webtoon mode (controller over a fake engine)", () => {
     pipeline.dispose();
   });
 
-  test("reroll adds a take as a regenerate job; text edits re-lay out the strip", async () => {
+  test("reroll adds a take as a regenerate job; older takes can be shown again; text edits re-lay out the strip", async () => {
     const { fx, engine, pipeline } = await setup();
     fx.llmReplies.push(STORYBOARD);
     const run = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
@@ -107,11 +108,15 @@ describe("webtoon mode (controller over a fake engine)", () => {
     const view = (await pipeline.getWebtoon(CHAT_ID, "illustration:m1@0")).strip!;
     expect(view.panels["2"]!.takes.length).toBe(2);
     expect(view.panels["2"]!.selected).toBe(1);
+    const back = (await pipeline.selectWebtoonTake({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", take: 0, width: 450 })).strip;
+    expect([back.panels["2"]!.selected, back.layout!.width]).toEqual([0, 450]);
+    expect((await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.panels["2"]!.selected).toBe(0);
+    await expect(pipeline.selectWebtoonTake({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", take: 2 })).rejects.toThrow();
 
     const edited = (await pipeline.editWebtoonText({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", textIndex: 0, text: "Late. Again." })).strip;
     const balloon = (s: typeof edited) => s.layout!.items.flatMap((i) => (i.kind === "speech" ? [i.text] : []))[0];
     expect(balloon(edited)).toBe("Late. Again.");
-    expect(edited.revision).toBeGreaterThan(view.revision);
+    expect(edited.revision).toBeGreaterThan(back.revision);
     const reverted = (await pipeline.editWebtoonText({ chatId: CHAT_ID, messageKey: "illustration:m1@0", panelId: "2", textIndex: 0, text: "You're late again!" })).strip;
     expect(balloon(reverted)).toBe("You're late again!");
     expect((await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!.textOverrides).toEqual({});

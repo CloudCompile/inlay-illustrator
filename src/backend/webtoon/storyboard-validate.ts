@@ -5,7 +5,7 @@ import {
   type Anchor, type ImagePanel, type Panel, type PlannerCharacter, type Storyboard, type TextBeatPanel, type TextItem,
 } from "./storyboard-schema.js";
 
-export const LIMITS = { minImages: 6, maxImages: 8, maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
+export const LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
 
 // ---------- quote check ----------
 export function normWords(s: string): string[] {
@@ -94,10 +94,11 @@ function splitLong(t: string): string[] {
 
 const snap = (v: unknown) => { const n = Number(v); const x = Number.isFinite(n) ? n : 0.5; return GRID.reduce((a, g) => (Math.abs(g - x) < Math.abs(a - x) ? g : a), GRID[0]); };
 
-export function hardOk(raw: any): boolean {
+/** Inlay: the accepted image panel count comes from the message length (`webtoonPanelRange`). */
+export function hardOk(raw: any, images: { min: number; max: number }): boolean {
   try {
     const imgs = raw.panels.filter((p: any) => p?.kind === "image");
-    return imgs.length >= LIMITS.minImages && imgs.length <= LIMITS.maxImages && imgs.every((p: any) => p.nai?.base);
+    return imgs.length >= images.min && imgs.length <= images.max && imgs.every((p: any) => p.nai?.base);
   } catch { return false; }
 }
 

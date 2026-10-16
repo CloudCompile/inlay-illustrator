@@ -266,16 +266,11 @@ describe("settings pages (DOM)", () => {
     controller.destroy();
   });
 
-  test("system page: webtoon mode switch replaces the count controls with the automatic-count note", async () => {
-    const { mock, controller } = await openSettings("system");
-    const toggle = await until(() => doc.querySelector('[aria-label="Webtoon mode"]'));
-    expect(doc.querySelector("[data-webtoon-mode]")?.textContent).toContain("Experimental");
-    expect(doc.querySelector('[aria-label="1 image more"]')).not.toBeNull();
-    (toggle as HTMLButtonElement).click();
-    await until(() => mock.db.chatImageGeneration.webtoonMode === true);
+  test("system page: webtoon mode (set from the chat count panel) replaces the count controls with the automatic-count note", async () => {
+    const { controller } = await openSettings("system", (mock) => void (mock.db.chatImageGeneration.webtoonMode = true));
     await until(() => doc.querySelector("[data-webtoon-count]"));
     expect(doc.querySelector('[aria-label="1 image more"]')).toBeNull();
-    expect(mock.db.chatImageGeneration.countPolicy).toEqual(createDefaultChatImageGenerationSettings().countPolicy);
+    expect(doc.querySelector('[aria-label="Webtoon mode"]')).toBeNull();
     controller.destroy();
   });
 

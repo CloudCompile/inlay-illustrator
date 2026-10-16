@@ -8,7 +8,7 @@ import { Button, CheckIcon, IconButton, Switch, TextField, TrashIcon, XIcon, cn,
 import { useConfigForm } from "./config-form.js";
 import { PencilIcon, PlusIcon, ResetIcon, SpinnerIcon } from "./icons.js";
 import { COMMON_LABELS as C, PAGE_TITLES, SYSTEM_LABELS as S } from "./labels.js";
-import { Badge, CommitSlider, ErrorBanner, LoadingBox, SaveActions, SettingsFrame, Stepper } from "./parts.js";
+import { CommitSlider, ErrorBanner, LoadingBox, SaveActions, SettingsFrame, Stepper } from "./parts.js";
 import {
   countLimit,
   newCustomSizeId,
@@ -26,9 +26,8 @@ import { SPLIT_ANALYSIS_MAX_TOTAL, maxSplitBatchSize } from "../../../shared/con
 /** Clicks on the hidden row that reveal the developer mode switch (AM 144809). */
 export const DEVELOPER_UNLOCK_CLICKS = 5;
 
-function SystemRow({ title, titleEnd, description, children, first, className, ...rest }: {
+function SystemRow({ title, description, children, first, className, ...rest }: {
   title: string;
-  titleEnd?: ComponentChildren;
   description?: string;
   children?: ComponentChildren;
   first?: boolean;
@@ -37,7 +36,7 @@ function SystemRow({ title, titleEnd, description, children, first, className, .
   return (
     <div class={cn("grid grid-cols-[minmax(0,1fr)_auto] items-center gap-5", !first && "border-t border-white/5 pt-4", className)} {...rest}>
       <div class="min-w-0">
-        <h3 class="flex items-center gap-2 text-xs font-bold">{title}{titleEnd}</h3>
+        <h3 class="text-xs font-bold">{title}</h3>
         {description ? <p class="mt-1 max-w-140 text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
       </div>
       {children ? <div class="flex flex-wrap items-center justify-end gap-2">{children}</div> : null}
@@ -272,9 +271,6 @@ function ChatImageSettings({ settings, developerMode }: { settings: ChatImageGen
       <div class="grid min-w-0 content-start gap-4 rounded-lg bg-card p-4">
         <SystemRow title={S.autoGeneration.title} description={S.autoGeneration.description} first>
           <Switch aria-label={S.autoGeneration.title} checked={settings.autoGenerationEnabled} onCheckedChange={(checked) => void save({ ...settings, autoGenerationEnabled: checked })} />
-        </SystemRow>
-        <SystemRow title={S.webtoonMode.title} titleEnd={<Badge tone="warning">{S.experimental}</Badge>} description={S.webtoonMode.description} data-webtoon-mode="">
-          <Switch aria-label={S.webtoonMode.title} checked={settings.webtoonMode} onCheckedChange={(checked) => void save({ ...settings, webtoonMode: checked })} />
         </SystemRow>
         {settings.webtoonMode ? (
           <SystemRow title={S.webtoonCount.title} description={S.webtoonCount.description} data-webtoon-count="" />

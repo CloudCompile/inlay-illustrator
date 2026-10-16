@@ -4548,7 +4548,8 @@ var RPC_METHODS = [
   "chatDom.getMessageStates",
   "webtoon.get",
   "webtoon.rerollPanel",
-  "webtoon.editText"
+  "webtoon.editText",
+  "webtoon.selectTake"
 ];
 var RPC_EVENTS = [
   "status.changed",
@@ -4698,6 +4699,10 @@ var FETCH_BRIDGE_RESPONSE = "inlay-illustrator:fetch-response";
 function isAllowedBridgeUrl(url) {
   return typeof url === "string" && url.startsWith("/api/") && !url.startsWith("//") && !/\.\.(?:\/|$)/u.test(url) && !/[\s\\]/u.test(url);
 }
+// src/shared/contract/webtoon.ts
+var STRIP_WIDTH = 690;
+var STRIP_MIN_LAYOUT_WIDTH = 360;
+var STRIP_SPEECH_PX = 19;
 // src/backend/rpc/errors.ts
 class RpcFailure extends Error {
   error;
@@ -63870,7 +63875,7 @@ How the target webtoons are built:
 - Balloons sit ON the art, in the empty part of the panel next to the speaker's head (sky, wall, ceiling), or straddle the panel's top/bottom edge, with a tail pointing at the speaker. They never cover faces. Narration boxes sit on the panel's corners. Sound effects are big bold lettering over the art, and on action beats they break out of the panel frame.
 
 Hard rules (checked by code; violations are removed or repaired automatically):
-1. {{PANELS}} "image" panels in reading order (6 to 8 accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
+1. {{PANELS}} "image" panels in reading order ({{MIN}} to {{MAX}} accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
 2. At most 2 speech/thought balloons per panel, each at most 10 words (12 is the absolute maximum). Split long lines over panels.
 3. Narration goes ON the image panels: up to 2 narration boxes per image panel (one at a top corner = before the panel's dialogue, one at a bottom corner = after it). Use at most 1 "text_beat" panel (narration on white), only for a deliberate pause (a time skip or a punchline beat), and set "pause": true on it.
 4. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag ("No," she said. "I was..." -> "No, I was..."). Never add, change or invent words. Narration boxes reuse the source's own narration wording, shortened.
@@ -63928,8 +63933,13 @@ The chat reply:
 >>>
 `;
 var PARTS = ["head", "top", "bottom", "legs", "feet"];
+var WEBTOON_MIN_PANELS = 4;
+var WEBTOON_MAX_PANELS = 14;
 function webtoonPanelTarget(sourceLength) {
-  return sourceLength <= 2500 ? 6 : sourceLength <= 5000 ? 7 : 8;
+  return Math.min(WEBTOON_MAX_PANELS, Math.max(WEBTOON_MIN_PANELS, Math.round(sourceLength / 1000)));
+}
+function webtoonPanelRange(target) {
+  return { min: Math.max(WEBTOON_MIN_PANELS, target - 2), max: Math.min(WEBTOON_MAX_PANELS, target + 2) };
 }
 function items(outfit) {
   return PARTS.filter((k) => outfit[k]?.trim()).map((k) => `${k}: ${outfit[k]}`).join("; ");
@@ -63943,13 +63953,16 @@ function rosterLines(roster) {
 `);
 }
 function buildPlannerPrompt(args) {
+  const range = webtoonPanelRange(args.panels);
   const fill = {
-    "{{PANELS}}": String(webtoonPanelTarget(args.source.length)),
+    "{{PANELS}}": String(args.panels),
+    "{{MIN}}": String(range.min),
+    "{{MAX}}": String(range.max),
     "{{ROSTER}}": rosterLines(args.roster),
     "{{OFFSCREEN}}": args.offscreenNote ?? "",
     "{{SOURCE}}": args.source
   };
-  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
+  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
 }
 function chosenOutfits(raw, roster, log) {
   const picks = new Map;
@@ -64289,7 +64302,7 @@ var STORYBOARD_JSON_SCHEMA = {
 };
 
 // src/backend/webtoon/storyboard-validate.ts
-var LIMITS = { minImages: 6, maxImages: 8, maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
+var LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6 };
 function normWords(s) {
   s = s.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
   return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
@@ -64384,10 +64397,10 @@ var snap = (v) => {
   const x = Number.isFinite(n) ? n : 0.5;
   return GRID.reduce((a, g) => Math.abs(g - x) < Math.abs(a - x) ? g : a, GRID[0]);
 };
-function hardOk(raw) {
+function hardOk(raw, images) {
   try {
     const imgs = raw.panels.filter((p) => p?.kind === "image");
-    return imgs.length >= LIMITS.minImages && imgs.length <= LIMITS.maxImages && imgs.every((p) => p.nai?.base);
+    return imgs.length >= images.min && imgs.length <= images.max && imgs.every((p) => p.nai?.base);
   } catch {
     return false;
   }
@@ -64656,7 +64669,7 @@ var RULES2 = {
   maxBandH: 360,
   tightH: 400,
   gap: { base: 36, action: 22, reaction: 64, scene: 150, pause: 120 },
-  speech: { size: 19, lh: 22 },
+  speech: { size: STRIP_SPEECH_PX, lh: 22 },
   narration: { size: 20, lh: 24 },
   sfx: { action: 88, normal: 64, beat: 72, letterSpacing: 2 },
   sfxColors: ["#ff4f7f", "#ffc21a", "#38c6ff", "#ff7a2e"],
@@ -64684,7 +64697,8 @@ function isShout(t) {
   return t.includes("?!") || t.includes("!!") || t.trimEnd().endsWith("!") && caps > 0.5;
 }
 function layoutStrip(sb, images, opts = {}) {
-  const W = opts.width ?? 690;
+  const W = opts.width ?? STRIP_WIDTH;
+  const k = W / STRIP_WIDTH;
   const measure = opts.measure ?? defaultMeasure;
   const log = [];
   const panelsOut = [];
@@ -64716,15 +64730,15 @@ function layoutStrip(sb, images, opts = {}) {
     const lay = p.layout;
     let x = 0, w = W;
     if (lay === "inset_left" || lay === "inset_right") {
-      w = RULES2.insetW;
+      w = Math.round(RULES2.insetW * k);
       x = lay === "inset_left" ? 0 : W - w;
     }
     let h = Math.round(w * ih / iw);
     if (lay === "tight_crop")
-      h = Math.min(h, RULES2.tightH);
+      h = Math.min(h, RULES2.tightH * k);
     else if (lay === "wide_band")
-      h = Math.min(h, RULES2.maxBandH);
-    h = Math.min(h, lay === "title" ? RULES2.maxTitleH : lay.startsWith("inset") ? RULES2.maxInsetH : RULES2.maxPanelH);
+      h = Math.min(h, RULES2.maxBandH * k);
+    h = Math.round(Math.min(h, (lay === "title" ? RULES2.maxTitleH : lay.startsWith("inset") ? RULES2.maxInsetH : RULES2.maxPanelH) * k));
     const vis = w / iw * ih;
     return { x, w, h, frac: h < vis - 1 ? h / vis : 1 };
   }
@@ -64816,7 +64830,7 @@ function layoutStrip(sb, images, opts = {}) {
       const bb = img.cutout.bbox;
       const [bl, bt] = toPx(bb.left, bb.top);
       const [br] = toPx(bb.right, bb.bottom);
-      const depth = clamp(0.1 * h, RULES2.breakDepth[0], RULES2.breakDepth[1]);
+      const depth = clamp(0.1 * h, RULES2.breakDepth[0] * k, RULES2.breakDepth[1] * k);
       const sideDepth = Math.min(depth, 0.12 * w);
       if (bt > 0.03 * h && bt <= RULES2.breakMaxTop * h) {
         frame = [x0, bt + depth, x0 + w, h];
@@ -64967,7 +64981,7 @@ function layoutStrip(sb, images, opts = {}) {
     };
     const placeSfx = (t) => {
       const action = p.beat === "action";
-      const size = action ? RULES2.sfx.action : RULES2.sfx.normal;
+      const size = Math.round((action ? RULES2.sfx.action : RULES2.sfx.normal) * k);
       const tw = measure(t.text.toUpperCase(), "sfx", size);
       const bw = tw + 10, bh = size + 10;
       const breakEdge = action && sfxInPanel === 0;
@@ -65078,7 +65092,7 @@ function layoutStrip(sb, images, opts = {}) {
     let side = 0;
     for (const t of p.text) {
       if (t.type === "sfx") {
-        const size = RULES2.sfx.beat, tw = measure(t.text.toUpperCase(), "sfx", size);
+        const size = Math.round(RULES2.sfx.beat * k), tw = measure(t.text.toUpperCase(), "sfx", size);
         items.push({
           kind: "sfx",
           panel: p.id,
@@ -65165,8 +65179,7 @@ function createStripDocument(input) {
     style: null,
     requests: {},
     panels: {},
-    textOverrides: {},
-    layout: null
+    textOverrides: {}
   };
 }
 async function readStrip(storage, chatId, historyId) {
@@ -65209,7 +65222,7 @@ function effectiveStoryboard(doc) {
     }))
   };
 }
-function relayout(doc) {
+function relayout(doc, width = STRIP_WIDTH) {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard)
     return null;
@@ -65222,9 +65235,9 @@ function relayout(doc) {
     const [width, height] = p.size.split("x").map(Number);
     images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
   }
-  return layoutStrip(storyboard, images);
+  return layoutStrip(storyboard, images, { width });
 }
-function stripView(doc) {
+function stripView(doc, width = STRIP_WIDTH) {
   return {
     chatId: doc.chatId,
     messageKey: doc.messageKey,
@@ -65232,7 +65245,7 @@ function stripView(doc) {
     ...doc.error ? { error: doc.error } : {},
     revision: doc.revision,
     title: doc.storyboard?.title ?? "",
-    layout: doc.layout,
+    layout: relayout(doc, Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, Math.round(width) || STRIP_WIDTH))),
     panels: doc.panels,
     updatedAt: doc.updatedAt
   };
@@ -65285,7 +65298,7 @@ async function generatePanel(deps, input) {
   const now = (deps.now ?? Date.now)();
   return takeOf(imageId, String(result.seed ?? ""), Math.round(Number(result.width) || input.request.width), Math.round(Number(result.height) || input.request.height), now);
 }
-async function plan(deps, prompt, signal) {
+async function plan(deps, prompt, images, signal) {
   const calls = [];
   let model = "";
   for (let attempt = 0;attempt < MAX_PLANNER_CALLS; attempt += 1) {
@@ -65295,7 +65308,7 @@ async function plan(deps, prompt, signal) {
     try {
       const result = await deps.services.llm.complete({ purpose: "webtoon-planner", messages: [{ role: "user", content: prompt }], responseMode: "json", settings: { timeoutMs: PLANNER_TIMEOUT_MS }, retries: 0 }, { signal });
       model = result.model;
-      const ok = hardOk(result.parsed);
+      const ok = hardOk(result.parsed, images);
       calls.push({ ms: result.latencyMs, finishReason: result.finishReason, parsed: true, hardOk: ok });
       if (ok)
         return { raw: result.parsed, model, calls };
@@ -65306,7 +65319,7 @@ async function plan(deps, prompt, signal) {
     }
   }
   const last = calls.at(-1);
-  throw Object.assign(new RpcFailure(rpcError("provider-error", last?.error ? `The webtoon planner failed: ${last.error}` : "The webtoon planner returned no usable storyboard (6 to 8 image panels).", { retryable: true })), { calls, model });
+  throw Object.assign(new RpcFailure(rpcError("provider-error", last?.error ? `The webtoon planner failed: ${last.error}` : `The webtoon planner returned no usable storyboard (${images.min} to ${images.max} image panels).`, { retryable: true })), { calls, model });
 }
 async function runWebtoonStrip(deps, req) {
   const { services } = deps;
@@ -65343,7 +65356,8 @@ async function runWebtoonStrip(deps, req) {
       });
       let planned;
       try {
-        planned = await plan(deps, buildPlannerPrompt({ roster: context.roster, source: req.source }), req.signal);
+        const panels = webtoonPanelTarget(req.source.length);
+        planned = await plan(deps, buildPlannerPrompt({ roster: context.roster, source: req.source, panels }), webtoonPanelRange(panels), req.signal);
       } catch (error) {
         const meta = error;
         if (meta.calls)
@@ -65367,7 +65381,6 @@ async function runWebtoonStrip(deps, req) {
         d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), buildPanelRequest(p, cast, context.style)]));
         d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
         d.status = "generating";
-        d.layout = relayout(d);
       });
     }
     const requests = doc.requests;
@@ -65388,7 +65401,6 @@ async function runWebtoonStrip(deps, req) {
           p.selected = p.takes.length - 1;
           p.status = "done";
           delete p.error;
-          d.layout = relayout(d);
         });
       } catch (error) {
         if (req.signal.aborted || isAbortLike(error))
@@ -65440,11 +65452,20 @@ async function rerollWebtoonPanel(deps, req) {
     p.status = "done";
     delete p.error;
     d.panels[req.panelId] = p;
-    d.layout = relayout(d);
     return d;
   }, deps.now);
   req.onChanged();
   return stripView(written);
+}
+async function selectWebtoonTake(deps, req) {
+  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
+    const panel = current?.panels[req.panelId];
+    if (!current || !panel?.takes[req.take])
+      throw new RpcFailure(rpcError("not-found", "This webtoon panel take does not exist.", { retryable: false }));
+    panel.selected = req.take;
+    return current;
+  }, deps.now);
+  return stripView(written, req.width);
 }
 async function editWebtoonText(deps, req) {
   const text = req.text.replace(/\s+/gu, " ").trim();
@@ -65460,10 +65481,9 @@ async function editWebtoonText(deps, req) {
       delete current.textOverrides[key];
     else
       current.textOverrides[key] = text;
-    current.layout = relayout(current);
     return current;
   }, deps.now);
-  return stripView(written);
+  return stripView(written, req.width);
 }
 
 // src/backend/pipeline/controller.ts
@@ -67080,9 +67100,9 @@ function createChatPipelineController(services, engine, options = {}) {
       }
       return { messages: out };
     },
-    async getWebtoon(chatId, messageKey) {
+    async getWebtoon(chatId, messageKey, width) {
       const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
-      return { strip: doc ? stripView(doc) : null };
+      return { strip: doc ? stripView(doc, width) : null };
     },
     async rerollWebtoonPanel(chatId, messageKey, panelId) {
       const target = targetOfKey(chatId, messageKey);
@@ -67105,7 +67125,13 @@ function createChatPipelineController(services, engine, options = {}) {
     },
     async editWebtoonText(params) {
       const historyId = targetHistoryId(params.chatId, params.messageKey);
-      const result = await editWebtoonText({ services, engine, now }, { chatId: params.chatId, historyId, panelId: params.panelId, textIndex: params.textIndex, text: params.text });
+      const result = await editWebtoonText({ services, engine, now }, { ...params, historyId });
+      emitChanged(params.chatId, [params.messageKey]);
+      return { strip: result };
+    },
+    async selectWebtoonTake(params) {
+      const historyId = targetHistoryId(params.chatId, params.messageKey);
+      const result = await selectWebtoonTake({ services, engine, now }, { ...params, historyId });
       emitChanged(params.chatId, [params.messageKey]);
       return { strip: result };
     }
@@ -68176,6 +68202,13 @@ function need(value, name) {
     fail2("bad-request", `${name} is required.`);
   return value.trim();
 }
+function stripWidth(value) {
+  if (value === undefined)
+    return;
+  if (typeof value !== "number" || !Number.isFinite(value))
+    fail2("bad-request", "width must be a number.");
+  return value;
+}
 var OK2 = { ok: true };
 var chatHandlers = {
   "generation.start": (params, ctx) => pipelineOf(ctx).start(params),
@@ -68232,7 +68265,7 @@ var chatHandlers = {
     return pipelineOf(ctx).setChatState(need(params.chatId, "chatId"), params.actorState, params.baseRevision);
   },
   "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
-  "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey")),
+  "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), stripWidth(params.width)),
   "webtoon.rerollPanel": (params, ctx) => pipelineOf(ctx).rerollWebtoonPanel(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), need(params.panelId, "panelId")),
   "webtoon.editText": (params, ctx) => {
     if (!Number.isSafeInteger(params.textIndex) || params.textIndex < 0)
@@ -68244,7 +68277,19 @@ var chatHandlers = {
       messageKey: need(params.messageKey, "messageKey"),
       panelId: need(params.panelId, "panelId"),
       textIndex: params.textIndex,
-      text: params.text
+      text: params.text,
+      width: stripWidth(params.width)
+    });
+  },
+  "webtoon.selectTake": (params, ctx) => {
+    if (!Number.isSafeInteger(params.take) || params.take < 0)
+      fail2("bad-request", "take is required.");
+    return pipelineOf(ctx).selectWebtoonTake({
+      chatId: need(params.chatId, "chatId"),
+      messageKey: need(params.messageKey, "messageKey"),
+      panelId: need(params.panelId, "panelId"),
+      take: params.take,
+      width: stripWidth(params.width)
     });
   }
 };

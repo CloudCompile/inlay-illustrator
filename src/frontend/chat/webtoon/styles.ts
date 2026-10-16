@@ -1,6 +1,6 @@
 /**
- * Webtoon strip styles (experimental webtoon mode) + the bundled lettering fonts. Design size 690 px; the canvas is
- * scaled to the message width. Text classes follow the webtoon bench renderer.
+ * Webtoon strip styles (experimental webtoon mode) + the bundled lettering fonts. The canvas is laid out at the layout
+ * width (690 px on desktop, narrower on phones) and scaled to the message width. Text classes follow the webtoon bench renderer.
  */
 import { BANGERS_WOFF, COMIC_NEUE_BOLD_WOFF, PATRICK_HAND_WOFF } from "./fonts-data.js";
 
@@ -27,16 +27,22 @@ export const WEBTOON_CSS = [
 .ii-wt-narr { box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center; font-family: "II Webtoon Patrick Hand", "Patrick Hand", sans-serif; font-size: 20px; line-height: 24px; color: #111; background: #fff; border: 2px solid #111; padding: 6px 10px; }
 .ii-wt-sfx { font-family: "II Webtoon Bangers", Bangers, Impact, sans-serif; line-height: 1; letter-spacing: 2px; text-align: center; text-transform: uppercase; -webkit-text-stroke: 8px #fff; paint-order: stroke fill; text-shadow: 4px 5px 0 #2a1a2a; white-space: nowrap; }
 .ii-wt-bt:hover, .ii-wt-narr:hover, .ii-wt-sfx:hover { outline: 2px dashed rgba(215, 140, 60, .7); outline-offset: 2px; }
-.ii-wt-title { position: absolute; left: 0; width: 690px; text-align: center; font-family: "II Webtoon Patrick Hand", "Patrick Hand", sans-serif; color: #fff; text-shadow: 0 2px 10px rgba(30, 20, 40, .65); pointer-events: none; }
+.ii-wt-title { position: absolute; left: 0; text-align: center; font-family: "II Webtoon Patrick Hand", "Patrick Hand", sans-serif; color: #fff; text-shadow: 0 2px 10px rgba(30, 20, 40, .65); pointer-events: none; }
 .ii-wt-title .ii-wt-t1 { font-size: 26px; letter-spacing: 6px; }
 .ii-wt-title .ii-wt-t2 { font-size: 62px; line-height: 1.05; margin: 6px 40px 0; }
 .ii-wt-title .ii-wt-bar { width: 60px; height: 2px; background: #fff; margin: 20px auto 0; }
-.ii-wt-reroll { position: absolute; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(20, 16, 12, .62); color: #fff; font: 700 22px/36px system-ui, sans-serif; text-align: center; cursor: pointer; opacity: 0; transition: opacity .15s; padding: 0; }
-.ii-wt-canvas:hover .ii-wt-reroll, .ii-wt-reroll:focus-visible, .ii-wt-reroll[data-ii-wt-busy="true"] { opacity: 1; }
-.ii-wt-reroll:disabled { cursor: default; background: rgba(20, 16, 12, .35); }
+.ii-wt-controls { position: absolute; pointer-events: none; }
+.ii-wt-reroll, .ii-wt-take { position: absolute; pointer-events: auto; border: 0; border-radius: 50%; background: rgba(20, 16, 12, .62); color: #fff; text-align: center; cursor: pointer; opacity: 0; transition: opacity .15s; padding: 0; }
+.ii-wt-reroll { right: 8px; top: 8px; width: 36px; height: 36px; font: 700 22px/36px system-ui, sans-serif; }
+.ii-wt-take { top: 50%; width: 30px; height: 44px; margin-top: -22px; border-radius: 15px; font: 700 28px/40px system-ui, sans-serif; }
+.ii-wt-take--prev { left: 6px; }
+.ii-wt-take--next { right: 6px; }
+.ii-wt-controls[data-ii-wt-hover] > button, .ii-wt-controls > button:focus-visible, .ii-wt-reroll[data-ii-wt-busy="true"] { opacity: 1; }
+.ii-wt-reroll:disabled, .ii-wt-take:disabled { cursor: default; background: rgba(20, 16, 12, .35); }
+.ii-wt-controls[data-ii-wt-hover] > .ii-wt-take:disabled { opacity: .45; }
 .ii-wt-reroll[data-ii-wt-busy="true"] { animation: ii-wt-spin 1s linear infinite; }
 @keyframes ii-wt-spin { to { transform: rotate(360deg); } }
-@media (pointer: coarse) { .ii-wt-reroll { opacity: .85; } }
+@media (pointer: coarse) { .ii-wt-reroll, .ii-wt-take { opacity: .85; } .ii-wt-take:disabled { opacity: .4; } }
 .ii-wt-note { padding: 18px; font: 600 14px/1.4 system-ui, sans-serif; color: #6f665c; text-align: center; }
 .ii-wt-strip[data-ii-wt-status="error"] .ii-wt-note { color: #b4463c; }
 .ii-wt-editor { position: absolute; left: 8px; right: 8px; z-index: 2; display: grid; gap: 6px; padding: 8px; background: #1d1a17; border-radius: 8px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }

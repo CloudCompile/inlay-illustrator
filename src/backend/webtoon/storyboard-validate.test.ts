@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { chosenOutfits, type PlannerRosterEntry } from "./planner-prompt.js";
+import { chosenOutfits, webtoonPanelRange, webtoonPanelTarget, type PlannerRosterEntry } from "./planner-prompt.js";
 import type { ImagePanel } from "./storyboard-schema.js";
 import { buildQuoteIndex, checkQuote, hardOk, validateStoryboard } from "./storyboard-validate.js";
 
@@ -18,11 +18,17 @@ const ROSTER = [
 ];
 
 describe("webtoon storyboard validation (round 2)", () => {
-  test("hard rule: 6 to 8 image panels with a base prompt", () => {
-    expect(hardOk({ panels: [1, 2, 3, 4, 5].map((i) => image(i)) })).toBe(false);
-    expect(hardOk({ panels: [1, 2, 3, 4, 5, 6].map((i) => image(i)) })).toBe(true);
-    expect(hardOk({ panels: [1, 2, 3, 4, 5, 6].map((i) => image(i, i === 3 ? { nai: { base: "" } } : {})) })).toBe(false);
-    expect(hardOk("not json")).toBe(false);
+  test("panel count: about one per 1,000 characters, 4 to 14, accepted within 2", () => {
+    expect([800, 4400, 9600, 17346, 40000].map(webtoonPanelTarget)).toEqual([4, 4, 10, 14, 14]);
+    expect([4, 10, 14].map(webtoonPanelRange)).toEqual([{ min: 4, max: 6 }, { min: 8, max: 12 }, { min: 12, max: 14 }]);
+  });
+
+  test("hard rule: image panel count in the accepted range, each with a base prompt", () => {
+    const range = { min: 6, max: 8 };
+    expect(hardOk({ panels: [1, 2, 3, 4, 5].map((i) => image(i)) }, range)).toBe(false);
+    expect(hardOk({ panels: [1, 2, 3, 4, 5, 6].map((i) => image(i)) }, range)).toBe(true);
+    expect(hardOk({ panels: [1, 2, 3, 4, 5, 6].map((i) => image(i, i === 3 ? { nai: { base: "" } } : {})) }, range)).toBe(false);
+    expect(hardOk("not json", range)).toBe(false);
   });
 
   test("quotes: verbatim kept, joined across a speech tag, near match repaired, invented dropped", () => {

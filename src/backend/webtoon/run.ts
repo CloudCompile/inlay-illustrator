@@ -8,12 +8,12 @@ import { isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import type { BackendServices, ChatInfo } from "../services/types.js";
 import type { EnginePort } from "../pipeline/engine-port.js";
 import type { ChatMessageView } from "../pipeline/host-chat.js";
-import { buildPlannerPrompt, chosenOutfits } from "./planner-prompt.js";
+import { buildPlannerPrompt, chosenOutfits, webtoonPanelRange, webtoonPanelTarget } from "./planner-prompt.js";
 import { buildPanelRequest, engineImageRequest, type PanelRequest, type WebtoonStyle } from "./panel-request.js";
 import { castFor, loadWebtoonContext, validationRoster } from "./roster.js";
 import type { ImagePanel } from "./storyboard-schema.js";
 import { hardOk, validateStoryboard } from "./storyboard-validate.js";
-import { createStripDocument, readStrip, relayout, stripView, takeOf, updateStrip, type PlannerCall, type WebtoonStripDocument } from "./store.js";
+import { createStripDocument, readStrip, stripView, takeOf, updateStrip, type PlannerCall, type WebtoonStripDocument } from "./store.js";
 
 const MAX_PLANNER_CALLS = 3;
 /** NovelAI Opus allows one generation at a time per account: "429 Concurrent generation is locked" while another client
@@ -112,7 +112,7 @@ async function generatePanel(deps: WebtoonDeps, input: { request: PanelRequest; 
   return takeOf(imageId, String(result.seed ?? ""), Math.round(Number(result.width) || input.request.width), Math.round(Number(result.height) || input.request.height), now);
 }
 
-async function plan(deps: WebtoonDeps, prompt: string, signal: AbortSignal): Promise<{ raw: unknown; model: string; calls: PlannerCall[] }> {
+async function plan(deps: WebtoonDeps, prompt: string, images: { min: number; max: number }, signal: AbortSignal): Promise<{ raw: unknown; model: string; calls: PlannerCall[] }> {
   const calls: PlannerCall[] = [];
   let model = "";
   for (let attempt = 0; attempt < MAX_PLANNER_CALLS; attempt += 1) {
@@ -124,7 +124,7 @@ async function plan(deps: WebtoonDeps, prompt: string, signal: AbortSignal): Pro
         { signal },
       );
       model = result.model;
-      const ok = hardOk(result.parsed);
+      const ok = hardOk(result.parsed, images);
       calls.push({ ms: result.latencyMs, finishReason: result.finishReason, parsed: true, hardOk: ok });
       if (ok) return { raw: result.parsed, model, calls };
     } catch (error) {
@@ -134,7 +134,7 @@ async function plan(deps: WebtoonDeps, prompt: string, signal: AbortSignal): Pro
   }
   const last = calls.at(-1);
   throw Object.assign(
-    new RpcFailure(rpcError("provider-error", last?.error ? `The webtoon planner failed: ${last.error}` : "The webtoon planner returned no usable storyboard (6 to 8 image panels).", { retryable: true })),
+    new RpcFailure(rpcError("provider-error", last?.error ? `The webtoon planner failed: ${last.error}` : `The webtoon planner returned no usable storyboard (${images.min} to ${images.max} image panels).`, { retryable: true })),
     { calls, model },
   );
 }
@@ -176,7 +176,8 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
       });
       let planned: Awaited<ReturnType<typeof plan>>;
       try {
-        planned = await plan(deps, buildPlannerPrompt({ roster: context.roster, source: req.source }), req.signal);
+        const panels = webtoonPanelTarget(req.source.length);
+        planned = await plan(deps, buildPlannerPrompt({ roster: context.roster, source: req.source, panels }), webtoonPanelRange(panels), req.signal);
       } catch (error) {
         const meta = error as { calls?: PlannerCall[]; model?: string };
         if (meta.calls) await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls! }));
@@ -199,7 +200,6 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), buildPanelRequest(p, cast, context.style)]));
         d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
         d.status = "generating";
-        d.layout = relayout(d);
       });
     }
     const requests = doc.requests;
@@ -220,7 +220,6 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
           p.selected = p.takes.length - 1;
           p.status = "done";
           delete p.error;
-          d.layout = relayout(d);
         });
       } catch (error) {
         if (req.signal.aborted || isAbortLike(error)) throw error;
@@ -251,7 +250,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
   }
 }
 
-/** New take of one panel (random seed); the new take is selected and the strip laid out again. */
+/** New take of one panel (random seed); the new take is selected (older takes stay, see `selectWebtoonTake`). */
 export async function rerollWebtoonPanel(
   deps: WebtoonDeps,
   req: { chatId: string; historyId: string; panelId: string; config: InlayConfig; signal: AbortSignal; onChanged: () => void },
@@ -269,17 +268,30 @@ export async function rerollWebtoonPanel(
     p.status = "done";
     delete p.error;
     d.panels[req.panelId] = p;
-    d.layout = relayout(d);
     return d;
   }, deps.now);
   req.onChanged();
   return stripView(written);
 }
 
-/** Replace the text of one text item (the original text again removes the override) and lay the strip out again. */
+/** Show another take of one panel (a previous reroll); the strip is laid out again with that image's size. */
+export async function selectWebtoonTake(
+  deps: WebtoonDeps,
+  req: { chatId: string; historyId: string; panelId: string; take: number; width?: number },
+): Promise<WebtoonStripView> {
+  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
+    const panel = current?.panels[req.panelId];
+    if (!current || !panel?.takes[req.take]) throw new RpcFailure(rpcError("not-found", "This webtoon panel take does not exist.", { retryable: false }));
+    panel.selected = req.take;
+    return current;
+  }, deps.now);
+  return stripView(written, req.width);
+}
+
+/** Replace the text of one text item (the original text again removes the override). */
 export async function editWebtoonText(
   deps: WebtoonDeps,
-  req: { chatId: string; historyId: string; panelId: string; textIndex: number; text: string },
+  req: { chatId: string; historyId: string; panelId: string; textIndex: number; text: string; width?: number },
 ): Promise<WebtoonStripView> {
   const text = req.text.replace(/\s+/gu, " ").trim();
   if (!text) throw new RpcFailure(rpcError("bad-request", "The text is empty.", { retryable: false }));
@@ -290,8 +302,7 @@ export async function editWebtoonText(
     const key = `${req.panelId}:${req.textIndex}`;
     if (text === original.text) delete current.textOverrides[key];
     else current.textOverrides[key] = text;
-    current.layout = relayout(current);
     return current;
   }, deps.now);
-  return stripView(written);
+  return stripView(written, req.width);
 }

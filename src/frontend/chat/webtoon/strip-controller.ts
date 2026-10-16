@@ -1,19 +1,22 @@
 /**
  * Webtoon strips in the chat (experimental webtoon mode): one injected strip per message swipe that has a strip
  * (`ChatMessageUiState.webtoon`), refetched (`webtoon.get`) when its revision changes, so panels appear as they finish.
- * Reroll a panel (`webtoon.rerollPanel`, a regenerate job with slot id `webtoon:<panelId>`) or edit a text item
- * (`webtoon.editText`, inline editor).
+ * The strip is laid out for the width it is shown at (`stripLayoutWidth`) and fetched again, debounced, when that changes.
+ * Reroll a panel (`webtoon.rerollPanel`, a regenerate job with slot id `webtoon:<panelId>`), switch a panel between its
+ * takes (`webtoon.selectTake`) or edit a text item (`webtoon.editText`, inline editor).
  */
 import type { SpindleFrontendContext } from "lumiverse-spindle-types";
 import type { ChatMessageUiState } from "../../../shared/contract/chat-dom.js";
 import type { GenerationJobSnapshot } from "../../../shared/contract/rpc.js";
-import type { WebtoonStripView } from "../../../shared/contract/webtoon.js";
+import { STRIP_WIDTH, stripLayoutWidth, type WebtoonStripView } from "../../../shared/contract/webtoon.js";
 import type { AppController } from "../../state/app-state.js";
 import { historyIdOfKey, jobForMessage } from "../dom.js";
 import { WEBTOON_LABELS } from "../labels.js";
-import { renderStrip, setStripScale, STRIP_WIDTH } from "./strip-dom.js";
+import { renderStrip, setStripScale } from "./strip-dom.js";
 
 const WRAPPER_ATTR = "data-ii-chat-wrapper";
+/** Wait for the resize to settle before laying the strip out again. */
+const RELAYOUT_DELAY_MS = 250;
 
 interface StripEntry {
   messageKey: string;
@@ -25,6 +28,7 @@ interface StripEntry {
   signature: string;
   editing: string | null;
   resize?: ResizeObserver;
+  relayoutTimer?: ReturnType<typeof setTimeout>;
 }
 
 export interface WebtoonStrips {
@@ -49,6 +53,7 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
     const entry = entries.get(id);
     if (!entry) return;
     entry.resize?.disconnect();
+    clearTimeout(entry.relayoutTimer);
     try {
       ctx.dom.uninject(entry.wrapper);
     } catch {
@@ -57,30 +62,46 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
     entries.delete(id);
   }
 
+  const layoutWidth = (entry: StripEntry) => stripLayoutWidth(entry.frame.clientWidth || STRIP_WIDTH);
+  /** The shown layout is for another width (a resize while it was fetched). */
+  const staleWidth = (entry: StripEntry) => !!entry.view?.layout && entry.view.layout.width !== layoutWidth(entry);
+
   async function fetchStrip(entry: StripEntry, revision: number): Promise<void> {
     if (entry.fetching) return;
     entry.fetching = true;
     const forChat = chatId;
+    let again = false;
     try {
-      const { strip } = await app.call("webtoon.get", { chatId: forChat, messageKey: entry.messageKey });
+      const { strip } = await app.call("webtoon.get", { chatId: forChat, messageKey: entry.messageKey, width: layoutWidth(entry) });
       if (forChat !== chatId) return;
       entry.view = strip;
       entry.fetched = Math.max(revision, strip?.revision ?? revision);
       entry.signature = "";
+      again = staleWidth(entry);
     } catch (error) {
       entry.fetched = revision;
       console.warn("[Inlay Illustrator] webtoon.get failed:", error);
     } finally {
       entry.fetching = false;
+      if (again) void fetchStrip(entry, entry.fetched);
       options.schedule();
     }
+  }
+
+  /** Apply a strip returned by a change (text edit, take switch). */
+  function showStrip(entry: StripEntry, strip: WebtoonStripView): void {
+    entry.view = strip;
+    entry.fetched = strip.revision;
+    entry.signature = "";
+    options.schedule();
   }
 
   function openEditor(entry: StripEntry, canvas: HTMLElement, item: { panelId: string; textIndex: number; text: string }): void {
     entry.frame.querySelector(".ii-wt-editor")?.remove();
     const key = `${item.panelId}:${item.textIndex}`;
     const target = canvas.querySelector(`[data-ii-wt-text="${key}"]`) as HTMLElement | null;
-    const scale = (entry.frame.clientWidth || STRIP_WIDTH) / STRIP_WIDTH;
+    const width = entry.view?.layout?.width ?? STRIP_WIDTH;
+    const scale = (entry.frame.clientWidth || width) / width;
     const top = target ? (parseFloat(target.style.top) || 0) * scale : 0;
     const editor = doc.createElement("form");
     editor.className = "ii-wt-editor";
@@ -112,13 +133,10 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
       if (!text || text === item.text) return close();
       save.disabled = true;
       app
-        .call("webtoon.editText", { chatId, messageKey: entry.messageKey, panelId: item.panelId, textIndex: item.textIndex, text })
+        .call("webtoon.editText", { chatId, messageKey: entry.messageKey, panelId: item.panelId, textIndex: item.textIndex, text, width: layoutWidth(entry) })
         .then(({ strip }) => {
-          entry.view = strip;
-          entry.fetched = strip.revision;
-          entry.signature = "";
           close();
-          options.schedule();
+          showStrip(entry, strip);
         })
         .catch((error) => {
           save.disabled = false;
@@ -139,7 +157,7 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
     const view = entry.view;
     const busy = busyPanels(jobs, entry.messageKey);
     const stripBusy = !!jobForMessage(jobs, state) || state.busy;
-    const signature = JSON.stringify([view?.revision ?? -1, [...busy].sort(), stripBusy]);
+    const signature = JSON.stringify([view?.revision ?? -1, view?.layout?.width, [...busy].sort(), stripBusy]);
     if (signature === entry.signature) return;
     entry.signature = signature;
     const editor = entry.frame.querySelector(".ii-wt-editor");
@@ -149,6 +167,12 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
       ? renderStrip(doc, view, {
           onReroll: (panelId) => {
             app.call("webtoon.rerollPanel", { chatId, messageKey: entry.messageKey, panelId }).then(options.schedule, (error) => options.notice(WEBTOON_LABELS.rerollFailed, error));
+          },
+          onSelectTake: (panelId, take) => {
+            app.call("webtoon.selectTake", { chatId, messageKey: entry.messageKey, panelId, take, width: layoutWidth(entry) }).then(
+              ({ strip }) => showStrip(entry, strip),
+              (error) => options.notice(WEBTOON_LABELS.takeFailed, error),
+            );
           },
           onEditText: (item) => openEditor(entry, canvas!, item),
         }, { busyPanels: busy, stripBusy, labels: { ...WEBTOON_LABELS, failed: WEBTOON_LABELS.panelFailed } })
@@ -161,10 +185,10 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
       entry.frame.appendChild(note);
       return;
     }
-    entry.frame.style.setProperty("aspect-ratio", `${STRIP_WIDTH} / ${view.layout.height}`);
+    entry.frame.style.setProperty("aspect-ratio", `${view.layout.width} / ${view.layout.height}`);
     entry.frame.appendChild(canvas);
     if (editor) entry.frame.appendChild(editor);
-    setStripScale(entry.frame, canvas);
+    setStripScale(entry.frame, canvas, view.layout.width);
   }
 
   return {
@@ -194,7 +218,11 @@ export function createWebtoonStrips(ctx: SpindleFrontendContext, app: AppControl
             const e = entry;
             e.resize = new Observer(() => {
               const canvas = e.frame.querySelector(".ii-wt-canvas") as HTMLElement | null;
-              if (canvas) setStripScale(e.frame, canvas);
+              if (canvas && e.view?.layout) setStripScale(e.frame, canvas, e.view.layout.width);
+              clearTimeout(e.relayoutTimer);
+              e.relayoutTimer = setTimeout(() => {
+                if (staleWidth(e)) void fetchStrip(e, e.fetched);
+              }, RELAYOUT_DELAY_MS);
             });
             e.resize.observe(frame);
           }

@@ -528,11 +528,14 @@ export interface RpcMethods {
   "chatDom.getMessageStates": { params: { chatId: string; messageIds?: string[] }; result: { messages: ChatMessageUiState[] } };
 
   /* experimental webtoon mode (strip per message swipe, see webtoon.ts) */
-  "webtoon.get": { params: { chatId: string; messageKey: string }; result: { strip: WebtoonStripView | null } };
+  /** `width`: layout width in strip px (`stripLayoutWidth` of the shown width; default 690). */
+  "webtoon.get": { params: { chatId: string; messageKey: string; width?: number }; result: { strip: WebtoonStripView | null } };
   /** New image for one panel (new seed), as a regenerate job; the strip is laid out again when it finishes. */
   "webtoon.rerollPanel": { params: { chatId: string; messageKey: string; panelId: string }; result: { jobId: string } };
   /** Replace the text of one text item (`textIndex` into the panel's text list) and lay the strip out again. */
-  "webtoon.editText": { params: { chatId: string; messageKey: string; panelId: string; textIndex: number; text: string }; result: { strip: WebtoonStripView } };
+  "webtoon.editText": { params: { chatId: string; messageKey: string; panelId: string; textIndex: number; text: string; width?: number }; result: { strip: WebtoonStripView } };
+  /** Show another take of one panel (`take` indexes the panel's takes) and lay the strip out again. */
+  "webtoon.selectTake": { params: { chatId: string; messageKey: string; panelId: string; take: number; width?: number }; result: { strip: WebtoonStripView } };
 }
 
 export type RpcMethod = keyof RpcMethods;
@@ -613,7 +616,7 @@ export const RPC_METHODS = [
   "zoom.getDetails", "zoom.saveDraft", "zoom.clearDraft", "zoom.importViewed", "zoom.requestAiPromptEdit", "zoom.applyAiPromptEdit",
   "chatState.get", "chatState.clear", "chatState.set",
   "chatDom.getMessageStates",
-  "webtoon.get", "webtoon.rerollPanel", "webtoon.editText",
+  "webtoon.get", "webtoon.rerollPanel", "webtoon.editText", "webtoon.selectTake",
 ] as const satisfies readonly RpcMethod[];
 
 export const RPC_EVENTS = [

@@ -97,7 +97,7 @@ import { HostGenerationTracker, isIllustratableMessage, loadMessages, swipeConte
 import { formatLabel, labelError, phaseProgress, PIPELINE_TEXT, WEBTOON_TEXT, type Label } from "./labels.js";
 import { bakeMessage, messageSlots, stripForInterceptor, type InterceptorMessage } from "./markup.js";
 import { readSidecar, sidecarPath, updateSidecar } from "./records.js";
-import { editWebtoonText, rerollWebtoonPanel, runWebtoonStrip, type WebtoonProgress } from "../webtoon/run.js";
+import { editWebtoonText, rerollWebtoonPanel, runWebtoonStrip, selectWebtoonTake, type WebtoonProgress } from "../webtoon/run.js";
 import { readStrip, stripSummaries, stripView } from "../webtoon/store.js";
 
 type Rec = Record<string, unknown>;
@@ -167,9 +167,10 @@ export interface ChatPipeline {
   publish(chatId: string, messageKey: string): Promise<PublishResult>;
 
   /* webtoon.* (experimental webtoon mode) */
-  getWebtoon(chatId: string, messageKey: string): Promise<{ strip: WebtoonStripView | null }>;
+  getWebtoon(chatId: string, messageKey: string, width?: number): Promise<{ strip: WebtoonStripView | null }>;
   rerollWebtoonPanel(chatId: string, messageKey: string, panelId: string): Promise<{ jobId: string }>;
-  editWebtoonText(params: { chatId: string; messageKey: string; panelId: string; textIndex: number; text: string }): Promise<{ strip: WebtoonStripView }>;
+  editWebtoonText(params: { chatId: string; messageKey: string; panelId: string; textIndex: number; text: string; width?: number }): Promise<{ strip: WebtoonStripView }>;
+  selectWebtoonTake(params: { chatId: string; messageKey: string; panelId: string; take: number; width?: number }): Promise<{ strip: WebtoonStripView }>;
 }
 
 export type PublishResult = "published" | "missing" | "streaming";
@@ -1836,9 +1837,9 @@ export function createChatPipelineController(services: BackendServices, engine: 
       return { messages: out };
     },
 
-    async getWebtoon(chatId, messageKey) {
+    async getWebtoon(chatId, messageKey, width) {
       const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
-      return { strip: doc ? stripView(doc) : null };
+      return { strip: doc ? stripView(doc, width) : null };
     },
 
     async rerollWebtoonPanel(chatId, messageKey, panelId) {
@@ -1860,7 +1861,14 @@ export function createChatPipelineController(services: BackendServices, engine: 
 
     async editWebtoonText(params) {
       const historyId = targetHistoryId(params.chatId, params.messageKey);
-      const result = await editWebtoonText({ services, engine, now }, { chatId: params.chatId, historyId, panelId: params.panelId, textIndex: params.textIndex, text: params.text });
+      const result = await editWebtoonText({ services, engine, now }, { ...params, historyId });
+      emitChanged(params.chatId, [params.messageKey]);
+      return { strip: result };
+    },
+
+    async selectWebtoonTake(params) {
+      const historyId = targetHistoryId(params.chatId, params.messageKey);
+      const result = await selectWebtoonTake({ services, engine, now }, { ...params, historyId });
       emitChanged(params.chatId, [params.messageKey]);
       return { strip: result };
     },

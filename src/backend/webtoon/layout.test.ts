@@ -33,6 +33,21 @@ describe("webtoon layout (round 2, coordinates only)", () => {
     expect(layout.items.filter((i) => i.kind !== "title").length).toBe(texts.length);
   });
 
+  test("narrow strip (phone): same text items, balloons stay inside the strip and off faces", () => {
+    const narrow = layoutStrip(storyboard, images, { width: 520 });
+    expect(narrow.width).toBe(520);
+    expect(narrow.panels.every((p) => p.rect[0] >= 0 && p.rect[2] <= 520)).toBe(true);
+    const balloons = (l: typeof layout) => l.items.flatMap((i) => (i.kind === "speech" || i.kind === "thought" ? [i] : []));
+    expect(balloons(narrow).map((b) => b.text)).toEqual(balloons(layout).map((b) => b.text));
+    const faces = narrow.panels.flatMap((p) => Object.values(p.faces).filter((f): f is NonNullable<typeof f> => !!f));
+    for (const b of balloons(narrow)) {
+      expect(b.rect[0]).toBeGreaterThanOrEqual(0);
+      expect(b.rect[2]).toBeLessThanOrEqual(520);
+      const inner = [b.cx - b.rx * 0.92, b.cy - b.ry * 0.92, b.cx + b.rx * 0.92, b.cy + b.ry * 0.92];
+      for (const f of faces) expect(inter(inner, f)).toBe(0);
+    }
+  });
+
   test("is deterministic", () => {
     expect(layoutStrip(structuredClone(storyboard), images)).toEqual(layout);
   });

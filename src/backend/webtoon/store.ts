@@ -2,10 +2,13 @@
  * Webtoon strip storage: one document per message swipe, `chats/<chatId>/webtoon/<messageId>@<swipe>.json`, plus
  * `chats/<chatId>/webtoon/index.json` (revision + status per swipe, read by `chatDom.getMessageStates`).
  * The document keeps the planner output (raw + validated storyboard, validation log), the exact panel requests, every
- * take (image id + seed), the selected take, text overrides and the layout computed from all of that.
+ * take (image id + seed), the selected take and text overrides. The layout is computed from all of that per view, at the
+ * width the chat shows the strip (older documents also carry a stored 690 px `layout`; it is not read).
  */
 import {
   STORAGE_PATHS,
+  STRIP_MIN_LAYOUT_WIDTH,
+  STRIP_WIDTH,
   imageResultUrl,
   safePathSegment,
   type StripLayout,
@@ -52,7 +55,6 @@ export interface WebtoonStripDocument {
   panels: Record<string, WebtoonPanelState>;
   /** `<panelId>:<textIndex>` -> edited text. */
   textOverrides: Record<string, string>;
-  layout: StripLayout | null;
 }
 
 type Index = Record<string, WebtoonStripSummary>;
@@ -83,7 +85,6 @@ export function createStripDocument(input: { chatId: string; messageKey: string;
     requests: {},
     panels: {},
     textOverrides: {},
-    layout: null,
   };
 }
 
@@ -142,8 +143,8 @@ export function effectiveStoryboard(doc: Pick<WebtoonStripDocument, "storyboard"
   };
 }
 
-/** Layout from the storyboard + overrides; image sizes from the selected takes, else the planned size. */
-export function relayout(doc: WebtoonStripDocument): StripLayout | null {
+/** Layout from the storyboard + overrides at `width`; image sizes from the selected takes, else the planned size. */
+export function relayout(doc: WebtoonStripDocument, width: number = STRIP_WIDTH): StripLayout | null {
   const storyboard = effectiveStoryboard(doc);
   if (!storyboard) return null;
   const images: Record<string, PanelImage> = {};
@@ -154,10 +155,11 @@ export function relayout(doc: WebtoonStripDocument): StripLayout | null {
     const [width, height] = p.size.split("x").map(Number) as [number, number];
     images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
   }
-  return layoutStrip(storyboard, images);
+  return layoutStrip(storyboard, images, { width });
 }
 
-export function stripView(doc: WebtoonStripDocument): WebtoonStripView {
+/** The chat view of a strip, laid out at `width` (strip px, `stripLayoutWidth` of the shown width). */
+export function stripView(doc: WebtoonStripDocument, width: number = STRIP_WIDTH): WebtoonStripView {
   return {
     chatId: doc.chatId,
     messageKey: doc.messageKey,
@@ -165,7 +167,7 @@ export function stripView(doc: WebtoonStripDocument): WebtoonStripView {
     ...(doc.error ? { error: doc.error } : {}),
     revision: doc.revision,
     title: doc.storyboard?.title ?? "",
-    layout: doc.layout,
+    layout: relayout(doc, Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, Math.round(width) || STRIP_WIDTH))),
     panels: doc.panels,
     updatedAt: doc.updatedAt,
   };

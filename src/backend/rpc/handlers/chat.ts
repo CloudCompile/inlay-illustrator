@@ -17,6 +17,13 @@ function need(value: unknown, name: string): string {
   return value.trim();
 }
 
+/** Optional webtoon layout width (`stripView` clamps it to 360..690). */
+function stripWidth(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value)) fail("bad-request", "width must be a number.");
+  return value;
+}
+
 const OK = { ok: true } as const;
 
 export const chatHandlers: HandlerGroup = {
@@ -85,7 +92,7 @@ export const chatHandlers: HandlerGroup = {
   "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
 
   /* webtoon (experimental) */
-  "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey")),
+  "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), stripWidth(params.width)),
   "webtoon.rerollPanel": (params, ctx) => pipelineOf(ctx).rerollWebtoonPanel(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), need(params.panelId, "panelId")),
   "webtoon.editText": (params, ctx) => {
     if (!Number.isSafeInteger(params.textIndex) || params.textIndex < 0) fail("bad-request", "textIndex is required.");
@@ -96,6 +103,17 @@ export const chatHandlers: HandlerGroup = {
       panelId: need(params.panelId, "panelId"),
       textIndex: params.textIndex,
       text: params.text,
+      width: stripWidth(params.width),
+    });
+  },
+  "webtoon.selectTake": (params, ctx) => {
+    if (!Number.isSafeInteger(params.take) || params.take < 0) fail("bad-request", "take is required.");
+    return pipelineOf(ctx).selectWebtoonTake({
+      chatId: need(params.chatId, "chatId"),
+      messageKey: need(params.messageKey, "messageKey"),
+      panelId: need(params.panelId, "panelId"),
+      take: params.take,
+      width: stripWidth(params.width),
     });
   },
 };

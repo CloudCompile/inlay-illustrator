@@ -1,7 +1,25 @@
 /**
- * Webtoon strip layout as stored and rendered: output of the backend layout engine (src/backend/webtoon/layout.ts, round 2
- * of the webtoon bench), input of the live-DOM renderer. Coordinates are strip pixels (690 px design width) unless noted.
+ * Webtoon strip layout as rendered: output of the backend layout engine (src/backend/webtoon/layout.ts, round 2 of the
+ * webtoon bench), input of the live-DOM renderer. Coordinates are strip pixels (`StripLayout.width` wide) unless noted.
  */
+
+/** Design width of the strip (desktop). */
+export const STRIP_WIDTH = 690;
+/** Narrowest layout width the backend lays out. */
+export const STRIP_MIN_LAYOUT_WIDTH = 360;
+/** Balloon text size in strip pixels (layout.ts `RULES.speech.size`). */
+export const STRIP_SPEECH_PX = 19;
+/** Smallest balloon text on screen, CSS px. */
+export const STRIP_MIN_TEXT_PX = 12;
+
+/**
+ * Layout width for a strip shown `renderWidth` CSS px wide: 690 when the scaled balloon text stays at least 12 px,
+ * else narrower, so text keeps its size and the panels get smaller around it.
+ */
+export function stripLayoutWidth(renderWidth: number): number {
+  const width = Math.floor((renderWidth * STRIP_SPEECH_PX) / STRIP_MIN_TEXT_PX);
+  return Math.min(STRIP_WIDTH, Math.max(STRIP_MIN_LAYOUT_WIDTH, width));
+}
 export type Rect = [number, number, number, number]; // x0, y0, x1, y1 in strip px
 export type Point = [number, number];
 
@@ -61,7 +79,7 @@ export interface WebtoonStripView {
   /** Increments on every write (the chat view refetches when it changes). */
   revision: number;
   title: string;
-  /** Null until the storyboard is planned. */
+  /** Laid out for the requested width; null until the storyboard is planned. */
   layout: StripLayout | null;
   panels: Record<string, WebtoonPanelState>;
   updatedAt: number;

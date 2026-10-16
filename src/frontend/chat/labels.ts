@@ -120,6 +120,8 @@ export const RETRY_DETAIL_STAGE_LABEL = "Detail {n} analysis";
 /** Webtoon strip in the chat (experimental; no Asset Maid original). */
 export const WEBTOON_LABELS = {
   reroll: "Redraw this panel",
+  previousTake: "Previous drawing",
+  nextTake: "Next drawing",
   drawing: "Drawing…",
   pending: "Not drawn yet",
   failed: "Webtoon failed",
@@ -132,6 +134,7 @@ export const WEBTOON_LABELS = {
   cancel: "Cancel",
   editFailed: "Could not save the text",
   rerollFailed: "Could not redraw the panel",
+  takeFailed: "Could not switch the drawing",
 } as const;
 
 export const COUNT_LABELS = {
@@ -151,8 +154,8 @@ export const COUNT_LABELS = {
   range: "Range", // 범위
   split: "Split", // 분할
   webtoon: "Webtoon", // 웹툰
-  webtoonNote: "6–8 panels", // 6~8컷 (webtoon mode: follows the message length)
-  webtoonNoteTitle: "Webtoon mode: one strip per message, 6 to 8 panels by message length.", // 웹툰 모드: 메시지마다 웹툰 한 편, 길이에 따라 6~8컷.
+  webtoonNote: "4–14 panels", // 4~14컷 (webtoon mode: follows the message length)
+  webtoonNoteTitle: "Webtoon mode: one strip per message, about one panel per 1,000 characters (4 to 14).", // 웹툰 모드: 메시지마다 웹툰 한 편, 1,000자당 약 1컷(4~14컷).
   splitUnsupported: "Split analysis is supported on V5. Select fixed or range.", // 분할 분석은 V5에서 지원합니다. 고정 또는 범위를 선택하세요.
   count: "Generation count", // 생성 장수
   countDecrease: "Decrease generation count", // 생성 장수 감소

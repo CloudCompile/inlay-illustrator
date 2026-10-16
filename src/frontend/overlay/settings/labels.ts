@@ -328,9 +328,7 @@ export const SYSTEM_LABELS = {
   developerModeDisabled: "Developer mode disabled.",
   chatImages: "Chat image generation",
   autoGeneration: { title: "Automatic generation", description: "Generates illustrations when an AI reply finishes." },
-  webtoonMode: { title: "Webtoon mode", description: "A message generation makes one webtoon strip (6 to 8 NovelAI panels with lettering) instead of inline illustrations." }, // 웹툰 모드 / 메시지마다 인라인 삽화 대신 웹툰 한 편(NovelAI 6~8컷, 말풍선 포함)을 만듭니다.
-  experimental: "Experimental", // 실험적
-  webtoonCount: { title: "Image count", description: "Automatic in webtoon mode: 6 to 8 panels by message length. Count and analysis mode settings are not used." }, // 장수 / 웹툰 모드에서는 자동: 메시지 길이에 따라 6~8컷. 장수와 분석 방식 설정은 사용하지 않습니다.
+  webtoonCount: { title: "Image count", description: "Automatic in webtoon mode: about one panel per 1,000 characters, 4 to 14. Count and analysis mode settings are not used. Turn webtoon mode on or off from the chat's image count panel." }, // 장수 / 웹툰 모드에서는 자동: 1,000자당 약 1컷, 4~14컷. 장수와 분석 방식 설정은 사용하지 않습니다. 웹툰 모드는 채팅의 장수 패널에서 켜고 끕니다.
   countMode: { title: "Image count", description: "Number of illustrations per message." },
   countModes: { fixed: "Fixed", range: "Range" },
   count: "Image count",

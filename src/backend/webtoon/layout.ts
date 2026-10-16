@@ -14,15 +14,17 @@ export interface PanelImage {
   cutout?: { src: string; bbox: NBox }; // RGBA cut-out of the characters (optional): enables a character frame-break on action beats
 }
 export interface LayoutOptions {
+  /** Inlay: strip width (default 690). Panel geometry and SFX scale with it; balloon and narration text keep their size. */
   width?: number;
   measure?: (text: string, font: FontKind, sizePx: number) => number; // text advance width in px; default: built-in font metrics
 }
 // Inlay: the output types live in the shared contract (the chat view renders them).
-import type { LaidItem, PanelLayout, Rect, StripLayout } from "../../shared/contract/webtoon.js";
+import { STRIP_SPEECH_PX, STRIP_WIDTH, type LaidItem, type PanelLayout, type Rect, type StripLayout } from "../../shared/contract/webtoon.js";
 export type { LaidItem, PanelLayout, Rect, StripLayout };
 
 // ---------- constants (same rules for every strip) ----------
 export const RULES = {
+  // Inlay: the geometry values below are for the 690 px width; `layoutStrip` scales them to `opts.width`.
   insetW: 500,
   maxPanelH: 1100,
   maxTitleH: 1050,
@@ -30,7 +32,7 @@ export const RULES = {
   maxBandH: 360,
   tightH: 400,
   gap: { base: 36, action: 22, reaction: 64, scene: 150, pause: 120 },
-  speech: { size: 19, lh: 22 },
+  speech: { size: STRIP_SPEECH_PX, lh: 22 },
   narration: { size: 20, lh: 24 },
   sfx: { action: 88, normal: 64, beat: 72, letterSpacing: 2 },
   sfxColors: ["#ff4f7f", "#ffc21a", "#38c6ff", "#ff7a2e"],
@@ -64,7 +66,8 @@ export function isShout(t: string): boolean {
 }
 
 export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, opts: LayoutOptions = {}): StripLayout {
-  const W = opts.width ?? 690;
+  const W = opts.width ?? STRIP_WIDTH;
+  const k = W / STRIP_WIDTH;
   const measure = opts.measure ?? defaultMeasure;
   const log: string[] = [];
   const panelsOut: PanelLayout[] = [];
@@ -91,11 +94,11 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
   function shape(p: ImagePanel, iw: number, ih: number) {
     const lay = p.layout;
     let x = 0, w = W;
-    if (lay === "inset_left" || lay === "inset_right") { w = RULES.insetW; x = lay === "inset_left" ? 0 : W - w; }
+    if (lay === "inset_left" || lay === "inset_right") { w = Math.round(RULES.insetW * k); x = lay === "inset_left" ? 0 : W - w; }
     let h = Math.round((w * ih) / iw);
-    if (lay === "tight_crop") h = Math.min(h, RULES.tightH);
-    else if (lay === "wide_band") h = Math.min(h, RULES.maxBandH);
-    h = Math.min(h, lay === "title" ? RULES.maxTitleH : lay.startsWith("inset") ? RULES.maxInsetH : RULES.maxPanelH);
+    if (lay === "tight_crop") h = Math.min(h, RULES.tightH * k);
+    else if (lay === "wide_band") h = Math.min(h, RULES.maxBandH * k);
+    h = Math.round(Math.min(h, (lay === "title" ? RULES.maxTitleH : lay.startsWith("inset") ? RULES.maxInsetH : RULES.maxPanelH) * k));
     const vis = (w / iw) * ih;
     return { x, w, h, frac: h < vis - 1 ? h / vis : 1 };
   }
@@ -175,7 +178,7 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
     if (p.beat === "action" && img.cutout && chars.length === 1) { // one actor: the cut-out is that character
       const bb = img.cutout.bbox;
       const [bl, bt] = toPx(bb.left, bb.top); const [br] = toPx(bb.right, bb.bottom);
-      const depth = clamp(0.1 * h, RULES.breakDepth[0], RULES.breakDepth[1]);
+      const depth = clamp(0.1 * h, RULES.breakDepth[0] * k, RULES.breakDepth[1] * k);
       const sideDepth = Math.min(depth, 0.12 * w);
       if (bt > 0.03 * h && bt <= RULES.breakMaxTop * h) { frame = [x0, bt + depth, x0 + w, h]; frameBreak = "top"; cutTop = bt; }
       // side breaks only toward an inset's free column, so the panel loses little width
@@ -286,7 +289,7 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
 
     const placeSfx = (t: TextItem): LaidItem => {
       const action = p.beat === "action";
-      const size = action ? RULES.sfx.action : RULES.sfx.normal;
+      const size = Math.round((action ? RULES.sfx.action : RULES.sfx.normal) * k);
       const tw = measure(t.text.toUpperCase(), "sfx", size);
       const bw = tw + 10, bh = size + 10;
       const breakEdge = action && sfxInPanel === 0;
@@ -359,7 +362,7 @@ export function layoutStrip(sb: Storyboard, images: Record<string, PanelImage>, 
     let side = 0;
     for (const t of p.text) {
       if (t.type === "sfx") {
-        const size = RULES.sfx.beat, tw = measure(t.text.toUpperCase(), "sfx", size);
+        const size = Math.round(RULES.sfx.beat * k), tw = measure(t.text.toUpperCase(), "sfx", size);
         items.push({ kind: "sfx", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, cx: W / 2, cy: y + size / 2, size, rot: -8, color: RULES.sfxColors[sfxI++ % RULES.sfxColors.length],
                      rect: [W / 2 - tw / 2, y, W / 2 + tw / 2, y + size], breaksFrame: false });
         y += size + 30; continue;

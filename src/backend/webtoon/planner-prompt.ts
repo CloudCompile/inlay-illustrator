@@ -12,7 +12,7 @@ How the target webtoons are built:
 - Balloons sit ON the art, in the empty part of the panel next to the speaker's head (sky, wall, ceiling), or straddle the panel's top/bottom edge, with a tail pointing at the speaker. They never cover faces. Narration boxes sit on the panel's corners. Sound effects are big bold lettering over the art, and on action beats they break out of the panel frame.
 
 Hard rules (checked by code; violations are removed or repaired automatically):
-1. {{PANELS}} "image" panels in reading order (6 to 8 accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
+1. {{PANELS}} "image" panels in reading order ({{MIN}} to {{MAX}} accepted). The first image panel may use layout "title": an establishing shot of the place with the top 40% empty (sky/ceiling) for the episode title, no text items.
 2. At most 2 speech/thought balloons per panel, each at most 10 words (12 is the absolute maximum). Split long lines over panels.
 3. Narration goes ON the image panels: up to 2 narration boxes per image panel (one at a top corner = before the panel's dialogue, one at a bottom corner = after it). Use at most 1 "text_beat" panel (narration on white), only for a deliberate pause (a time skip or a punchline beat), and set "pause": true on it.
 4. Speech and thought text must be COPIED VERBATIM from the source (dialogue in quotes, or italic/inner thoughts). You may cut a line short, drop words and mark the gap with "...", or join the parts of ONE line that the source splits with a speech tag ("No," she said. "I was..." -> "No, I was..."). Never add, change or invent words. Narration boxes reuse the source's own narration wording, shortened.
@@ -81,9 +81,18 @@ export interface PlannerRosterEntry {
   currentOutfitId: string;
 }
 
-/** 6 image panels up to 2500 characters, 7 up to 5000, else 8. */
+export const WEBTOON_MIN_PANELS = 4;
+/** Measured on the 17k-char bench chapter (webtoon-polish.md): the planner stays valid and under 2 minutes at this count. */
+export const WEBTOON_MAX_PANELS = 14;
+
+/** About one image panel per 1,000 characters, 4 to WEBTOON_MAX_PANELS. */
 export function webtoonPanelTarget(sourceLength: number): number {
-  return sourceLength <= 2500 ? 6 : sourceLength <= 5000 ? 7 : 8;
+  return Math.min(WEBTOON_MAX_PANELS, Math.max(WEBTOON_MIN_PANELS, Math.round(sourceLength / 1000)));
+}
+
+/** Image panel counts the run accepts for a target: up to 2 fewer or 2 more, inside the global bounds. */
+export function webtoonPanelRange(target: number): { min: number; max: number } {
+  return { min: Math.max(WEBTOON_MIN_PANELS, target - 2), max: Math.min(WEBTOON_MAX_PANELS, target + 2) };
 }
 
 function items(outfit: PlannerCharacter["outfit"]): string {
@@ -102,14 +111,17 @@ export function rosterLines(roster: readonly PlannerRosterEntry[]): string {
     .join("\n");
 }
 
-export function buildPlannerPrompt(args: { roster: readonly PlannerRosterEntry[]; source: string; offscreenNote?: string }): string {
+export function buildPlannerPrompt(args: { roster: readonly PlannerRosterEntry[]; source: string; panels: number; offscreenNote?: string }): string {
+  const range = webtoonPanelRange(args.panels);
   const fill: Record<string, string> = {
-    "{{PANELS}}": String(webtoonPanelTarget(args.source.length)),
+    "{{PANELS}}": String(args.panels),
+    "{{MIN}}": String(range.min),
+    "{{MAX}}": String(range.max),
     "{{ROSTER}}": rosterLines(args.roster),
     "{{OFFSCREEN}}": args.offscreenNote ?? "",
     "{{SOURCE}}": args.source,
   };
-  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
+  return PLANNER_PROMPT_TEMPLATE.replace(/\{\{(?:PANELS|MIN|MAX|ROSTER|OFFSCREEN|SOURCE)\}\}/gu, (m) => fill[m] ?? m);
 }
 
 /** Inlay: the planner's outfit pick per character (unknown ids fall back to the current outfit). */

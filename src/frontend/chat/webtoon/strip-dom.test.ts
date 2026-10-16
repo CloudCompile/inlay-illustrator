@@ -8,7 +8,8 @@ import { renderStrip } from "./strip-dom.js";
 
 const win = new Window({ url: "http://localhost/" });
 const doc = win.document as unknown as Document;
-const labels = { reroll: "Redraw", drawing: "Drawing", failed: "Failed", pending: "Pending", edit: "Edit" };
+const labels = { reroll: "Redraw", previousTake: "Previous", nextTake: "Next", drawing: "Drawing", failed: "Failed", pending: "Pending", edit: "Edit" };
+const take = (n: number) => ({ imageId: `img-${n}`, url: `/api/v1/image-gen/results/img-${n}`, seed: String(n), width: 832, height: 1216, createdAt: n });
 
 function view(): WebtoonStripView {
   const storyboard = fixture as unknown as Storyboard;
@@ -19,7 +20,7 @@ function view(): WebtoonStripView {
   for (const [i, lp] of layout.panels.entries()) {
     const p = { panelId: String(lp.id) };
     panels[p.panelId] = i === 0
-      ? { panelId: p.panelId, status: "done", selected: 0, takes: [{ imageId: "img-1", url: "/api/v1/image-gen/results/img-1", seed: "1", width: 832, height: 1216, createdAt: 0 }] }
+      ? { panelId: p.panelId, status: "done", selected: 0, takes: [take(1)] }
       : i === 1 ? { panelId: p.panelId, status: "error", selected: -1, takes: [], error: "429" } : { panelId: p.panelId, status: "pending", selected: -1, takes: [] };
   }
   return { chatId: "c", messageKey: "illustration:m@0", status: "generating", revision: 3, title: "T", layout, panels, updatedAt: 0 };
@@ -30,7 +31,7 @@ describe("webtoon strip DOM", () => {
     const v = view();
     const calls: string[] = [];
     const ids = v.layout!.panels.map((p) => String(p.id));
-    const canvas = renderStrip(doc, v, { onReroll: (id) => calls.push(`reroll:${id}`), onEditText: (t) => calls.push(`edit:${t.panelId}:${t.textIndex}:${t.text}`) }, { busyPanels: new Set([ids[2]!]), stripBusy: false, labels })!;
+    const canvas = renderStrip(doc, v, { onReroll: (id) => calls.push(`reroll:${id}`), onSelectTake: () => {}, onEditText: (t) => calls.push(`edit:${t.panelId}:${t.textIndex}:${t.text}`) }, { busyPanels: new Set([ids[2]!]), stripBusy: false, labels })!;
     expect(canvas.style.height).toBe(`${v.layout!.height}px`);
     const panels = canvas.querySelectorAll("[data-ii-wt-panel]");
     expect(panels.length).toBe(v.layout!.panels.length);
@@ -53,7 +54,25 @@ describe("webtoon strip DOM", () => {
     expect(calls.at(-1)).toBe(`reroll:${ids[0]}`);
   });
 
+  test("take arrows only on a panel with older takes, shown while the pointer is over that panel", () => {
+    const v = view();
+    const id = String(v.layout!.panels[0]!.id);
+    v.panels[id] = { ...v.panels[id]!, takes: [take(1), take(2), take(3)], selected: 2 };
+    const calls: string[] = [];
+    const canvas = renderStrip(doc, v, { onReroll() {}, onSelectTake: (panelId, n) => calls.push(`${panelId}:${n}`), onEditText() {} }, { busyPanels: new Set(), stripBusy: false, labels })!;
+    expect(canvas.querySelectorAll("[data-ii-wt-take]").length).toBe(2);
+    const controls = canvas.querySelector(`[data-ii-wt-controls="${id}"]`)!;
+    const [prev, next] = [...controls.querySelectorAll("[data-ii-wt-take]")] as HTMLButtonElement[];
+    expect(prev!.title).toBe("Previous (3/3)");
+    expect([prev!.disabled, next!.disabled]).toEqual([false, true]);
+    prev!.click();
+    expect(calls).toEqual([`${id}:1`]);
+    canvas.querySelector(`[data-ii-wt-panel="${id}"] img`)!.dispatchEvent(new win.Event("pointerover", { bubbles: true }) as unknown as Event);
+    expect(controls.hasAttribute("data-ii-wt-hover")).toBe(true);
+    expect(canvas.querySelectorAll("[data-ii-wt-hover]").length).toBe(1);
+  });
+
   test("no layout yet -> nothing to draw", () => {
-    expect(renderStrip(doc, { ...view(), layout: null }, { onReroll() {}, onEditText() {} }, { busyPanels: new Set(), stripBusy: true, labels })).toBeNull();
+    expect(renderStrip(doc, { ...view(), layout: null }, { onReroll() {}, onSelectTake() {}, onEditText() {} }, { busyPanels: new Set(), stripBusy: true, labels })).toBeNull();
   });
 });
