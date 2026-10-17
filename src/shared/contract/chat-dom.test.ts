@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CHAT_ACTION_RPC, CHAT_ACTIONS, ILLUSTRATION_ATTR, imageIdFromResultUrl, imageResultUrl, pagerStep, readIllustrationAttributes, renderIllustrationBlock } from "./chat-dom.js";
+import { CHAT_ACTION_RPC, CHAT_ACTIONS, ILLUSTRATION_ATTR, illustrationBlockStyles, imageIdFromResultUrl, imageResultUrl, pagerStep, readIllustrationAttributes, renderIllustrationBlock } from "./chat-dom.js";
 import { isRpcMethod } from "./rpc.js";
 
 const input = {
@@ -38,6 +38,12 @@ describe("chat DOM contract", () => {
     expect(parsed).toMatchObject({ chatId: "chat-1", messageId: "m-1", swipeId: 2, slotIndex: 0, entryId: 'e"1', entryIndex: 1, entryCount: 3, canRegenerate: true, imageId: input.imageId });
     expect(html).toContain(`src="${imageResultUrl(input.imageId)}"`);
     expect(attrs.get(ILLUSTRATION_ATTR.block)).toBe("true");
+  });
+  test("the frame carries the height cap in its width, so it keeps the image ratio", () => {
+    const { frame, image } = illustrationBlockStyles(1216, 832, 100);
+    expect(frame).toContain("width:min(var(--ii-am-chat-image-width,100%),calc(min(994px,85vh)*1216/832));max-width:100%;aspect-ratio:1216/832;");
+    expect(frame).not.toContain("max-height");
+    expect(image).toContain("width:100%;height:auto;");
   });
   test("non-blocks are ignored", () => {
     expect(readIllustrationAttributes(() => null)).toBeNull();

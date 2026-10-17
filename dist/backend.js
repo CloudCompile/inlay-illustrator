@@ -4617,6 +4617,7 @@ var ILLUSTRATION_ATTR = {
 var DEFAULT_ILLUSTRATION_WIDTH = 832;
 var DEFAULT_ILLUSTRATION_HEIGHT = 1216;
 var CHAT_IMAGE_WIDTH_VAR = "--ii-am-chat-image-width";
+var CHAT_IMAGE_MAX_HEIGHT = "min(994px,85vh)";
 function imageResultUrl(imageId) {
   return `/api/v1/image-gen/results/${encodeURIComponent(imageId)}`;
 }
@@ -4648,8 +4649,8 @@ function illustrationBlockStyles(width, height, widthPercent) {
   const ratio = `${width}/${height}`;
   return {
     wrapper: "display:flex;flex-direction:column;align-items:center;margin:10px 0;width:100%;",
-    frame: `position:relative;display:block;width:var(${CHAT_IMAGE_WIDTH_VAR},${pct}%);max-width:100%;max-height:min(994px,85vh);aspect-ratio:${ratio};overflow:hidden;border-radius:8px;`,
-    image: `display:block;width:100%;height:100%;max-width:100%;max-height:none;aspect-ratio:${ratio};object-fit:contain;border-radius:8px;cursor:zoom-in;`
+    frame: `position:relative;display:block;width:min(var(${CHAT_IMAGE_WIDTH_VAR},${pct}%),calc(${CHAT_IMAGE_MAX_HEIGHT}*${ratio}));max-width:100%;aspect-ratio:${ratio};overflow:hidden;border-radius:8px;`,
+    image: `display:block;width:100%;height:auto;max-width:100%;max-height:none;aspect-ratio:${ratio};object-fit:contain;border-radius:8px;cursor:zoom-in;`
   };
 }
 function renderIllustrationBlock(input) {

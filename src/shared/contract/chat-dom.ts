@@ -76,6 +76,8 @@ export const DEFAULT_ILLUSTRATION_WIDTH = 832;
 export const DEFAULT_ILLUSTRATION_HEIGHT = 1216;
 /** CSS custom property the frontend may set on the chat root to restyle widths live (AM `--am-chat-image-width`). */
 export const CHAT_IMAGE_WIDTH_VAR = "--ii-am-chat-image-width";
+/** Height cap of a chat image (AM 994px; 85vh keeps it inside short windows). */
+export const CHAT_IMAGE_MAX_HEIGHT = "min(994px,85vh)";
 
 export interface IllustrationBlockInput {
   chatId: string;
@@ -154,16 +156,20 @@ function clampPercent(value: unknown): number {
   return Number.isFinite(n) ? Math.min(100, Math.max(30, n)) : 70;
 }
 
-/** Inline styles of a baked block (AM `wbt`/`BI` simplified: width % of the message column, aspect from the image). */
+/**
+ * Inline styles of a baked block (AM `wbt`/`BI` simplified: width % of the message column, aspect from the image).
+ * The height cap is applied through the frame width (cap x width/height), so the frame always keeps the image's ratio
+ * and never clips it; the image fills it at its own ratio.
+ */
 export function illustrationBlockStyles(width: number, height: number, widthPercent: number): { wrapper: string; frame: string; image: string } {
   const pct = clampPercent(widthPercent);
   const ratio = `${width}/${height}`;
   return {
     wrapper: "display:flex;flex-direction:column;align-items:center;margin:10px 0;width:100%;",
-    frame: `position:relative;display:block;width:var(${CHAT_IMAGE_WIDTH_VAR},${pct}%);max-width:100%;max-height:min(994px,85vh);aspect-ratio:${ratio};overflow:hidden;border-radius:8px;`,
+    frame: `position:relative;display:block;width:min(var(${CHAT_IMAGE_WIDTH_VAR},${pct}%),calc(${CHAT_IMAGE_MAX_HEIGHT}*${ratio}));max-width:100%;aspect-ratio:${ratio};overflow:hidden;border-radius:8px;`,
     // max-height:none: host prose CSS caps message images (`--prose-image-max-height`, 240px) and would shrink the image
     // inside the frame.
-    image: `display:block;width:100%;height:100%;max-width:100%;max-height:none;aspect-ratio:${ratio};object-fit:contain;border-radius:8px;cursor:zoom-in;`,
+    image: `display:block;width:100%;height:auto;max-width:100%;max-height:none;aspect-ratio:${ratio};object-fit:contain;border-radius:8px;cursor:zoom-in;`,
   };
 }
 

@@ -1,3 +1,5 @@
+import { CHAT_IMAGE_MAX_HEIGHT } from "../../shared/contract/chat-dom.js";
+
 /**
  * Chat-side stylesheet (injected with ctx.dom.addStyle). Ported from Asset Maid's chat runtime CSS
  * (extract/ui/chat-runtime.css: `gPt` footer, `vbt` edge controls, `kq` toasts + count panel, `LIe` error dialog).
@@ -126,8 +128,17 @@ export const CHAT_SIDE_CSS = String.raw`
   transition: opacity .16s ease;
 }
 /* Host prose CSS caps message images (max-height: var(--prose-image-max-height, 240px)); blocks baked before the inline
-   max-height:none fix still need this override. */
-.inlay-illustrator-frame > img.inlay-illustrator-img { max-height: none !important; max-width: 100% !important; height: 100% !important; }
+   max-height:none fix still need this override. height:auto: the frame has the image's ratio, so the image fills it
+   without a percentage height (which some hosts leave unresolved). */
+.inlay-illustrator-frame > img.inlay-illustrator-img { max-height: none !important; max-width: 100% !important; height: auto !important; }
+/* Frames baked with max-height: once the cap applied, the frame kept its width and lost the image's ratio, so the image
+   was cut (or letterboxed). Drop that cap. Where attr() reads the image's width/height, size the image to
+   min(width setting, cap x ratio) and let the frame wrap it, as new blocks do inline. */
+.inlay-illustrator-frame[style*="max-height"] { max-height: none !important; }
+@supports (width: calc(attr(width type(<number>)) * 1px)) {
+  .inlay-illustrator-frame[style*="max-height"] { width: auto !important; max-width: min(100%, var(--ii-am-chat-image-width, 70%)) !important; }
+  .inlay-illustrator-frame[style*="max-height"] > img.inlay-illustrator-img { width: calc(${CHAT_IMAGE_MAX_HEIGHT} * attr(width type(<number>)) / attr(height type(<number>))) !important; }
+}
 .inlay-illustrator-frame:hover .ii-am-root.ii-am-chat-edge,
 .ii-am-root.ii-am-chat-edge:focus-within,
 .ii-am-root.ii-am-chat-edge[data-ii-busy="true"] { opacity: 1; }
