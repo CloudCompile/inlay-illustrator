@@ -103,7 +103,8 @@ export const ANALYSIS_LABELS = {
   controls: {
     "comic.speech-bubble": "Speech bubbles", // 말풍선
     "comic.landscape": "Landscape", // 가로형
-    "comic.minimum-panels": "Minimum panels" // 최소 컷
+    "comic.minimum-panels": "Minimum panels", // 최소 컷
+    "pov.hands": "POV hands required" // POV hands 필수
   } as Record<string, string>
 } as const;
 

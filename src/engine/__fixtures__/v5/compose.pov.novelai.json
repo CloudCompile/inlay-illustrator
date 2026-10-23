@@ -156,6 +156,12 @@
         "options": [
          "pov"
         ]
+       },
+       {
+        "id": "camera.pov",
+        "options": [
+         "pov_hands"
+        ]
        }
       ],
       "instruction": "First-person view from the persona at the gate."
@@ -305,7 +311,7 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-064e26890e3120df",
+  "requestPayload": "fnv1a64-f0fd20a4873772e8",
   "localProjection": {
    "allowedSizeIds": [
     1,
@@ -314,7 +320,7 @@
    ],
    "characterCoordinates": "persona-automatic"
   },
-  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
+  "catalogFingerprint": "v5.fnv1a64-e275e8a1dab52c47"
  },
  "plans": [
   {
@@ -974,7 +980,7 @@
        {
         "id": "scene-pov",
         "name": "pov 연출",
-        "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+        "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when the persona's hands and arms are not visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Select camera.pov option pov_hands only when the persona's hands or arms are visibly framed for action, contact, object manipulation, or spatial distance; otherwise leave this modifier unselected. Keep the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
         "scenePresetId": "pov"
        },
        {
@@ -991,7 +997,7 @@
        }
       ],
       "presetId": "pov",
-      "customText": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number."
+      "customText": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when the persona's hands and arms are not visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Select camera.pov option pov_hands only when the persona's hands or arms are visibly framed for action, contact, object manipulation, or spatial distance; otherwise leave this modifier unselected. Keep the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number."
      },
      "imageRatio": {
       "mode": "preset",
@@ -1103,10 +1109,10 @@
     }
    },
    "analysisMetadata": {
-    "hash": "fnv1a64-511229b6be5d705b"
+    "hash": "fnv1a64-364921c8c14fae2e"
    },
    "decision": {
-    "hash": "fnv1a64-fff07dff97873296"
+    "hash": "fnv1a64-e3063b1a1a35e691"
    },
    "analyzerContinuity": {
     "previous_modifiers": {
@@ -1224,7 +1230,7 @@
        {
         "id": "scene-pov",
         "name": "pov 연출",
-        "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+        "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when the persona's hands and arms are not visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Select camera.pov option pov_hands only when the persona's hands or arms are visibly framed for action, contact, object manipulation, or spatial distance; otherwise leave this modifier unselected. Keep the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
         "scenePresetId": "pov"
        },
        {
@@ -1241,7 +1247,7 @@
        }
       ],
       "presetId": "pov",
-      "customText": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number."
+      "customText": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when the persona's hands and arms are not visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Select camera.pov option pov_hands only when the persona's hands or arms are visibly framed for action, contact, object manipulation, or spatial distance; otherwise leave this modifier unselected. Keep the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number."
      },
      "imageRatio": {
       "mode": "preset",
@@ -1344,7 +1350,7 @@
     }
    },
    "generationRecord": {
-    "hash": "fnv1a64-42364b79a0043b9d"
+    "hash": "fnv1a64-ed9df0217538c612"
    }
   }
  ],

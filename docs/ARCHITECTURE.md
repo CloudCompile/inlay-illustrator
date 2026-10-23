@@ -1,6 +1,6 @@
 # Architecture (Asset Maid port, 0.10.x)
 
-Inlay Illustrator 0.10 is a port of the RisuAI plugin **Asset Maid 0.9.88** to Lumiverse.
+Inlay Illustrator 0.10 is a port of the RisuAI plugin **Asset Maid** to Lumiverse (ported from 0.9.88; the generated cores now follow 0.9.89.6, see `src/engine/README.md`).
 The Lightboard pipeline of 0.9.x is gone. This document describes the target layout, the toolchain,
 how the overlay UI is mounted and styled, file ownership during the port, and how to build and test.
 

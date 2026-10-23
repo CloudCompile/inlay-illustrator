@@ -1144,6 +1144,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -2124,6 +2125,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -4026,6 +4028,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -4727,6 +4730,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -6092,6 +6096,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -6614,6 +6619,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -7878,6 +7884,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -8421,6 +8428,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -9246,6 +9254,12 @@
        "options": [
         "pov"
        ]
+      },
+      {
+       "id": "camera.pov",
+       "options": [
+        "pov_hands"
+       ]
       }
      ],
      "instruction": "First-person view from the persona at the gate."
@@ -9794,7 +9808,7 @@
      },
      {
       "rule": {
-       "id": "rule:fnv1a64-6a35c1c1c4d58387",
+       "id": "rule:fnv1a64-c13b03cda5c7d765",
        "source": {
         "kind": "option",
         "definitionId": "camera.view",
@@ -9808,6 +9822,50 @@
         "add": {
          "option": {
           "persona.framing.presence": [
+           "out_of_frame"
+          ]
+         }
+        }
+       },
+       "effects": {
+        "add": {
+         "option": {
+          "persona.framing.presence": [
+           "out_of_frame"
+          ]
+         }
+        }
+       }
+      },
+      "owner": {
+       "kind": "global"
+      },
+      "chanceOwner": {
+       "kind": "global"
+      },
+      "sourceOptions": [
+       "pov"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-cc3df8b477d64c97",
+       "source": {
+        "kind": "option",
+        "definitionId": "camera.pov",
+        "optionId": "pov_hands",
+        "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "add": {
+         "option": {
+          "camera.view": [
+           "pov"
+          ],
+          "persona.framing.presence": [
            "pov_hands",
            "out_of_frame"
           ]
@@ -9817,6 +9875,9 @@
        "effects": {
         "add": {
          "option": {
+          "camera.view": [
+           "pov"
+          ],
           "persona.framing.presence": [
            "pov_hands",
            "out_of_frame"
@@ -9832,7 +9893,7 @@
        "kind": "global"
       },
       "sourceOptions": [
-       "pov"
+       "pov_hands"
       ]
      },
      {
@@ -10021,7 +10082,232 @@
      },
      {
       "rule": {
-       "id": "rule:fnv1a64-6a35c1c1c4d58387",
+       "id": "rule:fnv1a64-7d921ae24ec88be7",
+       "source": {
+        "kind": "stage",
+        "stage": "actor_detail",
+        "sourcePath": "raw.stages.actor_detail.rules[0]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        },
+        "when": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "effects": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        }
+       },
+       "condition": {
+        "attribute": {
+         "actor.outfit.nude": true
+        }
+       }
+      },
+      "owner": {
+       "kind": "actor",
+       "actorId": "actor_1",
+       "placementIndex": 0
+      },
+      "chanceOwner": {
+       "kind": "actor",
+       "actorId": "actor_1",
+       "placementIndex": 0
+      },
+      "sourceOptions": []
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-7d921ae24ec88be7",
+       "source": {
+        "kind": "stage",
+        "stage": "actor_detail",
+        "sourcePath": "raw.stages.actor_detail.rules[0]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        },
+        "when": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "effects": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        }
+       },
+       "condition": {
+        "attribute": {
+         "actor.outfit.nude": true
+        }
+       }
+      },
+      "owner": {
+       "kind": "actor",
+       "actorId": "actor_2",
+       "placementIndex": 2
+      },
+      "chanceOwner": {
+       "kind": "actor",
+       "actorId": "actor_2",
+       "placementIndex": 2
+      },
+      "sourceOptions": []
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-af514dbd2c0ad015",
+       "source": {
+        "kind": "option",
+        "definitionId": "camera.pov",
+        "optionId": "pov_hands",
+        "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[1]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "remove": {
+         "prompt": {
+          "persona.actor.action.*": "*",
+          "persona.actor.injury.*": "*",
+          "persona.actor.pose.*": "*",
+          "persona.continuity.*": "*",
+          "persona.expression.*": "*",
+          "persona.gaze.direction.*": "*",
+          "persona.identity.*": "*",
+          "persona.interaction.*": "*",
+          "persona.manual.*": "*",
+          "persona.object.*": "*",
+          "persona.orientation.*": "*",
+          "persona.outfit.*": "*",
+          "persona.placement.*": "*",
+          "persona.state.*": "*"
+         }
+        },
+        "when": {
+         "not": {
+          "option": {
+           "camera.view": "pov"
+          }
+         }
+        }
+       },
+       "effects": {
+        "remove": {
+         "prompt": {
+          "persona.actor.action.*": "*",
+          "persona.actor.injury.*": "*",
+          "persona.actor.pose.*": "*",
+          "persona.continuity.*": "*",
+          "persona.expression.*": "*",
+          "persona.gaze.direction.*": "*",
+          "persona.identity.*": "*",
+          "persona.interaction.*": "*",
+          "persona.manual.*": "*",
+          "persona.object.*": "*",
+          "persona.orientation.*": "*",
+          "persona.outfit.*": "*",
+          "persona.placement.*": "*",
+          "persona.state.*": "*"
+         }
+        }
+       },
+       "condition": {
+        "not": {
+         "option": {
+          "camera.view": "pov"
+         }
+        }
+       }
+      },
+      "owner": {
+       "kind": "global"
+      },
+      "chanceOwner": {
+       "kind": "global"
+      },
+      "sourceOptions": [
+       "pov_hands"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-c13b03cda5c7d765",
        "source": {
         "kind": "option",
         "definitionId": "camera.view",
@@ -10035,7 +10321,6 @@
         "add": {
          "option": {
           "persona.framing.presence": [
-           "pov_hands",
            "out_of_frame"
           ]
          }
@@ -10045,7 +10330,6 @@
         "add": {
          "option": {
           "persona.framing.presence": [
-           "pov_hands",
            "out_of_frame"
           ]
          }
@@ -10064,151 +10348,52 @@
      },
      {
       "rule": {
-       "id": "rule:fnv1a64-7d921ae24ec88be7",
+       "id": "rule:fnv1a64-cc3df8b477d64c97",
        "source": {
-        "kind": "stage",
-        "stage": "actor_detail",
-        "sourcePath": "raw.stages.actor_detail.rules[0]"
+        "kind": "option",
+        "definitionId": "camera.pov",
+        "optionId": "pov_hands",
+        "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
        },
        "phases": [
         "result"
        ],
        "rule": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
+        "add": {
+         "option": {
+          "camera.view": [
+           "pov"
+          ],
+          "persona.framing.presence": [
+           "pov_hands",
+           "out_of_frame"
           ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        },
-        "when": {
-         "attribute": {
-          "actor.outfit.nude": true
          }
         }
        },
        "effects": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
+        "add": {
+         "option": {
+          "camera.view": [
+           "pov"
+          ],
+          "persona.framing.presence": [
+           "pov_hands",
+           "out_of_frame"
           ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        }
-       },
-       "condition": {
-        "attribute": {
-         "actor.outfit.nude": true
-        }
-       }
-      },
-      "owner": {
-       "kind": "actor",
-       "actorId": "actor_1",
-       "placementIndex": 0
-      },
-      "chanceOwner": {
-       "kind": "actor",
-       "actorId": "actor_1",
-       "placementIndex": 0
-      },
-      "sourceOptions": []
-     },
-     {
-      "rule": {
-       "id": "rule:fnv1a64-7d921ae24ec88be7",
-       "source": {
-        "kind": "stage",
-        "stage": "actor_detail",
-        "sourcePath": "raw.stages.actor_detail.rules[0]"
-       },
-       "phases": [
-        "result"
-       ],
-       "rule": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        },
-        "when": {
-         "attribute": {
-          "actor.outfit.nude": true
          }
         }
-       },
-       "effects": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        }
-       },
-       "condition": {
-        "attribute": {
-         "actor.outfit.nude": true
-        }
        }
       },
       "owner": {
-       "kind": "actor",
-       "actorId": "actor_2",
-       "placementIndex": 2
+       "kind": "global"
       },
       "chanceOwner": {
-       "kind": "actor",
-       "actorId": "actor_2",
-       "placementIndex": 2
+       "kind": "global"
       },
-      "sourceOptions": []
+      "sourceOptions": [
+       "pov_hands"
+      ]
      },
      {
       "rule": {
@@ -10300,6 +10485,9 @@
      "global:camera.view": [
       "pov"
      ],
+     "global:camera.pov": [
+      "pov_hands"
+     ],
      "actor:actor_1:0:gaze.direction": [
       "looking_at_viewer"
      ],
@@ -10321,6 +10509,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -10414,6 +10603,12 @@
        "id": "camera.view",
        "options": [
         "pov"
+       ]
+      },
+      {
+       "id": "camera.pov",
+       "options": [
+        "pov_hands"
        ]
       }
      ],
@@ -10880,7 +11075,7 @@
       },
       {
        "rule": {
-        "id": "rule:fnv1a64-6a35c1c1c4d58387",
+        "id": "rule:fnv1a64-c13b03cda5c7d765",
         "source": {
          "kind": "option",
          "definitionId": "camera.view",
@@ -10894,6 +11089,50 @@
          "add": {
           "option": {
            "persona.framing.presence": [
+            "out_of_frame"
+           ]
+          }
+         }
+        },
+        "effects": {
+         "add": {
+          "option": {
+           "persona.framing.presence": [
+            "out_of_frame"
+           ]
+          }
+         }
+        }
+       },
+       "owner": {
+        "kind": "global"
+       },
+       "chanceOwner": {
+        "kind": "global"
+       },
+       "sourceOptions": [
+        "pov"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-cc3df8b477d64c97",
+        "source": {
+         "kind": "option",
+         "definitionId": "camera.pov",
+         "optionId": "pov_hands",
+         "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "add": {
+          "option": {
+           "camera.view": [
+            "pov"
+           ],
+           "persona.framing.presence": [
             "pov_hands",
             "out_of_frame"
            ]
@@ -10903,6 +11142,9 @@
         "effects": {
          "add": {
           "option": {
+           "camera.view": [
+            "pov"
+           ],
            "persona.framing.presence": [
             "pov_hands",
             "out_of_frame"
@@ -10918,7 +11160,7 @@
         "kind": "global"
        },
        "sourceOptions": [
-        "pov"
+        "pov_hands"
        ]
       },
       {
@@ -11107,7 +11349,232 @@
       },
       {
        "rule": {
-        "id": "rule:fnv1a64-6a35c1c1c4d58387",
+        "id": "rule:fnv1a64-7d921ae24ec88be7",
+        "source": {
+         "kind": "stage",
+         "stage": "actor_detail",
+         "sourcePath": "raw.stages.actor_detail.rules[0]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "when": {
+          "attribute": {
+           "actor.outfit.nude": true
+          }
+         }
+        },
+        "effects": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         }
+        },
+        "condition": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "owner": {
+        "kind": "actor",
+        "actorId": "actor_1",
+        "placementIndex": 0
+       },
+       "chanceOwner": {
+        "kind": "actor",
+        "actorId": "actor_1",
+        "placementIndex": 0
+       },
+       "sourceOptions": []
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-7d921ae24ec88be7",
+        "source": {
+         "kind": "stage",
+         "stage": "actor_detail",
+         "sourcePath": "raw.stages.actor_detail.rules[0]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "when": {
+          "attribute": {
+           "actor.outfit.nude": true
+          }
+         }
+        },
+        "effects": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         }
+        },
+        "condition": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "owner": {
+        "kind": "actor",
+        "actorId": "actor_2",
+        "placementIndex": 2
+       },
+       "chanceOwner": {
+        "kind": "actor",
+        "actorId": "actor_2",
+        "placementIndex": 2
+       },
+       "sourceOptions": []
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-af514dbd2c0ad015",
+        "source": {
+         "kind": "option",
+         "definitionId": "camera.pov",
+         "optionId": "pov_hands",
+         "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[1]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "remove": {
+          "prompt": {
+           "persona.actor.action.*": "*",
+           "persona.actor.injury.*": "*",
+           "persona.actor.pose.*": "*",
+           "persona.continuity.*": "*",
+           "persona.expression.*": "*",
+           "persona.gaze.direction.*": "*",
+           "persona.identity.*": "*",
+           "persona.interaction.*": "*",
+           "persona.manual.*": "*",
+           "persona.object.*": "*",
+           "persona.orientation.*": "*",
+           "persona.outfit.*": "*",
+           "persona.placement.*": "*",
+           "persona.state.*": "*"
+          }
+         },
+         "when": {
+          "not": {
+           "option": {
+            "camera.view": "pov"
+           }
+          }
+         }
+        },
+        "effects": {
+         "remove": {
+          "prompt": {
+           "persona.actor.action.*": "*",
+           "persona.actor.injury.*": "*",
+           "persona.actor.pose.*": "*",
+           "persona.continuity.*": "*",
+           "persona.expression.*": "*",
+           "persona.gaze.direction.*": "*",
+           "persona.identity.*": "*",
+           "persona.interaction.*": "*",
+           "persona.manual.*": "*",
+           "persona.object.*": "*",
+           "persona.orientation.*": "*",
+           "persona.outfit.*": "*",
+           "persona.placement.*": "*",
+           "persona.state.*": "*"
+          }
+         }
+        },
+        "condition": {
+         "not": {
+          "option": {
+           "camera.view": "pov"
+          }
+         }
+        }
+       },
+       "owner": {
+        "kind": "global"
+       },
+       "chanceOwner": {
+        "kind": "global"
+       },
+       "sourceOptions": [
+        "pov_hands"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-c13b03cda5c7d765",
         "source": {
          "kind": "option",
          "definitionId": "camera.view",
@@ -11121,7 +11588,6 @@
          "add": {
           "option": {
            "persona.framing.presence": [
-            "pov_hands",
             "out_of_frame"
            ]
           }
@@ -11131,7 +11597,6 @@
          "add": {
           "option": {
            "persona.framing.presence": [
-            "pov_hands",
             "out_of_frame"
            ]
           }
@@ -11150,151 +11615,52 @@
       },
       {
        "rule": {
-        "id": "rule:fnv1a64-7d921ae24ec88be7",
+        "id": "rule:fnv1a64-cc3df8b477d64c97",
         "source": {
-         "kind": "stage",
-         "stage": "actor_detail",
-         "sourcePath": "raw.stages.actor_detail.rules[0]"
+         "kind": "option",
+         "definitionId": "camera.pov",
+         "optionId": "pov_hands",
+         "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
         },
         "phases": [
          "result"
         ],
         "rule": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
+         "add": {
+          "option": {
+           "camera.view": [
+            "pov"
+           ],
+           "persona.framing.presence": [
+            "pov_hands",
+            "out_of_frame"
            ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "when": {
-          "attribute": {
-           "actor.outfit.nude": true
           }
          }
         },
         "effects": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
+         "add": {
+          "option": {
+           "camera.view": [
+            "pov"
+           ],
+           "persona.framing.presence": [
+            "pov_hands",
+            "out_of_frame"
            ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         }
-        },
-        "condition": {
-         "attribute": {
-          "actor.outfit.nude": true
-         }
-        }
-       },
-       "owner": {
-        "kind": "actor",
-        "actorId": "actor_1",
-        "placementIndex": 0
-       },
-       "chanceOwner": {
-        "kind": "actor",
-        "actorId": "actor_1",
-        "placementIndex": 0
-       },
-       "sourceOptions": []
-      },
-      {
-       "rule": {
-        "id": "rule:fnv1a64-7d921ae24ec88be7",
-        "source": {
-         "kind": "stage",
-         "stage": "actor_detail",
-         "sourcePath": "raw.stages.actor_detail.rules[0]"
-        },
-        "phases": [
-         "result"
-        ],
-        "rule": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
-           ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "when": {
-          "attribute": {
-           "actor.outfit.nude": true
           }
          }
-        },
-        "effects": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
-           ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         }
-        },
-        "condition": {
-         "attribute": {
-          "actor.outfit.nude": true
-         }
         }
        },
        "owner": {
-        "kind": "actor",
-        "actorId": "actor_2",
-        "placementIndex": 2
+        "kind": "global"
        },
        "chanceOwner": {
-        "kind": "actor",
-        "actorId": "actor_2",
-        "placementIndex": 2
+        "kind": "global"
        },
-       "sourceOptions": []
+       "sourceOptions": [
+        "pov_hands"
+       ]
       },
       {
        "rule": {
@@ -11386,6 +11752,9 @@
       "global:camera.view": [
        "pov"
       ],
+      "global:camera.pov": [
+       "pov_hands"
+      ],
       "actor:actor_1:0:gaze.direction": [
        "looking_at_viewer"
       ],
@@ -11407,6 +11776,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -11500,6 +11870,12 @@
         "id": "camera.view",
         "options": [
          "pov"
+        ]
+       },
+       {
+        "id": "camera.pov",
+        "options": [
+         "pov_hands"
         ]
        }
       ],
@@ -12466,6 +12842,12 @@
        "options": [
         "pov"
        ]
+      },
+      {
+       "id": "camera.pov",
+       "options": [
+        "pov_hands"
+       ]
       }
      ],
      "instruction": "First-person view from the persona at the gate."
@@ -13016,7 +13398,7 @@
      },
      {
       "rule": {
-       "id": "rule:fnv1a64-6a35c1c1c4d58387",
+       "id": "rule:fnv1a64-c13b03cda5c7d765",
        "source": {
         "kind": "option",
         "definitionId": "camera.view",
@@ -13030,6 +13412,50 @@
         "add": {
          "option": {
           "persona.framing.presence": [
+           "out_of_frame"
+          ]
+         }
+        }
+       },
+       "effects": {
+        "add": {
+         "option": {
+          "persona.framing.presence": [
+           "out_of_frame"
+          ]
+         }
+        }
+       }
+      },
+      "owner": {
+       "kind": "global"
+      },
+      "chanceOwner": {
+       "kind": "global"
+      },
+      "sourceOptions": [
+       "pov"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-cc3df8b477d64c97",
+       "source": {
+        "kind": "option",
+        "definitionId": "camera.pov",
+        "optionId": "pov_hands",
+        "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "add": {
+         "option": {
+          "camera.view": [
+           "pov"
+          ],
+          "persona.framing.presence": [
            "pov_hands",
            "out_of_frame"
           ]
@@ -13039,6 +13465,9 @@
        "effects": {
         "add": {
          "option": {
+          "camera.view": [
+           "pov"
+          ],
           "persona.framing.presence": [
            "pov_hands",
            "out_of_frame"
@@ -13054,7 +13483,7 @@
        "kind": "global"
       },
       "sourceOptions": [
-       "pov"
+       "pov_hands"
       ]
      },
      {
@@ -13243,7 +13672,232 @@
      },
      {
       "rule": {
-       "id": "rule:fnv1a64-6a35c1c1c4d58387",
+       "id": "rule:fnv1a64-7d921ae24ec88be7",
+       "source": {
+        "kind": "stage",
+        "stage": "actor_detail",
+        "sourcePath": "raw.stages.actor_detail.rules[0]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        },
+        "when": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "effects": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        }
+       },
+       "condition": {
+        "attribute": {
+         "actor.outfit.nude": true
+        }
+       }
+      },
+      "owner": {
+       "kind": "actor",
+       "actorId": "actor_1",
+       "placementIndex": 0
+      },
+      "chanceOwner": {
+       "kind": "actor",
+       "actorId": "actor_1",
+       "placementIndex": 0
+      },
+      "sourceOptions": []
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-7d921ae24ec88be7",
+       "source": {
+        "kind": "stage",
+        "stage": "actor_detail",
+        "sourcePath": "raw.stages.actor_detail.rules[0]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        },
+        "when": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "effects": {
+        "remove": {
+         "continuity": {
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "modifier": [
+          "state.clothing.surface",
+          "state.clothing.arrangement",
+          "state.clothing.coverage.upper",
+          "state.clothing.coverage.lower",
+          "manual.clothing_access"
+         ]
+        }
+       },
+       "condition": {
+        "attribute": {
+         "actor.outfit.nude": true
+        }
+       }
+      },
+      "owner": {
+       "kind": "actor",
+       "actorId": "actor_2",
+       "placementIndex": 2
+      },
+      "chanceOwner": {
+       "kind": "actor",
+       "actorId": "actor_2",
+       "placementIndex": 2
+      },
+      "sourceOptions": []
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-af514dbd2c0ad015",
+       "source": {
+        "kind": "option",
+        "definitionId": "camera.pov",
+        "optionId": "pov_hands",
+        "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[1]"
+       },
+       "phases": [
+        "result"
+       ],
+       "rule": {
+        "remove": {
+         "prompt": {
+          "persona.actor.action.*": "*",
+          "persona.actor.injury.*": "*",
+          "persona.actor.pose.*": "*",
+          "persona.continuity.*": "*",
+          "persona.expression.*": "*",
+          "persona.gaze.direction.*": "*",
+          "persona.identity.*": "*",
+          "persona.interaction.*": "*",
+          "persona.manual.*": "*",
+          "persona.object.*": "*",
+          "persona.orientation.*": "*",
+          "persona.outfit.*": "*",
+          "persona.placement.*": "*",
+          "persona.state.*": "*"
+         }
+        },
+        "when": {
+         "not": {
+          "option": {
+           "camera.view": "pov"
+          }
+         }
+        }
+       },
+       "effects": {
+        "remove": {
+         "prompt": {
+          "persona.actor.action.*": "*",
+          "persona.actor.injury.*": "*",
+          "persona.actor.pose.*": "*",
+          "persona.continuity.*": "*",
+          "persona.expression.*": "*",
+          "persona.gaze.direction.*": "*",
+          "persona.identity.*": "*",
+          "persona.interaction.*": "*",
+          "persona.manual.*": "*",
+          "persona.object.*": "*",
+          "persona.orientation.*": "*",
+          "persona.outfit.*": "*",
+          "persona.placement.*": "*",
+          "persona.state.*": "*"
+         }
+        }
+       },
+       "condition": {
+        "not": {
+         "option": {
+          "camera.view": "pov"
+         }
+        }
+       }
+      },
+      "owner": {
+       "kind": "global"
+      },
+      "chanceOwner": {
+       "kind": "global"
+      },
+      "sourceOptions": [
+       "pov_hands"
+      ]
+     },
+     {
+      "rule": {
+       "id": "rule:fnv1a64-c13b03cda5c7d765",
        "source": {
         "kind": "option",
         "definitionId": "camera.view",
@@ -13257,7 +13911,6 @@
         "add": {
          "option": {
           "persona.framing.presence": [
-           "pov_hands",
            "out_of_frame"
           ]
          }
@@ -13267,7 +13920,6 @@
         "add": {
          "option": {
           "persona.framing.presence": [
-           "pov_hands",
            "out_of_frame"
           ]
          }
@@ -13286,151 +13938,52 @@
      },
      {
       "rule": {
-       "id": "rule:fnv1a64-7d921ae24ec88be7",
+       "id": "rule:fnv1a64-cc3df8b477d64c97",
        "source": {
-        "kind": "stage",
-        "stage": "actor_detail",
-        "sourcePath": "raw.stages.actor_detail.rules[0]"
+        "kind": "option",
+        "definitionId": "camera.pov",
+        "optionId": "pov_hands",
+        "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
        },
        "phases": [
         "result"
        ],
        "rule": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
+        "add": {
+         "option": {
+          "camera.view": [
+           "pov"
+          ],
+          "persona.framing.presence": [
+           "pov_hands",
+           "out_of_frame"
           ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        },
-        "when": {
-         "attribute": {
-          "actor.outfit.nude": true
          }
         }
        },
        "effects": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
+        "add": {
+         "option": {
+          "camera.view": [
+           "pov"
+          ],
+          "persona.framing.presence": [
+           "pov_hands",
+           "out_of_frame"
           ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        }
-       },
-       "condition": {
-        "attribute": {
-         "actor.outfit.nude": true
-        }
-       }
-      },
-      "owner": {
-       "kind": "actor",
-       "actorId": "actor_1",
-       "placementIndex": 0
-      },
-      "chanceOwner": {
-       "kind": "actor",
-       "actorId": "actor_1",
-       "placementIndex": 0
-      },
-      "sourceOptions": []
-     },
-     {
-      "rule": {
-       "id": "rule:fnv1a64-7d921ae24ec88be7",
-       "source": {
-        "kind": "stage",
-        "stage": "actor_detail",
-        "sourcePath": "raw.stages.actor_detail.rules[0]"
-       },
-       "phases": [
-        "result"
-       ],
-       "rule": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        },
-        "when": {
-         "attribute": {
-          "actor.outfit.nude": true
          }
         }
-       },
-       "effects": {
-        "remove": {
-         "continuity": {
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "modifier": [
-          "state.clothing.surface",
-          "state.clothing.arrangement",
-          "state.clothing.coverage.upper",
-          "state.clothing.coverage.lower",
-          "manual.clothing_access"
-         ]
-        }
-       },
-       "condition": {
-        "attribute": {
-         "actor.outfit.nude": true
-        }
        }
       },
       "owner": {
-       "kind": "actor",
-       "actorId": "actor_2",
-       "placementIndex": 2
+       "kind": "global"
       },
       "chanceOwner": {
-       "kind": "actor",
-       "actorId": "actor_2",
-       "placementIndex": 2
+       "kind": "global"
       },
-      "sourceOptions": []
+      "sourceOptions": [
+       "pov_hands"
+      ]
      },
      {
       "rule": {
@@ -13523,6 +14076,9 @@
      "global:camera.view": [
       "pov"
      ],
+     "global:camera.pov": [
+      "pov_hands"
+     ],
      "actor:actor_1:0:gaze.direction": [
       "looking_at_viewer"
      ],
@@ -13544,6 +14100,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -13637,6 +14194,12 @@
        "id": "camera.view",
        "options": [
         "pov"
+       ]
+      },
+      {
+       "id": "camera.pov",
+       "options": [
+        "pov_hands"
        ]
       }
      ],
@@ -14103,7 +14666,7 @@
       },
       {
        "rule": {
-        "id": "rule:fnv1a64-6a35c1c1c4d58387",
+        "id": "rule:fnv1a64-c13b03cda5c7d765",
         "source": {
          "kind": "option",
          "definitionId": "camera.view",
@@ -14117,6 +14680,50 @@
          "add": {
           "option": {
            "persona.framing.presence": [
+            "out_of_frame"
+           ]
+          }
+         }
+        },
+        "effects": {
+         "add": {
+          "option": {
+           "persona.framing.presence": [
+            "out_of_frame"
+           ]
+          }
+         }
+        }
+       },
+       "owner": {
+        "kind": "global"
+       },
+       "chanceOwner": {
+        "kind": "global"
+       },
+       "sourceOptions": [
+        "pov"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-cc3df8b477d64c97",
+        "source": {
+         "kind": "option",
+         "definitionId": "camera.pov",
+         "optionId": "pov_hands",
+         "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "add": {
+          "option": {
+           "camera.view": [
+            "pov"
+           ],
+           "persona.framing.presence": [
             "pov_hands",
             "out_of_frame"
            ]
@@ -14126,6 +14733,9 @@
         "effects": {
          "add": {
           "option": {
+           "camera.view": [
+            "pov"
+           ],
            "persona.framing.presence": [
             "pov_hands",
             "out_of_frame"
@@ -14141,7 +14751,7 @@
         "kind": "global"
        },
        "sourceOptions": [
-        "pov"
+        "pov_hands"
        ]
       },
       {
@@ -14330,7 +14940,232 @@
       },
       {
        "rule": {
-        "id": "rule:fnv1a64-6a35c1c1c4d58387",
+        "id": "rule:fnv1a64-7d921ae24ec88be7",
+        "source": {
+         "kind": "stage",
+         "stage": "actor_detail",
+         "sourcePath": "raw.stages.actor_detail.rules[0]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "when": {
+          "attribute": {
+           "actor.outfit.nude": true
+          }
+         }
+        },
+        "effects": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         }
+        },
+        "condition": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "owner": {
+        "kind": "actor",
+        "actorId": "actor_1",
+        "placementIndex": 0
+       },
+       "chanceOwner": {
+        "kind": "actor",
+        "actorId": "actor_1",
+        "placementIndex": 0
+       },
+       "sourceOptions": []
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-7d921ae24ec88be7",
+        "source": {
+         "kind": "stage",
+         "stage": "actor_detail",
+         "sourcePath": "raw.stages.actor_detail.rules[0]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         },
+         "when": {
+          "attribute": {
+           "actor.outfit.nude": true
+          }
+         }
+        },
+        "effects": {
+         "remove": {
+          "continuity": {
+           "modifier": [
+            "state.clothing.surface",
+            "state.clothing.arrangement",
+            "state.clothing.coverage.upper",
+            "state.clothing.coverage.lower",
+            "manual.clothing_access"
+           ]
+          },
+          "modifier": [
+           "state.clothing.surface",
+           "state.clothing.arrangement",
+           "state.clothing.coverage.upper",
+           "state.clothing.coverage.lower",
+           "manual.clothing_access"
+          ]
+         }
+        },
+        "condition": {
+         "attribute": {
+          "actor.outfit.nude": true
+         }
+        }
+       },
+       "owner": {
+        "kind": "actor",
+        "actorId": "actor_2",
+        "placementIndex": 2
+       },
+       "chanceOwner": {
+        "kind": "actor",
+        "actorId": "actor_2",
+        "placementIndex": 2
+       },
+       "sourceOptions": []
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-af514dbd2c0ad015",
+        "source": {
+         "kind": "option",
+         "definitionId": "camera.pov",
+         "optionId": "pov_hands",
+         "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[1]"
+        },
+        "phases": [
+         "result"
+        ],
+        "rule": {
+         "remove": {
+          "prompt": {
+           "persona.actor.action.*": "*",
+           "persona.actor.injury.*": "*",
+           "persona.actor.pose.*": "*",
+           "persona.continuity.*": "*",
+           "persona.expression.*": "*",
+           "persona.gaze.direction.*": "*",
+           "persona.identity.*": "*",
+           "persona.interaction.*": "*",
+           "persona.manual.*": "*",
+           "persona.object.*": "*",
+           "persona.orientation.*": "*",
+           "persona.outfit.*": "*",
+           "persona.placement.*": "*",
+           "persona.state.*": "*"
+          }
+         },
+         "when": {
+          "not": {
+           "option": {
+            "camera.view": "pov"
+           }
+          }
+         }
+        },
+        "effects": {
+         "remove": {
+          "prompt": {
+           "persona.actor.action.*": "*",
+           "persona.actor.injury.*": "*",
+           "persona.actor.pose.*": "*",
+           "persona.continuity.*": "*",
+           "persona.expression.*": "*",
+           "persona.gaze.direction.*": "*",
+           "persona.identity.*": "*",
+           "persona.interaction.*": "*",
+           "persona.manual.*": "*",
+           "persona.object.*": "*",
+           "persona.orientation.*": "*",
+           "persona.outfit.*": "*",
+           "persona.placement.*": "*",
+           "persona.state.*": "*"
+          }
+         }
+        },
+        "condition": {
+         "not": {
+          "option": {
+           "camera.view": "pov"
+          }
+         }
+        }
+       },
+       "owner": {
+        "kind": "global"
+       },
+       "chanceOwner": {
+        "kind": "global"
+       },
+       "sourceOptions": [
+        "pov_hands"
+       ]
+      },
+      {
+       "rule": {
+        "id": "rule:fnv1a64-c13b03cda5c7d765",
         "source": {
          "kind": "option",
          "definitionId": "camera.view",
@@ -14344,7 +15179,6 @@
          "add": {
           "option": {
            "persona.framing.presence": [
-            "pov_hands",
             "out_of_frame"
            ]
           }
@@ -14354,7 +15188,6 @@
          "add": {
           "option": {
            "persona.framing.presence": [
-            "pov_hands",
             "out_of_frame"
            ]
           }
@@ -14373,151 +15206,52 @@
       },
       {
        "rule": {
-        "id": "rule:fnv1a64-7d921ae24ec88be7",
+        "id": "rule:fnv1a64-cc3df8b477d64c97",
         "source": {
-         "kind": "stage",
-         "stage": "actor_detail",
-         "sourcePath": "raw.stages.actor_detail.rules[0]"
+         "kind": "option",
+         "definitionId": "camera.pov",
+         "optionId": "pov_hands",
+         "sourcePath": "raw.modifierLibrary.closed[53].options[0].rules[0]"
         },
         "phases": [
          "result"
         ],
         "rule": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
+         "add": {
+          "option": {
+           "camera.view": [
+            "pov"
+           ],
+           "persona.framing.presence": [
+            "pov_hands",
+            "out_of_frame"
            ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "when": {
-          "attribute": {
-           "actor.outfit.nude": true
           }
          }
         },
         "effects": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
+         "add": {
+          "option": {
+           "camera.view": [
+            "pov"
+           ],
+           "persona.framing.presence": [
+            "pov_hands",
+            "out_of_frame"
            ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         }
-        },
-        "condition": {
-         "attribute": {
-          "actor.outfit.nude": true
-         }
-        }
-       },
-       "owner": {
-        "kind": "actor",
-        "actorId": "actor_1",
-        "placementIndex": 0
-       },
-       "chanceOwner": {
-        "kind": "actor",
-        "actorId": "actor_1",
-        "placementIndex": 0
-       },
-       "sourceOptions": []
-      },
-      {
-       "rule": {
-        "id": "rule:fnv1a64-7d921ae24ec88be7",
-        "source": {
-         "kind": "stage",
-         "stage": "actor_detail",
-         "sourcePath": "raw.stages.actor_detail.rules[0]"
-        },
-        "phases": [
-         "result"
-        ],
-        "rule": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
-           ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         },
-         "when": {
-          "attribute": {
-           "actor.outfit.nude": true
           }
          }
-        },
-        "effects": {
-         "remove": {
-          "continuity": {
-           "modifier": [
-            "state.clothing.surface",
-            "state.clothing.arrangement",
-            "state.clothing.coverage.upper",
-            "state.clothing.coverage.lower",
-            "manual.clothing_access"
-           ]
-          },
-          "modifier": [
-           "state.clothing.surface",
-           "state.clothing.arrangement",
-           "state.clothing.coverage.upper",
-           "state.clothing.coverage.lower",
-           "manual.clothing_access"
-          ]
-         }
-        },
-        "condition": {
-         "attribute": {
-          "actor.outfit.nude": true
-         }
         }
        },
        "owner": {
-        "kind": "actor",
-        "actorId": "actor_2",
-        "placementIndex": 2
+        "kind": "global"
        },
        "chanceOwner": {
-        "kind": "actor",
-        "actorId": "actor_2",
-        "placementIndex": 2
+        "kind": "global"
        },
-       "sourceOptions": []
+       "sourceOptions": [
+        "pov_hands"
+       ]
       },
       {
        "rule": {
@@ -14610,6 +15344,9 @@
       "global:camera.view": [
        "pov"
       ],
+      "global:camera.pov": [
+       "pov_hands"
+      ],
       "actor:actor_1:0:gaze.direction": [
        "looking_at_viewer"
       ],
@@ -14631,6 +15368,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -14724,6 +15462,12 @@
         "id": "camera.view",
         "options": [
          "pov"
+        ]
+       },
+       {
+        "id": "camera.pov",
+        "options": [
+         "pov_hands"
         ]
        }
       ],

@@ -497,7 +497,11 @@ export function createLlmService(deps: LlmServiceDeps): LlmService {
             },
             { signal, onRetry: clientOptions.onRetry },
             0,
-          );
+          ).catch((error: unknown) => {
+            // AM's nativeFetch fails with a TypeError, which the engine's retry checks (`Ume`, chat `Or`) retry.
+            if (error instanceof AnalyzerClientErrorClass && (error as AnalyzerClientError).code === "ANALYZER_NETWORK") throw new TypeError((error as Error).message, { cause: error });
+            throw error;
+          });
           return { raw: result.raw, parsed: result.parsed, model: result.model, attempts: result.attempts, usage: result.usage };
         },
       };

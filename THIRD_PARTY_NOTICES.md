@@ -2,7 +2,7 @@
 
 ## Asset Maid
 
-Inlay Illustrator is being rebuilt as a port of the RisuAI plugin **Asset Maid** (version 0.9.88) to Lumiverse.
+Inlay Illustrator is a port of the RisuAI plugin **Asset Maid** to Lumiverse (ported from version 0.9.88, synced with upstream up to 0.9.89.6).
 
 - Source: https://github.com/acahaAM/Asset-Maid
 - License: the Asset Maid repository does not publish a license file. No license terms are stated there, so no license is claimed or granted here for material derived from it.

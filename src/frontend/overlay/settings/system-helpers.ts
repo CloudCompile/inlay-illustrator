@@ -5,6 +5,7 @@
 import {
   IMAGE_SIZE_PRESETS,
   SPLIT_ANALYSIS_MAX_TOTAL,
+  MAX_SPLIT_BATCH_SIZE,
   maxSplitBatchSize,
   normalizeChatImageGenerationSettings,
   validateImageSize,
@@ -34,7 +35,7 @@ export function saveCustomSize(sizes: readonly CustomImageSize[], draft: CustomS
   return { sizes: sizes.some((s) => s.id === draft.id) ? sizes.map((s) => (s.id === draft.id ? next : s)) : [...sizes, next] };
 }
 
-/** Count limit of the chat image settings (7, unlimited in developer mode). */
+/** Count limit of the chat image settings (10, unlimited in developer mode). */
 export function countLimit(developerMode: boolean): number {
   return developerMode ? UNLIMITED_IMAGE_COUNT : MAX_IMAGE_COUNT;
 }
@@ -72,6 +73,6 @@ export function setSplitTotal(settings: ChatImageGenerationSettings, total: numb
 
 export function setSplitBatch(settings: ChatImageGenerationSettings, batch: number, limit: number): ChatImageGenerationSettings {
   const total = settings.splitAnalysis.totalCount;
-  const max = total === null ? 7 : maxSplitBatchSize(total);
+  const max = total === null ? MAX_SPLIT_BATCH_SIZE : maxSplitBatchSize(total);
   return finish({ ...settings, splitAnalysis: { totalCount: total, batchSize: Math.min(max, Math.max(1, Math.round(batch))) } }, limit);
 }

@@ -444,7 +444,7 @@
    "actor.m0ais.6ynrym": "lore:bob",
    "actor.1fmv888.fk4pvw": "persona::p1"
   },
-  "requestPayload": "fnv1a64-064e26890e3120df",
+  "requestPayload": "fnv1a64-f0fd20a4873772e8",
   "localProjection": {
    "allowedSizeIds": [
     1,
@@ -453,7 +453,7 @@
    ],
    "characterCoordinates": "fixed"
   },
-  "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab"
+  "catalogFingerprint": "v5.fnv1a64-e275e8a1dab52c47"
  },
  "plans": [
   {
@@ -2427,6 +2427,12 @@
      ],
      "c": [
       [
+       "camera.pov",
+       [
+        "global"
+       ]
+      ],
+      [
        "camera.view",
        [
         "global"
@@ -2556,7 +2562,7 @@
     "analysis_profile": "v5-hybrid",
     "v5_interaction_led": {
      "format": "novelai-v5-interaction-led-history-v1",
-     "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
+     "catalogFingerprint": "v5.fnv1a64-e275e8a1dab52c47",
      "normalizedGraph": {
       "slotNumber": 0,
       "status": "recovered",
@@ -3889,7 +3895,7 @@
       "analysis_profile": "v5-hybrid",
       "v5_interaction_led": {
        "format": "novelai-v5-interaction-led-history-v1",
-       "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
+       "catalogFingerprint": "v5.fnv1a64-e275e8a1dab52c47",
        "normalizedGraph": {
         "slotNumber": 0,
         "status": "recovered",
@@ -5521,6 +5527,12 @@
      ],
      "c": [
       [
+       "camera.pov",
+       [
+        "global"
+       ]
+      ],
+      [
        "camera.view",
        [
         "global"
@@ -5650,7 +5662,7 @@
     "analysis_profile": "v5-hybrid",
     "v5_interaction_led": {
      "format": "novelai-v5-interaction-led-history-v1",
-     "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
+     "catalogFingerprint": "v5.fnv1a64-e275e8a1dab52c47",
      "normalizedGraph": {
       "slotNumber": 1,
       "status": "recovered",
@@ -6478,7 +6490,7 @@
       "analysis_profile": "v5-hybrid",
       "v5_interaction_led": {
        "format": "novelai-v5-interaction-led-history-v1",
-       "catalogFingerprint": "v5.fnv1a64-8eb6d4b8578a81ab",
+       "catalogFingerprint": "v5.fnv1a64-e275e8a1dab52c47",
        "normalizedGraph": {
         "slotNumber": 1,
         "status": "recovered",

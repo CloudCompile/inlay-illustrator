@@ -15,12 +15,23 @@
       "options": [
         {
           "id": "pov",
-          "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when only the persona's hands or arms are visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Use the persona's hands and arms as POV hands to express action, contact, object manipulation, and spatial distance while keeping the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
+          "instruction": "Stage every scene strictly through the persona's first-person view. Always include the persona in Actor Roster as the viewpoint participant, even when the persona's hands and arms are not visible. Even when other characters appear or drive the action, never switch to an external observer's or another character's viewpoint; frame them as seen from the persona's gaze direction, distance, and eye level. The persona is the story's viewpoint protagonist, not an externally observed Actor. Keep the required Persona Frame Placement and Actor Detail binding only for response-contract compliance: omit Persona facing and placement prose, and leave Persona actions, modifiers, freeTags, cumClear, injuryClear, poseInstruction, actionInstruction, objects, and objectInstruction empty. Express visible contact and relationships through Interaction and the other visible Actors. Select camera.pov option pov_hands only when the persona's hands or arms are visibly framed for action, contact, object manipulation, or spatial distance; otherwise leave this modifier unselected. Keep the persona's head, face, and full body out of frame. When multiple other characters are present, frame them together whenever feasible within the persona's natural field of view, with their actions and relationships clearly readable. Do not exclude or distribute them across images merely because of their number.",
           "variables": {
             "preset.camera.viewpoint": "persona_first_person",
             "preset.persona.visibility": "partial",
             "preset.actor.coverage": "all_present"
           },
+          "controls": [
+            {
+              "id": "hands",
+              "label": "POV hands 필수",
+              "defaultEnabled": true,
+              "variables": {
+                "preset.persona.hands": "required"
+              },
+              "instructionSuffix": "POV hands are required in every illustration: frame the persona's hands or arms visibly and select camera.pov option pov_hands, even when the optional-selection guidance above would otherwise leave it unselected."
+            }
+          ],
           "presentation": {
             "label": "pov 연출",
             "description": "페르소나의 시야를 기준으로 장면을 1인칭 구도로 연출합니다. 다른 인물이 등장해도 시점은 페르소나에게 유지됩니다.",
@@ -2587,7 +2598,8 @@
     "camera": {
       "modifiers": {
         "closed": [
-          "camera.view"
+          "camera.view",
+          "camera.pov"
         ],
         "freeTags": [],
         "naturalLanguage": [
@@ -2602,7 +2614,8 @@
             },
             "remove": {
               "closed": [
-                "camera.view"
+                "camera.view",
+                "camera.pov"
               ]
             }
           },
@@ -2616,6 +2629,21 @@
               "option": {
                 "camera.view": [
                   "pov"
+                ]
+              }
+            }
+          },
+          {
+            "when": {
+              "option": {
+                "preset.camera.viewpoint": "persona_first_person",
+                "preset.persona.hands": "required"
+              }
+            },
+            "defaults": {
+              "option": {
+                "camera.pov": [
+                  "pov_hands"
                 ]
               }
             }
@@ -7100,7 +7128,6 @@
                 "add": {
                   "option": {
                     "persona.framing.presence": [
-                      "pov_hands",
                       "out_of_frame"
                     ]
                   }
@@ -7136,6 +7163,7 @@
                 "pov hands"
               ]
             ],
+            "derivedOnly": true,
             "rules": [
               {
                 "add": {
@@ -7176,6 +7204,67 @@
                 1,
                 "dutch angle"
               ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "camera.pov",
+        "subjects": [
+          "global"
+        ],
+        "order": 51,
+        "select": {
+          "by": "ai",
+          "min": 0,
+          "max": 1
+        },
+        "description": "Optional first-person framing through the active persona. Select pov_hands only when that persona's hands or arms are visible; an empty selection keeps POV without visible hands.",
+        "options": [
+          {
+            "id": "pov_hands",
+            "prompt": null,
+            "rules": [
+              {
+                "add": {
+                  "option": {
+                    "camera.view": [
+                      "pov"
+                    ],
+                    "persona.framing.presence": [
+                      "pov_hands",
+                      "out_of_frame"
+                    ]
+                  }
+                }
+              },
+              {
+                "when": {
+                  "not": {
+                    "option": {
+                      "camera.view": "pov"
+                    }
+                  }
+                },
+                "remove": {
+                  "prompt": {
+                    "persona.identity.*": "*",
+                    "persona.outfit.*": "*",
+                    "persona.actor.action.*": "*",
+                    "persona.gaze.direction.*": "*",
+                    "persona.actor.pose.*": "*",
+                    "persona.expression.*": "*",
+                    "persona.state.*": "*",
+                    "persona.manual.*": "*",
+                    "persona.actor.injury.*": "*",
+                    "persona.interaction.*": "*",
+                    "persona.object.*": "*",
+                    "persona.placement.*": "*",
+                    "persona.orientation.*": "*",
+                    "persona.continuity.*": "*"
+                  }
+                }
+              }
             ]
           }
         ]

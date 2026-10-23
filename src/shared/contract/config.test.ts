@@ -75,6 +75,7 @@ describe("Lumiverse mapping", () => {
   test("port clamps NovelAI parameters", () => {
     const n = normalizeConfig({ novelai: { steps: 99, scale: -1, cfgRescale: 3, sampler: "nope", noiseSchedule: "x", width: 10 } }).novelai;
     expect([n.steps, n.scale, n.cfgRescale, n.sampler, n.noiseSchedule, n.width]).toEqual([50, 0, 1, "k_euler_ancestral", "karras", 64]);
+    expect(normalizeConfig({ novelai: { sampler: "k_dpmpp_2m_sde" } }).novelai.sampler).toBe("k_dpmpp_2m_sde");
   });
   test("buildRuntimeConfig merges the character document", () => {
     const g = normalizeConfig({ image: { provider: "novelai" }, novelai: { characterReferenceEnabled: true } });
@@ -172,8 +173,8 @@ describe("per-character override resolution parity (ki/xE/ONe/jNe/NNe/ENe/RNe)",
 describe("chat image generation settings (Km parity)", () => {
   for (const [i, item] of (parity.chatImageSettings as AnyRec[]).entries()) {
     test(`case ${i}`, () => {
-      // webtoonMode is a port addition (off unless stored).
-      expect(normalizeChatImageGenerationSettings(item.input)).toEqual({ ...item.max7, webtoonMode: false });
+      // webtoonMode is a port addition (off unless stored). `maxDefault`: AM `Km` default cap (10 since 0.9.89.6).
+      expect(normalizeChatImageGenerationSettings(item.input)).toEqual({ ...item.maxDefault, webtoonMode: false });
       expect(normalizeChatImageGenerationSettings(item.input, undefined, UNLIMITED_IMAGE_COUNT)).toEqual({ ...item.unlimited, webtoonMode: false });
     });
   }

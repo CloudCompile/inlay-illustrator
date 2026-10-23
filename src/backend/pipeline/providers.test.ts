@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { rpcError } from "../../shared/contract/index.js";
 import { RpcFailure } from "../rpc/errors.js";
 import { createFakeServices } from "../testing/fake-services.js";
-import { buildNovelAIRequest, createImageProviderAdapters, ProviderRunRegistry, toProviderError } from "./providers.js";
+import { buildNovelAIRequest, createComfyReferencePreparer, createImageProviderAdapters, ProviderRunRegistry, toProviderError } from "./providers.js";
 
 const ctx = { purpose: "chat" as const, connectionId: "img-1", model: "nai-diffusion-4-5-full", ownerChatId: "c1", ownerCharacterId: "ch1", forceNsfwPrefix: () => false };
 
@@ -102,6 +102,31 @@ describe("adapters over ImageService", () => {
     const r2 = registry.register({ ...ctx, model: "nai-diffusion-5-full" });
     await adapters.novelai!.generate({ provider: "novelai", providerRef: { providerId: "novelai", queueScopeKey: registry.queueScopeKey(r2) }, prompt: "x", negativePrompt: "", seed: "", width: 832, height: 1216, config: { characterReferenceEnabled: true }, references: [{ asset: { key: "img-ref" } }] });
     expect(fx.imageRequests[1]!.novelai?.characterReferences).toBeUndefined();
+  });
+
+  test("references keep their crop for the bytes service (NovelAI and ComfyUI)", async () => {
+    const seen: unknown[] = [];
+    const fx = createFakeServices({ imageBytes: { getAsset: async (asset: unknown) => (seen.push(asset), { data: "AA==", mimeType: "image/png" }) } });
+    const registry = new ProviderRunRegistry();
+    const adapters = createImageProviderAdapters(fx.services, registry);
+    const cropReference = { version: 1, assetKey: "storage:characters/ch1/reference-crops/c.png" };
+    const runId = registry.register({ ...ctx, model: "nai-diffusion-4-5-full" });
+    await adapters.novelai!.generate({
+      provider: "novelai",
+      providerRef: { providerId: "novelai", queueScopeKey: registry.queueScopeKey(runId) },
+      prompt: "1girl",
+      negativePrompt: "",
+      seed: "5",
+      width: 832,
+      height: 1216,
+      config: { characterReferenceEnabled: true, characterPrompts: [] },
+      references: [{ asset: { key: "img-ref", name: "ref", extension: "png" }, cropReference, strength: 0.5, fidelity: 1, type: "character" }],
+    });
+    await createComfyReferencePreparer(fx.services).prepare({ asset: { key: "img-ref", name: "ref", extension: "png" }, cropReference });
+    expect(seen).toEqual([
+      { key: "img-ref", name: "ref", extension: "png", cropReference },
+      { key: "img-ref", name: "ref", extension: "png", cropReference },
+    ]);
   });
 
   test("generic providers send the flat prompt pair", async () => {

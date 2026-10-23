@@ -42,7 +42,7 @@ export const IMAGE_RETRY_DELAY_MS = 100;
 export const NOVELAI_SKIP_CFG_ABOVE_SIGMA = 59.04722600415217;
 
 /** Canonical NovelAI sampler ids the host provider accepts. */
-export const NOVELAI_SAMPLER_IDS: readonly string[] = Object.freeze(["k_euler_ancestral", "k_euler", "k_dpmpp_2m", "k_dpmpp_2s_ancestral", "k_dpmpp_sde", "ddim_v3"]);
+export const NOVELAI_SAMPLER_IDS: readonly string[] = Object.freeze(["k_euler_ancestral", "k_euler", "k_dpmpp_2m", "k_dpmpp_2m_sde", "k_dpmpp_2s_ancestral", "k_dpmpp_sde", "ddim_v3"]);
 
 /** Reads a sampler value that may be a plain string or a structured object (host profiles are not consistent). */
 export function samplerCandidateFrom(value: unknown): string | undefined {
@@ -63,6 +63,7 @@ export function normalizeNovelAiSampler(candidate: unknown): string | undefined 
   if (clean === "euler") return "k_euler";
   if (clean === "euler_ancestral" || clean === "euler a" || clean === "euler_a" || clean === "euler ancestral") return "k_euler_ancestral";
   if (clean === "dpmpp_2m" || clean === "dpm_2m" || clean === "dpm++ 2m") return "k_dpmpp_2m";
+  if (clean === "dpmpp_2m_sde" || clean === "dpm_2m_sde" || clean === "dpm++ 2m sde") return "k_dpmpp_2m_sde";
   if (clean === "dpmpp_2s_ancestral" || clean === "dpm_2s_ancestral" || clean === "dpm++ 2s ancestral") return "k_dpmpp_2s_ancestral";
   if (clean === "dpmpp_sde" || clean === "dpm++ sde") return "k_dpmpp_sde";
   if (clean === "ddim" || clean === "ddim_v3") return "ddim_v3";

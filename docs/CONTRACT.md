@@ -326,7 +326,7 @@ interface ChatDataDocument {
 - A breaking shape change bumps the file version and adds a `StorageMigration` hook (`from` -> `to`); normalizers keep accepting
   older shapes. Files newer than the build are reported `tooNew` and must not be overwritten.
 - The RPC handshake (`session.hello`) exchanges `protocol`; mismatches answer `protocol-mismatch`.
-- Parity fixtures pin Asset Maid 0.9.88 behaviour; a deliberate deviation must update the fixture test with a comment.
+- Parity fixtures pin Asset Maid behaviour (config and chat image settings recorded from 0.9.89.6, the rest from 0.9.88); a deliberate deviation must update the fixture test with a comment.
 
 ## 10. Chat DOM (`chat-dom.ts`)
 

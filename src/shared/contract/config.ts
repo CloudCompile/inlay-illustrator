@@ -69,6 +69,7 @@ export const NOVELAI_SAMPLERS = [
   { value: "k_euler_ancestral", label: "Euler Ancestral" },
   { value: "k_euler", label: "Euler" },
   { value: "k_dpmpp_2m", label: "DPM++ 2M" },
+  { value: "k_dpmpp_2m_sde", label: "DPM++ 2M SDE" },
   { value: "k_dpmpp_sde", label: "DPM++ SDE" },
 ] as const;
 export const NOVELAI_NOISE_SCHEDULES = ["karras", "native", "exponential", "polyexponential"] as const;
@@ -202,9 +203,17 @@ function controlValue(control: V5DirectionControl, value: unknown): boolean | nu
   }
   return typeof value === "boolean" && value !== control.defaultEnabled ? value : undefined;
 }
+/** AM `r8`: a legacy boolean `comic.landscape` becomes `comic.frame` (2 landscape, 1 portrait) unless the frame is set. */
+function migrateLegacyControlOverrides(value: unknown): Record<string, unknown> {
+  const out = { ...asRecord(value) };
+  if (!("comic.frame" in out) && typeof out["comic.landscape"] === "boolean") out["comic.frame"] = out["comic.landscape"] ? 2 : 1;
+  delete out["comic.landscape"];
+  return out;
+}
+/** AM `Yg`. */
 function normalizeControlOverrides(value: unknown): V5ControlOverrides | undefined {
   const out: V5ControlOverrides = {};
-  for (const [ref, v] of Object.entries(asRecord(value))) {
+  for (const [ref, v] of Object.entries(migrateLegacyControlOverrides(value))) {
     const control = controlsByRef.get(ref);
     if (!control) continue;
     const n = controlValue(control, v);
@@ -1171,17 +1180,19 @@ export interface ChatImageGenerationSettings {
   /** With `webtoonMode`: "manga" makes manga pages instead of the webtoon strip (absent = webtoon). */
   comicFormat?: "manga";
 }
-export const SPLIT_ANALYSIS_MAX_TOTAL = 20;
+/** AM 0.9.89.6 `iRt` / `aRt`: split total cap 30 and batch cap 10 (20 and 7 before). */
+export const SPLIT_ANALYSIS_MAX_TOTAL = 30;
+export const MAX_SPLIT_BATCH_SIZE = 10;
 export function createDefaultChatImageGenerationSettings(): ChatImageGenerationSettings {
   return { autoGenerationEnabled: true, countPolicy: fixedCountPolicy(1), analysisMode: "single", splitAnalysis: { totalCount: null, batchSize: 3 }, webtoonMode: false };
 }
 export const DEFAULT_CHAT_IMAGE_GENERATION_SETTINGS: Readonly<ChatImageGenerationSettings> = Object.freeze(createDefaultChatImageGenerationSettings());
 /** AM `T2`: max batch size for a split total. */
 export function maxSplitBatchSize(totalCount: number): number {
-  return Math.min(7, Math.max(1, Math.ceil(totalCount / 2)));
+  return Math.min(MAX_SPLIT_BATCH_SIZE, Math.max(1, Math.ceil(totalCount / 2)));
 }
 /**
- * AM `Km` 157826. `maxCount` defaults to 7 (UI); storage load uses unlimited (`UNLIMITED_IMAGE_COUNT`),
+ * AM `Km` 157826. `maxCount` defaults to 10 (UI); storage load uses unlimited (`UNLIMITED_IMAGE_COUNT`),
  * developer mode allows unlimited counts.
  */
 export function normalizeChatImageGenerationSettings(value: unknown, fallback: ChatImageGenerationSettings = DEFAULT_CHAT_IMAGE_GENERATION_SETTINGS, maxCount: number = MAX_IMAGE_COUNT): ChatImageGenerationSettings {
@@ -1192,7 +1203,7 @@ export function normalizeChatImageGenerationSettings(value: unknown, fallback: C
   const batch = positive(split.batchSize) ? split.batchSize : 3;
   return {
     analysisMode: r.analysisMode === "split" && total !== null ? "split" : "single",
-    splitAnalysis: { totalCount: total, batchSize: Math.min(batch, total === null ? 7 : maxSplitBatchSize(total)) },
+    splitAnalysis: { totalCount: total, batchSize: Math.min(batch, total === null ? MAX_SPLIT_BATCH_SIZE : maxSplitBatchSize(total)) },
     autoGenerationEnabled: typeof r.autoGenerationEnabled === "boolean" ? r.autoGenerationEnabled : fallback.autoGenerationEnabled,
     countPolicy: normalizeCountPolicy(r.countPolicy, fallback.countPolicy, maxCount),
     webtoonMode: typeof r.webtoonMode === "boolean" ? r.webtoonMode : fallback.webtoonMode,

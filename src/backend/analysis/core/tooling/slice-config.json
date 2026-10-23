@@ -1,6 +1,6 @@
 {
- "source": "E:/Asset-Maid-upstream/pretty-versions/0.9.89.5.pretty.js",
- "sourceLabel": "AssetMaid 0.9.89.5 (0.9.89.5.pretty.js)",
+ "source": "E:/Asset-Maid-upstream/pretty-versions/0.9.89.6.as95.js",
+ "sourceLabel": "AssetMaid 0.9.89.6 (0.9.89.6.pretty.js, top-level names translated to 0.9.89.5 by 0.9.89.6.namemap96to95.json)",
  "out": "<worktree>/src/backend/analysis/core/analysis-core.ts",
  "manifest": "<scratch>/manifest-analysis.json",
  "envImport": "../../../engine/core/env",

@@ -1485,6 +1485,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -2748,6 +2749,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -5794,6 +5796,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -7054,6 +7057,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -9577,7 +9581,7 @@
        "source": {
         "kind": "definition",
         "definitionId": "interaction.penetration.instrument",
-        "sourcePath": "raw.modifierLibrary.closed[55].rules[0]"
+        "sourcePath": "raw.modifierLibrary.closed[56].rules[0]"
        },
        "phases": [
         "candidate"
@@ -9790,6 +9794,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -10968,7 +10973,7 @@
         "source": {
          "kind": "definition",
          "definitionId": "interaction.penetration.instrument",
-         "sourcePath": "raw.modifierLibrary.closed[55].rules[0]"
+         "sourcePath": "raw.modifierLibrary.closed[56].rules[0]"
         },
         "phases": [
          "candidate"
@@ -11181,6 +11186,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -13714,7 +13720,7 @@
        "source": {
         "kind": "definition",
         "definitionId": "interaction.penetration.instrument",
-        "sourcePath": "raw.modifierLibrary.closed[55].rules[0]"
+        "sourcePath": "raw.modifierLibrary.closed[56].rules[0]"
        },
        "phases": [
         "candidate"
@@ -13927,6 +13933,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -15105,7 +15112,7 @@
         "source": {
          "kind": "definition",
          "definitionId": "interaction.penetration.instrument",
-         "sourcePath": "raw.modifierLibrary.closed[55].rules[0]"
+         "sourcePath": "raw.modifierLibrary.closed[56].rules[0]"
         },
         "phases": [
          "candidate"
@@ -15318,6 +15325,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",
@@ -17541,6 +17549,7 @@
      "actor.framing.head_crop",
      "actor.pose.body",
      "actor.pose.refinement",
+     "camera.pov",
      "camera.view",
      "expression.blush",
      "expression.eye.openness",
@@ -18354,6 +18363,7 @@
       "actor.framing.head_crop",
       "actor.pose.body",
       "actor.pose.refinement",
+      "camera.pov",
       "camera.view",
       "expression.blush",
       "expression.eye.openness",

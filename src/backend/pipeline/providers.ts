@@ -287,13 +287,20 @@ export function buildNovelAIRequest(
 
 const DEFAULT_CONTEXT: ProviderRunContext = { purpose: "chat", forceNsfwPrefix: () => false };
 
+/** Engine reference `{asset, cropReference}` -> asset ref carrying the crop. */
+function withCrop(reference: Record<string, unknown>): Record<string, unknown> {
+  const asset = rec(reference.asset);
+  return reference.cropReference === undefined ? asset : { ...asset, cropReference: reference.cropReference };
+}
+
 /** AM `SAt` 167314 / `Yut` 109240: reference bytes (failures collected, never fatal). */
 async function prepareReferences(services: BackendServices, refs: unknown[], signal?: AbortSignal) {
   const references: NonNullable<NovelAIImageOptions["characterReferences"]> = [];
   const failures: Array<{ asset: string; error: string }> = [];
   for (const raw of refs) {
     const r = rec(raw);
-    const asset = rec(r.asset);
+    // The engine keeps the crop next to the asset (AM `Cq` 167886); the bytes service reads it from the asset ref.
+    const asset = withCrop(r);
     try {
       const prepared = toImageBytes(r.image) ?? (await services.imageBytes.getAsset(asset as unknown as AssetRef, { signal }));
       const type = str(r.type);
@@ -423,7 +430,7 @@ export function createImageProviderAdapters(services: BackendServices, registry:
 export function createComfyReferencePreparer(services: BackendServices) {
   return {
     async prepare(reference: Record<string, unknown>, options: { signal?: AbortSignal } = {}) {
-      const asset = rec(reference.asset);
+      const asset = withCrop(reference);
       const bytes = await services.imageBytes.getAsset(asset as unknown as AssetRef, { signal: options.signal });
       return { bytes: base64ToBytes(bytes.data), mimeType: bytes.mimeType, extension: extensionFor(bytes.mimeType) };
     },

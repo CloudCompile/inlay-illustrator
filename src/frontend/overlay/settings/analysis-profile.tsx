@@ -332,7 +332,13 @@ export function DirectionEditor({ kind, settingKey, title, saved, customImageSiz
           />
         </div>
         {controls.length > 0 ? (
-          <div class={cn("grid min-w-0 gap-2 md:h-full md:w-36", developerMode ? "md:grid-rows-4" : "md:grid-rows-2")} role="group" aria-label={A.presetOptions} data-v5-preset-controls={shown?.scenePresetId}>
+          <div
+            class={cn(
+              "grid min-w-0 gap-2 md:h-full md:w-36",
+              // AM 0.9.89.6 (176745): comic keeps its row grid, other presets stack fixed-height rows from the top.
+              shown?.scenePresetId === "comic" ? (developerMode ? "md:grid-rows-4" : "md:grid-rows-2") : "md:auto-rows-[2.5rem] md:content-start",
+            )}
+            role="group" aria-label={A.presetOptions} data-v5-preset-controls={shown?.scenePresetId}>
             {controls.map((control) => {
               const state = controlState(control, shown?.controlOverrides);
               const label = A.controls[control.ref] ?? control.label;

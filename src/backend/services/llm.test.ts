@@ -112,6 +112,15 @@ describe("llm service", () => {
     expect(await client.complete({}, [{ role: "user", content: "x" }], { responseMode: "text" })).toMatchObject({ raw: "plain", parsed: "plain" });
   });
 
+  test("analyzerClient raises network failures as a TypeError (AM nativeFetch), which the engine retry checks retry", async () => {
+    const { fake, llm } = setup();
+    fake.scriptLlm(new TypeError("fetch failed"));
+    const error = await llm.analyzerClient({ purpose: "chat-analyzer" }).complete({}, [{ role: "user", content: "x" }]).catch((e) => e);
+    expect(error).toBeInstanceOf(TypeError);
+    expect(error.message).toBe("fetch failed");
+    expect(error.cause).toMatchObject({ code: "ANALYZER_NETWORK" });
+  });
+
   test("connections, models, message test", async () => {
     const { fake, llm } = setup();
     expect((await llm.listConnections()).map((c) => [c.id, c.isDefault])).toEqual([["oa", true], ["cl", false]]);

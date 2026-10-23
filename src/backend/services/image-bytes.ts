@@ -177,6 +177,15 @@ export function createImageBytesService(deps: ImageBytesServiceDeps): ImageBytes
       const asset = normalizeAssetRef(raw);
       if (asset.key.startsWith(STORAGE_KEY_PREFIX)) return fromStorageKey(asset.key);
       const crop = asRecord(asset.cropReference);
+      // AM `$mt` 138466: the crop's own image first, the source asset when it cannot be read.
+      const cropKey = str(crop.assetKey);
+      if (cropKey.startsWith(STORAGE_KEY_PREFIX)) {
+        try {
+          return await fromStorageKey(cropKey);
+        } catch {
+          /* fall through */
+        }
+      }
       const characterId = str(asset.characterTarget?.chaId);
       if ((Object.keys(crop).length || asset.name.startsWith(CROP_ASSET_NAME_PREFIX)) && characterId) {
         const cropName = (asset.name || asset.key).replace(/\.png$/i, "");

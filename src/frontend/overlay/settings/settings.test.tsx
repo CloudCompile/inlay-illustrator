@@ -76,10 +76,17 @@ describe("V5 direction helpers", () => {
     const control = presetControls("analysis", comic, true).find((c) => c.id === "minimum-panels")!;
     expect(controlState(control, panels)).toEqual({ enabled: true, value: 3 });
   });
+  test("pov controls: POV hands required, on by default (AM 0.9.89.6)", () => {
+    const pov = scene.presets.find((p) => p.id === "scene-pov")!;
+    const [hands] = presetControls("analysis", pov, false);
+    expect(hands).toMatchObject({ id: "hands", ref: "pov.hands", defaultEnabled: true, variables: { "preset.persona.hands": "required" } });
+    expect(controlState(hands!, undefined)).toEqual({ enabled: true });
+    expect(setControlEnabled(undefined, "pov.hands", false)).toEqual({ "pov.hands": false });
+  });
   test("direction patch lists every control so stale overrides cannot survive a deep merge", () => {
     const patch = directionPatch(selectPreset(scene, "scene-default"));
     expect(patch.presetId).toBe("");
-    expect(patch.controlOverrides).toEqual({ "comic.frame": 0, "comic.speech-bubble": true, "comic.minimum-panels": false });
+    expect(patch.controlOverrides).toEqual({ "pov.hands": true, "comic.frame": 0, "comic.speech-bubble": true, "comic.minimum-panels": false });
   });
   test("custom presets: add, then delete selects the first remaining", () => {
     const added = commitPresetDraft("analysis", scene, { id: "scene-x", name: "  Mine ", instruction: "", customInstruction: { enabled: true, text: " close-up " } });
@@ -123,7 +130,7 @@ describe("settings form helpers", () => {
     const split = setAnalysisMode(base, "split", 7);
     expect(split.analysisMode).toBe("split");
     expect(split.splitAnalysis.totalCount).toBe(2);
-    expect(setSplitTotal(split, 50, 7).splitAnalysis.totalCount).toBe(20);
+    expect(setSplitTotal(split, 50, 7).splitAnalysis.totalCount).toBe(30);
     const webtoon = { ...base, webtoonMode: true };
     for (const next of [setFixedCount(webtoon, 3, 7), setCountMode(webtoon, "range", 7), setAnalysisMode(webtoon, "split", 7), setSplitTotal({ ...split, webtoonMode: true }, 3, 7)]) expect(next.webtoonMode).toBe(true);
   });

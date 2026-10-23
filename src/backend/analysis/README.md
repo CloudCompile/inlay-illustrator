@@ -1,11 +1,11 @@
-# src/backend/analysis — asset analysis, workspace and outfit images (Asset Maid port; analysis slice from 0.9.89.5)
+# src/backend/analysis — asset analysis, workspace and outfit images (Asset Maid port; analysis slice from 0.9.89.6)
 
 Owner: `analysis` (sub-agent of the backend lead). Specs: `spec/data.md` Part A + "Asset analysis", `spec/ui.md` §1-§3,
 `spec/novelai.md` §9 F. RPC handlers: `src/backend/rpc/handlers/workspace.ts`.
 
 ## How it is built
 
-- `core/analysis-core.ts` is a **generated verbatim slice** of AM 0.9.89.5 (`E:/Asset-Maid-upstream/pretty-versions/0.9.89.5.pretty.js`;
+- `core/analysis-core.ts` is a **generated verbatim slice** of AM 0.9.89.6 (`E:/Asset-Maid-upstream/pretty-versions/0.9.89.6.as95.js`, top-level names translated to 0.9.89.5 as described in `src/engine/README.md`;
   same slicer as `src/engine/core`, copy in `core/tooling/`; it also follows top-level `for (var ...)` declarations and
   rewrites `const x = globalThis` to `Object(globalThis)` for Lumiverse's backend fetch scan). Roots: the analysis
   controllers `Gwt` (character prompts), `f0t` (references), `o0t` (persona), `C0t` (asset matching), `Pwt` (metadata

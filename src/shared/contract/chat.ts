@@ -32,8 +32,8 @@ import {
 
 /** `Fa`: upper bound of every image count ("unlimited"). */
 export const UNLIMITED_IMAGE_COUNT = Number.MAX_SAFE_INTEGER;
-/** Asset Maid's chat image settings cap (`Km(e, t, r = 7)`). */
-export const MAX_IMAGE_COUNT = 7;
+/** Asset Maid's chat image settings cap (`Km(e, t, r = 10)`, 7 before 0.9.89.6). */
+export const MAX_IMAGE_COUNT = 10;
 const COUNT_MAX = UNLIMITED_IMAGE_COUNT;
 
 export type CountPolicyMode = "fixed" | "range";

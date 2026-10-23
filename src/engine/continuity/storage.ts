@@ -20,6 +20,7 @@ import {
   readLocalLoreActorState as coreReadLore,
   writeLocalLoreActorState as coreWriteLore,
   hasContinuityData as coreHasData,
+  EBe as coreCheckpointToStore,
   gR as LOCAL_LORE_ID,
 } from "./storage-core";
 import type {
@@ -110,6 +111,39 @@ export function writeContinuityToChat(store: ContinuityChatStore, chat: Continui
   const current = readLocalLoreActorState(chat);
   const actors = { ...current.actors };
   for (const [key, value] of Object.entries(fromStore.characters[chatKey] ?? {})) actors[key] = toLocalLoreActorEntry(value);
+  const payload = { revision: current.revision + 1, actors };
+  writeLocalLoreActorState(chat, payload);
+  return payload;
+}
+
+/** AM 0.9.89.5 `UF` @48353: actor keys that may be written to the current actor state (no role placeholders). */
+function isPersistableActorKey(key: string): boolean {
+  return !!key.trim() && key === key.trim() && !/^(?:primary|secondary|actor_\d+|female_\d+|male_\d+)$/u.test(key);
+}
+
+/**
+ * Commit one revision's continuity (AM 0.9.89.5 `gIe` 209136-209151): the checkpoint of `messageId`/`historyRevisionId`
+ * in `next` goes onto that generation only, other generations keep theirs; the next state's actors are merged over the
+ * current actor state with `revision + 1`. Mutates `store` and `chat`; returns the written actor state.
+ */
+export function commitContinuityCheckpoint(
+  store: ContinuityChatStore,
+  chat: ContinuityChat,
+  next: ContinuityState,
+  chatKey: string,
+  messageId: string,
+  historyRevisionId: string,
+): LocalLoreActorState {
+  const checkpoint = next.recentCheckpoints[chatKey]?.find(
+    (c) => c.messageId.replace(/^id:/u, "") === messageId && c.historyRevisionId === historyRevisionId,
+  );
+  const generation = store.messages[messageId]?.generations.find((g) => g.id === historyRevisionId);
+  const compact = checkpoint ? coreCheckpointToStore(checkpoint) : undefined;
+  if (generation && compact) generation.continuity = compact;
+  const current = readLocalLoreActorState(chat);
+  const actors = { ...current.actors };
+  for (const [key, value] of Object.entries(next.characters[chatKey] ?? {}))
+    if (isPersistableActorKey(key)) actors[key] = toLocalLoreActorEntry(value);
   const payload = { revision: current.revision + 1, actors };
   writeLocalLoreActorState(chat, payload);
   return payload;

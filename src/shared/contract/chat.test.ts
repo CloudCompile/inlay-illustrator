@@ -90,7 +90,7 @@ describe("count policy parity (qf / Gf / IW / SW / w5)", () => {
       expect([0, 1, 2, 4, 10].map((n) => clampCountPolicyToResolved(v, n))).toEqual(c.SW as never);
     });
   test("constants", () => {
-    expect(MAX_IMAGE_COUNT).toBe(7);
+    expect(MAX_IMAGE_COUNT).toBe(10);
     expect(UNLIMITED_IMAGE_COUNT).toBe(Number.MAX_SAFE_INTEGER);
     expect(fixedCountPolicy(1)).toEqual({ mode: "fixed", min: 1, max: 1, values: { fixed: 1, min: 1, max: 2 } });
   });

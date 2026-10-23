@@ -181,6 +181,7 @@
   "action",
   "object_instruction",
   "camera.view",
+  "camera.pov",
   "camera"
  ],
  "localRecovery": {
@@ -463,11 +464,11 @@
  "hashes": {
   "requestContext": "fnv1a64-1bc60c06b7ff55fe",
   "instructionModules": "fnv1a64-2df042e1c11e8f13",
-  "payload": "fnv1a64-55032a25a233f3ed",
+  "payload": "fnv1a64-401712e7fd787b4a",
   "schema": "fnv1a64-f3a356dac71a9e91",
-  "messages": "fnv1a64-09e059e77080af3c",
-  "cachePartition": "fnv1a64-1195d6495c14dfab",
-  "wirePayload": "fnv1a64-da5e39dec9b1e68e",
-  "messagePayload": "fnv1a64-da5e39dec9b1e68e"
+  "messages": "fnv1a64-f224a4973b22c283",
+  "cachePartition": "fnv1a64-a393d965e6209d3c",
+  "wirePayload": "fnv1a64-681e5fc5e9432831",
+  "messagePayload": "fnv1a64-681e5fc5e9432831"
  }
 }

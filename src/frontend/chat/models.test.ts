@@ -17,11 +17,11 @@ describe("generation-count panel model", () => {
     expect(view.auto).toBe(true);
     expect(countToggleText(view)).toBe("1");
   });
-  test("fixed stepper clamps to 1..7", () => {
+  test("fixed stepper clamps to 1..10 (AM 0.9.89.6)", () => {
     let s = createDefaultChatImageGenerationSettings();
     expect(applyCountAction(s, "fixed-decrement", limits)).toBeNull();
-    for (let i = 0; i < 10; i += 1) s = applyCountAction(s, "fixed-increment", limits) ?? s;
-    expect(countView(s, limits).fixed).toBe(7);
+    for (let i = 0; i < 15; i += 1) s = applyCountAction(s, "fixed-increment", limits) ?? s;
+    expect(countView(s, limits).fixed).toBe(10);
     expect(applyCountAction(s, "fixed-increment", limits)).toBeNull();
     expect(countView(s, countLimits(true, "v5-hybrid")).bounds.fixed.max).toBe(Number.MAX_SAFE_INTEGER);
   });

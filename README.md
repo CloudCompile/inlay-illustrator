@@ -65,4 +65,4 @@ bun run build
 ## Credits
 
 The analyzer, prompt engine and workspace design are ported from the RisuAI plugin
-[Asset Maid](https://github.com/acahaAM/Asset-Maid) 0.9.88 by acahaAM.
+[Asset Maid](https://github.com/acahaAM/Asset-Maid) by acahaAM (ported from 0.9.88, kept in step with upstream up to 0.9.89.6).

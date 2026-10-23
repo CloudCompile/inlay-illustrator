@@ -46,16 +46,12 @@ import {
 } from "../../engine/context/index.js";
 import { BUNDLED_COMFY_WORKFLOW_PROFILE, resolveImageCountConstraint, resolveImageSize } from "../../engine/compose/index.js";
 import {
+  commitContinuityCheckpoint,
   computeDeferredVisualContinuity,
-  createEmptyContinuityState,
   getLatestContinuityCheckpointSnapshot,
   mergeLocalLoreActorState,
-  pushContinuityCheckpoint,
-  readContinuityFromChat,
   readLocalLoreActorState,
   rebuildContinuityAtMessage,
-  serializeContinuityState,
-  writeContinuityToChat,
   writeLocalLoreActorState,
   type ContinuityChat,
   type ContinuityChatStore,
@@ -325,6 +321,14 @@ export function continuityChat(messages: readonly ChatMessageView[], target: { i
   return chat;
 }
 
+/**
+ * Message ids for the continuity lookback (AM `cPt` 209396): only assistant messages carry an id, others are "",
+ * so the 3-message lookback counts assistant replies.
+ */
+export function continuityLookbackIds(messages: readonly ChatMessageView[], target: number, historyId: string): string[] {
+  return messages.map((m, i) => (i === target ? historyId : m.role === "assistant" ? `${m.id}@${m.swipeId}` : ""));
+}
+
 /* ------------------------------------------------------------------------------------------------
  * Run
  * ---------------------------------------------------------------------------------------------- */
@@ -417,7 +421,7 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
 
   // Continuity basis at the target message (AM 169508-169524: `ooe` + current actor state `Lne`).
   const chatKey = chatKeyForChat(req.chatId);
-  const liveIds = req.messages.map((m, i) => (i === req.target ? req.historyId : `${m.id}@${m.swipeId}`));
+  const liveIds = continuityLookbackIds(req.messages, req.target, req.historyId);
   const store = req.chatData.store as unknown as ContinuityChatStore;
   const hr: ContinuityState = rebuildContinuityAtMessage(store, chatKey, liveIds, req.historyId);
   hr.characters[chatKey] = mergeLocalLoreActorState((hr.characters[chatKey] ?? {}) as never, req.chatData.actorState as never) as never;
@@ -503,24 +507,10 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     async (doc, info) => {
       if (!persistContinuity) return;
       const chatObj = continuityChat(req.messages, { index: req.target, historyId: req.historyId }, doc.actorState);
-      const current = readContinuityFromChat(doc.store as unknown as ContinuityChatStore, chatObj, chatKey) ?? createEmptyContinuityState();
-      // AM 0.9.89 computes the next state from the basis (`_Ye` / `rYe`); the port stores only its checkpoint.
+      // AM 0.9.89 computes the next state from the basis (`_Ye` / `rYe`) and stores only this revision's checkpoint
+      // (`gIe` 209136-209151); checkpoints of other messages and revisions stay as they are.
       const next = apply(info);
-      const checkpoint = next.recentCheckpoints[chatKey]?.find((c) => c.messageId === continuityMessageId && (c.historyRevisionId ?? "") === info.historyRevisionId);
-      if (checkpoint) {
-        pushContinuityCheckpoint(current, {
-          chatKey,
-          messageId: continuityMessageId,
-          messageIndex: checkpoint.messageIndex,
-          historyRevisionId: info.historyRevisionId,
-          historyRevisionOrder: info.historyRevisionOrder,
-          capturedAt: checkpoint.capturedAt,
-          sourceState: next,
-          participants: checkpoint.participants,
-        });
-      }
-      // The storage adapter takes the serialized document (AM pKe persists `Ete(state)`; `gDe` reads the string form).
-      writeContinuityToChat(doc.store as unknown as ContinuityChatStore, chatObj, serializeContinuityState(current), chatKey);
+      commitContinuityCheckpoint(doc.store as unknown as ContinuityChatStore, chatObj, next, chatKey, req.historyId, info.historyRevisionId);
       const actorState = readLocalLoreActorState(chatObj);
       doc.actorState = { revision: actorState.revision, actors: actorState.actors } as unknown as CurrentActorState;
     };

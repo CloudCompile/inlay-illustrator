@@ -29,7 +29,7 @@ import {
 import type { BackendServices, ChatInfo, PersonaInfo } from "../services/types.js";
 import type { ChatMessageView } from "../pipeline/host-chat.js";
 import { cleanMessageContent } from "../pipeline/markup.js";
-import { speakingCharacterId } from "../pipeline/generate.js";
+import { continuityLookbackIds, speakingCharacterId } from "../pipeline/generate.js";
 import { appearanceText, fold, latestLooks, type DerivedLook } from "./looks.js";
 import type { PlannerRosterEntry } from "./planner-prompt.js";
 import type { PlannerCharacter } from "./storyboard-schema.js";
@@ -136,7 +136,7 @@ export async function loadWebtoonContext(
   const active = await services.sources.getActivePersona(input.chatId);
 
   const chatKey = chatKeyForChat(input.chatId);
-  const liveIds = input.messages.map((m, i) => (i === input.target ? input.historyId : `${m.id}@${m.swipeId}`));
+  const liveIds = continuityLookbackIds(input.messages, input.target, input.historyId);
   const continuity = rebuildContinuityAtMessage(input.chatData.store as unknown as ContinuityChatStore, chatKey, liveIds, input.historyId);
   continuity.characters[chatKey] = mergeLocalLoreActorState((continuity.characters[chatKey] ?? {}) as never, input.chatData.actorState as never) as never;
   const requestMessages = input.messages.slice(0, input.target).flatMap((m) => {

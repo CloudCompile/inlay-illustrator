@@ -486,6 +486,12 @@
         "options": [
          "pov"
         ]
+       },
+       {
+        "id": "camera.pov",
+        "options": [
+         "pov_hands"
+        ]
        }
       ],
       "instruction": "First-person view from the persona at the gate."

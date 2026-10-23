@@ -70,6 +70,17 @@ describe("image bytes", () => {
     expect((await bytes.getAsset({ name: "smile.webp", key: "g1", extension: "webp", sourceType: "character", moduleId: "", moduleName: "" })).mimeType).toBe("image/gif");
     expect((await bytes.getAsset({ name: "gen", key: "/api/v1/image-gen/results/g1", extension: "png", sourceType: "generated", moduleId: "", moduleName: "" })).mimeType).toBe("image/gif");
   });
+
+  test("assets: a crop reference without a character target reads the crop image, else the source", async () => {
+    const { fake, storage, bytes } = setup();
+    const path = STORAGE_PATHS.characterReferenceCrop("c1", "__asset_maid_crop_2");
+    await storage.writeBinary(path, new Uint8Array([7, 8]));
+    fake.addImage({ id: "src1" }, ascii("GIF89a"));
+    const ref = { name: "full.png", key: "src1", extension: "png", sourceType: "character", moduleId: "", moduleName: "" };
+    const crop = { version: 1, assetName: "__asset_maid_crop_2.png", assetKey: `storage:${path}`, extension: "png", cropRect: { x: 0, y: 0, width: 1, height: 1 }, sourceSize: { width: 2, height: 2 } };
+    expect(await bytes.getAsset({ ...ref, cropReference: crop })).toEqual({ data: bytesToBase64(new Uint8Array([7, 8])), mimeType: "image/png" });
+    expect((await bytes.getAsset({ ...ref, cropReference: { ...crop, assetKey: "storage:characters/c1/reference-crops/gone.png" } })).mimeType).toBe("image/gif");
+  });
 });
 
 describe("JSON fetch bridge", () => {

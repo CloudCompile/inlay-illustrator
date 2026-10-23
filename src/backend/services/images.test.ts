@@ -39,6 +39,7 @@ describe("image helpers", () => {
     expect(normalizeNovelAiSampler("euler_ancestral")).toBe("k_euler_ancestral");
     expect(normalizeNovelAiSampler("DDIM")).toBe("ddim_v3");
     expect(normalizeNovelAiSampler({ id: "dpmpp_2m" })).toBe("k_dpmpp_2m");
+    expect(normalizeNovelAiSampler("dpmpp_2m_sde")).toBe("k_dpmpp_2m_sde");
     expect(normalizeNovelAiSampler("weird")).toBeUndefined();
     expect(parseSeed("123")).toBe(123);
     expect(parseSeed("-1")).toBeNull();

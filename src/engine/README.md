@@ -1,4 +1,4 @@
-# src/engine — Asset Maid 0.9.89.5 core (pure, deterministic, parity-tested)
+# src/engine — Asset Maid 0.9.89.6 core (pure, deterministic, parity-tested)
 
 The engine is a faithful port of Asset Maid's pure core: NovelAI V5 and V4.5 catalogs and rule runtimes,
 analyzer request building and response recovery, prompt composition and provider prompt codecs, visual
@@ -7,8 +7,9 @@ image generation, storage, clock, randomness) is injected.
 
 ## How the port is built (read this first)
 
-- `core/asset-maid-core.ts` is **generated**. It is a verbatim slice of the AM 0.9.89.5 bundle
-  (`E:/Asset-Maid-upstream/pretty-versions/0.9.89.5.pretty.js`, prettier width 120), made by
+- `core/asset-maid-core.ts` is **generated**. It is a verbatim slice of the AM 0.9.89.6 bundle
+  (`E:/Asset-Maid-upstream/pretty-versions/0.9.89.6.as95.js`: the prettier 3.7.4 width-120 build with its top-level
+  identifiers renamed to their 0.9.89.5 names, so the roots, renames and every import of the core stay the same), made by
   `core/tooling/slice.mjs` (acorn + eslint-scope). The slicer takes the root declarations listed in
   `core/tooling/slice-config.json` and emits their full top-level dependency closure in original order.
   The current slice has about 2450 declarations and about 54k lines, including the data literals (`vW`, `dg`, prompt texts).
@@ -26,10 +27,16 @@ image generation, storage, clock, randomness) is injected.
   names by matching identical top-level units (`asset-maid-port/scratch/port-0.9.89.5/`). Do not edit `asset-maid-core.ts` by hand.
 - `continuity/storage-core.ts` is a second generated slice, from the **0.9.88** bundle (`core/tooling/slice-config.storage-core.json`).
   AM 0.9.89 moved continuity persistence into its own chat lore document; the port keeps the 0.9.88 storage format
-  (chat-store checkpoints + local-lore actor state) in userStorage. Helpers that are identical in 0.9.89.5 are imported from the main core.
-- Golden fixtures are recorded from the original 0.9.89.5 bundle (`scratch/port-0.9.89.5/reslice/am_harness95.js`, generators in
-  `scratch/port-0.9.89.5/reslice/gen/engine/**`; they translate the 0.9.88 names they use to 0.9.89.5 names).
-- The `// AM <name> @<line>` tags in the core now refer to 0.9.89.5 names and lines. Most facade doc comments and `spec/*.md`
+  (chat-store checkpoints + local-lore actor state) in userStorage. Helpers that are identical in 0.9.89.6 are imported from the main core.
+- 0.9.89.6 port (`asset-maid-port/scratch/port-0.9.89.6/`): `units.mjs` + `map.py` align the top-level units of both builds
+  and map 0.9.89.6 names to 0.9.89.5 names (`namemap96to95.json`; new declarations keep their name with a `$96` suffix),
+  `rename.mjs` applies the map with eslint-scope (`0.9.89.6.as95.js`), and `semdiff.mjs` compares two generated cores
+  unit by unit with local identifiers alpha-renamed. 0.9.89.5 -> 0.9.89.6 changed 10 core units (POV hands control and
+  `camera.pov` modifier, `isPov`, `retryable === false` guard in `Ume`, split batch limit 10, Flex-only backoff `ZT$96`)
+  and added 5 (`ZT$96`, Flex settings helpers; Flex paths are inert in the port).
+- Golden fixtures are recorded from the original 0.9.89.6 bundle (`scratch/port-0.9.89.6/reslice/am_harness96.js`, generators in
+  `scratch/port-0.9.89.6/reslice/gen/engine/**`; they translate the 0.9.88 names they use to 0.9.89.5 names).
+- The `// AM <name> @<line>` tags in the core refer to 0.9.89.5 names and 0.9.89.6 `as95` lines. Most facade doc comments and `spec/*.md`
   still cite the 0.9.88 names and lines (`core/names.json` has the current mapping).
 
 ## Module map

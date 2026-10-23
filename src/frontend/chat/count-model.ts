@@ -36,7 +36,7 @@ export const COUNT_ACTIONS = [
 export type CountAction = (typeof COUNT_ACTIONS)[number];
 
 export interface CountLimits {
-  /** 7, or unlimited in developer mode (AM 180577). */
+  /** 10, or unlimited in developer mode (AM 180577). */
   maximumCount: number;
   /** Split analysis needs the V5 hybrid analysis profile. */
   splitSupported: boolean;
