@@ -121,6 +121,9 @@ const MAX_RETAINED_JOBS = 64;
 const MAX_SETTINGS_SNAPSHOTS = 16;
 /** AM auto-retry delay between attempts (`ur` 173382). */
 const AUTO_RETRY_DELAY_MS = 100;
+/** Automatic runs and auto-retries wait up to this long for a generation streaming in the chat to end. */
+const STREAM_WAIT_MAX_MS = 5 * 60_000;
+const STREAM_WAIT_POLL_MS = 250;
 /** Host generation types that start automatic illustration (Lumiverse: normal, swipe, regenerate; not continue/impersonate/quiet). */
 const AUTO_GENERATION_TYPES = new Set(["", "normal", "swipe", "regenerate"]);
 
@@ -391,9 +394,13 @@ export function createChatPipelineController(services: BackendServices, engine: 
     return "published";
   };
 
-  /** Serialized per message; "streaming" schedules background retries (120/400/1000/2000 ms, then every 2 s). */
+  /**
+   * Serialized per host message, not per swipe: writing a swipe that is not shown sends the message's whole swipe list, so
+   * two swipes of one message written at once would restore each other's old text. "streaming" schedules background
+   * retries (120/400/1000/2000 ms, then every 2 s).
+   */
   const publish = (chatId: string, planKey: string, attempt = 0): Promise<PublishResult> => {
-    const key = k(chatId, planKey);
+    const key = k(chatId, parseHistoryMessageId(planKey.replace(/^illustration:/u, ""))?.messageId ?? planKey);
     const run = (publishChains.get(key) ?? Promise.resolve()).then(
       () => publishOnce(chatId, planKey),
       () => publishOnce(chatId, planKey),
@@ -441,6 +448,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
     /** Restart: the saved settings snapshot (AM `mt`). */
     settings?: ChatImageGenerationSettings;
     revision?: RevisionInput;
+    /** Auto-retry: wait out a generation streaming in the chat, as an automatic run does. */
+    waitForChat?: boolean;
   }
   type Outcome =
     | { kind: "completed" }
@@ -488,6 +497,20 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const skey = k(chatId, planKey);
     const signal = job.controller.signal;
     setRetryErrors(job, { engine: [] });
+    // Automatic runs and auto-retries wait while another generation streams in the chat (the next reply, a group member,
+    // a swipe) instead of ending as busy; a manual start is still refused at once below (AM 214856).
+    if ((opts.automatic || opts.waitForChat) && tracker.isStreaming(chatId)) {
+      job.snapshot.progress = phaseProgress("queued");
+      emitProgress(job);
+      const deadline = now() + STREAM_WAIT_MAX_MS;
+      while (tracker.isStreaming(chatId) && !signal.aborted && now() < deadline) await sleep(STREAM_WAIT_POLL_MS, signal);
+      if (signal.aborted) return { kind: "cancelled" };
+      // An automatic run only illustrates the swipe on screen: the user swiped away while it waited.
+      if (opts.automatic) {
+        const shown = findMessage(await loadMessages(services.host, chatId), messageId).view;
+        if (shown && shown.swipeId !== swipeIndex) return { kind: "cancelled" };
+      }
+    }
     const config = await services.storage.loadConfig();
     const chat = await getChat(chatId);
     const messages = await loadMessages(services.host, chatId);
@@ -798,7 +821,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
         emitProgress(job);
         await sleep(AUTO_RETRY_DELAY_MS, job.controller.signal);
         // AM ur 173403: further attempts are manual retries of the same message.
-        current = { ...current, automatic: false, attemptKind: current.revision ? current.attemptKind : "retry", settings: undefined };
+        current = { ...current, automatic: false, attemptKind: current.revision ? current.attemptKind : "retry", settings: undefined, waitForChat: true };
       }
     } catch (e) {
       finishJob(job, isAbortLike(e) ? "cancelled" : "failed", isAbortLike(e) ? "cancelled" : "error", isAbortLike(e) ? undefined : errorOf(e));

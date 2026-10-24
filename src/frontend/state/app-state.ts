@@ -69,6 +69,8 @@ export interface AppState {
   chatDataRevision: Record<string, number>;
   /** Bumped on `document.changed` per character. */
   documentRevision: Record<string, number>;
+  /** Bumped by `resync()`: chat-side views re-read every message state they show. */
+  resyncCount: number;
 }
 
 export function createInitialAppState(): AppState {
@@ -89,7 +91,8 @@ export function createInitialAppState(): AppState {
     outfitJobs: {},
     generationJobs: {},
     chatDataRevision: {},
-    documentRevision: {}
+    documentRevision: {},
+    resyncCount: 0
   };
 }
 
@@ -235,6 +238,39 @@ export class AppController {
 
   reloadWorkspace(): Promise<void> {
     return this.selectCharacter(this.state.selectedCharacterId, { reload: true });
+  }
+
+  /**
+   * Re-reads everything the backend keeps current through events, for when the page was disconnected (events sent
+   * meanwhile are lost): status, settings, running jobs (a job that ended meanwhile loses its spinner), the open chat's
+   * data and the workspace. Does nothing before the first handshake; a failed read keeps the current state.
+   */
+  async resync(): Promise<void> {
+    if (this.state.connection !== "ready") return;
+    try {
+      const [status, cfg, analysis, generation] = await Promise.all([
+        this.call("session.getStatus", {}),
+        this.call("config.get", {}),
+        this.call("analysis.listActive", {}),
+        this.call("generation.listActive", {})
+      ]);
+      this.setStatus(status);
+      this.store.patch({ config: cfg.config, chatImageGeneration: cfg.chatImageGeneration, uiState: cfg.uiState });
+      const running = new Set(analysis.jobs.map((job) => job.jobId));
+      const analysisJobs: Record<string, AnalysisJobState> = {};
+      for (const [jobId, job] of Object.entries(this.state.analysisJobs)) if (job.finishedAt !== undefined || running.has(jobId)) analysisJobs[jobId] = job;
+      for (const job of analysis.jobs) {
+        const existing: AnalysisJobState | undefined = analysisJobs[job.jobId];
+        analysisJobs[job.jobId] = { ...existing, jobId: job.jobId, kind: job.kind, characterId: job.characterId, status: job.status, progress: job.progress, rows: existing?.rows ?? [], startedAt: existing?.startedAt ?? Date.now() };
+      }
+      const generationJobs: Record<string, GenerationJobSnapshot> = {};
+      for (const job of generation.jobs) if (job.status === "queued" || job.status === "running") generationJobs[job.jobId] = job;
+      this.store.patch({ analysisJobs, generationJobs, resyncCount: this.state.resyncCount + 1 });
+      if (status.activeChatId) this.bump("chatDataRevision", status.activeChatId);
+      if (this.state.selectedCharacterId) await this.reloadWorkspace();
+    } catch {
+      // Still disconnected or a read failed: the next reconnect or visibility change tries again.
+    }
   }
 
   /** Replaces the current snapshot with one returned by a mutation (ignored when the character changed). */

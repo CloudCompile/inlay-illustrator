@@ -381,9 +381,13 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
   };
   let doc: WebtoonStripDocument | null = null;
   let manga = req.format === "manga";
+  // A new plan replaces the strip at once (status planning); until its storyboard is saved, a cancel or failure puts the
+  // previous strip back instead of leaving an empty one.
+  let previous: WebtoonStripDocument | null = null;
+  let replanning = false;
   try {
     await requireNovelAI(services);
-    const previous = await readStrip(services.storage, req.chatId, req.historyId);
+    previous = await readStrip(services.storage, req.chatId, req.historyId);
     const resume = req.resume && previous?.storyboard && previous.style && Object.keys(previous.requests).length;
     if (resume) manga = previous!.format === "manga";
     req.onProgress({ stage: "planning", manga });
@@ -398,6 +402,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         delete d.error;
       });
     } else {
+      replanning = !!previous?.storyboard;
       const context = await loadWebtoonContext(services, { ...req, format: manga ? "manga" : "webtoon" });
       style = context.style;
       characterId = context.characterId;
@@ -449,6 +454,7 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
           d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
           d.status = "generating";
         });
+        replanning = false;
       } finally {
         auto?.dispose();
       }
@@ -523,10 +529,17 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
   } catch (e) {
     const cancelled = req.signal.aborted || isAbortLike(e);
     const error = cancelled ? undefined : toRpcError(e);
-    await write((d) => {
-      d.status = cancelled ? "cancelled" : "error";
-      if (error) d.error = error.message;
-    }).catch(() => undefined);
+    if (replanning && previous) {
+      const restored = previous;
+      await updateStrip(services.storage, req.chatId, req.historyId, () => structuredClone(restored), now)
+        .then(() => req.onChanged())
+        .catch(() => undefined);
+    } else {
+      await write((d) => {
+        d.status = cancelled ? "cancelled" : "error";
+        if (error) d.error = error.message;
+      }).catch(() => undefined);
+    }
     return cancelled ? { status: "cancelled", failedPanels: 0 } : { status: "error", error: error!, failedPanels: 0 };
   }
 }

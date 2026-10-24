@@ -18,6 +18,9 @@ import { answerFetchBridge } from "./frontend/fetch-bridge.js";
 import { createZoomViewer, type ZoomViewer } from "./frontend/zoom/index.js";
 import { isFetchBridgeRequest } from "./shared/contract/bridge.js";
 
+/** A tab hidden at least this long re-reads the backend state when it is shown again. */
+const RESYNC_AFTER_HIDDEN_MS = 5_000;
+
 /** Handles exposed to dev tools (preview page, tests). */
 export type FrontendHandles = { app: AppController; client: RpcClient; overlay: OverlayController; zoom: ZoomViewer };
 export type SetupOptions = { onReady?: (handles: FrontendHandles) => void };
@@ -151,6 +154,16 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
     void app.call("session.getStatus", {}).then((status) => app.setStatus(status)).catch(() => undefined);
   });
 
+  // Backend events sent while the page was disconnected are lost: re-read the state when the host connection is back,
+  // and when the tab is shown again after a while (a backgrounded phone tab can miss events without a reconnect).
+  const unsubConnected = ctx.events.on("CONNECTED", () => void app.resync());
+  let hiddenAt = 0;
+  const onVisibility = () => {
+    if (document.visibilityState === "hidden") hiddenAt = Date.now();
+    else if (hiddenAt && Date.now() - hiddenAt >= RESYNC_AFTER_HIDDEN_MS) void app.resync();
+  };
+  document.addEventListener("visibilitychange", onVisibility);
+
   void app.init();
   ctx.ready();
   options.onReady?.({ app, client, overlay, zoom });
@@ -158,6 +171,8 @@ export function setup(ctx: SpindleFrontendContext, options: SetupOptions = {}) {
   const cleanup = () => {
     unsubForeign();
     unsubChatSwitched();
+    unsubConnected();
+    document.removeEventListener("visibilitychange", onVisibility);
     unsubOverlayDrawer();
     composer.stop();
     removeChatSide();

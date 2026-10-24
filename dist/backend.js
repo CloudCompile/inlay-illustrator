@@ -67510,9 +67510,11 @@ async function runWebtoonStrip(deps, req) {
   };
   let doc = null;
   let manga = req.format === "manga";
+  let previous = null;
+  let replanning = false;
   try {
     await requireNovelAI(services);
-    const previous = await readStrip(services.storage, req.chatId, req.historyId);
+    previous = await readStrip(services.storage, req.chatId, req.historyId);
     const resume = req.resume && previous?.storyboard && previous.style && Object.keys(previous.requests).length;
     if (resume)
       manga = previous.format === "manga";
@@ -67527,6 +67529,7 @@ async function runWebtoonStrip(deps, req) {
         delete d.error;
       });
     } else {
+      replanning = !!previous?.storyboard;
       const context = await loadWebtoonContext(services, { ...req, format: manga ? "manga" : "webtoon" });
       style = context.style;
       characterId = context.characterId;
@@ -67577,6 +67580,7 @@ async function runWebtoonStrip(deps, req) {
           d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
           d.status = "generating";
         });
+        replanning = false;
       } finally {
         auto?.dispose();
       }
@@ -67652,13 +67656,20 @@ async function runWebtoonStrip(deps, req) {
   } catch (e) {
     const cancelled = req.signal.aborted || isAbortLike(e);
     const error = cancelled ? undefined : toRpcError(e);
-    await write((d) => {
-      d.status = cancelled ? "cancelled" : "error";
-      if (error)
-        d.error = error.message;
-    }).catch(() => {
-      return;
-    });
+    if (replanning && previous) {
+      const restored = previous;
+      await updateStrip(services.storage, req.chatId, req.historyId, () => structuredClone(restored), now).then(() => req.onChanged()).catch(() => {
+        return;
+      });
+    } else {
+      await write((d) => {
+        d.status = cancelled ? "cancelled" : "error";
+        if (error)
+          d.error = error.message;
+      }).catch(() => {
+        return;
+      });
+    }
     return cancelled ? { status: "cancelled", failedPanels: 0 } : { status: "error", error, failedPanels: 0 };
   }
 }
@@ -67741,6 +67752,8 @@ var PUBLISH_MAX_ATTEMPTS = 40;
 var MAX_RETAINED_JOBS = 64;
 var MAX_SETTINGS_SNAPSHOTS = 16;
 var AUTO_RETRY_DELAY_MS = 100;
+var STREAM_WAIT_MAX_MS = 5 * 60000;
+var STREAM_WAIT_POLL_MS = 250;
 var AUTO_GENERATION_TYPES = new Set(["", "normal", "swipe", "regenerate"]);
 function createChatPipelineController(services, engine, options = {}) {
   const now = options.now ?? (() => Date.now());
@@ -67896,7 +67909,7 @@ function createChatPipelineController(services, engine, options = {}) {
     return "published";
   };
   const publish = (chatId, planKey, attempt = 0) => {
-    const key = k(chatId, planKey);
+    const key = k(chatId, parseHistoryMessageId(planKey.replace(/^illustration:/u, ""))?.messageId ?? planKey);
     const run = (publishChains.get(key) ?? Promise.resolve()).then(() => publishOnce(chatId, planKey), () => publishOnce(chatId, planKey));
     publishChains.set(key, run.catch(() => {
       return;
@@ -67954,6 +67967,20 @@ function createChatPipelineController(services, engine, options = {}) {
     const skey = k(chatId, planKey);
     const signal = job.controller.signal;
     setRetryErrors(job, { engine: [] });
+    if ((opts.automatic || opts.waitForChat) && tracker.isStreaming(chatId)) {
+      job.snapshot.progress = phaseProgress("queued");
+      emitProgress(job);
+      const deadline = now() + STREAM_WAIT_MAX_MS;
+      while (tracker.isStreaming(chatId) && !signal.aborted && now() < deadline)
+        await sleep(STREAM_WAIT_POLL_MS, signal);
+      if (signal.aborted)
+        return { kind: "cancelled" };
+      if (opts.automatic) {
+        const shown = findMessage(await loadMessages(services.host, chatId), messageId).view;
+        if (shown && shown.swipeId !== swipeIndex)
+          return { kind: "cancelled" };
+      }
+    }
     const config = await services.storage.loadConfig();
     const chat = await getChat(chatId);
     const messages = await loadMessages(services.host, chatId);
@@ -68258,7 +68285,7 @@ function createChatPipelineController(services, engine, options = {}) {
         job.snapshot.progress = phaseProgress("planned", { retry: { attempt: attempt + 1, total: retries } });
         emitProgress(job);
         await sleep(AUTO_RETRY_DELAY_MS, job.controller.signal);
-        current = { ...current, automatic: false, attemptKind: current.revision ? current.attemptKind : "retry", settings: undefined };
+        current = { ...current, automatic: false, attemptKind: current.revision ? current.attemptKind : "retry", settings: undefined, waitForChat: true };
       }
     } catch (e) {
       finishJob(job, isAbortLike(e) ? "cancelled" : "failed", isAbortLike(e) ? "cancelled" : "error", isAbortLike(e) ? undefined : errorOf(e));

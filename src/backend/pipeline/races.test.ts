@@ -199,4 +199,73 @@ describe("chat pipeline: races", () => {
     expect(finished(fx, jobId)[0]!.result).toBe("completed");
     expect(fx.message("m1").content).toContain(`data-inlay-illustrator-image-id="${regen.savedPath!.split("/").pop()}"`);
   });
+
+  test("two swipes of one message written at once keep each other's images", async () => {
+    // Own copy: earlier tests splice the shared SWIPES array.
+    const swipes = ["A one.\n\nA two.", "B one.\n\nB two.", "C one.\n\nC two."];
+    const { fx, pipeline } = setup({ messages: [{ id: "m1", swipes: [...swipes], swipe_id: 2 }] });
+    for (const swipeIndex of [0, 1]) {
+      const { jobId } = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex });
+      await waitFor(() => finished(fx, jobId).length > 0);
+    }
+    // Both swipes lose their markup, then are re-baked at the same moment over a slow host write. Writing a swipe that is
+    // not shown sends the whole swipe list, so the second write used to restore the first swipe's old text.
+    const m = fx.fakeHost!.messages.get(CHAT_ID)!.find((x) => x.id === "m1")!;
+    m.swipes = [...swipes];
+    m.content = swipes[2]!;
+    const chat = fx.fakeHost!.host.chat as unknown as { updateMessage: (...a: unknown[]) => Promise<unknown> };
+    const update = chat.updateMessage.bind(chat);
+    chat.updateMessage = async (...args: unknown[]) => {
+      await new Promise((r) => setTimeout(r, 20));
+      return update(...args);
+    };
+    await Promise.all([pipeline.publish(CHAT_ID, "illustration:m1@0"), pipeline.publish(CHAT_ID, "illustration:m1@1")]);
+    expect(fx.message("m1").swipes[0]).toContain("data-inlay-illustrator-image-id");
+    expect(fx.message("m1").swipes[1]).toContain("data-inlay-illustrator-image-id");
+  });
+
+  test("an automatic run waits while another generation streams in the chat, then illustrates the reply", async () => {
+    const { fx, engine, pipeline } = setup();
+    await pipeline.handleHostEvent("GENERATION_STARTED", { generationId: "g-next", chatId: CHAT_ID });
+    await pipeline.handleGenerationEnded({ chatId: CHAT_ID, messageId: "m1", generationType: "normal" });
+    await new Promise((r) => setTimeout(r, 600));
+    expect(engine.runs.length).toBe(0);
+    expect(finished(fx).length).toBe(0);
+    await pipeline.handleHostEvent("GENERATION_STOPPED", { generationId: "g-next", chatId: CHAT_ID });
+    await waitFor(() => finished(fx).length > 0);
+    expect(finished(fx)[0]!.result).toBe("completed");
+    expect(fx.message("m1").content).toContain("data-inlay-illustrator-image-id");
+  });
+
+  test("an automatic run that waited does not illustrate a swipe the user left", async () => {
+    const { fx, engine, pipeline } = setup({ messages: [{ id: "m1", swipes: ["A one.\n\nA two.", "B one.\n\nB two."], swipe_id: 0 }] });
+    await pipeline.handleHostEvent("GENERATION_STARTED", { generationId: "g-swipe", chatId: CHAT_ID, targetMessageId: "m1" });
+    await pipeline.handleGenerationEnded({ chatId: CHAT_ID, messageId: "m1", generationType: "normal" });
+    const m = fx.fakeHost!.messages.get(CHAT_ID)!.find((x) => x.id === "m1")!;
+    m.swipe_id = 1;
+    m.content = m.swipes[1]!;
+    await pipeline.handleHostEvent("GENERATION_STOPPED", { generationId: "g-swipe", chatId: CHAT_ID });
+    await waitFor(() => finished(fx).length > 0);
+    expect(finished(fx)[0]!.result).toBe("cancelled");
+    expect(engine.runs.length).toBe(0);
+  });
+
+  test("an auto-retry waits while another generation streams instead of ending as busy", async () => {
+    const { fx, engine, pipeline } = setup();
+    engine.beforeImages = async (n) => {
+      if (n !== 1) return;
+      // The user sends the next message while the first attempt fails.
+      await pipeline.handleHostEvent("GENERATION_STARTED", { generationId: "g-user", chatId: CHAT_ID });
+      throw Object.assign(new Error("Image server timeout"), { retryable: true });
+    };
+    const { jobId } = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => engine.runs.length >= 1);
+    await new Promise((r) => setTimeout(r, 600));
+    expect(finished(fx, jobId).length).toBe(0);
+    expect(engine.runs.length).toBe(1);
+    await pipeline.handleHostEvent("GENERATION_STOPPED", { generationId: "g-user", chatId: CHAT_ID });
+    await waitFor(() => finished(fx, jobId).length > 0);
+    expect(finished(fx, jobId)[0]!.result).toBe("completed");
+    expect(engine.runs.length).toBe(2);
+  });
 });

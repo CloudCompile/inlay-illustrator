@@ -148,6 +148,45 @@ describe("webtoon: races and recovery", () => {
     pipeline.dispose();
   });
 
+  test("a re-plan that fails before its storyboard is saved puts the previous strip back", async () => {
+    const { fx, pipeline } = await setup();
+    fx.llmReplies.push(STORYBOARD);
+    const first = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, first.jobId).length > 0);
+    const before = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    expect(before.storyboard).not.toBeNull();
+    for (let i = 0; i < 5; i += 1) fx.llmReplies.push(Object.assign(new Error("Planner unavailable"), { retryable: false }));
+    const second = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, second.jobId).length > 0);
+    expect(finished(fx, second.jobId)[0]!.result).toBe("failed");
+    const after = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    expect(after.status).toBe(before.status);
+    expect(after.storyboard).toEqual(before.storyboard);
+    expect(after.panels).toEqual(before.panels);
+    pipeline.dispose();
+  });
+
+  test("a re-plan cancelled while planning puts the previous strip back", async () => {
+    const { fx, pipeline } = await setup();
+    fx.llmReplies.push(STORYBOARD);
+    const first = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, first.jobId).length > 0);
+    const before = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    // The user cancels while the planner call is out.
+    fx.llmReplies.push(() => {
+      pipeline.cancel({ chatId: CHAT_ID });
+      return Object.assign(new Error("aborted"), { name: "AbortError" });
+    });
+    const second = await pipeline.start({ chatId: CHAT_ID, messageId: "m1", swipeIndex: 0 });
+    await waitFor(() => finished(fx, second.jobId).length > 0);
+    expect(finished(fx, second.jobId)[0]!.result).toBe("cancelled");
+    const after = (await readStrip(fx.services.storage, CHAT_ID, "m1@0"))!;
+    expect(after.status).toBe(before.status);
+    expect(after.storyboard).toEqual(before.storyboard);
+    expect(after.panels).toEqual(before.panels);
+    pipeline.dispose();
+  });
+
   test("recover() turns an interrupted webtoon strip into an error instead of planning forever", async () => {
     const { fx, pipeline } = await setup();
     await updateStrip(fx.services.storage, CHAT_ID, "m1@0", () => createStripDocument({ chatId: CHAT_ID, messageKey: "illustration:m1@0", historyId: "m1@0", characterId: "char-1", sourceLength: 1, now: 1 }));

@@ -37,6 +37,34 @@ describe("AppController", () => {
     expect(app.state.selectedCharacterId).toBe("char-seoyeon");
   });
 
+  test("resync after a disconnect: jobs that ended meanwhile lose their spinner; settings and running jobs are re-read", async () => {
+    const { app, mock } = setup();
+    await app.init();
+    const handlers = mock.handlers as Record<string, unknown>;
+    // Two jobs were running when the page lost its connection.
+    mock.emit("analysis.progress", { jobId: "a1", kind: "persona", characterId: "char-seoyeon", status: "running", progress: { label: "Reading", fraction: 0.5 } });
+    mock.emit("generation.progress", { jobId: "g1", status: "running", chatId: "chat-1", messageKey: "illustration:m1@0", progress: { label: "Generating", fraction: 0.5 } } as never);
+    await tick();
+    expect(Object.keys(app.state.generationJobs)).toEqual(["g1"]);
+    // While disconnected: both jobs ended, a new one started and a setting changed. None of those events arrived.
+    const g2 = { jobId: "g2", status: "running", chatId: "chat-1", messageKey: "illustration:m2@0", progress: { label: "Generating", fraction: 0.1 } };
+    handlers["analysis.listActive"] = () => ({ jobs: [] });
+    handlers["generation.listActive"] = () => ({ jobs: [g2] });
+    mock.db.config.runtime.generationAutoRetryCount = 7;
+    await app.resync();
+    expect(app.state.analysisJobs.a1).toBeUndefined();
+    expect(Object.keys(app.state.generationJobs)).toEqual(["g2"]);
+    expect(app.state.config?.runtime.generationAutoRetryCount).toBe(7);
+    expect(app.state.resyncCount).toBe(1);
+  });
+
+  test("resync before the first handshake does nothing", async () => {
+    const { app, mock } = setup();
+    await app.resync();
+    expect(mock.calls.length).toBe(0);
+    expect(app.state.resyncCount).toBe(0);
+  });
+
   test("optimistic config update and rollback", async () => {
     const { app, mock } = setup();
     await app.init();

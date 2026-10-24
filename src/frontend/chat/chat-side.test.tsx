@@ -171,6 +171,16 @@ describe("chat side (DOM, dev mock)", () => {
     await until(() => (q(".ii-am-chat-count__generate") as HTMLButtonElement | null)?.disabled);
   });
 
+  test("after a resync every shown message state is read again", async () => {
+    const r = rig();
+    await r.app.init();
+    await until(() => q('[data-message-id="msg-2"] .ii-am-chat-footer'));
+    const before = calls(r, "chatDom.getMessageStates").length;
+    await r.app.resync();
+    const call = await until(() => calls(r, "chatDom.getMessageStates").slice(before)[0]);
+    expect((call.params as { messageIds: string[] }).messageIds).toEqual(expect.arrayContaining(["msg-2", "msg-4", "msg-5"]));
+  });
+
   test("backend error events open the runtime error dialog", async () => {
     const r = rig();
     await until(() => q(".ii-am-chat-footer"));

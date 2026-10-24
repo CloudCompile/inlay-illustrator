@@ -472,9 +472,15 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
   disposers.push(() => removeWidthStyle?.());
   let lastJobs = app.state.generationJobs;
   let lastSettings = app.state.chatImageGeneration;
+  let lastResync = app.state.resyncCount;
   disposers.push(app.store.subscribe(() => {
     syncWidth();
     const s = app.state;
+    // After a disconnect (AppController.resync) every shown message state is re-read: its events may have been lost.
+    if (s.resyncCount !== lastResync) {
+      lastResync = s.resyncCount;
+      void fetchStates([...new Set([...states.keys(), ...listBubbles().map((b) => b.messageId)])]);
+    }
     if (s.generationJobs !== lastJobs || s.chatImageGeneration !== lastSettings) {
       lastJobs = s.generationJobs;
       lastSettings = s.chatImageGeneration;
