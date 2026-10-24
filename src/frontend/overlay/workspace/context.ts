@@ -4,6 +4,7 @@ import { useApp, useAppState, type AppController } from "../../state/app-state.j
 import type { WorkspaceSnapshot } from "../../../shared/contract/rpc.js";
 import { useSourceUi, useWorkspaceUiStore, type SourceUi, type WorkspaceUiStore } from "../workspace-ui.js";
 import { draftStoreFor, type FormDraftStore } from "./drafts.js";
+import { watchOutfitJobs } from "./generation.js";
 import { providerInfo, type ProviderInfo } from "./model.js";
 import { sessionStoreFor, useSourceSession, type SourceSession, type WorkspaceSessionStore } from "./session.js";
 
@@ -29,6 +30,7 @@ export function useWorkspaceCtx(): WorkspaceCtx {
   const ui = useWorkspaceUiStore();
   const sourceUi = useSourceUi(characterId);
   const sessions = sessionStoreFor(app);
+  watchOutfitJobs(app, sessions);
   const session = useSourceSession(sessions, characterId);
   const drafts = draftStoreFor(app);
   const provider = useMemo(() => providerInfo(config, status), [config, status]);

@@ -129,8 +129,8 @@ function ShellInner({ navigation, onClose, workspaceUi }: { navigation: OverlayN
   const setActiveTab = (tab: WorkspaceTab) => workspaceUi.updateSource(characterId, { activeTab: tab, secondaryOpen: false, infoPromptKey: null });
 
   // A requested tab is applied to the character that is selected (or selected next: none loaded yet, or a requested
-  // character that is being selected).
-  const pendingTab = useRef<WorkspaceTab | null>(null);
+  // character that is being selected). It names its character: the effect below also runs before the selection lands.
+  const pendingTab = useRef<{ tab: WorkspaceTab; characterId: string | null } | null>(null);
   useEffect(() => {
     if (!navigation.requestId) return;
     const target = navigation.characterId;
@@ -140,19 +140,20 @@ function ShellInner({ navigation, onClose, workspaceUi }: { navigation: OverlayN
     } else if (target && target !== characterId) {
       setSettingsOpen(false);
       guarded(() => {
-        pendingTab.current = navigation.tab ?? null;
+        pendingTab.current = navigation.tab ? { tab: navigation.tab, characterId: target } : null;
         workspaceUi.updateSource(characterId, { editor: null });
         void app.selectCharacter(target);
       });
     } else if (navigation.tab) {
-      pendingTab.current = characterId ? null : navigation.tab;
+      pendingTab.current = characterId ? null : { tab: navigation.tab, characterId: null };
       setActiveTab(navigation.tab);
       setSettingsOpen(false);
     }
   }, [navigation.requestId]);
   useEffect(() => {
-    if (characterId && pendingTab.current) {
-      setActiveTab(pendingTab.current);
+    const pending = pendingTab.current;
+    if (characterId && pending && (pending.characterId === null || pending.characterId === characterId)) {
+      setActiveTab(pending.tab);
       pendingTab.current = null;
     }
   }, [characterId]);

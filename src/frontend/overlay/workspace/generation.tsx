@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { findOutfit, type FormCollection } from "../../../shared/contract/character.js";
 import type { OutfitImageDraft, OutfitImageResult } from "../../../shared/contract/rpc.js";
-import { useAppState } from "../../state/app-state.js";
+import { useAppState, type AppController } from "../../state/app-state.js";
 import { DockLayout } from "../shell/dock.js";
 import { Button, ChevronDownIcon, ChevronUpIcon, IconButton, Select, Slider, cn } from "../ui/index.js";
 import type { WorkspaceCtx } from "./context.js";
@@ -20,7 +20,7 @@ import { findForm, formReferenceAsset, outfitReferenceAsset, toAssetRef } from "
 import { Badge, Checkbox, GenderToggle, ImageViewer, LabeledCheckbox, RatingToggle, SaveButtonIcon, Spinner, useAssetUrl } from "./generation-parts.js";
 import { BufferedField, type OutfitOwner } from "./outfits.js";
 import { openPicker } from "./picker.js";
-import type { GenerationSession } from "./session.js";
+import type { GenerationSession, WorkspaceSessionStore } from "./session.js";
 
 export const MAX_GENERATION_HISTORY = 8;
 
@@ -47,19 +47,35 @@ export function toggleSelection(session: GenerationSession, resultId: string): s
   return on ? session.selectedResultIds.filter((id) => id !== resultId) : [...session.selectedResultIds, resultId];
 }
 
-function useGenerationJob(ctx: WorkspaceCtx, session: GenerationSession) {
-  const job = useAppState((s) => (session.jobId ? s.outfitJobs[session.jobId] : undefined));
-  useEffect(() => {
-    if (!job?.done || !session.jobId) return;
-    if (job.result) ctx.sessions.updateGeneration(ctx.characterId, (g) => (g.id === session.id ? addResult(g, job.result!) : {}));
-    else ctx.sessions.updateGeneration(ctx.characterId, { jobId: null, error: job.error?.message ?? GENERATION_LABELS.unsupported });
-  }, [job?.done]);
-  return job;
+const watchedSessions = new WeakSet<WorkspaceSessionStore>();
+
+/**
+ * Ends a generation session when its outfit job finishes, from the app store, so a job that ends while no generation
+ * pane is mounted (tab, pane or character switch) does not keep the session generating: its job entry is dropped later.
+ */
+export function watchOutfitJobs(app: AppController, sessions: WorkspaceSessionStore): void {
+  if (watchedSessions.has(sessions)) return;
+  watchedSessions.add(sessions);
+  const apply = () => {
+    const jobs = app.state.outfitJobs;
+    for (const [characterId, source] of Object.entries(sessions.store.get())) {
+      const g = source.generation;
+      const job = g?.jobId ? jobs[g.jobId] : undefined;
+      if (!g || !job?.done) continue;
+      sessions.updateGeneration(characterId, job.result ? addResult(g, job.result) : { jobId: null, error: job.error?.message ?? GENERATION_LABELS.unsupported });
+    }
+  };
+  app.store.subscribe(apply);
+  apply();
+}
+
+function useGenerationJob(session: GenerationSession) {
+  return useAppState((s) => (session.jobId ? s.outfitJobs[session.jobId] : undefined));
 }
 
 export function GenerationPanel({ ctx, owner, draftKey, source }: GenerationProps) {
   const session = ctx.session.generation!;
-  const job = useGenerationJob(ctx, session);
+  const job = useGenerationJob(session);
   const draft = useFormDraftView(ctx.drafts, draftKey, source);
   const { personas } = usePersonas(ctx.app, ctx.characterId);
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
@@ -155,7 +171,6 @@ export function GenerationPanel({ ctx, owner, draftKey, source }: GenerationProp
 
 export function GenerationDock({ ctx, owner, draftKey, source }: GenerationProps) {
   const session = ctx.session.generation!;
-  useGenerationJob(ctx, session);
   const draft = useFormDraftView(ctx.drafts, draftKey, source);
   const generating = !!session.jobId;
   const update = (patch: Partial<GenerationSession>) => ctx.sessions.updateGeneration(ctx.characterId, patch);

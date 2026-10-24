@@ -29,6 +29,8 @@ export class ChatRuntimeStore {
   zoomOpen = false;
   /** A chat is active (count panel only on the chat screen). */
   chatActive = false;
+  /** The active chat (a switch re-renders the runtime, so the count panel follows the chat). */
+  chatId = "";
   private readonly jobs = new Map<string, { attemptKind: AttemptKind; requestedCount: number; completedSlots: number; canRetry: boolean; canRestart: boolean; jevSelection?: JevSelectionProgress; phase: GenerationPhase; retryErrors?: GenerationRetryError[] }>();
   private readonly seenErrorIds: string[] = [];
   private readonly listeners = new Set<() => void>();
@@ -50,11 +52,12 @@ export class ChatRuntimeStore {
     for (const listener of [...this.listeners]) listener();
   }
 
-  setFlags(flags: Partial<Pick<ChatRuntimeStore, "overlayOpen" | "zoomOpen" | "chatActive">>): void {
+  setFlags(flags: Partial<Pick<ChatRuntimeStore, "overlayOpen" | "zoomOpen" | "chatActive" | "chatId">>): void {
     let changed = false;
-    for (const [key, value] of Object.entries(flags) as Array<["overlayOpen" | "zoomOpen" | "chatActive", boolean]>) {
-      if (this[key] !== value) {
-        this[key] = value;
+    const self = this as unknown as Record<string, unknown>;
+    for (const [key, value] of Object.entries(flags)) {
+      if (self[key] !== value) {
+        self[key] = value;
         changed = true;
       }
     }

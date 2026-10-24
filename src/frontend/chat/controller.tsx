@@ -220,7 +220,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
       pendingFooter.clear();
       busySlots.clear();
     }
-    runtime.setFlags({ chatActive: !!chatId, overlayOpen: isOverlayOpen() });
+    runtime.setFlags({ chatActive: !!chatId, chatId, overlayOpen: isOverlayOpen() });
     const bubbles = chatId ? listBubbles() : [];
     const missing = bubbles.map((b) => b.messageId).filter((id) => !states.has(id) && !inflight.has(id));
     if (missing.length) void fetchStates(missing);

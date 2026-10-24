@@ -28,20 +28,20 @@ export class Store<T> {
   }
 }
 
-/** Subscribes a component to a selected part of a store (re-renders when the selection changes by `Object.is`). */
+/**
+ * Subscribes a component to a selected part of a store (re-renders when the selection changes by `Object.is`).
+ * The selection is taken on every render, so a selector over props or other state follows them right away.
+ */
 export function useSelector<T, S>(store: Store<T>, selector: (value: T) => S): S {
   const selectorRef = useRef(selector);
   selectorRef.current = selector;
-  const [selected, setSelected] = useState(() => selector(store.get()));
+  const selected = selector(store.get());
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
+  const [, rerender] = useState(0);
   useEffect(() => {
     const check = () => {
-      const next = selectorRef.current(store.get());
-      if (!Object.is(next, selectedRef.current)) {
-        selectedRef.current = next;
-        setSelected(() => next);
-      }
+      if (!Object.is(selectorRef.current(store.get()), selectedRef.current)) rerender((n) => n + 1);
     };
     check();
     return store.subscribe(check);

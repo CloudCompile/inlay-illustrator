@@ -284,7 +284,7 @@ interface CountPanelProps {
 function CountPanel({ app, settings, config, chatId, generateLatest, openOverview }: CountPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [starting, setStarting] = useState(false);
-  const chatBusy = useSelector(app.store, (s) => Object.values(s.generationJobs).some((job) => job.chatId === chatId));
+  const chatBusy = useSelector(app.store, (s) => Object.values(s.generationJobs).some((job) => job.chatId === chatId && (job.status === "queued" || job.status === "running")));
   const [menu, setMenu] = useState<"none" | "count" | "scene">("none");
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "failed">("saved");
   const [sceneSaving, setSceneSaving] = useState(false);
