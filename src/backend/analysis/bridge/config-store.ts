@@ -21,6 +21,7 @@ import {
   type InlayConfig,
 } from "../../../shared/contract/index.js";
 import type { BackendServices } from "../../services/types.js";
+import { amFn } from "../core/index.js";
 
 /** AM merged config (`Y0` + charx). Loosely typed on purpose: verbatim AM code reads arbitrary fields. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,6 +58,16 @@ export function buildAmConfig(parts: AmConfigParts): AmConfig {
 
 const same = (a: unknown, b: unknown): boolean => a === b || JSON.stringify(a) === JSON.stringify(b);
 
+/** AM `qv` item id (array items are merged by `id`). */
+const itemId = (value: unknown): string | undefined =>
+  typeof value === "object" && value !== null && "id" in value && typeof (value as { id: unknown }).id === "string" ? (value as { id: string }).id : undefined;
+
+/**
+ * AM three-way merge (`Mc`, as in `qv`): the change `before -> after` applied over the stored value, so edits saved
+ * outside a long run (Prompts / Artists tabs, other runs) survive; the run's value wins where both changed the same field.
+ */
+const merge3 = (before: unknown, after: unknown, stored: unknown): unknown => jsonClone(amFn("Mc")(before, after, stored, itemId));
+
 /** Apply the difference `before -> after` of one object field onto `target` (per entry for plain maps). */
 function patchField(target: Record<string, unknown>, field: string, before: unknown, after: unknown): boolean {
   if (same(before, after)) return false;
@@ -65,13 +76,13 @@ function patchField(target: Record<string, unknown>, field: string, before: unkn
     for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
       if (same(before[key], after[key])) continue;
       if (after[key] === undefined) delete next[key];
-      else next[key] = jsonClone(after[key]);
+      else next[key] = merge3(before[key], after[key], next[key]);
     }
     target[field] = next;
     return true;
   }
   if (after === undefined) delete target[field];
-  else target[field] = jsonClone(after);
+  else target[field] = merge3(before, after, target[field]);
   return true;
 }
 

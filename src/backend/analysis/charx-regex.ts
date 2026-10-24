@@ -84,6 +84,7 @@ export async function runCharxRegex(ctx: JobContext, params: { force?: boolean }
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
+    ctx.signal.throwIfAborted();
     await controller.analyzeRegex({ scope: "current-character", currentCharacter: character, force: params.force === true });
     await session.store.flushSave();
     const snap = controller.getSnapshot();

@@ -106,7 +106,8 @@ export async function driveAmController(ctx: JobContext, session: AnalysisSessio
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
-    if (ctx.signal.aborted) controller.cancel();
+    // AM controllers only cancel a run they already started, so a cancel that came in while the session was opening stops here.
+    ctx.signal.throwIfAborted();
     const returned = await invoke();
     await session.store.flushSave().catch((error) => {
       throw Object.assign(new Error(`Saving the analysis results failed: ${error instanceof Error ? error.message : String(error)}`), { code: "storage-error" });
@@ -252,6 +253,7 @@ export async function runArtistExtraction(ctx: JobContext, params: AnalysisStart
 export async function runRepresentativePick(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   const session = await open(ctx, "representative-pick");
   try {
+    ctx.signal.throwIfAborted();
     const wanted = params.promptKeys?.length ? new Set(params.promptKeys) : null;
     const items = (amFn("SK")(session.source, session.store.getCurrentSnapshot().characterPrompt) as Any[]).filter((item) => !wanted || wanted.has(item.promptKey));
     ctx.progress({ label: "Selecting representative images", labelKo: "캐릭터별 기본 의상 이미지 자동 선택", done: 0, total: items.length });
@@ -316,6 +318,7 @@ export async function runReclassification(ctx: JobContext, params: AnalysisStart
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
+    ctx.signal.throwIfAborted();
     await controller.start();
     await session.store.flushSave();
     const snap = controller.getSnapshot();
