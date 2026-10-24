@@ -64,6 +64,7 @@ import type { ImageProviderId } from "../../engine/index.js";
 import type { BackendServices, ChatInfo, PersonaInfo, ResolvedImageTarget } from "../services/types.js";
 import type { BackendModules } from "../rpc/types.js";
 import type { EnginePort } from "./engine-port.js";
+import { createRunOutfitIndex, recordPreparedOutfits, reuseSameOutfits, withoutAbsenceProposals } from "./outfit-awareness.js";
 import { openAutoGeneration, type AutoGeneration } from "./auto.js";
 import type { ChatMessageView } from "./host-chat.js";
 import { cleanMessageContent } from "./markup.js";
@@ -485,6 +486,8 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     ...(req.revision ? { revisionDirection: req.revision.direction, revisionPromptChannels: req.revision.currentPrompt as never, revisionEvidenceKey: req.revision.evidenceKey } : {}),
   });
   assembled.context.freeCharacterGenerationEnabled = freeCharacters;
+  // Inlay outfit layer: registered outfit parts for the analyzer request and the image-prompt repair.
+  const outfitIndex = config.runtime.outfitAwarenessDisabled ? undefined : createRunOutfitIndex(assembled.context);
   const revisionImage = req.revision?.image && (await services.llm.supportsVision().catch(() => false)) ? [await req.revision.image()] : [];
   if (req.signal.aborted) throw new DOMException("Image generation preparation was cancelled.", "AbortError");
 
@@ -535,9 +538,14 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     ? (routePlan: unknown, signal?: AbortSignal) => auto!.autoOutfit.prepare({ routePlan, source: sourceWithCustom, sourceId, signal, creationMode })
     : undefined;
   const prepareOutfits = auto
-    ? ({ actors, signal }: { actors: unknown[]; signal?: AbortSignal }) =>
-        auto!.autoOutfit.prepareActors({
-          actors,
+    ? async ({ actors, signal }: { actors: unknown[]; signal?: AbortSignal }) => {
+        const requested = outfitIndex
+          ? reuseSameOutfits(outfitIndex, withoutAbsenceProposals(actors), (r) =>
+              services.log.append("info", "pipeline", `Outfit reuse: proposal "${r.proposal}" for ${r.identityKey} matches "${r.reused}"; no new outfit.`),
+            )
+          : actors;
+        const prepared = await auto!.autoOutfit.prepareActors({
+          actors: requested,
           source: sourceWithCustom,
           sourceId,
           signal,
@@ -549,7 +557,10 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
             deps.replayOutfits.set(replayKey, map);
             while (deps.replayOutfits.size > 64) deps.replayOutfits.delete(deps.replayOutfits.keys().next().value!);
           },
-        })
+        });
+        if (outfitIndex) recordPreparedOutfits(outfitIndex, requested, prepared.preparedOutfits);
+        return prepared;
+      }
     : undefined;
   // Free character generation (AM E1t 169768-169782): generated forms join the live config (`jt`).
   // AM 0.9.89.5 (170958-170963) keys the allocations by the request object (`requestOwner`); here that is `req`.
@@ -621,6 +632,7 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
     },
     ...(prepareCharacters ? { prepareCharacters } : {}),
     ...(prepareOutfits ? { prepareOutfits } : {}),
+    ...(outfitIndex ? { outfitIndex } : {}),
     promptInputs: ft.promptInputs,
     v5PromptContext: ft.v5PromptContext,
     references: ft.references,

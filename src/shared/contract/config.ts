@@ -459,6 +459,17 @@ export interface RuntimeSettings {
   comfyuiCompletionTimeoutMs: number;
   comfyuiCharacterReferenceEnabled: boolean;
   comfyuiOutfitReferenceEnabled: boolean;
+  /**
+   * Test switch (no UI): every image request stores a 1x1 placeholder instead of calling the image provider, so the
+   * analyzer and prompt composition can be exercised without provider cost or NovelAI's one-image-at-a-time lock.
+   */
+  devPromptOnly?: boolean;
+  /**
+   * Switch (no UI) that turns off the Inlay outfit layer: outfit parts in V5 analyzer requests, the legwear/footwear
+   * visibility and state repair of image prompts (backend/pipeline/outfit-awareness.ts, outfit-visibility.ts) and the
+   * text clothing evidence of outfit analysis (backend/analysis/outfit-evidence.ts).
+   */
+  outfitAwarenessDisabled?: boolean;
 }
 
 export interface PresetCatalogSettings { rawJson: string; lastError: string }
@@ -784,6 +795,8 @@ export function normalizeConfigWithIssues(raw: unknown): ConfigNormalizeResult {
     comfyuiCompletionTimeoutMs: clampInt(rt.comfyuiCompletionTimeoutMs, 600000, 1000, 3600000),
     comfyuiCharacterReferenceEnabled: rt.comfyuiCharacterReferenceEnabled !== false,
     comfyuiOutfitReferenceEnabled: rt.comfyuiOutfitReferenceEnabled === true,
+    ...(rt.devPromptOnly === true ? { devPromptOnly: true } : {}),
+    ...(rt.outfitAwarenessDisabled === true ? { outfitAwarenessDisabled: true } : {}),
   };
 
   const pc = asRecord(merged.presetCatalog);

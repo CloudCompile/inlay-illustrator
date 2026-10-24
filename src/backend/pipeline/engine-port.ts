@@ -12,6 +12,8 @@ import type { InlayConfig } from "../../shared/contract/index.js";
 import { createAssetMaidEngine, type AssetMaidEngine, type ImageProviderId, type OrchestratorRunInputLike, type OrchestratorRunResult } from "../../engine/index.js";
 import type { BackendServices } from "../services/types.js";
 import { createComfyReferencePreparer, createImageProviderAdapters, ProviderRunRegistry, type ProviderRunContext } from "./providers.js";
+import { OutfitIndexRegistry, withOutfitAwareness, type RunOutfitIndex } from "./outfit-awareness.js";
+import { repairBatchItems } from "./outfit-visibility.js";
 
 export type { OrchestratorRunInputLike, OrchestratorRunResult } from "../../engine/index.js";
 
@@ -49,13 +51,27 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
   const references = createComfyReferencePreparer(services);
   let current: { raw: string; engine: AssetMaidEngine } | null = null;
   let snapshot: InlayConfig | null = null;
+  // Outfit parts of the runs in flight (outfit-awareness.ts): read by the analyzer wrapper and the batch repair.
+  const outfitRuns = new OutfitIndexRegistry();
+  const repairItems = (input: Record<string, unknown>, items: readonly unknown[]): unknown[] => {
+    try {
+      return repairBatchItems(items, input.outfitIndex as RunOutfitIndex | undefined, (log) =>
+        services.log.append("info", "pipeline", `Outfit repair ${log.actorId} (${log.sourceImageToken}): ${log.changes.join("; ")}`),
+      );
+    } catch (e) {
+      services.log.append("warn", "pipeline", `Outfit repair skipped: ${e instanceof Error ? e.message : String(e)}`);
+      return [...items];
+    }
+  };
 
   const engineFor = (config: InlayConfig): AssetMaidEngine => {
     const raw = String(config.presetCatalog?.rawJson ?? "");
     if (current && current.raw === raw) return current.engine;
     current?.engine.dispose();
     const engine = createAssetMaidEngine({
-      analyzerClient: services.llm.analyzerClient({ purpose: "analyzer" }) as never,
+      analyzerClient: withOutfitAwareness(services.llm.analyzerClient({ purpose: "analyzer" }), outfitRuns, (n) =>
+        services.log.append("info", "pipeline", `Analyzer request: outfit parts of ${n} registered outfit(s) added.`),
+      ) as never,
       imageProviders: adapters,
       comfyUIReferences: references,
       getRetryCount: () => snapshot?.runtime.generationAutoRetryCount ?? 5,
@@ -63,6 +79,7 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       rawCatalogJson: raw,
       jev: services.decisions ? services.decisions.createJevAdapter(() => snapshot?.jevConnection ?? { rosterSelectionDefault: false, model: "jev-latest" }, { userId: services.userId }) : undefined,
       onAnalyzerDiagnostic: (event) => options.onAnalyzerDiagnostic?.(event),
+      prepareBatchItems: repairItems,
     });
     current = { raw, engine };
     return engine;
@@ -77,6 +94,8 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
       const engine = engineFor(config);
       const runId = registry.register(context);
       const ref = { providerId: context.engineProvider, queueScopeKey: registry.queueScopeKey(runId) };
+      const outfitIndex = (input as { outfitIndex?: RunOutfitIndex }).outfitIndex;
+      const releaseOutfits = outfitIndex ? outfitRuns.register(outfitIndex) : undefined;
       // JEV roster progress and retry errors only update the generation session (AM setPhase(..., {jevSelection}),
       // {imageRetry, retryErrors}, {splitAnalysis}); they emit no run event. Forward each change of this run's session.
       const sessions = engine.parts.sessions as { subscribe(listener: () => void): () => void };
@@ -109,6 +128,7 @@ export function createEnginePort(services: BackendServices, options: EnginePortO
         });
       } finally {
         unsubscribe();
+        releaseOutfits?.();
         registry.release(runId);
       }
     },

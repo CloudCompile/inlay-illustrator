@@ -173,6 +173,15 @@ export interface V5CandidateBindings {
   readonly [key: string]: unknown;
 }
 
+/**
+ * Candidate bindings of one analyzer context, as `buildV5AnalyzerRequest` builds them. Each `response` entry maps a wire
+ * `candidateKey` to its source key (`identityReferences[0]`) and lists `appearanceForms[{formRef, formId, outfits[{outfitRef,
+ * outfitId}]}]`, where `outfitRef` is the outfit id the analyzer sees. Original: `lve` (buildV5ActorCandidates) @119479.
+ */
+export function buildV5CandidateBindings(context: V5AnalyzerContext, continuitySnapshot?: V5ContinuitySnapshot | null): V5CandidateBindings {
+  return buildV5ActorCandidates(context, continuitySnapshot ?? null) as unknown as V5CandidateBindings;
+}
+
 /** Result of `buildV5AnalyzerRequest`. */
 export interface V5AnalyzerRequestBuild {
   readonly runtime: V5RuleRuntime;

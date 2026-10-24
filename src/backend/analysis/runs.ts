@@ -23,6 +23,7 @@ import { buildPersonaCatalog, createAmAnalyzer, openAnalysisSession, rememberVis
 import { amLabel, amMessage } from "./labels.js";
 import type { JobContext, JobOutcome } from "./jobs.js";
 import { runCharxRegex } from "./charx-regex.js";
+import { loreBodiesByPromptKey, withOutfitEvidence } from "./outfit-evidence.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -130,12 +131,28 @@ async function open(ctx: JobContext, reason: string): Promise<AnalysisSession> {
   return session;
 }
 
-function analyzer(ctx: JobContext, purpose: string) {
-  return createAmAnalyzer(ctx.services, {
+/** `loreFor`: character text by prompt key; enables the Inlay outfit evidence layer (outfit-evidence.ts). */
+function analyzer(ctx: JobContext, purpose: string, loreFor?: (promptKey: string) => string | undefined) {
+  const client = createAmAnalyzer(ctx.services, {
     purpose,
     onRetry: (info) => ctx.progress({ label: `Retrying (${info.attempt}/${info.total})`, labelKo: "재시도", retry: { attempt: info.attempt, total: info.total } }),
   });
+  if (!loreFor) return client;
+  return withOutfitEvidence(client, loreFor, ({ evidenceTargets, completedParts, strippedParts }) =>
+    ctx.services.log.append(
+      "info",
+      "analysis",
+      `Outfit analysis: text clothing evidence for ${evidenceTargets} target(s), ${completedParts} legs/feet part(s) completed from text, ${strippedParts} absence part(s) removed.`,
+    ),
+  );
 }
+
+/** The text lookup of the outfit evidence layer, or none while `runtime.outfitAwarenessDisabled` is on. */
+function outfitLore(session: AnalysisSession, loreFor: (promptKey: string) => string | undefined) {
+  return (session.store.getCurrentSnapshot() as Any).runtime?.outfitAwarenessDisabled === true ? undefined : loreFor;
+}
+
+const sessionLore = (session: AnalysisSession) => outfitLore(session, (promptKey) => loreBodiesByPromptKey(session.source).get(promptKey));
 
 const promptKeysOf = (session: AnalysisSession): string[] => session.source.members.flatMap((m) => m.lorebooks.map((l) => amFn("Hs")(m, l) as string));
 
@@ -145,7 +162,7 @@ export async function runCharacterPrompts(ctx: JobContext, params: AnalysisStart
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     images: session.images,
-    analyzer: analyzer(ctx, "character-analysis"),
+    analyzer: analyzer(ctx, "character-analysis", sessionLore(session)),
     config: session.store,
     priorityAssets: session.priorityAssets,
     ensureSourceHydrated: async () => {},
@@ -176,7 +193,7 @@ export async function runReferences(ctx: JobContext, params: AnalysisStartParams
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     images: session.images,
-    analyzer: analyzer(ctx, "reference-analysis"),
+    analyzer: analyzer(ctx, "reference-analysis", sessionLore(session)),
     config: session.store,
     priorityAssets: session.priorityAssets,
     ensureSourceHydrated: async () => {},
@@ -195,11 +212,13 @@ export async function runReferences(ctx: JobContext, params: AnalysisStartParams
 export async function runPersona(ctx: JobContext, params: AnalysisStartParams): Promise<JobOutcome> {
   const session = await open(ctx, "persona-analysis");
   await session.sourceCatalog.refreshPersonas();
+  const personas = await ctx.services.sources.listPersonas().catch(() => []);
+  const personaText = (key: string) => personas.find((p) => p.personaId === key.replace(/^persona:+/, ""))?.description;
   const controller = AM.o0t({
     sourceCatalog: session.sourceCatalog,
     metadata: session.metadata,
     images: session.images,
-    analyzer: analyzer(ctx, "persona-analysis"),
+    analyzer: analyzer(ctx, "persona-analysis", outfitLore(session, personaText)),
     config: session.store,
     referenceCrops: session.referenceCrops,
   });

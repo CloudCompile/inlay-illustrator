@@ -91,6 +91,31 @@ export interface AssetMaidEngineOptions {
   onSplitResumeState?: (key: unknown, state: unknown) => void;
   /** Profile switch; default: `input.novelAIConfig.analysisProfile === "v5-hybrid" ? "v5-hybrid" : "v4-5"`. */
   resolveProfile?: (input: OrchestratorRunInputLike) => "v4-5" | "v5-hybrid";
+  /**
+   * Inlay addition (not in AM): rewrites the composed items of each executor batch (`reservation.execute(input, items)`)
+   * before they are dispatched. `input` is the executor input (the run input plus orchestrator callbacks).
+   */
+  prepareBatchItems?: (input: Record<string, unknown>, items: readonly unknown[]) => unknown[];
+}
+
+type BatchExecutor = ReturnType<typeof createGenerationBatchExecutor>;
+
+/** The core executor with `prepare` applied to every batch's items; reservation lifecycle is the core's. */
+function withPreparedBatchItems(executor: BatchExecutor, prepare: NonNullable<AssetMaidEngineOptions["prepareBatchItems"]>): BatchExecutor {
+  const core = executor as unknown as {
+    providerRef(provider: unknown, scope: unknown): unknown;
+    reserve(session: unknown): { release(): void; execute(input: Record<string, unknown>, items: readonly unknown[], resume?: unknown): Promise<unknown> };
+  };
+  return Object.freeze({
+    providerRef: (provider: unknown, scope: unknown) => core.providerRef(provider, scope),
+    reserve(session: unknown) {
+      const reservation = core.reserve(session);
+      return Object.freeze({
+        release: () => reservation.release(),
+        execute: (input: Record<string, unknown>, items: readonly unknown[], resume?: unknown) => reservation.execute(input, items.length ? prepare(input, items) : items, resume),
+      });
+    },
+  }) as unknown as BatchExecutor;
 }
 
 /** Minimal structural view of `OrchestratorRunInput` (spec/pipeline.md §3.2). The full shape is documented in README.md. */
@@ -150,7 +175,8 @@ export function createAssetMaidEngine(options: AssetMaidEngineOptions): AssetMai
     createProviderQueues({ getIntervalMs }),
     options.getRetryCount ?? (() => 5),
   );
-  const executor = createGenerationBatchExecutor(dispatcher, sessions, options.comfyUIReferences);
+  const coreExecutor = createGenerationBatchExecutor(dispatcher, sessions, options.comfyUIReferences);
+  const executor = options.prepareBatchItems ? withPreparedBatchItems(coreExecutor, options.prepareBatchItems) : coreExecutor;
   const v45 = createV45Orchestrator(v45Analyzer, promptCompiler, sessions, executor);
   // Egt(C, void 0, {network, getConfig}): JEV pre-pass adapter injected.
   const v5Analyzer = (createV5Analyzer as any)(options.analyzerClient, undefined, options.jev);

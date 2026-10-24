@@ -48,6 +48,8 @@ export const LOCKED_RETRY_MAX_MS = 10_000;
 export const ABANDONED_REQUEST_HOLD_MS = 60_000;
 /** AM `kmt` 138113: each NovelAI attempt times out after 120 s (retryable). */
 export const NOVELAI_REQUEST_TIMEOUT_MS = 120_000;
+/** 1x1 grey PNG stored for every image while `runtime.devPromptOnly` is on. */
+const PROMPT_ONLY_PLACEHOLDER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN4+P//fwAJeAPm7ip/RgAAAABJRU5ErkJggg==";
 
 /** Per-attempt timeout: ComfyUI from the settings, NovelAI 120 s, other providers none (0). */
 export function imageRequestTimeoutMs(provider: string, config: InlayConfig): number {
@@ -515,6 +517,10 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
       const queue = request.queue === false ? null : queueFor(target.generationProvider);
 
       const callOnce = async (): Promise<Record<string, unknown>> => {
+        if (config.runtime.devPromptOnly) {
+          const stored = asRecord(await host.images.uploadFromDataUrl(PROMPT_ONLY_PLACEHOLDER, "inlay-prompt-only.png", userId));
+          return { imageId: str(stored.id), provider: "prompt-only", model: target.model };
+        }
         // A retry after a timeout must not overlap the timed-out request NovelAI is still drawing.
         await queue?.whenFree(signal);
         const pending = host.imageGen.generate(input as unknown as Parameters<SpindleHost["imageGen"]["generate"]>[0]) as Promise<unknown>;
