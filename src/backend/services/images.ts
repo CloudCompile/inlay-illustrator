@@ -38,6 +38,14 @@ import type { ImageGenerateRequest, ImageGenerateResult, ImageService, ResolvedI
 import { abortError, asArray, asRecord, errorMessage, raceAbort, sleep, str, TtlCache } from "./util.js";
 
 export const IMAGE_RETRY_DELAY_MS = 100;
+/** AM `kmt` 138113: each NovelAI attempt times out after 120 s (retryable). */
+export const NOVELAI_REQUEST_TIMEOUT_MS = 120_000;
+
+/** Per-attempt timeout: ComfyUI from the settings, NovelAI 120 s, other providers none (0). */
+export function imageRequestTimeoutMs(provider: string, config: InlayConfig): number {
+  if (provider === "comfy-ui") return clampInt(config.runtime.comfyuiCompletionTimeoutMs, 1000, 3600000, 600000);
+  return provider === "novelai" ? NOVELAI_REQUEST_TIMEOUT_MS : 0;
+}
 /** AM `skip_cfg_above_sigma` for 4.5 models with the quality toggle (jut @108897). */
 export const NOVELAI_SKIP_CFG_ABOVE_SIGMA = 59.04722600415217;
 
@@ -210,6 +218,8 @@ export function buildNovelAIParameters(
   }
 
   const inner: Record<string, unknown> = {
+    // The host replaces an empty `negativePrompt` with its own default UC; AM sends the user's negative as is (138055).
+    negative_prompt: negative,
     params_version: target.isNovelAIV5 ? 4 : 3,
     qualityToggle,
     noise_schedule: noiseSchedule,
@@ -471,7 +481,7 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
 
       const retries = request.retries !== undefined ? clampInt(request.retries, 0, 10, 0) : clampInt(config.runtime.generationAutoRetryCount, 0, 10, 5);
       const gapMs = () => clampInt(config.runtime.novelaiParallelIntervalSec, 0, 30, 0) * 1000;
-      const timeoutMs = target.generationProvider === "comfy-ui" ? clampInt(config.runtime.comfyuiCompletionTimeoutMs, 1000, 3600000, 600000) : 0;
+      const timeoutMs = imageRequestTimeoutMs(target.generationProvider, config);
 
       const callOnce = async (): Promise<Record<string, unknown>> => {
         const pending = host.imageGen.generate(input as unknown as Parameters<SpindleHost["imageGen"]["generate"]>[0]) as Promise<unknown>;

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { normalizeConfig, type InlayConfig } from "../../shared/contract/index.js";
 import { createFakeHost } from "../testing/fake-host.js";
-import { createLlmService, declaredVisionSupport, extractText, httpStatusOf, supportsJsonMode, unsupportedVisionError } from "./llm.js";
+import { createLlmService, declaredVisionSupport, extractText, httpStatusOf, omitsTemperature, supportsJsonMode, unsupportedVisionError } from "./llm.js";
 
 function setup(configPatch: Record<string, unknown> = {}) {
   const fake = createFakeHost();
@@ -20,13 +20,22 @@ describe("llm helpers", () => {
     expect(supportsJsonMode("openai", "gpt-4o")).toBe(true);
     expect(supportsJsonMode("anthropic", "claude-3")).toBe(false);
     expect(supportsJsonMode("custom", "deepseek-chat")).toBe(true);
+    expect(supportsJsonMode("custom", "qwen3-32b")).toBe(true);
+    expect(omitsTemperature("claude-opus-5")).toBe(true);
+    expect(omitsTemperature("anthropic/claude-sonnet-5-20261001")).toBe(true);
+    expect(omitsTemperature("gemini-3.5-flash")).toBe(true);
+    expect(omitsTemperature("gemini-2.5-flash")).toBe(false);
+    expect(omitsTemperature("gpt-5.6-luna")).toBe(false);
     expect(httpStatusOf(new Error("OpenAI generate failed (429): slow down"))).toBe(429);
     expect(httpStatusOf({ status: 503 })).toBe(503);
     expect(httpStatusOf(new Error("nothing here"))).toBe(0);
     expect(declaredVisionSupport({ capabilities: { vision: true } })).toBe(true);
     expect(declaredVisionSupport({ input_modalities: ["text"] })).toBe(false);
     expect(declaredVisionSupport({})).toBeNull();
-    expect(unsupportedVisionError(new Error("This model does not support image input"))).toBe(true);
+    expect(unsupportedVisionError(new Error("OpenAI generate failed (400): This model does not support image input"))).toBe(true);
+    expect(unsupportedVisionError(new Error("This model does not support image input"))).toBe(false);
+    expect(unsupportedVisionError(new Error("failed (400): Invalid image data: invalid base64"))).toBe(false);
+    expect(unsupportedVisionError(new Error("failed (404): No endpoints found that support image input"))).toBe(true);
     expect(unsupportedVisionError(new Error("rate limited"))).toBe(false);
     expect(extractText({ choices: [{ message: { content: [{ type: "text", text: "a" }] } }] })).toBe("a");
     expect(extractText({ content: "b" })).toBe("b");
@@ -66,6 +75,12 @@ describe("llm service", () => {
     fake.scriptLlm(new Error("failed (401): bad key"));
     await expect(llm.complete({ purpose: "t", messages: [], responseMode: "json" })).rejects.toMatchObject({ error: { code: "permission-denied", detailCode: "ANALYZER_HTTP" } });
     expect(fake.generateCalls).toHaveLength(4);
+  });
+
+  test("an empty reply cut off by length is an empty response and is retried (AM checks the finish reason only for DeepSeek)", async () => {
+    const { fake, llm } = setup({ runtime: { generationAutoRetryCount: 1 } });
+    fake.scriptLlm({ content: "", finish_reason: "length" }, { content: '{"ok":1}' });
+    expect(await llm.complete({ purpose: "t", messages: [], responseMode: "json" })).toMatchObject({ parsed: { ok: 1 }, attempts: 2 });
   });
 
   test("own timeout -> ANALYZER_TIMEOUT; caller abort -> AbortError without retry", async () => {

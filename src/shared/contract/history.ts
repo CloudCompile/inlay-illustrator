@@ -1476,6 +1476,8 @@ export function foldTreeIntoStore(store: ChatStore, tree: HistoryTree | null): C
           slots,
           ...(deleted.length ? { deletedSlotIndices: deleted } : {}),
           ...(prev?.continuity ? { continuity: structuredClone(prev.continuity) } : {}),
+          ...(prev?.stateCommitRevision !== undefined ? { stateCommitRevision: prev.stateCommitRevision } : {}),
+          ...(prev?.stateCommitSkipped ? { stateCommitSkipped: true } : {}),
           ...(rev.error ? { error: rev.error } : {}),
         };
       });

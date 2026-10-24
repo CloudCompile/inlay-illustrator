@@ -54,6 +54,31 @@ describe("automatic generation (GENERATION_ENDED)", () => {
     expect(engine.runs.length).toBe(0);
   });
 
+  test("a reply in a chat the user has left is not illustrated (AM 215831)", async () => {
+    const { fx, engine, pipeline } = setup();
+    fx.chats.push({ chatId: "chat-2", characterId: "char-1", groupCharacterIds: [], personaId: null, metadata: {} } as never);
+    fx.activeChatId.value = "chat-2";
+    await pipeline.handleGenerationEnded({ chatId: CHAT_ID, messageId: "m1", generationType: "normal" });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(engine.runs.length).toBe(0);
+  });
+
+  test("a failed message write after the commit keeps the run completed and publishes again later", async () => {
+    const { fx, pipeline } = setup();
+    const chat = fx.services.host.chat as { updateMessage: (...args: unknown[]) => Promise<unknown> };
+    const original = chat.updateMessage.bind(chat);
+    let failures = 1;
+    chat.updateMessage = async (...args: unknown[]) => {
+      if (failures-- > 0) throw new Error("host write failed (503)");
+      return original(...args);
+    };
+    await pipeline.handleGenerationEnded({ chatId: CHAT_ID, messageId: "m1", generationType: "normal" });
+    await waitFor(() => finished(fx).length > 0);
+    expect(finished(fx)[0]!.result).toBe("completed");
+    expect(fx.chatData.get(CHAT_ID)!.plans["illustration:m1@0"]!.status).toBe("complete");
+    await waitFor(() => fx.message("m1").content.includes('data-inlay-illustrator-image-id="img-1"'));
+  });
+
   test("message with fewer than 2 paragraphs -> plan error with the Asset Maid text", async () => {
     const { fx, pipeline } = setup({ messages: [{ id: "m1", content: "Only one paragraph." }] });
     await pipeline.handleGenerationEnded({ chatId: CHAT_ID, messageId: "m1", generationType: "normal" });

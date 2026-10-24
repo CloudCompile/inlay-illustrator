@@ -76,11 +76,24 @@ interface ResolvedConnection {
  * Pure helpers (exported for tests)
  * ---------------------------------------------------------------------------------------------- */
 
-/** Providers/models known to accept `response_format: {type:"json_object"}`. */
-export function supportsJsonMode(provider: string, model: string): boolean {
-  const p = `${provider} ${model}`.toLowerCase();
-  if (/anthropic|claude/.test(provider.toLowerCase())) return false;
-  return /openai|gpt-|gemini|google|deepseek|openrouter|xai|grok|mistral|nanogpt/.test(p);
+/**
+ * JSON mode (`response_format: {type:"json_object"}`) for every connection except Anthropic, as AM sends it to every
+ * OpenAI-format provider including custom endpoints (81884). A provider that rejects it is resent without it and remembered.
+ */
+export function supportsJsonMode(provider: string, _model: string): boolean {
+  return !/anthropic|claude/.test(provider.toLowerCase());
+}
+
+/** AM `sqe` (Claude 5 family, Opus 4.7/4.8) and `Ree` (Gemini 3, Gemini 4 Argon): models sent without `temperature`. */
+export function omitsTemperature(model: string): boolean {
+  const m = model.trim().toLowerCase().split("/").at(-1) ?? "";
+  return (
+    /^claude-(?:fable|mythos)-5(?:[-.]|$)/.test(m) ||
+    /^claude-(?:sonnet|opus)-5(?:[-.]|$)/.test(m) ||
+    /^claude-opus-4-(?:7|8)(?:[-.]|$)/.test(m) ||
+    /^gemini-3(?:[.-]|$)/.test(m) ||
+    m === "gemini-4-argon"
+  );
 }
 
 /** Lumiverse reasoning DTO from the analyzer settings (AM thinkingMode default/off/on -> inherit/off/custom). */
@@ -157,10 +170,20 @@ export function declaredVisionSupport(metadata: unknown): boolean | null {
   return null;
 }
 
-/** True when a provider error means "images are not accepted" (AM `oP` @81557-81568). */
+/**
+ * True when a provider error means "images are not accepted" (AM 0.9.89.5 `YP` 114563): HTTP 400/415/422 with one of
+ * AM's wordings. Port addition: OpenRouter's "no endpoints found that support image input" (404).
+ */
 export function unsupportedVisionError(error: unknown): boolean {
-  const message = errorMessage(error).toLowerCase();
-  return /(?:image|vision|multimodal).*(?:unsupported|not supported|not allowed|invalid|not enabled)|(?:unsupported|invalid|does not support|doesn't support|cannot read|can't read).*(?:image|vision|content.*array|input modality)|text[- ]only|no endpoints found that support image/.test(message);
+  const message = errorMessage(error);
+  if (/no endpoints found that support image/i.test(message)) return true;
+  if (![400, 415, 422].includes(httpStatusOf(error))) return false;
+  return [
+    /(?:image|image_url|vision|multimodal|visual|modality).{0,160}(?:not supported|unsupported|does not support|isn't supported|not allowed|only supports? text)/iu,
+    /(?:not supported|unsupported|does not support|isn't supported|not allowed|only supports? text).{0,160}(?:image|image_url|vision|multimodal|visual|modality)/iu,
+    /(?:image|image_url|vision).{0,160}only supported by.{0,80}models?/iu,
+    /model.{0,120}(?:is not multimodal|is text[- ]only)/iu,
+  ].some((pattern) => pattern.test(message));
 }
 
 function isJsonModeRejection(error: unknown): boolean {
@@ -405,7 +428,7 @@ export function createLlmService(deps: LlmServiceDeps): LlmService {
 
     const baseParameters: Record<string, unknown> = { ...(request.parameters ?? {}) };
     const temperature = request.temperature ?? settings.temperature;
-    if (baseParameters.temperature === undefined && Number.isFinite(temperature)) baseParameters.temperature = temperature;
+    if (baseParameters.temperature === undefined && Number.isFinite(temperature) && !omitsTemperature(model)) baseParameters.temperature = temperature;
     const maxTokens = request.maxTokens ?? settings.maxTokens;
     if (baseParameters.max_tokens === undefined && maxTokens > 0) baseParameters.max_tokens = Math.floor(maxTokens);
 
@@ -444,7 +467,8 @@ export function createLlmService(deps: LlmServiceDeps): LlmService {
         const raw = extractText(result);
         const finishReason = extractFinishReason(result);
         if (!raw.trim()) {
-          if (finishReason === "length") throw makeAnalyzerError("The analyzer response was truncated before any output.", { code: "ANALYZER_OUTPUT_TRUNCATED" });
+          // AM checks the finish reason only for DeepSeek (`JUe` 80056); elsewhere an empty reply is a (retryable) empty response.
+          if (finishReason === "length" && /deepseek/i.test(connection.provider)) throw makeAnalyzerError("The analyzer response was truncated before any output.", { code: "ANALYZER_OUTPUT_TRUNCATED" });
           if (finishReason === "content_filter") throw makeAnalyzerError("The provider filtered the analyzer response.", { code: "ANALYZER_CONTENT_FILTERED" });
           throw makeAnalyzerError("The analyzer returned an empty response.", { code: "ANALYZER_EMPTY_RESPONSE" });
         }

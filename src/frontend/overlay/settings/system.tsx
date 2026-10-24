@@ -130,9 +130,7 @@ export function SystemSettingsPage() {
           </Button>
           <Switch aria-label={S.floatingCountUse} checked={config.ui.floatingGenerationCountEnabled} onCheckedChange={(checked) => void form.apply({ ui: { floatingGenerationCountEnabled: checked } })} />
         </SystemRow>
-        <SystemRow title={S.popupProtection.title} description={S.popupProtection.description}>
-          <Switch aria-label={S.popupProtectionUse} checked={config.ui.popupClickThroughProtectionEnabled} onCheckedChange={(checked) => void form.apply({ ui: { popupClickThroughProtectionEnabled: checked } })} />
-        </SystemRow>
+        {/* AM's "block clicks behind popups" guard watches RisuAI's host document; the overlay shares the page, so there is no toggle. */}
         <SystemRow title={S.nsfw.title} description={S.nsfw.description}>
           <Switch aria-label={S.nsfw.title} checked={runtime.nsfwAlwaysEnabled} onCheckedChange={(checked) => void setNsfw(checked)} />
         </SystemRow>

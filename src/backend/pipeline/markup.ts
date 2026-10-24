@@ -134,7 +134,7 @@ export function bakeMessage(input: BakeInput): BakeResult {
   const clean = cleanMessageContent(input.content);
   const markups = detectNativeAssetMarkups(clean, { customImageTokenDetectors: [...(input.nativeAssetDetectors ?? [])] });
   const blocks = [...input.blocks].filter((b) => b.html).sort((a, b) => a.slotIndex - b.slotIndex);
-  if (!blocks.length) return { text: clean, changed: clean !== input.content, orphanSlotIndices: [] };
+  if (!blocks.length && !input.suppressNative) return { text: clean, changed: clean !== input.content, orphanSlotIndices: [] };
   const split = splitWithoutMarkups(input.messageKey, clean, markups.map((m) => m.sourceMarkup));
   const nl = clean.includes("\r\n") ? "\r\n" : "\n";
   const sep = `${nl}${nl}`;

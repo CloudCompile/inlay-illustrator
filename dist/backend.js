@@ -2736,6 +2736,8 @@ function foldTreeIntoStore(store, tree) {
           slots,
           ...deleted.length ? { deletedSlotIndices: deleted } : {},
           ...prev?.continuity ? { continuity: structuredClone(prev.continuity) } : {},
+          ...prev?.stateCommitRevision !== undefined ? { stateCommitRevision: prev.stateCommitRevision } : {},
+          ...prev?.stateCommitSkipped ? { stateCommitSkipped: true } : {},
           ...rev.error ? { error: rev.error } : {}
         };
       });
@@ -3012,7 +3014,7 @@ function normalizeContinuityCheckpoint(value) {
   return;
 }
 var IMAGE_FIELDS = ["assetName", "savedPath", "extension", "kind", "width", "height"];
-var GENERATION_FIELDS = ["id", "parentId", "targetCount", "slots", "deletedSlotIndices", "continuity", "error"];
+var GENERATION_FIELDS = ["id", "parentId", "targetCount", "slots", "deletedSlotIndices", "continuity", "stateCommitRevision", "stateCommitSkipped", "error"];
 var MESSAGE_FIELDS = ["kind", "sources", "requestedCount", "generations"];
 function storeIssue(out, code, path, message) {
   out.push({ code, path, message });
@@ -3097,6 +3099,7 @@ function normalizeStoreGeneration(value, path, out) {
   if (hasContinuity && !continuity)
     return storeIssue(out, "continuity", `${path}.continuity`, "Invalid continuity checkpoint.");
   const error = clip(t.error, 512);
+  const stateCommitRevision = Number.isSafeInteger(t.stateCommitRevision) && t.stateCommitRevision >= 0 ? t.stateCommitRevision : undefined;
   return {
     id,
     ...clip(t.parentId) ? { parentId: clip(t.parentId) } : {},
@@ -3104,6 +3107,8 @@ function normalizeStoreGeneration(value, path, out) {
     slots,
     ...Array.isArray(deleted) && deleted.length ? { deletedSlotIndices: [...deleted] } : {},
     ...continuity ? { continuity } : {},
+    ...stateCommitRevision !== undefined ? { stateCommitRevision } : {},
+    ...t.stateCommitSkipped === true ? { stateCommitSkipped: true } : {},
     ...error ? { error } : {}
   };
 }
@@ -60333,20 +60338,29 @@ function toLocalLoreActorEntry2(state) {
 function isPersistableActorKey(key) {
   return !!key.trim() && key === key.trim() && !/^(?:primary|secondary|actor_\d+|female_\d+|male_\d+)$/u.test(key);
 }
-function commitContinuityCheckpoint(store, chat, next, chatKey, messageId, historyRevisionId) {
-  const checkpoint = next.recentCheckpoints[chatKey]?.find((c) => c.messageId.replace(/^id:/u, "") === messageId && c.historyRevisionId === historyRevisionId);
+function commitContinuityCheckpoint(store, chat, next, chatKey, messageId, historyRevisionId, basisRevision) {
   const generation = store.messages[messageId]?.generations.find((g) => g.id === historyRevisionId);
+  if (generation?.stateCommitRevision !== undefined || generation?.stateCommitSkipped === true)
+    return "already-committed";
+  const current = readLocalLoreActorState2(chat);
+  if (current.revision !== basisRevision) {
+    if (generation)
+      generation.stateCommitSkipped = true;
+    return "skipped";
+  }
+  const checkpoint = next.recentCheckpoints[chatKey]?.find((c) => c.messageId.replace(/^id:/u, "") === messageId && c.historyRevisionId === historyRevisionId);
   const compact = checkpoint ? EBe(checkpoint) : undefined;
   if (generation && compact)
     generation.continuity = compact;
-  const current = readLocalLoreActorState2(chat);
   const actors = { ...current.actors };
   for (const [key, value] of Object.entries(next.characters[chatKey] ?? {}))
     if (isPersistableActorKey(key))
       actors[key] = toLocalLoreActorEntry2(value);
   const payload = { revision: current.revision + 1, actors };
   writeLocalLoreActorState2(chat, payload);
-  return payload;
+  if (generation)
+    generation.stateCommitRevision = payload.revision;
+  return "committed";
 }
 // src/engine/text/slots.ts
 function splitParagraphSlots2(messageKey, text, options = {}) {
@@ -62849,7 +62863,7 @@ function bakeMessage(input) {
   const clean = cleanMessageContent(input.content);
   const markups = detectNativeAssetMarkups2(clean, { customImageTokenDetectors: [...input.nativeAssetDetectors ?? []] });
   const blocks = [...input.blocks].filter((b) => b.html).sort((a, b) => a.slotIndex - b.slotIndex);
-  if (!blocks.length)
+  if (!blocks.length && !input.suppressNative)
     return { text: clean, changed: clean !== input.content, orphanSlotIndices: [] };
   const split = splitWithoutMarkups(input.messageKey, clean, markups.map((m) => m.sourceMarkup));
   const nl = clean.includes(`\r
@@ -63198,6 +63212,7 @@ async function generateMessageIllustrations(deps, req) {
   const store = req.chatData.store;
   const hr = rebuildContinuityAtMessage2(store, chatKey, liveIds, req.historyId);
   hr.characters[chatKey] = mergeLocalLoreActorState2(hr.characters[chatKey] ?? {}, req.chatData.actorState);
+  const basisRevision = req.chatData.actorState.revision;
   const detectors = nativeDetectorsFor(primaryId, character.name, primaryDoc, memberIds);
   const tokens = detectImageTokens(req.clean, { customImageTokenDetectors: detectors });
   const markups = detectNativeAssetMarkups2(req.clean, { customImageTokenDetectors: detectors });
@@ -63271,7 +63286,9 @@ async function generateMessageIllustrations(deps, req) {
       return;
     const chatObj = continuityChat(req.messages, { index: req.target, historyId: req.historyId }, doc.actorState);
     const next = apply(info);
-    commitContinuityCheckpoint(doc.store, chatObj, next, chatKey, req.historyId, info.historyRevisionId);
+    const outcome = commitContinuityCheckpoint(doc.store, chatObj, next, chatKey, req.historyId, info.historyRevisionId, basisRevision);
+    if (outcome === "skipped")
+      services.log.append("info", "pipeline", "The chat state changed during the run; this run's continuity was not saved.");
     const actorState = readLocalLoreActorState2(chatObj);
     doc.actorState = { revision: actorState.revision, actors: actorState.actors };
   };
@@ -63838,6 +63855,8 @@ function buildNovelAIRequest(request, ctx, extras = {}) {
   const model = str3(ctx.model) || str3(config.naiModel) || "nai-diffusion-5-full";
   const v4 = /^nai-diffusion-(?:4|5)(?:-|$)/u.test(model);
   const v5Profile = config.analysisProfile === "v5-hybrid";
+  if (v5Profile && !v4)
+    throw Object.assign(new Error(`The NovelAI V5 analysis profile needs a V4 or later model (character captions); ${model} has none.`), { code: "NOVELAI_V5_PROFILE_MODEL", retryable: false });
   const forced = config.forceCharacterCoordinates === true;
   const characters = normalizeCharacterPrompts(config.characterPrompts);
   const anyFixed = characters.some((c) => c.coordinateMode !== "automatic");
@@ -63928,9 +63947,13 @@ function createNovelAIAdapter(services, registry) {
       const signal = request.signal ?? options.signal;
       onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "queued" });
       const refs = Array.isArray(request.references) ? request.references : [];
-      const prepared = refs.length ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
+      const refModel = str3(ctx.model) || str3(rec3(request.config).naiModel);
+      const sendsRefs = rec3(request.config).characterReferenceEnabled !== false && /^nai-diffusion-4-5/u.test(refModel);
+      const prepared = refs.length && sendsRefs ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
       const i2iRaw = rec3(request.imageToImage);
       const i2iImage = request.imageToImage ? toImageBytes(i2iRaw.image) : null;
+      if (request.imageToImage && !i2iImage)
+        throw Object.assign(new Error("NovelAI img2img source image is empty."), { code: "NOVELAI_IMG2IMG_EMPTY", retryable: false });
       const build = buildNovelAIRequest(request, ctx, {
         characterReferences: prepared.references,
         ...i2iImage ? { imageToImage: { ...i2iImage, strength: num(i2iRaw.strength, 0.4, 0.4, 1), noise: num(i2iRaw.noise, 0, 0, 1) } } : {}
@@ -67813,7 +67836,7 @@ function createChatPipelineController(services, engine, options = {}) {
       content,
       messageKey: planKey,
       blocks: selection.blocks,
-      suppressNative: visibility === "hidden" && selection.entryCount > 0,
+      suppressNative: visibility === "hidden",
       nativeAssetDetectors: nativeDetectorsFor(characterId, "", document2)
     });
     if (!result.changed)
@@ -67832,17 +67855,28 @@ function createChatPipelineController(services, engine, options = {}) {
     publishChains.set(key, run.catch(() => {
       return;
     }));
+    const retryLater = () => {
+      if (disposed || attempt >= PUBLISH_MAX_ATTEMPTS)
+        return;
+      const timer = setTimeout(() => {
+        publishTimers.delete(timer);
+        publish(chatId, planKey, attempt + 1).then((r) => r === "published" && emitChanged(chatId, [planKey])).catch((e) => log("warn", "Illustration publish retry failed", toRpcError(e)));
+      }, PUBLISH_RETRY_DELAYS[attempt] ?? PUBLISH_RETRY_DELAYS.at(-1));
+      publishTimers.add(timer);
+    };
     return run.then((result) => {
-      if (result === "streaming" && !disposed && attempt < PUBLISH_MAX_ATTEMPTS) {
-        const timer = setTimeout(() => {
-          publishTimers.delete(timer);
-          publish(chatId, planKey, attempt + 1).then((r) => r === "published" && emitChanged(chatId, [planKey])).catch((e) => log("warn", "Illustration publish retry failed", toRpcError(e)));
-        }, PUBLISH_RETRY_DELAYS[attempt] ?? PUBLISH_RETRY_DELAYS.at(-1));
-        publishTimers.add(timer);
-      }
+      if (result === "streaming")
+        retryLater();
       return result;
+    }, (error) => {
+      retryLater();
+      throw error;
     });
   };
+  const publishCommitted = (chatId, planKey) => publish(chatId, planKey).catch((e) => {
+    log("warn", "The illustrated message could not be updated; retrying in the background.", toRpcError(e));
+    return "failed";
+  });
   const autoRetryable = (error) => {
     if (!error || isCancellation(error))
       return false;
@@ -67883,7 +67917,7 @@ function createChatPipelineController(services, engine, options = {}) {
       return { kind: "blocked", error: labelError("not-found", PIPELINE_TEXT.messageMissing) };
     if (!content.trim())
       return { kind: "blocked", error: labelError("bad-request", PIPELINE_TEXT.emptyContent) };
-    if (tracker.isStreaming(chatId, messageId))
+    if (tracker.isStreaming(chatId))
       return { kind: "blocked", error: labelError("busy", PIPELINE_TEXT.busy, { retryable: true }) };
     const doc0 = await services.storage.loadChatData(chatId);
     let plan = ensurePlan(doc0, historyId, view.index);
@@ -68021,7 +68055,7 @@ function createChatPipelineController(services, engine, options = {}) {
         let next;
         const patchRevision = (id, patch) => base.revisions.map((r) => r.revisionId === id ? { ...r, ...patch } : r);
         if (attemptKind === "retry" && errorRevision && base.revisions.some((r) => r.revisionId === errorRevision.revisionId)) {
-          next = { ...base, status, requestedCount: resolved, entries: merged, assetHints, revisions: patchRevision(errorRevision.revisionId, { requestedCount: resolved, status, entries: merged, error: errorText }), error: errorText };
+          next = { ...base, status, requestedCount: resolved, entries: merged, assetHints, revisions: patchRevision(errorRevision.revisionId, { requestedCount: resolved, status, entries: merged, error: errorText }), activeRevisionId: errorRevision.revisionId, error: errorText };
         } else if (revisionTarget && base.revisions.some((r) => r.revisionId === revisionTarget.revisionId)) {
           next = { ...base, status, entries: merged, assetHints, revisions: patchRevision(revisionTarget.revisionId, { status, entries: merged, error: errorText }), activeRevisionId: revisionTarget.revisionId, error: errorText };
         } else if (!merged.length) {
@@ -68038,7 +68072,7 @@ function createChatPipelineController(services, engine, options = {}) {
             error: errorText
           };
         }
-        next = { ...next, nativeAssetSuppressed: visibility === "hidden" && next.entries.length > 0, updatedAt: createdAt };
+        next = { ...next, nativeAssetSuppressed: visibility === "hidden", updatedAt: createdAt };
         const tree = merged.length ? commitPlanToTree(doc.history, next) : doc.history;
         storePlanAndTree(doc, next, tree);
         finalPlan = next;
@@ -68057,7 +68091,7 @@ function createChatPipelineController(services, engine, options = {}) {
           for (const r of result.records)
             s.records[r.entryId] = r;
         }, written.history).catch((e) => log("warn", "Generation records could not be saved", toRpcError(e)));
-      const published = await publish(chatId, planKey);
+      const published = await publishCommitted(chatId, planKey);
       if (published === "missing")
         log("warn", "The illustrated message could not be resolved for publishing.", { chatId, planKey });
       emitChanged(chatId, [planKey]);
@@ -68317,8 +68351,8 @@ function createChatPipelineController(services, engine, options = {}) {
     const sections = new Map((o.sections ?? []).map((s) => [s.id, s]));
     const main = sections.get("main") ?? sections.get("provider");
     const size = o.sizeId ? resolveImageSize2(o.sizeId, config.runtime.customImageSizes ?? []) : undefined;
-    const width = size?.width ?? record.width;
-    const height = size?.height ?? record.height;
+    const width = size?.width ?? (record.width || config.novelai.width);
+    const height = size?.height ?? (record.height || config.novelai.height);
     const positive = o.positivePrompt ?? main?.value ?? rebuilt?.positive ?? record.positivePrompt;
     const negative = o.negativePrompt ?? main?.negativeValue ?? rebuilt?.negative ?? record.negativePrompt;
     const excluded = new Set(o.excludedCharacterIndexes ?? []);
@@ -68484,7 +68518,7 @@ function createChatPipelineController(services, engine, options = {}) {
         };
       }, written.history);
       job.snapshot.completedSlots = 1;
-      await publish(chatId, job.planKey);
+      await publishCommitted(chatId, job.planKey);
       emitChanged(chatId, [job.planKey]);
       finishJob(job, "completed", "success");
     } catch (e) {
@@ -68739,6 +68773,9 @@ function createChatPipelineController(services, engine, options = {}) {
     try {
       const [settings, config] = await Promise.all([services.storage.loadChatImageGenerationSettings(), services.storage.loadConfig()]);
       if (!settings.autoGenerationEnabled || config.enabled === false)
+        return;
+      const active = await services.sources.getActiveChat();
+      if (active && active.chatId !== chatId)
         return;
       const messages = await loadMessages(services.host, chatId);
       const { view } = findMessage(messages, messageId);
@@ -70633,6 +70670,12 @@ function createImageBytesService(deps) {
 
 // src/backend/services/images.ts
 var IMAGE_RETRY_DELAY_MS = 100;
+var NOVELAI_REQUEST_TIMEOUT_MS = 120000;
+function imageRequestTimeoutMs(provider, config) {
+  if (provider === "comfy-ui")
+    return clampInt2(config.runtime.comfyuiCompletionTimeoutMs, 1000, 3600000, 600000);
+  return provider === "novelai" ? NOVELAI_REQUEST_TIMEOUT_MS : 0;
+}
 var NOVELAI_SKIP_CFG_ABOVE_SIGMA = 59.04722600415217;
 var NOVELAI_SAMPLER_IDS = Object.freeze(["k_euler_ancestral", "k_euler", "k_dpmpp_2m", "k_dpmpp_2m_sde", "k_dpmpp_2s_ancestral", "k_dpmpp_sde", "ddim_v3"]);
 function samplerCandidateFrom(value) {
@@ -70776,6 +70819,7 @@ function buildNovelAIParameters(request, config, target, connectionDefaults = {}
     }
   }
   const inner = {
+    negative_prompt: negative,
     params_version: target.isNovelAIV5 ? 4 : 3,
     qualityToggle,
     noise_schedule: noiseSchedule,
@@ -71008,7 +71052,7 @@ function createImageService(deps) {
       };
       const retries = request.retries !== undefined ? clampInt2(request.retries, 0, 10, 0) : clampInt2(config.runtime.generationAutoRetryCount, 0, 10, 5);
       const gapMs = () => clampInt2(config.runtime.novelaiParallelIntervalSec, 0, 30, 0) * 1000;
-      const timeoutMs = target.generationProvider === "comfy-ui" ? clampInt2(config.runtime.comfyuiCompletionTimeoutMs, 1000, 3600000, 600000) : 0;
+      const timeoutMs = imageRequestTimeoutMs(target.generationProvider, config);
       const callOnce = async () => {
         const pending = host.imageGen.generate(input);
         let abandoned = false;
@@ -71139,11 +71183,12 @@ var DEFAULT_RETRY_COUNT = 5;
 var MAX_RETRY_COUNT = 10;
 var RETRY_DELAY_MS = 100;
 var DEFAULT_TEST_MESSAGE = "Hello. Please greet me briefly.";
-function supportsJsonMode(provider, model) {
-  const p = `${provider} ${model}`.toLowerCase();
-  if (/anthropic|claude/.test(provider.toLowerCase()))
-    return false;
-  return /openai|gpt-|gemini|google|deepseek|openrouter|xai|grok|mistral|nanogpt/.test(p);
+function supportsJsonMode(provider, _model) {
+  return !/anthropic|claude/.test(provider.toLowerCase());
+}
+function omitsTemperature(model) {
+  const m = model.trim().toLowerCase().split("/").at(-1) ?? "";
+  return /^claude-(?:fable|mythos)-5(?:[-.]|$)/.test(m) || /^claude-(?:sonnet|opus)-5(?:[-.]|$)/.test(m) || /^claude-opus-4-(?:7|8)(?:[-.]|$)/.test(m) || /^gemini-3(?:[.-]|$)/.test(m) || m === "gemini-4-argon";
 }
 function reasoningDto(reasoning) {
   if (reasoning.mode === "off")
@@ -71228,8 +71273,17 @@ function declaredVisionSupport(metadata) {
   return null;
 }
 function unsupportedVisionError(error) {
-  const message = errorMessage(error).toLowerCase();
-  return /(?:image|vision|multimodal).*(?:unsupported|not supported|not allowed|invalid|not enabled)|(?:unsupported|invalid|does not support|doesn't support|cannot read|can't read).*(?:image|vision|content.*array|input modality)|text[- ]only|no endpoints found that support image/.test(message);
+  const message = errorMessage(error);
+  if (/no endpoints found that support image/i.test(message))
+    return true;
+  if (![400, 415, 422].includes(httpStatusOf(error)))
+    return false;
+  return [
+    /(?:image|image_url|vision|multimodal|visual|modality).{0,160}(?:not supported|unsupported|does not support|isn't supported|not allowed|only supports? text)/iu,
+    /(?:not supported|unsupported|does not support|isn't supported|not allowed|only supports? text).{0,160}(?:image|image_url|vision|multimodal|visual|modality)/iu,
+    /(?:image|image_url|vision).{0,160}only supported by.{0,80}models?/iu,
+    /model.{0,120}(?:is not multimodal|is text[- ]only)/iu
+  ].some((pattern) => pattern.test(message));
 }
 function isJsonModeRejection(error) {
   const message = errorMessage(error);
@@ -71461,7 +71515,7 @@ function createLlmService(deps) {
     }
     const baseParameters = { ...request.parameters ?? {} };
     const temperature = request.temperature ?? settings.temperature;
-    if (baseParameters.temperature === undefined && Number.isFinite(temperature))
+    if (baseParameters.temperature === undefined && Number.isFinite(temperature) && !omitsTemperature(model))
       baseParameters.temperature = temperature;
     const maxTokens = request.maxTokens ?? settings.maxTokens;
     if (baseParameters.max_tokens === undefined && maxTokens > 0)
@@ -71503,7 +71557,7 @@ function createLlmService(deps) {
         const raw = extractText(result);
         const finishReason = extractFinishReason(result);
         if (!raw.trim()) {
-          if (finishReason === "length")
+          if (finishReason === "length" && /deepseek/i.test(connection.provider))
             throw makeAnalyzerError("The analyzer response was truncated before any output.", { code: "ANALYZER_OUTPUT_TRUNCATED" });
           if (finishReason === "content_filter")
             throw makeAnalyzerError("The provider filtered the analyzer response.", { code: "ANALYZER_CONTENT_FILTERED" });

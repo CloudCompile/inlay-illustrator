@@ -121,10 +121,16 @@ function isPersistableActorKey(key: string): boolean {
   return !!key.trim() && key === key.trim() && !/^(?:primary|secondary|actor_\d+|female_\d+|male_\d+)$/u.test(key);
 }
 
+/** Outcome of {@link commitContinuityCheckpoint}. */
+export type ContinuityCommitOutcome = "committed" | "skipped" | "already-committed";
+
 /**
- * Commit one revision's continuity (AM 0.9.89.5 `gIe` 209136-209151): the checkpoint of `messageId`/`historyRevisionId`
- * in `next` goes onto that generation only, other generations keep theirs; the next state's actors are merged over the
- * current actor state with `revision + 1`. Mutates `store` and `chat`; returns the written actor state.
+ * Commit one revision's continuity (AM 0.9.89.5 `gIe` 209058-209151). `basisRevision` is the actor-state revision the
+ * run started from. A generation that already committed its state (`stateCommitRevision`) or skipped it never commits
+ * again; when the actor state changed during the run the commit is skipped and marked (`stateCommitSkipped`), so a
+ * user edit made meanwhile survives. Otherwise the checkpoint of `messageId`/`historyRevisionId` in `next` goes onto
+ * that generation only (other generations keep theirs) and the next state's actors are merged over the current actor
+ * state with `revision + 1`. Mutates `store` and `chat`.
  */
 export function commitContinuityCheckpoint(
   store: ContinuityChatStore,
@@ -133,20 +139,27 @@ export function commitContinuityCheckpoint(
   chatKey: string,
   messageId: string,
   historyRevisionId: string,
-): LocalLoreActorState {
+  basisRevision: number,
+): ContinuityCommitOutcome {
+  const generation = store.messages[messageId]?.generations.find((g) => g.id === historyRevisionId);
+  if (generation?.stateCommitRevision !== undefined || generation?.stateCommitSkipped === true) return "already-committed";
+  const current = readLocalLoreActorState(chat);
+  if (current.revision !== basisRevision) {
+    if (generation) generation.stateCommitSkipped = true;
+    return "skipped";
+  }
   const checkpoint = next.recentCheckpoints[chatKey]?.find(
     (c) => c.messageId.replace(/^id:/u, "") === messageId && c.historyRevisionId === historyRevisionId,
   );
-  const generation = store.messages[messageId]?.generations.find((g) => g.id === historyRevisionId);
   const compact = checkpoint ? coreCheckpointToStore(checkpoint) : undefined;
   if (generation && compact) generation.continuity = compact;
-  const current = readLocalLoreActorState(chat);
   const actors = { ...current.actors };
   for (const [key, value] of Object.entries(next.characters[chatKey] ?? {}))
     if (isPersistableActorKey(key)) actors[key] = toLocalLoreActorEntry(value);
   const payload = { revision: current.revision + 1, actors };
   writeLocalLoreActorState(chat, payload);
-  return payload;
+  if (generation) generation.stateCommitRevision = payload.revision;
+  return "committed";
 }
 
 /** Remove all continuity from a chat (`removeItem`, 180519-180530). */

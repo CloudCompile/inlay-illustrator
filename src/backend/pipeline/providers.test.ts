@@ -129,6 +129,22 @@ describe("adapters over ImageService", () => {
     ]);
   });
 
+  test("AM request checks: V5 profile needs a V4+ model, empty img2img source, references read only when sent", async () => {
+    expect(() => buildNovelAIRequest({ prompt: "1girl", negativePrompt: "", seed: "1", width: 832, height: 1216, config: { analysisProfile: "v5-hybrid" } }, { ...ctx, model: "nai-diffusion-3" })).toThrow(/V4 or later/);
+    const seen: unknown[] = [];
+    const fx = createFakeServices({ imageBytes: { getAsset: async (asset: unknown) => (seen.push(asset), { data: "AA==", mimeType: "image/png" }) } });
+    const registry = new ProviderRunRegistry();
+    const adapters = createImageProviderAdapters(fx.services, registry);
+    const run = (model: string, config: Record<string, unknown>, extra: Record<string, unknown> = {}) => {
+      const runId = registry.register({ ...ctx, model });
+      return adapters.novelai!.generate({ provider: "novelai", providerRef: { providerId: "novelai", queueScopeKey: registry.queueScopeKey(runId) }, prompt: "1girl", negativePrompt: "", seed: "5", width: 832, height: 1216, config, references: [{ asset: { key: "img-ref" } }], ...extra });
+    };
+    await run("nai-diffusion-4-5-full", { characterReferenceEnabled: false });
+    await run("nai-diffusion-5-full", { characterReferenceEnabled: true });
+    expect(seen).toEqual([]);
+    await expect(run("nai-diffusion-4-5-full", {}, { imageToImage: { image: "" } })).rejects.toThrow(/img2img source image is empty/);
+  });
+
   test("generic providers send the flat prompt pair", async () => {
     const fx = createFakeServices();
     const registry = new ProviderRunRegistry();

@@ -319,8 +319,6 @@ export const SYSTEM_LABELS = {
   floatingCount: { title: "Floating count button", description: "Press and drag the count button to move it. Click it to open its settings." }, // 플로팅 장수 버튼
   resetPosition: "Reset position", // 위치 초기화
   floatingCountUse: "Use floating count button", // 플로팅 장수 버튼 사용
-  popupProtection: { title: "Block clicks behind popups", description: "Off by default on iOS/iPadOS. If off, images behind a popup can get selected." }, // 팝업 뒤 클릭 방지
-  popupProtectionUse: "Use click blocking behind popups", // 팝업 뒤 클릭 방지 사용
   nsfw: { title: "Always add NSFW", description: "Same value as the all-characters setting. Adds nsfw in front of every generation prompt." },
   developerMode: { title: "Developer mode", description: "Shows the run logs and the analysis button in the zoom UI." }, // 개발자 모드 / 확대 UI에 분석 버튼을 표시합니다.
   developerModeArea: "Developer mode settings area", // 개발자 모드 설정 영역

@@ -425,6 +425,8 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
   const store = req.chatData.store as unknown as ContinuityChatStore;
   const hr: ContinuityState = rebuildContinuityAtMessage(store, chatKey, liveIds, req.historyId);
   hr.characters[chatKey] = mergeLocalLoreActorState((hr.characters[chatKey] ?? {}) as never, req.chatData.actorState as never) as never;
+  // Actor-state revision the run starts from (AM `candidate.basisRevision`).
+  const basisRevision = req.chatData.actorState.revision;
 
   // Image tokens + asset hints (AM 169527-169530).
   const detectors = nativeDetectorsFor(primaryId, character.name, primaryDoc, memberIds);
@@ -510,7 +512,8 @@ export async function generateMessageIllustrations(deps: GeneratorDeps, req: Gen
       // AM 0.9.89 computes the next state from the basis (`_Ye` / `rYe`) and stores only this revision's checkpoint
       // (`gIe` 209136-209151); checkpoints of other messages and revisions stay as they are.
       const next = apply(info);
-      commitContinuityCheckpoint(doc.store as unknown as ContinuityChatStore, chatObj, next, chatKey, req.historyId, info.historyRevisionId);
+      const outcome = commitContinuityCheckpoint(doc.store as unknown as ContinuityChatStore, chatObj, next, chatKey, req.historyId, info.historyRevisionId, basisRevision);
+      if (outcome === "skipped") services.log.append("info", "pipeline", "The chat state changed during the run; this run's continuity was not saved.");
       const actorState = readLocalLoreActorState(chatObj);
       doc.actorState = { revision: actorState.revision, actors: actorState.actors } as unknown as CurrentActorState;
     };

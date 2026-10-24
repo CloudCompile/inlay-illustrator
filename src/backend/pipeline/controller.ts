@@ -376,7 +376,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
       content,
       messageKey: planKey,
       blocks: selection.blocks,
-      suppressNative: visibility === "hidden" && selection.entryCount > 0,
+      // AM `le` 213429: hidden native assets stay hidden even when every slot was deleted.
+      suppressNative: visibility === "hidden",
       nativeAssetDetectors: nativeDetectorsFor(characterId, "", document),
     });
     if (!result.changed) return "published";
@@ -396,19 +397,38 @@ export function createChatPipelineController(services: BackendServices, engine: 
       () => publishOnce(chatId, planKey),
     );
     publishChains.set(key, run.catch(() => undefined));
-    return run.then((result) => {
-      if (result === "streaming" && !disposed && attempt < PUBLISH_MAX_ATTEMPTS) {
-        const timer = setTimeout(() => {
-          publishTimers.delete(timer);
-          void publish(chatId, planKey, attempt + 1)
-            .then((r) => r === "published" && emitChanged(chatId, [planKey]))
-            .catch((e) => log("warn", "Illustration publish retry failed", toRpcError(e)));
-        }, PUBLISH_RETRY_DELAYS[attempt] ?? PUBLISH_RETRY_DELAYS.at(-1)!);
-        publishTimers.add(timer);
-      }
-      return result;
-    });
+    // A streaming message or a failed host write is published again later (AM `Ie` 213490 re-arms its timer).
+    const retryLater = () => {
+      if (disposed || attempt >= PUBLISH_MAX_ATTEMPTS) return;
+      const timer = setTimeout(() => {
+        publishTimers.delete(timer);
+        void publish(chatId, planKey, attempt + 1)
+          .then((r) => r === "published" && emitChanged(chatId, [planKey]))
+          .catch((e) => log("warn", "Illustration publish retry failed", toRpcError(e)));
+      }, PUBLISH_RETRY_DELAYS[attempt] ?? PUBLISH_RETRY_DELAYS.at(-1)!);
+      publishTimers.add(timer);
+    };
+    return run.then(
+      (result) => {
+        if (result === "streaming") retryLater();
+        return result;
+      },
+      (error: unknown) => {
+        retryLater();
+        throw error;
+      },
+    );
   };
+
+  /**
+   * Publish after History and continuity are committed: a host write failure is retried in the background and does not
+   * turn the committed run into a failure (AM writes both in one transaction, so it never has a committed-but-unpublished state).
+   */
+  const publishCommitted = (chatId: string, planKey: string): Promise<PublishResult | "failed"> =>
+    publish(chatId, planKey).catch((e) => {
+      log("warn", "The illustrated message could not be updated; retrying in the background.", toRpcError(e));
+      return "failed" as const;
+    });
 
   /* ---------------------------------------------------------------- message job (AM `Or` 173414 + `ur` 173361) */
 
@@ -473,7 +493,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const content = view ? swipeContent(view, swipeIndex) : null;
     if (!view || view.role !== "assistant" || content === null) return { kind: "blocked", error: labelError("not-found", PIPELINE_TEXT.messageMissing) };
     if (!content.trim()) return { kind: "blocked", error: labelError("bad-request", PIPELINE_TEXT.emptyContent) };
-    if (tracker.isStreaming(chatId, messageId)) return { kind: "blocked", error: labelError("busy", PIPELINE_TEXT.busy, { retryable: true }) };
+    // AM 214856: busy while any host generation streams in the chat.
+    if (tracker.isStreaming(chatId)) return { kind: "blocked", error: labelError("busy", PIPELINE_TEXT.busy, { retryable: true }) };
 
     const doc0 = await services.storage.loadChatData(chatId);
     let plan = ensurePlan(doc0, historyId, view.index);
@@ -618,7 +639,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
         let next: IllustrationPlan;
         const patchRevision = (id: string, patch: Partial<IllustrationPlanRevision>) => base.revisions.map((r) => (r.revisionId === id ? { ...r, ...patch } : r));
         if (attemptKind === "retry" && errorRevision && base.revisions.some((r) => r.revisionId === errorRevision.revisionId)) {
-          next = { ...base, status, requestedCount: resolved, entries: merged, assetHints, revisions: patchRevision(errorRevision.revisionId, { requestedCount: resolved, status, entries: merged, error: errorText }), error: errorText };
+          // The retried revision stays active even if the pager moved meanwhile, so its images and checkpoint land on it.
+          next = { ...base, status, requestedCount: resolved, entries: merged, assetHints, revisions: patchRevision(errorRevision.revisionId, { requestedCount: resolved, status, entries: merged, error: errorText }), activeRevisionId: errorRevision.revisionId, error: errorText };
         } else if (revisionTarget && base.revisions.some((r) => r.revisionId === revisionTarget.revisionId)) {
           next = { ...base, status, entries: merged, assetHints, revisions: patchRevision(revisionTarget.revisionId, { status, entries: merged, error: errorText }), activeRevisionId: revisionTarget.revisionId, error: errorText };
         } else if (!merged.length) {
@@ -635,7 +657,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
             error: errorText,
           };
         }
-        next = { ...next, nativeAssetSuppressed: visibility === "hidden" && next.entries.length > 0, updatedAt: createdAt };
+        next = { ...next, nativeAssetSuppressed: visibility === "hidden", updatedAt: createdAt };
         const tree = merged.length ? commitPlanToTree(doc.history, next) : doc.history;
         storePlanAndTree(doc, next, tree);
         finalPlan = next;
@@ -653,7 +675,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
         await updateSidecar(services.storage, chatId, (s) => {
           for (const r of result.records) s.records[r.entryId] = r;
         }, written.history).catch((e) => log("warn", "Generation records could not be saved", toRpcError(e)));
-      const published = await publish(chatId, planKey);
+      const published = await publishCommitted(chatId, planKey);
       if (published === "missing") log("warn", "The illustrated message could not be resolved for publishing.", { chatId, planKey });
       emitChanged(chatId, [planKey]);
       if (finalPlan.status === "complete") return { kind: "completed" };
@@ -914,8 +936,9 @@ export function createChatPipelineController(services: BackendServices, engine: 
     const sections = new Map((o.sections ?? []).map((s) => [s.id, s] as const));
     const main = sections.get("main") ?? sections.get("provider");
     const size = o.sizeId ? resolveImageSize(o.sizeId, (config.runtime.customImageSizes ?? []) as never) : undefined;
-    const width = size?.width ?? record.width;
-    const height = size?.height ?? record.height;
+    // AM 217008 / 217401: the NovelAI default size is the fallback when the record has no size.
+    const width = size?.width ?? (record.width || config.novelai.width);
+    const height = size?.height ?? (record.height || config.novelai.height);
     const positive = o.positivePrompt ?? main?.value ?? rebuilt?.positive ?? record.positivePrompt;
     const negative = o.negativePrompt ?? main?.negativeValue ?? rebuilt?.negative ?? record.negativePrompt;
     const excluded = new Set(o.excludedCharacterIndexes ?? []);
@@ -1086,7 +1109,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
         };
       }, written.history);
       job.snapshot.completedSlots = 1;
-      await publish(chatId, job.planKey);
+      await publishCommitted(chatId, job.planKey);
       emitChanged(chatId, [job.planKey]);
       finishJob(job, "completed", "success");
     } catch (e) {
@@ -1344,6 +1367,9 @@ export function createChatPipelineController(services: BackendServices, engine: 
     try {
       const [settings, config] = await Promise.all([services.storage.loadChatImageGenerationSettings(), services.storage.loadConfig()]);
       if (!settings.autoGenerationEnabled || (config as { enabled?: boolean }).enabled === false) return;
+      // AM 215831: no automatic illustration for a chat the user has left (unknown active chat: go ahead).
+      const active = await services.sources.getActiveChat();
+      if (active && active.chatId !== chatId) return;
       const messages = await loadMessages(services.host, chatId);
       const { view } = findMessage(messages, messageId);
       if (!view || !isIllustratableMessage(view)) return;

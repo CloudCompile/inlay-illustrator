@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { normalizeConfig, type InlayConfig } from "../../shared/contract/index.js";
 import { createFakeHost, TINY_PNG_BASE64 } from "../testing/fake-host.js";
-import { buildNovelAIParameters, createImageService, isRetryableImageError, normalizeNovelAiSampler, parseSeed, readComfyConfig } from "./images.js";
+import { buildNovelAIParameters, createImageService, imageRequestTimeoutMs, isRetryableImageError, normalizeNovelAiSampler, NOVELAI_REQUEST_TIMEOUT_MS, parseSeed, readComfyConfig } from "./images.js";
 
 const comfyMeta = {
   comfyui_workflows: [
@@ -105,6 +105,14 @@ describe("image helpers", () => {
     });
   });
 
+  test("per-attempt timeouts: NovelAI 120 s (AM kmt), ComfyUI from settings, others none", () => {
+    const config = normalizeConfig({ runtime: { comfyuiCompletionTimeoutMs: 5000 } });
+    expect(imageRequestTimeoutMs("novelai", config)).toBe(NOVELAI_REQUEST_TIMEOUT_MS);
+    expect(NOVELAI_REQUEST_TIMEOUT_MS).toBe(120_000);
+    expect(imageRequestTimeoutMs("comfy-ui", config)).toBe(5000);
+    expect(imageRequestTimeoutMs("chan-server", config)).toBe(0);
+  });
+
   test("NovelAI V5: no director reference, random seed when empty, skip_cfg only for 4.5", () => {
     const config = normalizeConfig({});
     const built = buildNovelAIParameters(
@@ -117,7 +125,7 @@ describe("image helpers", () => {
     expect(built.parameters.resolvedReferenceImages).toBeUndefined();
     expect(built.parameters.seed).toBe(99);
     expect(built.notes[0]).toContain("Character reference skipped");
-    expect(JSON.parse(built.parameters.rawRequestOverride as string).parameters).toMatchObject({ params_version: 4, skip_cfg_above_sigma: null });
+    expect(JSON.parse(built.parameters.rawRequestOverride as string).parameters).toMatchObject({ params_version: 4, skip_cfg_above_sigma: null, negative_prompt: "" });
     const v45 = buildNovelAIParameters({ purpose: "chat", prompt: "x", negativePrompt: "", width: 1024, height: 1024 }, config, { model: "nai-diffusion-4-5-curated", isNovelAIV5: false });
     expect(JSON.parse(v45.parameters.rawRequestOverride as string).parameters.skip_cfg_above_sigma).toBe(59.04722600415217);
   });

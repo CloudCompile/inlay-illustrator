@@ -75,6 +75,14 @@ describe("bake", () => {
     expect(next).toContain('data-inlay-illustrator-image-id="b"');
     expect(cleanMessageContent(next)).toBe(text);
   });
+  test("hidden native assets stay suppressed when no slot is left (AM le)", () => {
+    const native = "Hello {{img::a}} there.";
+    const out = bakeMessage({ content: native, messageKey: KEY, blocks: [], suppressNative: true, nativeAssetDetectors: [] });
+    expect(out.changed).toBe(true);
+    expect(out.text).not.toBe(native);
+    expect(cleanMessageContent(out.text)).toBe(native);
+    expect(bakeMessage({ content: native, messageKey: KEY, blocks: [], suppressNative: false }).changed).toBe(false);
+  });
   test("CRLF texts keep CRLF separators", () => {
     const crlf = "One.\r\n\r\nTwo.";
     const out = bakeMessage({ content: crlf, messageKey: KEY, blocks: [{ slotIndex: 0, html: block(0) }], suppressNative: false }).text;

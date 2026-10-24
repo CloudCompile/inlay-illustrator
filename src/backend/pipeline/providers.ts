@@ -226,6 +226,9 @@ export function buildNovelAIRequest(
   const model = str(ctx.model) || str(config.naiModel) || "nai-diffusion-5-full";
   const v4 = /^nai-diffusion-(?:4|5)(?:-|$)/u.test(model);
   const v5Profile = config.analysisProfile === "v5-hybrid";
+  // AM 138036: V5 analysis prompts need structured character captions (V4 or later models).
+  if (v5Profile && !v4)
+    throw Object.assign(new Error(`The NovelAI V5 analysis profile needs a V4 or later model (character captions); ${model} has none.`), { code: "NOVELAI_V5_PROFILE_MODEL", retryable: false });
   const forced = config.forceCharacterCoordinates === true;
   const characters = normalizeCharacterPrompts(config.characterPrompts);
   const anyFixed = characters.some((c) => c.coordinateMode !== "automatic");
@@ -328,9 +331,14 @@ export function createNovelAIAdapter(services: BackendServices, registry: Provid
       const signal = (request.signal as AbortSignal | undefined) ?? options.signal;
       onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "queued" });
       const refs = Array.isArray(request.references) ? request.references : [];
-      const prepared = refs.length ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
+      // AM `Hmt.prepare` 138491: references are only read when they will be sent (enabled, NovelAI 4.5).
+      const refModel = str(ctx.model) || str(rec(request.config).naiModel);
+      const sendsRefs = rec(request.config).characterReferenceEnabled !== false && /^nai-diffusion-4-5/u.test(refModel);
+      const prepared = refs.length && sendsRefs ? await prepareReferences(services, refs, signal) : { references: [], failures: [] };
       const i2iRaw = rec(request.imageToImage);
       const i2iImage = request.imageToImage ? toImageBytes(i2iRaw.image) : null;
+      // AM 138091
+      if (request.imageToImage && !i2iImage) throw Object.assign(new Error("NovelAI img2img source image is empty."), { code: "NOVELAI_IMG2IMG_EMPTY", retryable: false });
       const build = buildNovelAIRequest(request, ctx, {
         characterReferences: prepared.references,
         ...(i2iImage ? { imageToImage: { ...i2iImage, strength: num(i2iRaw.strength, 0.4, 0.4, 1), noise: num(i2iRaw.noise, 0, 0, 1) } } : {}),

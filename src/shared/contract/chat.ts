@@ -277,6 +277,10 @@ export interface ChatStoreGeneration {
   slots: Record<string, ChatStoreImage[]>;
   deletedSlotIndices?: number[];
   continuity?: VisualContinuityCheckpoint;
+  /** AM 0.9.89 `gIe`: actor-state revision written when this generation committed its state. */
+  stateCommitRevision?: number;
+  /** AM 0.9.89 `gIe`: the state commit was skipped (the actor state changed during the run). */
+  stateCommitSkipped?: boolean;
   error?: string;
 }
 export type ChatStoreMessageKind = "inline" | "illustration";
@@ -514,7 +518,7 @@ export function normalizeContinuityCheckpoint(value: unknown): VisualContinuityC
 /* --- store validators --- */
 
 const IMAGE_FIELDS = ["assetName", "savedPath", "extension", "kind", "width", "height"];
-const GENERATION_FIELDS = ["id", "parentId", "targetCount", "slots", "deletedSlotIndices", "continuity", "error"];
+const GENERATION_FIELDS = ["id", "parentId", "targetCount", "slots", "deletedSlotIndices", "continuity", "stateCommitRevision", "stateCommitSkipped", "error"];
 const MESSAGE_FIELDS = ["kind", "sources", "requestedCount", "generations"];
 
 function storeIssue(out: ChatStoreIssue[], code: string, path: string, message: string): null {
@@ -608,6 +612,7 @@ function normalizeStoreGeneration(value: unknown, path: string, out: ChatStoreIs
   const continuity = hasContinuity ? normalizeContinuityCheckpoint(t.continuity) : undefined;
   if (hasContinuity && !continuity) return storeIssue(out, "continuity", `${path}.continuity`, "Invalid continuity checkpoint.");
   const error = clip(t.error, 512);
+  const stateCommitRevision = Number.isSafeInteger(t.stateCommitRevision) && (t.stateCommitRevision as number) >= 0 ? (t.stateCommitRevision as number) : undefined;
   return {
     id,
     ...(clip(t.parentId) ? { parentId: clip(t.parentId) } : {}),
@@ -615,6 +620,8 @@ function normalizeStoreGeneration(value: unknown, path: string, out: ChatStoreIs
     slots,
     ...(Array.isArray(deleted) && deleted.length ? { deletedSlotIndices: [...(deleted as number[])] } : {}),
     ...(continuity ? { continuity } : {}),
+    ...(stateCommitRevision !== undefined ? { stateCommitRevision } : {}),
+    ...(t.stateCommitSkipped === true ? { stateCommitSkipped: true } : {}),
     ...(error ? { error } : {}),
   };
 }
