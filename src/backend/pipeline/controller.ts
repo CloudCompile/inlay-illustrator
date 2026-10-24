@@ -96,9 +96,9 @@ import {
 import { HostGenerationTracker, isIllustratableMessage, loadMessages, swipeContent, writeSwipeContent, type ChatMessageView } from "./host-chat.js";
 import { formatLabel, labelError, MANGA_TEXT, phaseProgress, PIPELINE_TEXT, WEBTOON_TEXT, type Label } from "./labels.js";
 import { bakeMessage, messageSlots, stripForInterceptor, type InterceptorMessage } from "./markup.js";
-import { readSidecar, sidecarPath, updateSidecar } from "./records.js";
+import { emptySidecar, pruneSidecar, readSidecar, sidecarPath, updateSidecar, type PipelineSidecar } from "./records.js";
 import { editWebtoonText, rerollWebtoonPanel, runWebtoonStrip, selectWebtoonTake, type WebtoonProgress } from "../webtoon/run.js";
-import { readStrip, stripSummaries, stripView } from "../webtoon/store.js";
+import { dropMessageStrips, failInterruptedStrips, readStrip, stripSummaries, stripView } from "../webtoon/store.js";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : {});
@@ -251,6 +251,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
   let seq = 0;
   const nextId = (prefix: string) => `${prefix}:${now().toString(36)}:${(++seq).toString(36)}`;
   const k = (chatId: string, key: string) => `${chatId}\u0000${key}`;
+  /** Webtoon panel rerolls: panel ids repeat in every strip, so the busy key carries the message. */
+  const webtoonSlotKey = (chatId: string, messageKey: string, panelId: string) => k(chatId, `webtoon:${messageKey}\u0000${panelId}`);
 
   /* ---------------------------------------------------------------- events / snapshots */
 
@@ -771,7 +773,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
         log("warn", "Webtoon panel reroll failed", error);
       }
     } finally {
-      const key = k(chatId, job.slotId!);
+      const key = webtoonSlotKey(chatId, job.planKey, job.webtoonPanel!);
       if (slotJobs.get(key) === job) slotJobs.delete(key);
       emitChanged(chatId, [job.planKey]);
     }
@@ -1107,7 +1109,7 @@ export function createChatPipelineController(services: BackendServices, engine: 
             ...(ch.coordinateMode ? { coordinateMode: String(ch.coordinateMode) } : {}),
           })),
         };
-      }, written.history);
+      }, written.history).catch((e) => log("warn", "Generation records could not be saved", toRpcError(e)));
       job.snapshot.completedSlots = 1;
       await publishCommitted(chatId, job.planKey);
       emitChanged(chatId, [job.planKey]);
@@ -1316,13 +1318,81 @@ export function createChatPipelineController(services: BackendServices, engine: 
 
   /* ---------------------------------------------------------------- host events */
 
-  const dropMessageData = async (chatId: string, messageId: string, swipe?: number) => {
+  /**
+   * In-memory state keyed by message follows a deletion (errors, retry snapshots, split revisions, replayed outfits,
+   * finished jobs): `fate` gives the key's new value (null: removed, undefined: not this message); a moved key is one
+   * swipe lower.
+   */
+  const forgetMessageState = (chatId: string, fate: (key: string) => string | null | undefined) => {
+    const prefix = k(chatId, "");
+    const rekey = <V>(map: Map<string, V>, scoped: boolean) => {
+      const moved: Array<[string, V]> = [];
+      for (const [key, value] of map) {
+        const next = !scoped || key.startsWith(prefix) ? fate(key) : undefined;
+        if (next === undefined) continue;
+        map.delete(key);
+        if (next !== null) moved.push([next, value]);
+      }
+      for (const [key, value] of moved) map.set(key, value);
+    };
+    rekey(settingsSnapshots, true);
+    rekey(splitRevisions, true);
+    rekey(lastErrors, true);
+    rekey(replayOutfits, false);
+    const completed = new Map([...analyzerCompleted].map((key) => [key, true]));
+    rekey(completed, true);
+    analyzerCompleted.clear();
+    for (const key of completed.keys()) analyzerCompleted.add(key);
+    for (const [id, job] of jobs) {
+      if (job.target.chatId !== chatId) continue;
+      const next = fate(job.planKey);
+      if (next === undefined) continue;
+      if (next === null) {
+        jobs.delete(id);
+        continue;
+      }
+      job.planKey = next;
+      job.snapshot.messageKey = next;
+      job.target = { ...job.target, swipeIndex: job.target.swipeIndex - 1 };
+    }
+  };
+
+  /** Deletions of one chat run in host order: each one shifts the swipe keys the next one reads. */
+  const dropChains = new Map<string, Promise<unknown>>();
+  const dropMessageData = (chatId: string, messageId: string, swipe?: number): Promise<void> => {
+    const run = (dropChains.get(chatId) ?? Promise.resolve()).then(() => dropMessageDataNow(chatId, messageId, swipe));
+    const tail = run.catch(() => undefined);
+    dropChains.set(chatId, tail);
+    void tail.then(() => {
+      if (dropChains.get(chatId) === tail) dropChains.delete(chatId);
+    });
+    return run;
+  };
+
+  const dropMessageDataNow = async (chatId: string, messageId: string, swipe?: number) => {
     const matches = (historyId: string) => {
       const p = parseHistoryMessageId(historyId);
       return !!p && p.messageId === messageId && (swipe === undefined || p.swipeIndex === swipe);
     };
-    for (const job of [...messageJobs.values(), ...slotJobs.values()])
-      if (job.target.chatId === chatId && job.target.messageId === messageId && (swipe === undefined || job.target.swipeIndex >= swipe)) job.controller.abort("message-removed");
+    const escaped = messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+    // Later swipes shift down by one (`<id>@<n>` -> `<id>@<n-1>` in every key / id / checkpoint).
+    const shift = (text: string) =>
+      swipe === undefined ? text : text.replace(new RegExp(`${escaped}@(\\d+)(?![0-9])`, "gu"), (m, n: string) => (Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m));
+    const fate = (key: string) => {
+      const m = new RegExp(`${escaped}@(\\d+)(?![0-9])`, "u").exec(key);
+      if (!m) return undefined;
+      if (swipe === undefined || Number(m[1]) === swipe) return null;
+      const next = shift(key);
+      return next === key ? undefined : next;
+    };
+    // Runs on the removed message / swipe or a later swipe stop first. Their cancel writes (plan status, strip status) land
+    // on the old keys before anything moves, so nothing is written back to a key that now belongs to another swipe.
+    const stopped = [...messageJobs.values(), ...slotJobs.values()].filter(
+      (job) => job.target.chatId === chatId && job.target.messageId === messageId && (swipe === undefined || job.target.swipeIndex >= swipe),
+    );
+    for (const job of stopped) job.controller.abort("message-removed");
+    await Promise.allSettled(stopped.map((job) => job.done));
+    forgetMessageState(chatId, fate);
     const written = await services.storage.updateChatData(chatId, (doc) => {
       const keys = Object.values(doc.history.messagesByKey).filter((m) => matches(m.messageId)).map((m) => m.messageKey);
       let tree = doc.history;
@@ -1330,22 +1400,17 @@ export function createChatPipelineController(services: BackendServices, engine: 
       for (const key of Object.keys(doc.plans)) if (matches(doc.plans[key]!.messageId)) delete doc.plans[key];
       for (const key of Object.keys(doc.store.messages)) if (matches(key)) delete doc.store.messages[key];
       storePlanAndTree(doc, null, tree);
-      if (swipe === undefined) return doc;
-      // Later swipes shift down by one (`<id>@<n>` -> `<id>@<n-1>` in every key / id / checkpoint).
-      const pattern = new RegExp(`${messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}@(\\d+)(?![0-9])`, "gu");
-      const json = JSON.stringify(doc).replace(pattern, (m, n: string) => (Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m));
-      return JSON.parse(json) as ChatDataDocument;
+      return swipe === undefined ? doc : (JSON.parse(shift(JSON.stringify(doc))) as ChatDataDocument);
     });
-    // Generation records / zoom drafts of removed entries and slots go too (qa #10: they grew forever).
-    if (swipe === undefined) await updateSidecar(services.storage, chatId, () => undefined, written.history).catch(() => undefined);
+    // Generation records / zoom drafts of removed entries and slots go too (qa #10: they grew forever). One write, pruned
+    // against the History read inside it, so the records of a run that committed meanwhile stay.
+    await services.storage
+      .updateJson<PipelineSidecar>(sidecarPath(chatId), emptySidecar(), async (current) =>
+        pruneSidecar(JSON.parse(shift(JSON.stringify(current))), (await services.storage.loadChatData(chatId)).history),
+      )
+      .catch(() => undefined);
+    await dropMessageStrips(services.storage, chatId, messageId, swipe).catch((e) => log("warn", "Webtoon strip cleanup failed", toRpcError(e)));
     if (swipe !== undefined) {
-      const pattern = new RegExp(`${messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}@(\\d+)(?![0-9])`, "gu");
-      await services.storage
-        .updateJson(sidecarPath(chatId), null as unknown, (current) =>
-          current ? JSON.parse(JSON.stringify(current).replace(pattern, (m, n: string) => (Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m))) : current,
-        )
-        .catch(() => undefined);
-      await updateSidecar(services.storage, chatId, () => undefined, written.history).catch(() => undefined);
       // The shifted swipes still carry blocks baked with their old key / swipe id: re-bake them with the new identity.
       const doc = await services.storage.loadChatData(chatId);
       const shifted = Object.values(doc.history.messagesByKey)
@@ -1432,7 +1497,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
         return;
       }
       const chatIds = [...new Set(files.flatMap((f) => {
-        const m = /(?:^|\/)([^/]+)\/chat-data\.json$/u.exec(f.replace(/\\/gu, "/"));
+        // Chats with chat data or webtoon strips (a webtoon-only chat may have no chat data).
+        const m = /(?:^|\/)([^/]+)\/(?:chat-data|webtoon\/index)\.json$/u.exec(f.replace(/\\/gu, "/"));
         if (!m) return [];
         try {
           return [decodeURIComponent(m[1]!)];
@@ -1442,6 +1508,9 @@ export function createChatPipelineController(services: BackendServices, engine: 
       }))];
       for (const chatId of chatIds) {
         try {
+          // Webtoon strips left planning / generating by a restart would show their spinner forever.
+          const strips = await failInterruptedStrips(services.storage, chatId, PIPELINE_TEXT.interrupted.en, (historyId) => messageJobs.has(k(chatId, illustrationMessageKey(historyId))), now);
+          if (strips.length) emitChanged(chatId, strips.map((historyId) => illustrationMessageKey(historyId)));
           const doc = await services.storage.loadChatData(chatId);
           const stale = Object.values(doc.plans).filter((p) => p.status === "generating" && !messageJobs.has(k(chatId, p.key)));
           if (!stale.length) continue;
@@ -1476,6 +1545,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
       if (messageBusy(chatId, planKey)) throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
       const messages = await loadMessages(services.host, chatId);
       if (!isIllustratableMessage(findMessage(messages, messageId).view, swipeIndex)) throw new RpcFailure(labelError("not-found", PIPELINE_TEXT.messageMissing));
+      // Checked again: another start (or the automatic run) may have registered a job while the messages loaded.
+      if (messageBusy(chatId, planKey)) throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
       const job = startMessageJob({ chatId, messageId, swipeIndex }, planKey, {
         automatic: false,
         ...(params.attemptKind ? { attemptKind: params.attemptKind } : {}),
@@ -1801,6 +1872,8 @@ export function createChatPipelineController(services: BackendServices, engine: 
             }
           : {}),
       };
+      // Checked again after the reads above: a run started meanwhile (or the same proposal applied twice) keeps the message.
+      if (messageBusy(chatId, planKey)) throw new RpcFailure(rpcError("busy", "Another image operation is running.", { messageKo: "다른 이미지 작업이 진행 중입니다." }));
       proposals.delete(proposalId);
       const job = startMessageJob(target, planKey, { automatic: false, attemptKind: "regenerate", revision }, "revision");
       return { jobId: job.snapshot.jobId };
@@ -1875,12 +1948,17 @@ export function createChatPipelineController(services: BackendServices, engine: 
     async rerollWebtoonPanel(chatId, messageKey, panelId) {
       const target = targetOfKey(chatId, messageKey);
       const slotId = `webtoon:${panelId}`;
-      const slotKey = k(chatId, slotId);
-      if (slotJobs.has(slotKey)) throw new RpcFailure(labelError("busy", WEBTOON_TEXT.busy));
-      if (messageJobs.has(k(chatId, messageKey))) throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
+      const slotKey = webtoonSlotKey(chatId, messageKey, panelId);
+      const busy = () => {
+        if (slotJobs.has(slotKey)) throw new RpcFailure(labelError("busy", WEBTOON_TEXT.busy));
+        if (messageJobs.has(k(chatId, messageKey))) throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
+      };
+      busy();
       const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
       if (!doc?.requests[panelId]) fail("not-found", `Webtoon panel not found: ${panelId}`);
       const config = await services.storage.loadConfig();
+      // Checked again after the reads: a second click or a strip run may have started meanwhile.
+      busy();
       const job = createJob({ target, planKey: messageKey, kind: "regenerate", attemptKind: "regenerate", slotId, requestedCount: 1 });
       job.webtoonPanel = panelId;
       if (doc!.format === "manga") job.webtoonManga = true;

@@ -11,8 +11,11 @@ import {
   STORAGE_PATHS,
   STRIP_MIN_LAYOUT_WIDTH,
   STRIP_WIDTH,
+  illustrationMessageKey,
   imageResultUrl,
+  parseHistoryMessageId,
   safePathSegment,
+  toHistoryMessageId,
   type StripLayout,
   type WebtoonPanelState,
   type WebtoonStripStatus,
@@ -134,6 +137,52 @@ export async function deleteStrip(storage: StorageService, chatId: string, histo
 
 export async function stripSummaries(storage: StorageService, chatId: string): Promise<Index> {
   return storage.readJson<Index>(indexPath(chatId), {});
+}
+
+/**
+ * A deleted message drops its strips. A deleted swipe drops its strip and moves the strips of later swipes down by one
+ * (`<id>@<n>` -> `<id>@<n-1>`, as the chat data does). A moved strip gets a revision above the one shown at that swipe
+ * before, so the chat fetches it again.
+ */
+export async function dropMessageStrips(storage: StorageService, chatId: string, messageId: string, swipe: number | undefined): Promise<void> {
+  const affected = Object.keys(await stripSummaries(storage, chatId))
+    .flatMap((historyId) => {
+      const parsed = parseHistoryMessageId(historyId);
+      return parsed && parsed.messageId === messageId && (swipe === undefined || parsed.swipeIndex >= swipe) ? [{ historyId, index: parsed.swipeIndex }] : [];
+    })
+    .sort((a, b) => a.index - b.index);
+  const revisions = new Map<number, number>();
+  for (const { historyId, index } of affected) {
+    const doc = await readStrip(storage, chatId, historyId);
+    revisions.set(index, doc?.revision ?? 0);
+    await deleteStrip(storage, chatId, historyId);
+    if (swipe === undefined || index === swipe || !doc) continue;
+    const to = toHistoryMessageId(messageId, index - 1);
+    const moved: WebtoonStripDocument = { ...doc, historyId: to, messageKey: illustrationMessageKey(to), revision: Math.max(doc.revision, revisions.get(index - 1) ?? 0) + 1 };
+    await storage.writeJson(webtoonPath(chatId, to), moved);
+    await writeIndex(storage, moved, chatId, to);
+  }
+}
+
+/**
+ * Strips left planning / generating without a running job (the worker restarted mid-run) become errors, with their
+ * pending panels, so the chat offers a retry instead of a spinner. Returns the history ids it changed.
+ */
+export async function failInterruptedStrips(storage: StorageService, chatId: string, error: string, running: (historyId: string) => boolean, now: () => number = Date.now): Promise<string[]> {
+  const stale = Object.entries(await stripSummaries(storage, chatId))
+    .filter(([historyId, s]) => (s.status === "planning" || s.status === "generating") && !running(historyId))
+    .map(([historyId]) => historyId);
+  for (const historyId of stale) {
+    await updateStrip(storage, chatId, historyId, (current) => {
+      const doc = current ?? createStripDocument({ chatId, messageKey: illustrationMessageKey(historyId), historyId, characterId: "", sourceLength: 0, now: now() });
+      if (doc.status !== "planning" && doc.status !== "generating") return doc;
+      doc.status = "error";
+      doc.error = error;
+      for (const panel of Object.values(doc.panels)) if (panel.status === "pending") Object.assign(panel, { status: "error", error });
+      return doc;
+    }, now);
+  }
+  return stale;
 }
 
 /** Storyboard with the text overrides applied, as the layout engine reads it. */

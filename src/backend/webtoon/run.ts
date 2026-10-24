@@ -497,7 +497,8 @@ export async function runWebtoonStrip(deps: WebtoonDeps, req: WebtoonRunRequest)
         });
         if (vision) afterTake(vision, panel, input, take);
       } catch (error) {
-        if (req.signal.aborted || isAbortLike(error)) throw error;
+        // A lost target ends the run (as the check after planning does) instead of failing every remaining panel.
+        if (req.signal.aborted || isAbortLike(error) || (error as { name?: unknown } | null)?.name === "ChatResponseTargetChangedError") throw error;
         failed += 1;
         const message = toRpcError(error).message;
         doc = await write((d) => {

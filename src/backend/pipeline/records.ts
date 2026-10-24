@@ -46,10 +46,14 @@ export async function updateSidecar(
   return storage.updateJson<PipelineSidecar>(sidecarPath(chatId), emptySidecar(), (current) => {
     const next = normalize(current);
     mutate(next);
-    if (tree) {
-      for (const id of Object.keys(next.records)) if (!tree.entriesById[id]) delete next.records[id];
-      for (const id of Object.keys(next.drafts)) if (!tree.slotsById[id]) delete next.drafts[id];
-    }
-    return next;
+    return tree ? pruneSidecar(next, tree) : next;
   });
+}
+
+/** Drops records of entries no longer in `tree` and drafts of removed slots. */
+export function pruneSidecar(raw: unknown, tree: HistoryTree): PipelineSidecar {
+  const next = normalize(raw);
+  for (const id of Object.keys(next.records)) if (!tree.entriesById[id]) delete next.records[id];
+  for (const id of Object.keys(next.drafts)) if (!tree.slotsById[id]) delete next.drafts[id];
+  return next;
 }
