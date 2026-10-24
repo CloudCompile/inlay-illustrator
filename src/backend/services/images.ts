@@ -20,8 +20,11 @@
  * `runtime.novelaiParallelIntervalSec` between the end of one request and the start of the next.
  * Retries: AM dispatcher `_yt.generate` @120130-120173 / `byt` @120076: `generationAutoRetryCount` (0..10) extra attempts, fixed
  * 100 ms, on transient errors; exhausted -> IMAGE_REQUEST_RETRY_EXHAUSTED. `retries: 0` when an outer dispatcher retries.
+ * Port: NovelAI's "Concurrent generation is locked" (another image runs on the account) waits 2, 4, 6, 8, 10 s instead, so a
+ * busy account is waited out rather than failing after five 100 ms retries.
  * Abort: `imageGen.generate` has no signal, so an abort stops waiting (queue / retry / request) and discards a late result
- * (the persisted host image is deleted best effort).
+ * (the persisted host image is deleted best effort). NovelAI keeps drawing an image we stopped waiting for (abort, timeout):
+ * the queue stays closed until it settles (at most 60 s), so the next request does not run into the account lock.
  */
 import {
   generationProviderFromLumiverse,
@@ -38,6 +41,11 @@ import type { ImageGenerateRequest, ImageGenerateResult, ImageService, ResolvedI
 import { abortError, asArray, asRecord, errorMessage, raceAbort, sleep, str, TtlCache } from "./util.js";
 
 export const IMAGE_RETRY_DELAY_MS = 100;
+/** Retry wait after NovelAI's account lock: 2 s per attempt, at most 10 s. */
+export const LOCKED_RETRY_STEP_MS = 2000;
+export const LOCKED_RETRY_MAX_MS = 10_000;
+/** Longest the queue waits for a NovelAI request we stopped waiting for. */
+export const ABANDONED_REQUEST_HOLD_MS = 60_000;
 /** AM `kmt` 138113: each NovelAI attempt times out after 120 s (retryable). */
 export const NOVELAI_REQUEST_TIMEOUT_MS = 120_000;
 
@@ -302,6 +310,11 @@ export function isRetryableImageError(error: unknown): boolean {
   return /concurrent generation is locked|timed? ?out|fetch failed|network error|econnreset|socket hang up|terminated|temporarily unavailable/i.test(message);
 }
 
+/** NovelAI 429 "Concurrent generation is locked": another image is being drawn on the same account. */
+export function isConcurrentLockError(error: unknown): boolean {
+  return /concurrent generation is locked/i.test(errorMessage(error));
+}
+
 function stripBase64ForRecord(value: unknown): unknown {
   if (typeof value === "string") {
     if (value.length > 2000 && /^[A-Za-z0-9+/=\s]+$/.test(value.slice(0, 200))) return `[base64 ${value.length} chars]`;
@@ -352,12 +365,28 @@ interface ConnectionInfo {
 /** Serial queue with a minimum gap between the end of one task and the start of the next. */
 class GapQueue {
   private tail: Promise<void> = Promise.resolve();
+  private held: Promise<void> = Promise.resolve();
   private lastFinishedAt = 0;
   private depth = 0;
   constructor(
     private readonly now: () => number,
     private readonly wait: (ms: number, signal?: AbortSignal) => Promise<void>,
   ) {}
+  /** Keeps the queue closed until `work` settles, at most `capMs` (a request we stopped waiting for still runs upstream). */
+  holdUntil(work: Promise<unknown>, capMs: number): void {
+    const settled = work.then(
+      () => undefined,
+      () => undefined,
+    );
+    const cap = this.wait(capMs).catch(() => undefined);
+    this.held = Promise.all([this.held, Promise.race([settled, cap])]).then(() => {
+      this.lastFinishedAt = this.now();
+    });
+  }
+  /** Resolves when no held request is running anymore. */
+  whenFree(signal?: AbortSignal): Promise<void> {
+    return raceAbort(this.held, signal);
+  }
   async run<T>(gapMs: () => number, task: () => Promise<T>, signal?: AbortSignal, onQueue?: (position: number, depth: number) => void): Promise<T> {
     this.depth += 1;
     const position = this.depth;
@@ -368,6 +397,7 @@ class GapQueue {
     try {
       if (position > 1) onQueue?.(position - 1, this.depth);
       await raceAbort(previous, signal);
+      await this.whenFree(signal);
       const gap = Math.max(0, Math.min(30000, gapMs()) - (this.now() - this.lastFinishedAt));
       if (this.lastFinishedAt && gap > 0) await this.wait(gap, signal);
       ran = true;
@@ -482,17 +512,24 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
       const retries = request.retries !== undefined ? clampInt(request.retries, 0, 10, 0) : clampInt(config.runtime.generationAutoRetryCount, 0, 10, 5);
       const gapMs = () => clampInt(config.runtime.novelaiParallelIntervalSec, 0, 30, 0) * 1000;
       const timeoutMs = imageRequestTimeoutMs(target.generationProvider, config);
+      const queue = request.queue === false ? null : queueFor(target.generationProvider);
 
       const callOnce = async (): Promise<Record<string, unknown>> => {
+        // A retry after a timeout must not overlap the timed-out request NovelAI is still drawing.
+        await queue?.whenFree(signal);
         const pending = host.imageGen.generate(input as unknown as Parameters<SpindleHost["imageGen"]["generate"]>[0]) as Promise<unknown>;
         // A result that arrives after an abort / our timeout is discarded: delete the persisted image.
         let abandoned = false;
+        let settled = false;
         pending.then(
           (late) => {
+            settled = true;
             const id = str(asRecord(late).imageId);
             if (abandoned && id) void host.images.delete(id, userId).catch(() => undefined);
           },
-          () => undefined,
+          () => {
+            settled = true;
+          },
         );
         try {
           let race: Promise<unknown> = raceAbort(pending, signal);
@@ -508,6 +545,9 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
           return asRecord(await race);
         } catch (error) {
           abandoned = true;
+          // Stopped waiting (abort, timeout): NovelAI allows one image at a time per account and keeps drawing this one, so
+          // the next request waits for it.
+          if (!settled && target.generationProvider === "novelai") queue?.holdUntil(pending, ABANDONED_REQUEST_HOLD_MS);
           throw error;
         }
       };
@@ -531,16 +571,18 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
               log("error", `Image generation failed (${target.lumiverseProvider}/${target.model}).`, rpc);
               throw new RpcFailure(rpc, { cause: error });
             }
-            log("warn", `Image generation retry ${attempt}/${retries}: ${errorMessage(error)}`);
-            await wait(IMAGE_RETRY_DELAY_MS, signal);
+            const locked = isConcurrentLockError(error);
+            const delay = locked ? Math.min(LOCKED_RETRY_MAX_MS, LOCKED_RETRY_STEP_MS * attempt) : IMAGE_RETRY_DELAY_MS;
+            log("warn", `Image generation retry ${attempt}/${retries}: ${errorMessage(error)}${locked ? ` (next try in ${delay / 1000} s)` : ""}`);
+            if (locked) onProgress?.({ label: "NovelAI is busy with another image, waiting", labelKo: "NovelAI가 다른 이미지를 생성 중이라 대기 중", retry: { attempt, total: retries }, retryCount: `${attempt}/${retries}` });
+            await wait(delay, signal);
           }
         }
       };
 
-      const { result, attempts } =
-        request.queue === false
-          ? await attemptLoop()
-          : await queueFor(target.generationProvider).run(gapMs, attemptLoop, signal, (position, depth) => onProgress?.({ label: "Waiting for the image queue", labelKo: "이미지 생성 대기 중", queue: { position, depth } }));
+      const { result, attempts } = !queue
+        ? await attemptLoop()
+        : await queue.run(gapMs, attemptLoop, signal, (position, depth) => onProgress?.({ label: "Waiting for the image queue", labelKo: "이미지 생성 대기 중", queue: { position, depth } }));
 
       const imageId = str(result.imageId);
       const data = mimeOfDataUrl(result.imageDataUrl);

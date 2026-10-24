@@ -1,7 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import { normalizeConfig, type InlayConfig } from "../../shared/contract/index.js";
 import { createFakeHost, TINY_PNG_BASE64 } from "../testing/fake-host.js";
-import { buildNovelAIParameters, createImageService, imageRequestTimeoutMs, isRetryableImageError, normalizeNovelAiSampler, NOVELAI_REQUEST_TIMEOUT_MS, parseSeed, readComfyConfig } from "./images.js";
+import {
+  ABANDONED_REQUEST_HOLD_MS,
+  buildNovelAIParameters,
+  createImageService,
+  imageRequestTimeoutMs,
+  isConcurrentLockError,
+  isRetryableImageError,
+  normalizeNovelAiSampler,
+  NOVELAI_REQUEST_TIMEOUT_MS,
+  parseSeed,
+  readComfyConfig,
+} from "./images.js";
 
 const comfyMeta = {
   comfyui_workflows: [
@@ -192,6 +203,68 @@ describe("image service", () => {
     release();
     await new Promise((r) => setTimeout(r, 5));
     expect(fake.deletedImageIds).toEqual(["late"]);
+  });
+
+  test("NovelAI's account lock is retried after 2, 4, 6 ... s; other errors keep 100 ms", async () => {
+    const { fake, images, sleeps } = setup({ runtime: { generationAutoRetryCount: 5 } });
+    const locked = () => new Error("NovelAI image generate failed (429): Concurrent generation is locked");
+    expect(isConcurrentLockError(locked())).toBe(true);
+    expect(isConcurrentLockError(new Error("NovelAI image generate failed (429): Too many requests"))).toBe(false);
+    fake.scriptImageGen(locked(), new Error("NovelAI image generate failed (500): oops"), locked(), locked(), { imageDataUrl: "", model: "m", provider: "novelai", imageId: "ok", imageUrl: "/x" } as never);
+    const labels: string[] = [];
+    const result = await images.generate({ purpose: "chat", prompt: "p", negativePrompt: "", width: 512, height: 512 }, { onProgress: (p) => labels.push(p.label) });
+    expect(result.imageId).toBe("ok");
+    expect(sleeps).toEqual([2000, 100, 6000, 8000]);
+    expect(labels).toContain("NovelAI is busy with another image, waiting");
+  });
+
+  /** NovelAI service whose 60 s hold cap only ends when the test says so; other waits are instant. */
+  function holdSetup() {
+    const fake = createFakeHost();
+    fake.imageConnections.push(conn("nai", "novelai", "nai-diffusion-4-5-full", { is_default: true }));
+    const config = normalizeConfig({});
+    let endCap: () => void = () => undefined;
+    const sleep = (ms: number) => (ms === ABANDONED_REQUEST_HOLD_MS ? new Promise<void>((resolve) => (endCap = resolve)) : Promise.resolve());
+    const images = createImageService({ host: fake.host, userId: fake.userId, loadConfig: async () => config, sleep });
+    const request = (prompt: string) => ({ purpose: "chat" as const, prompt, negativePrompt: "", width: 512, height: 512 });
+    return { fake, images, request, endCap: () => endCap() };
+  }
+  const settle = (ms = 10) => new Promise((r) => setTimeout(r, ms));
+
+  test("a NovelAI image we stopped waiting for keeps the queue closed until NovelAI finishes it", async () => {
+    const { fake, images, request } = holdSetup();
+    let finishFirst!: () => void;
+    fake.scriptImageGen(() => new Promise((resolve) => (finishFirst = () => resolve({ imageDataUrl: "", model: "m", provider: "novelai", imageId: "late", imageUrl: "/x" } as never))));
+    fake.addImage({ id: "late" });
+    const controller = new AbortController();
+    const first = images.generate(request("1"), { signal: controller.signal });
+    await settle();
+    controller.abort();
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+    const second = images.generate(request("2"));
+    await settle(30);
+    // NovelAI is still drawing image 1: image 2 is not sent into the account lock.
+    expect(fake.imageGenCalls).toHaveLength(1);
+    finishFirst();
+    await second;
+    expect(fake.imageGenCalls.map((c) => c.input.prompt)).toEqual(["1", "2"]);
+    expect(fake.deletedImageIds).toEqual(["late"]);
+  });
+
+  test("the hold ends after 60 s when the abandoned NovelAI request never settles", async () => {
+    const { fake, images, request, endCap } = holdSetup();
+    fake.scriptImageGen(() => new Promise(() => undefined));
+    const controller = new AbortController();
+    const first = images.generate(request("1"), { signal: controller.signal });
+    await settle();
+    controller.abort();
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+    const second = images.generate(request("2"));
+    await settle(30);
+    expect(fake.imageGenCalls).toHaveLength(1);
+    endCap();
+    await second;
+    expect(fake.imageGenCalls).toHaveLength(2);
   });
 
   test("ComfyUI: workflow id, source image + denoise when init_image is mapped, unsupported otherwise; generic providers", async () => {
