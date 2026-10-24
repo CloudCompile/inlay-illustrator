@@ -76,6 +76,12 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
   const now = options.now ?? (() => new Date());
   let schemaChecked: Promise<void> | null = null;
   let configCache: { config: InlayConfig; stored: Partial<Record<keyof StoredGlobalConfig, string>>; tooNew: Set<string> } | null = null;
+  /** Bumped on every cache write or reset, so a read that started before a config write never caches its older result. */
+  let configGeneration = 0;
+  const setConfigCache = (state: typeof configCache) => {
+    configCache = state;
+    configGeneration += 1;
+  };
 
   const log = (level: "info" | "warn" | "error", message: string, details?: unknown) => options.log?.append(level, "storage", message, details);
 
@@ -145,6 +151,7 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
 
   async function loadConfigState() {
     if (configCache) return configCache;
+    const generation = configGeneration;
     const parts: Partial<StoredGlobalConfig> = {};
     const stored: Partial<Record<keyof StoredGlobalConfig, string>> = {};
     const tooNew = new Set<string>();
@@ -155,8 +162,11 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
       stored[part] = JSON.stringify(read.raw);
       if (read.tooNew) tooNew.add(path);
     }
-    configCache = { config: mergeStoredConfig(parts), stored, tooNew };
-    return configCache;
+    const state = { config: mergeStoredConfig(parts), stored, tooNew };
+    // loadConfig reads outside the config queue: a write (or reset) during this read wins over the older files read here.
+    if (generation !== configGeneration) return configCache ?? state;
+    configCache = state;
+    return state;
   }
 
   function withVersion(kind: StorageFileKind, value: Record<string, unknown>): Record<string, unknown> {
@@ -165,7 +175,7 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
 
   const service: StorageServiceImpl = {
     invalidateCache() {
-      configCache = null;
+      setConfigCache(null);
     },
 
     async readJson<T>(path: string, fallback: T): Promise<T> {
@@ -258,7 +268,7 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
           await writeRaw(path, value);
           stored[part] = text;
         }
-        configCache = { config: next, stored, tooNew: state.tooNew };
+        setConfigCache({ config: next, stored, tooNew: state.tooNew });
         return next;
       });
       options.events?.emit("config.changed", { config: jsonClone(config) });
@@ -303,7 +313,8 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
     async loadCharacterDocument(characterId) {
       const path = STORAGE_PATHS.characterDocument(characterId);
       const read = await readVersioned("character-document", path);
-      if (read.value === undefined) return createEmptyCharacterDocument(characterId, now());
+      // Same revision as updateCharacterDocument's empty document, so an edit based on this one passes the revision guard.
+      if (read.value === undefined) return createEmptyCharacterDocument(characterId, new Date(0));
       const normalized = normalizeCharacterDocument(read.value, characterId);
       if (normalized.issues.length) log("warn", `Character document ${characterId} was repaired on load.`, normalized.issues.slice(0, 20));
       return normalized.value;
@@ -375,7 +386,7 @@ export function createStorageService(host: SpindleHost, userId: string | undefin
             throw storageFailure(`Could not delete ${prefix}.`, error);
           }
         }
-        configCache = null;
+        setConfigCache(null);
         schemaChecked = null;
       });
       log("info", "Factory reset: all Inlay Illustrator settings and data were deleted.");

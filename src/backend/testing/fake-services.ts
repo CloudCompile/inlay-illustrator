@@ -225,13 +225,13 @@ export function createFakeServices(overrides: FakeServicesOverrides = {}): FakeS
       uiState = clone(state);
     },
     async loadCharacterDocument(characterId) {
-      return clone(fx.documents.get(characterId) ?? createEmptyCharacterDocument(characterId));
+      return clone(fx.documents.get(characterId) ?? createEmptyCharacterDocument(characterId, new Date(0)));
     },
     async hasCharacterDocument(characterId) {
       return fx.documents.has(characterId);
     },
     async updateCharacterDocument(characterId, mutate, options = {}) {
-      const current = fx.documents.get(characterId) ?? createEmptyCharacterDocument(characterId);
+      const current = fx.documents.get(characterId) ?? createEmptyCharacterDocument(characterId, new Date(0)); // same stamp as the real storage
       if (options.expectedUpdatedAt !== undefined && options.expectedUpdatedAt !== current.updatedAt) {
         fail("conflict", "The character data changed in another window. Reload and try again.", { detailCode: "ASSET_MAID_CHARX_EXTERNAL_CHANGE" });
       }

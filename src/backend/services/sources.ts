@@ -271,10 +271,15 @@ export function createSourcesService(deps: SourcesServiceDeps): SourcesService {
   const cache = new TtlCache<unknown>(SOURCES_CACHE_TTL_MS, 512, deps.now ?? Date.now);
   const log = (level: "debug" | "info" | "warn" | "error", message: string, details?: unknown) => deps.log?.append(level, "sources", message, details);
 
+  /** Bumped by invalidate(): a load that was in flight during an invalidation may predate the edit and is not cached. */
+  let generation = 0;
+
   async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
     const hit = cache.get(key);
     if (hit !== undefined) return hit as T;
-    return cache.set(key, await load()) as T;
+    const started = generation;
+    const value = await load();
+    return (started === generation ? cache.set(key, value) : value) as T;
   }
 
   async function paged<T>(load: (offset: number) => Promise<{ data: T[]; total: number }>): Promise<T[]> {
@@ -640,6 +645,7 @@ export function createSourcesService(deps: SourcesServiceDeps): SourcesService {
     },
 
     invalidate(characterId) {
+      generation += 1;
       if (!characterId) {
         cache.clear();
         return;

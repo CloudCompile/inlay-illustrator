@@ -34,7 +34,7 @@ export interface RouterOptions {
   host: Pick<SpindleHost, "sendToFrontend">;
   getContext: (userId: string, meta: RequestMeta) => Promise<RpcContext> | RpcContext;
   handlers: HandlerGroup;
-  /** Called for every failed request (after the error response was sent). */
+  /** Called for every failed request the router did not log itself (after the error response was sent). */
   onError?: (error: RpcError, meta: RequestMeta & { userId: string }) => void;
 }
 
@@ -72,9 +72,9 @@ export function createRouter(options: RouterOptions): Router {
       if (!requestId) return true; // cannot answer a request without id: dropped
       const method = rawMethod as RpcMethod;
       const meta: RequestMeta = { method, requestId, frontendSessionId };
-      const reply = (error: RpcError) => {
+      const reply = (error: RpcError, logged = false) => {
         send(userId, errorResponse({ requestId, method }, error));
-        options.onError?.(error, { ...meta, userId });
+        if (!logged) options.onError?.(error, { ...meta, userId });
       };
 
       if (message.protocol !== RPC_PROTOCOL_VERSION) {
@@ -104,12 +104,16 @@ export function createRouter(options: RouterOptions): Router {
         send(userId, okResponse({ requestId, method }, (result ?? { ok: true }) as never));
       } catch (error) {
         const rpc = toRpcError(error);
+        let logged = false;
         try {
-          if (rpc.code !== "cancelled") ctx?.log.append(rpc.code === "internal" ? "error" : "warn", "rpc", `${method} failed: ${rpc.message}`, { code: rpc.code, detailCode: rpc.detailCode });
+          if (rpc.code !== "cancelled" && ctx) {
+            ctx.log.append(rpc.code === "internal" ? "error" : "warn", "rpc", `${method} failed: ${rpc.message}`, { code: rpc.code, detailCode: rpc.detailCode });
+            logged = true;
+          }
         } catch {
           /* logging must not break the response */
         }
-        reply(rpc);
+        reply(rpc, logged);
       }
       return true;
     },
