@@ -58137,6 +58137,8 @@ function buildAmConfig(parts) {
   return runtime;
 }
 var same = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
+var itemId = (value) => typeof value === "object" && value !== null && ("id" in value) && typeof value.id === "string" ? value.id : undefined;
+var merge3 = (before, after, stored) => jsonClone(amFn("Mc")(before, after, stored, itemId));
 function patchField(target, field, before, after) {
   if (same(before, after))
     return false;
@@ -58148,7 +58150,7 @@ function patchField(target, field, before, after) {
       if (after[key] === undefined)
         delete next[key];
       else
-        next[key] = jsonClone(after[key]);
+        next[key] = merge3(before[key], after[key], next[key]);
     }
     target[field] = next;
     return true;
@@ -58156,7 +58158,7 @@ function patchField(target, field, before, after) {
   if (after === undefined)
     delete target[field];
   else
-    target[field] = jsonClone(after);
+    target[field] = merge3(before, after, target[field]);
   return true;
 }
 function diffAmConfig(before, after, characterId) {
@@ -59214,6 +59216,7 @@ async function runCharxRegex(ctx, params) {
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
+    ctx.signal.throwIfAborted();
     await controller.analyzeRegex({ scope: "current-character", currentCharacter: character, force: params.force === true });
     await session.store.flushSave();
     const snap = controller.getSnapshot();
@@ -59319,8 +59322,7 @@ async function driveAmController(ctx, session, controller, invoke, rowKeys = [])
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
-    if (ctx.signal.aborted)
-      controller.cancel();
+    ctx.signal.throwIfAborted();
     const returned = await invoke();
     await session.store.flushSave().catch((error) => {
       throw Object.assign(new Error(`Saving the analysis results failed: ${error instanceof Error ? error.message : String(error)}`), { code: "storage-error" });
@@ -59440,6 +59442,7 @@ async function runArtistExtraction(ctx, params) {
 async function runRepresentativePick(ctx, params) {
   const session = await open(ctx, "representative-pick");
   try {
+    ctx.signal.throwIfAborted();
     const wanted = params.promptKeys?.length ? new Set(params.promptKeys) : null;
     const items = amFn("SK")(session.source, session.store.getCurrentSnapshot().characterPrompt).filter((item) => !wanted || wanted.has(item.promptKey));
     ctx.progress({ label: "Selecting representative images", labelKo: "캐릭터별 기본 의상 이미지 자동 선택", done: 0, total: items.length });
@@ -59491,6 +59494,7 @@ async function runReclassification(ctx, params) {
   const onAbort = () => controller.cancel();
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
+    ctx.signal.throwIfAborted();
     await controller.start();
     await session.store.flushSave();
     const snap = controller.getSnapshot();
@@ -63693,16 +63697,18 @@ async function updateSidecar(storage, chatId, mutate, tree) {
   return storage.updateJson(sidecarPath(chatId), emptySidecar(), (current) => {
     const next = normalize(current);
     mutate(next);
-    if (tree) {
-      for (const id of Object.keys(next.records))
-        if (!tree.entriesById[id])
-          delete next.records[id];
-      for (const id of Object.keys(next.drafts))
-        if (!tree.slotsById[id])
-          delete next.drafts[id];
-    }
-    return next;
+    return tree ? pruneSidecar(next, tree) : next;
   });
+}
+function pruneSidecar(raw, tree) {
+  const next = normalize(raw);
+  for (const id of Object.keys(next.records))
+    if (!tree.entriesById[id])
+      delete next.records[id];
+  for (const id of Object.keys(next.drafts))
+    if (!tree.slotsById[id])
+      delete next.drafts[id];
+  return next;
 }
 
 // src/backend/pipeline/providers.ts
@@ -65146,8 +65152,47 @@ async function updateStrip(storage, chatId, historyId, mutate, now = Date.now) {
   await writeIndex(storage, written, chatId, historyId);
   return written;
 }
+async function deleteStrip(storage, chatId, historyId) {
+  await storage.delete(webtoonPath(chatId, historyId));
+  await writeIndex(storage, null, chatId, historyId);
+}
 async function stripSummaries(storage, chatId) {
   return storage.readJson(indexPath(chatId), {});
+}
+async function dropMessageStrips(storage, chatId, messageId, swipe) {
+  const affected = Object.keys(await stripSummaries(storage, chatId)).flatMap((historyId) => {
+    const parsed = parseHistoryMessageId(historyId);
+    return parsed && parsed.messageId === messageId && (swipe === undefined || parsed.swipeIndex >= swipe) ? [{ historyId, index: parsed.swipeIndex }] : [];
+  }).sort((a, b) => a.index - b.index);
+  const revisions = new Map;
+  for (const { historyId, index } of affected) {
+    const doc = await readStrip(storage, chatId, historyId);
+    revisions.set(index, doc?.revision ?? 0);
+    await deleteStrip(storage, chatId, historyId);
+    if (swipe === undefined || index === swipe || !doc)
+      continue;
+    const to = toHistoryMessageId(messageId, index - 1);
+    const moved = { ...doc, historyId: to, messageKey: illustrationMessageKey(to), revision: Math.max(doc.revision, revisions.get(index - 1) ?? 0) + 1 };
+    await storage.writeJson(webtoonPath(chatId, to), moved);
+    await writeIndex(storage, moved, chatId, to);
+  }
+}
+async function failInterruptedStrips(storage, chatId, error, running, now = Date.now) {
+  const stale = Object.entries(await stripSummaries(storage, chatId)).filter(([historyId, s]) => (s.status === "planning" || s.status === "generating") && !running(historyId)).map(([historyId]) => historyId);
+  for (const historyId of stale) {
+    await updateStrip(storage, chatId, historyId, (current) => {
+      const doc = current ?? createStripDocument({ chatId, messageKey: illustrationMessageKey(historyId), historyId, characterId: "", sourceLength: 0, now: now() });
+      if (doc.status !== "planning" && doc.status !== "generating")
+        return doc;
+      doc.status = "error";
+      doc.error = error;
+      for (const panel of Object.values(doc.panels))
+        if (panel.status === "pending")
+          Object.assign(panel, { status: "error", error });
+      return doc;
+    }, now);
+  }
+  return stale;
 }
 function effectiveStoryboard(doc) {
   if (!doc.storyboard)
@@ -67579,7 +67624,7 @@ async function runWebtoonStrip(deps, req) {
         if (vision)
           afterTake(vision, panel, input, take);
       } catch (error) {
-        if (req.signal.aborted || isAbortLike(error))
+        if (req.signal.aborted || isAbortLike(error) || error?.name === "ChatResponseTargetChangedError")
           throw error;
         failed += 1;
         const message = toRpcError(error).message;
@@ -67718,6 +67763,7 @@ function createChatPipelineController(services, engine, options = {}) {
   let seq = 0;
   const nextId = (prefix) => `${prefix}:${now().toString(36)}:${(++seq).toString(36)}`;
   const k = (chatId, key) => `${chatId}\x00${key}`;
+  const webtoonSlotKey = (chatId, messageKey, panelId) => k(chatId, `webtoon:${messageKey}\x00${panelId}`);
   const emitProgress = (job) => services.events.emit("generation.progress", jsonClone(job.snapshot));
   const emitChanged = (chatId, messageKeys) => services.events.emit("chatData.changed", { chatId, messageKeys: [...new Set(messageKeys)] });
   const log = (level, message, details) => {
@@ -68184,7 +68230,7 @@ function createChatPipelineController(services, engine, options = {}) {
         log("warn", "Webtoon panel reroll failed", error);
       }
     } finally {
-      const key = k(chatId, job.slotId);
+      const key = webtoonSlotKey(chatId, job.planKey, job.webtoonPanel);
       if (slotJobs.get(key) === job)
         slotJobs.delete(key);
       emitChanged(chatId, [job.planKey]);
@@ -68516,7 +68562,7 @@ function createChatPipelineController(services, engine, options = {}) {
             ...ch.coordinateMode ? { coordinateMode: String(ch.coordinateMode) } : {}
           }))
         };
-      }, written.history);
+      }, written.history).catch((e) => log("warn", "Generation records could not be saved", toRpcError(e)));
       job.snapshot.completedSlots = 1;
       await publishCommitted(chatId, job.planKey);
       emitChanged(chatId, [job.planKey]);
@@ -68710,14 +68756,79 @@ function createChatPipelineController(services, engine, options = {}) {
     { id: "main", kind: "main", label: "Main prompt", positive: record.positivePrompt, negative: record.negativePrompt },
     ...charactersOf(record).map((c, i) => ({ id: `actor:${i}`, kind: "actor", label: record.actors.find((a) => a.actorIndex === i)?.identityName || `Character ${i + 1}`, actorIndex: i, positive: c.prompt, negative: c.uc }))
   ];
-  const dropMessageData = async (chatId, messageId, swipe) => {
+  const forgetMessageState = (chatId, fate) => {
+    const prefix = k(chatId, "");
+    const rekey = (map, scoped) => {
+      const moved = [];
+      for (const [key, value] of map) {
+        const next = !scoped || key.startsWith(prefix) ? fate(key) : undefined;
+        if (next === undefined)
+          continue;
+        map.delete(key);
+        if (next !== null)
+          moved.push([next, value]);
+      }
+      for (const [key, value] of moved)
+        map.set(key, value);
+    };
+    rekey(settingsSnapshots, true);
+    rekey(splitRevisions, true);
+    rekey(lastErrors, true);
+    rekey(replayOutfits, false);
+    const completed = new Map([...analyzerCompleted].map((key) => [key, true]));
+    rekey(completed, true);
+    analyzerCompleted.clear();
+    for (const key of completed.keys())
+      analyzerCompleted.add(key);
+    for (const [id, job] of jobs) {
+      if (job.target.chatId !== chatId)
+        continue;
+      const next = fate(job.planKey);
+      if (next === undefined)
+        continue;
+      if (next === null) {
+        jobs.delete(id);
+        continue;
+      }
+      job.planKey = next;
+      job.snapshot.messageKey = next;
+      job.target = { ...job.target, swipeIndex: job.target.swipeIndex - 1 };
+    }
+  };
+  const dropChains = new Map;
+  const dropMessageData = (chatId, messageId, swipe) => {
+    const run = (dropChains.get(chatId) ?? Promise.resolve()).then(() => dropMessageDataNow(chatId, messageId, swipe));
+    const tail = run.catch(() => {
+      return;
+    });
+    dropChains.set(chatId, tail);
+    tail.then(() => {
+      if (dropChains.get(chatId) === tail)
+        dropChains.delete(chatId);
+    });
+    return run;
+  };
+  const dropMessageDataNow = async (chatId, messageId, swipe) => {
     const matches = (historyId) => {
       const p = parseHistoryMessageId(historyId);
       return !!p && p.messageId === messageId && (swipe === undefined || p.swipeIndex === swipe);
     };
-    for (const job of [...messageJobs.values(), ...slotJobs.values()])
-      if (job.target.chatId === chatId && job.target.messageId === messageId && (swipe === undefined || job.target.swipeIndex >= swipe))
-        job.controller.abort("message-removed");
+    const escaped = messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+    const shift = (text) => swipe === undefined ? text : text.replace(new RegExp(`${escaped}@(\\d+)(?![0-9])`, "gu"), (m, n) => Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m);
+    const fate = (key) => {
+      const m = new RegExp(`${escaped}@(\\d+)(?![0-9])`, "u").exec(key);
+      if (!m)
+        return;
+      if (swipe === undefined || Number(m[1]) === swipe)
+        return null;
+      const next = shift(key);
+      return next === key ? undefined : next;
+    };
+    const stopped = [...messageJobs.values(), ...slotJobs.values()].filter((job) => job.target.chatId === chatId && job.target.messageId === messageId && (swipe === undefined || job.target.swipeIndex >= swipe));
+    for (const job of stopped)
+      job.controller.abort("message-removed");
+    await Promise.allSettled(stopped.map((job) => job.done));
+    forgetMessageState(chatId, fate);
     const written = await services.storage.updateChatData(chatId, (doc) => {
       const keys = Object.values(doc.history.messagesByKey).filter((m) => matches(m.messageId)).map((m) => m.messageKey);
       let tree = doc.history;
@@ -68730,28 +68841,13 @@ function createChatPipelineController(services, engine, options = {}) {
         if (matches(key))
           delete doc.store.messages[key];
       storePlanAndTree(doc, null, tree);
-      if (swipe === undefined)
-        return doc;
-      const pattern = new RegExp(`${messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}@(\\d+)(?![0-9])`, "gu");
-      const json = JSON.stringify(doc).replace(pattern, (m, n) => Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m);
-      return JSON.parse(json);
+      return swipe === undefined ? doc : JSON.parse(shift(JSON.stringify(doc)));
     });
-    if (swipe === undefined)
-      await updateSidecar(services.storage, chatId, () => {
-        return;
-      }, written.history).catch(() => {
-        return;
-      });
+    await services.storage.updateJson(sidecarPath(chatId), emptySidecar(), async (current) => pruneSidecar(JSON.parse(shift(JSON.stringify(current))), (await services.storage.loadChatData(chatId)).history)).catch(() => {
+      return;
+    });
+    await dropMessageStrips(services.storage, chatId, messageId, swipe).catch((e) => log("warn", "Webtoon strip cleanup failed", toRpcError(e)));
     if (swipe !== undefined) {
-      const pattern = new RegExp(`${messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}@(\\d+)(?![0-9])`, "gu");
-      await services.storage.updateJson(sidecarPath(chatId), null, (current) => current ? JSON.parse(JSON.stringify(current).replace(pattern, (m, n) => Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m)) : current).catch(() => {
-        return;
-      });
-      await updateSidecar(services.storage, chatId, () => {
-        return;
-      }, written.history).catch(() => {
-        return;
-      });
       const doc = await services.storage.loadChatData(chatId);
       const shifted = Object.values(doc.history.messagesByKey).map((m) => ({ key: m.messageKey, parsed: parseHistoryMessageId(m.messageId) })).filter((m) => m.parsed?.messageId === messageId && m.parsed.swipeIndex >= swipe);
       for (const m of shifted)
@@ -68839,7 +68935,7 @@ function createChatPipelineController(services, engine, options = {}) {
         return;
       }
       const chatIds = [...new Set(files.flatMap((f) => {
-        const m = /(?:^|\/)([^/]+)\/chat-data\.json$/u.exec(f.replace(/\\/gu, "/"));
+        const m = /(?:^|\/)([^/]+)\/(?:chat-data|webtoon\/index)\.json$/u.exec(f.replace(/\\/gu, "/"));
         if (!m)
           return [];
         try {
@@ -68850,6 +68946,9 @@ function createChatPipelineController(services, engine, options = {}) {
       }))];
       for (const chatId of chatIds) {
         try {
+          const strips = await failInterruptedStrips(services.storage, chatId, PIPELINE_TEXT.interrupted.en, (historyId) => messageJobs.has(k(chatId, illustrationMessageKey(historyId))), now);
+          if (strips.length)
+            emitChanged(chatId, strips.map((historyId) => illustrationMessageKey(historyId)));
           const doc = await services.storage.loadChatData(chatId);
           const stale = Object.values(doc.plans).filter((p) => p.status === "generating" && !messageJobs.has(k(chatId, p.key)));
           if (!stale.length)
@@ -68891,6 +68990,8 @@ function createChatPipelineController(services, engine, options = {}) {
       const messages = await loadMessages(services.host, chatId);
       if (!isIllustratableMessage(findMessage(messages, messageId).view, swipeIndex))
         throw new RpcFailure(labelError("not-found", PIPELINE_TEXT.messageMissing));
+      if (messageBusy(chatId, planKey))
+        throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
       const job = startMessageJob({ chatId, messageId, swipeIndex }, planKey, {
         automatic: false,
         ...params.attemptKind ? { attemptKind: params.attemptKind } : {},
@@ -69242,6 +69343,8 @@ function createChatPipelineController(services, engine, options = {}) {
           imageToImageNoise: Math.min(1, Math.max(0, Number(req.noise) || 0))
         } : {}
       };
+      if (messageBusy(chatId, planKey))
+        throw new RpcFailure(rpcError("busy", "Another image operation is running.", { messageKo: "다른 이미지 작업이 진행 중입니다." }));
       proposals.delete(proposalId);
       const job = startMessageJob(target, planKey, { automatic: false, attemptKind: "regenerate", revision }, "revision");
       return { jobId: job.snapshot.jobId };
@@ -69316,15 +69419,19 @@ function createChatPipelineController(services, engine, options = {}) {
     async rerollWebtoonPanel(chatId, messageKey, panelId) {
       const target = targetOfKey(chatId, messageKey);
       const slotId = `webtoon:${panelId}`;
-      const slotKey = k(chatId, slotId);
-      if (slotJobs.has(slotKey))
-        throw new RpcFailure(labelError("busy", WEBTOON_TEXT.busy));
-      if (messageJobs.has(k(chatId, messageKey)))
-        throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
+      const slotKey = webtoonSlotKey(chatId, messageKey, panelId);
+      const busy = () => {
+        if (slotJobs.has(slotKey))
+          throw new RpcFailure(labelError("busy", WEBTOON_TEXT.busy));
+        if (messageJobs.has(k(chatId, messageKey)))
+          throw new RpcFailure(labelError("busy", PIPELINE_TEXT.busy));
+      };
+      busy();
       const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
       if (!doc?.requests[panelId])
         fail2("not-found", `Webtoon panel not found: ${panelId}`);
       const config = await services.storage.loadConfig();
+      busy();
       const job = createJob({ target, planKey: messageKey, kind: "regenerate", attemptKind: "regenerate", slotId, requestedCount: 1 });
       job.webtoonPanel = panelId;
       if (doc.format === "manga")
@@ -69547,9 +69654,10 @@ function createRouter(options) {
         return true;
       const method = rawMethod;
       const meta = { method, requestId, frontendSessionId };
-      const reply = (error) => {
+      const reply = (error, logged = false) => {
         send(userId, errorResponse({ requestId, method }, error));
-        options.onError?.(error, { ...meta, userId });
+        if (!logged)
+          options.onError?.(error, { ...meta, userId });
       };
       if (message.protocol !== RPC_PROTOCOL_VERSION) {
         reply(rpcError("protocol-mismatch", `Protocol ${String(message.protocol)} is not supported (backend speaks ${RPC_PROTOCOL_VERSION}). Reload the page.`, { details: { backend: RPC_PROTOCOL_VERSION, frontend: message.protocol } }));
@@ -69578,11 +69686,14 @@ function createRouter(options) {
         send(userId, okResponse({ requestId, method }, result ?? { ok: true }));
       } catch (error) {
         const rpc = toRpcError(error);
+        let logged = false;
         try {
-          if (rpc.code !== "cancelled")
-            ctx?.log.append(rpc.code === "internal" ? "error" : "warn", "rpc", `${method} failed: ${rpc.message}`, { code: rpc.code, detailCode: rpc.detailCode });
+          if (rpc.code !== "cancelled" && ctx) {
+            ctx.log.append(rpc.code === "internal" ? "error" : "warn", "rpc", `${method} failed: ${rpc.message}`, { code: rpc.code, detailCode: rpc.detailCode });
+            logged = true;
+          }
         } catch {}
-        reply(rpc);
+        reply(rpc, logged);
       }
       return true;
     }
@@ -71951,11 +72062,14 @@ function createSourcesService(deps) {
   const { host, userId } = deps;
   const cache = new TtlCache(SOURCES_CACHE_TTL_MS, 512, deps.now ?? Date.now);
   const log = (level, message, details) => deps.log?.append(level, "sources", message, details);
+  let generation = 0;
   async function cached(key, load) {
     const hit = cache.get(key);
     if (hit !== undefined)
       return hit;
-    return cache.set(key, await load());
+    const started = generation;
+    const value = await load();
+    return started === generation ? cache.set(key, value) : value;
   }
   async function paged(load) {
     const out = [];
@@ -72314,6 +72428,7 @@ function createSourcesService(deps) {
       });
     },
     invalidate(characterId) {
+      generation += 1;
       if (!characterId) {
         cache.clear();
         return;
@@ -72349,6 +72464,11 @@ function createStorageService(host, userId, options = {}) {
   const now = options.now ?? (() => new Date);
   let schemaChecked = null;
   let configCache = null;
+  let configGeneration = 0;
+  const setConfigCache = (state) => {
+    configCache = state;
+    configGeneration += 1;
+  };
   const log = (level, message, details) => options.log?.append(level, "storage", message, details);
   async function readRaw(path) {
     let text;
@@ -72416,6 +72536,7 @@ function createStorageService(host, userId, options = {}) {
   async function loadConfigState() {
     if (configCache)
       return configCache;
+    const generation = configGeneration;
     const parts = {};
     const stored = {};
     const tooNew = new Set;
@@ -72428,15 +72549,18 @@ function createStorageService(host, userId, options = {}) {
       if (read.tooNew)
         tooNew.add(path);
     }
-    configCache = { config: mergeStoredConfig(parts), stored, tooNew };
-    return configCache;
+    const state = { config: mergeStoredConfig(parts), stored, tooNew };
+    if (generation !== configGeneration)
+      return configCache ?? state;
+    configCache = state;
+    return state;
   }
   function withVersion(kind, value) {
     return { ...value, version: STORAGE_FILE_VERSIONS[kind] };
   }
   const service = {
     invalidateCache() {
-      configCache = null;
+      setConfigCache(null);
     },
     async readJson(path, fallback) {
       const raw = await readRaw(normalizePath(path));
@@ -72525,7 +72649,7 @@ function createStorageService(host, userId, options = {}) {
           await writeRaw(path, value);
           stored[part] = text;
         }
-        configCache = { config: next, stored, tooNew: state.tooNew };
+        setConfigCache({ config: next, stored, tooNew: state.tooNew });
         return next;
       });
       options.events?.emit("config.changed", { config: jsonClone2(config) });
@@ -72571,7 +72695,7 @@ function createStorageService(host, userId, options = {}) {
       const path = STORAGE_PATHS.characterDocument(characterId);
       const read = await readVersioned("character-document", path);
       if (read.value === undefined)
-        return createEmptyCharacterDocument(characterId, now());
+        return createEmptyCharacterDocument(characterId, new Date(0));
       const normalized = normalizeCharacterDocument(read.value, characterId);
       if (normalized.issues.length)
         log("warn", `Character document ${characterId} was repaired on load.`, normalized.issues.slice(0, 20));
@@ -72644,7 +72768,7 @@ function createStorageService(host, userId, options = {}) {
             throw storageFailure(`Could not delete ${prefix}.`, error);
           }
         }
-        configCache = null;
+        setConfigCache(null);
         schemaChecked = null;
       });
       log("info", "Factory reset: all Inlay Illustrator settings and data were deleted.");
