@@ -273,8 +273,9 @@ export function CharxSettingsPage({ scope }: { scope: CharxScope }) {
           <Switch aria-label={X.fixedResolutionUse} checked={values.fixedResolution.enabled}
             onCheckedChange={(checked) => void write({ fixedResolution: { enabled: checked, sizeId: values.fixedResolution.sizeId } })} />
         </Row>
-        <ToggleRow title={X.aiChoice.title} description={X.aiChoice.description} marker={marker("forceAiChoiceCoordinates")} checked={values.forceAiChoiceCoordinates}
-          onChange={(checked) => void write({ forceAiChoiceCoordinates: checked })} field="forceAiChoiceCoordinates" />
+        {/* AM 0.9.89.3+ (180633): the switch shows the inverse of forceAiChoiceCoordinates (on = analyzer coordinates). */}
+        <ToggleRow title={X.aiChoice.title} description={X.aiChoice.description} marker={marker("forceAiChoiceCoordinates")} checked={!values.forceAiChoiceCoordinates}
+          onChange={(checked) => void write({ forceAiChoiceCoordinates: !checked })} field="forceAiChoiceCoordinates" />
         <Row title={X.nativeAssets.title} titleEnd={marker("nativeAssetVisibility")} description={X.nativeAssets.description} data-charx-field="nativeAssetVisibility">
           <div class="inline-flex h-8 items-center rounded-md bg-surface-control p-1 max-md:h-11" role="group" aria-label={X.nativeAssets.title}>
             {(["hidden", "shown"] as const).map((option) => (

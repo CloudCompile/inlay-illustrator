@@ -138,7 +138,7 @@ export const CHARX_LABELS = {
   customSize: "Custom", // 커스텀
   sizeLabel: (kind: "square" | "landscape" | "portrait", width: number, height: number) =>
     `${kind === "square" ? "Square" : kind === "landscape" ? "Landscape" : "Portrait"} ${width} × ${height}`, // 정사각형/가로/세로 W × H
-  aiChoice: { title: "Character coordinates AI Choice", description: "Lets NovelAI decide character coordinates automatically." }, // 캐릭터 좌표 AI Choice
+  aiChoice: { title: "Analysis AI assigns character coordinates", description: "On: the analysis AI places each character. Off: NovelAI decides automatically." }, // 분석 AI가 캐릭터 좌표 지정
   nativeAssets: { title: "Show existing character assets", description: "Hides or shows the existing character images in chat." }, // 기존 charx 에셋 표시
   hide: "Hide", // 숨김
   show: "Show", // 표시

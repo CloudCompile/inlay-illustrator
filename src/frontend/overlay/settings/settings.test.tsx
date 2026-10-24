@@ -295,6 +295,19 @@ describe("settings pages (DOM)", () => {
     controller.destroy();
   });
 
+  test("coordinates switch is on when the analysis AI assigns coordinates (AM 0.9.89.3+: inverse of forceAiChoiceCoordinates)", async () => {
+    const { mock, controller } = await openSettings("charx");
+    const row = '[data-charx-field="forceAiChoiceCoordinates"]';
+    const toggle = (await until(() => doc.querySelector(`${row} [role="switch"]`))) as HTMLButtonElement;
+    expect(doc.querySelector(row)?.textContent).toContain("Analysis AI assigns character coordinates");
+    // Default forceAiChoiceCoordinates = true (NovelAI decides) -> switch off.
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    toggle.click();
+    await until(() => doc.querySelector(row)?.textContent?.includes("Custom"));
+    expect(mock.db.documents["char-seoyeon"]!.characterPrompt.charxSettings.overrides["char-seoyeon"]).toMatchObject({ forceAiChoiceCoordinates: false });
+    controller.destroy();
+  });
+
   test("charx regex rows: add, edit and delete detectors through charxRegex.setDetectors", async () => {
     const { mock, controller } = await openSettings("charx");
     const enabled = (selector: string) => until(() => { const b = doc.querySelector(selector) as HTMLButtonElement | null; return b && !b.disabled && b; });
