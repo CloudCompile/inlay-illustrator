@@ -9,12 +9,13 @@ function group(promptKey: string, outfit: string, extra: Partial<AutoPickGroup> 
 }
 
 describe("auto-pick contact sheets", () => {
-  test("untagged groups of the chosen characters, 25 tiles per sheet and 4 sheets per job", () => {
+  test("untagged, not name-nude groups of the chosen characters, 25 tiles per sheet and 4 sheets per job", () => {
     const many = Array.from({ length: 130 }, (_, i) => group("a", `o${i}`));
-    const others = [group("b", "x"), group("", "lost"), group("a", "done", { tags: {} as AutoPickGroup["tags"] })];
+    const others = [group("b", "x"), group("", "lost"), group("a", "done", { tags: {} as AutoPickGroup["tags"] }), group("a", "nude", { nude: true })];
     const jobs = planSheets([...many, ...others], new Set(["a"]), () => 0);
     expect(jobs.map((job) => job.map((sheet) => sheet.length))).toEqual([[25, 25, 25, 25], [25, 5]]);
-    expect(jobs.flat(2).some((t) => t.groupId === others[2]!.id || t.groupId === others[1]!.id || t.groupId === others[0]!.id)).toBe(false);
+    // Other characters, unknown characters, tagged groups and groups named nude get no tile.
+    expect(jobs.flat(2).some((t) => others.some((g) => g.id === t.groupId))).toBe(false);
   });
 
   test("the chosen candidate is tiled from the 700 px thumbnail", () => {

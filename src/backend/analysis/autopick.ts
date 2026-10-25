@@ -43,6 +43,7 @@ import {
 } from "../../shared/contract/index.js";
 import { fail, isAbortLike } from "../rpc/errors.js";
 import type { AmSource, BackendServices, CharacterImageAsset, LlmMessage } from "../services/types.js";
+import { partChunks, partGarments } from "../pipeline/outfit-garments.js";
 import { readSidecar } from "../pipeline/records.js";
 import { loadAmConfigParts } from "./bridge/config-store.js";
 import { amFn } from "./core/index.js";
@@ -358,7 +359,7 @@ Return JSON only: {"tiles":[...]} with one entry per tile, in number order:
  "legs_visible": true when the legs below the knees are visible, "feet_visible": true when the feet are visible,
  "nude": true when the person wears no clothing on the torso and hips,
  "explicit": true for sexual activity or exposed genitals,
- "outfit": {"head": "", "top": "", "bottom": "", "legs": "", "feet": ""} garments the image shows, as short comma-separated tags with colors (legwear such as thighhighs or pantyhose goes in legs when it shows on the thighs); "" when nothing is worn there or the body part is not visible. Never take garments from outfit_text here.
+ "outfit": {"head": "", "top": "", "bottom": "", "legs": "", "feet": ""} garments the image shows, as short comma-separated tags with colors; "" when nothing is worn there or the body part is not visible. Each garment goes in exactly one part: hats, glasses and hair ornaments head; dresses, leotards, bodysuits and other one-pieces top; separate skirts, shorts, pants and leggings bottom; hosiery (socks, thighhighs, stockings, tights, pantyhose) legs; footwear, boots included, feet. Never take garments from outfit_text here.
  "text_legs", "text_feet": the legwear / footwear that outfit_text names for THIS outfit as short tags with colors, "" when it names none or describes a different outfit. Never take these from the image.
  "label": a 2-5 word English name for the outfit ("" for nude)}`;
 
@@ -383,9 +384,35 @@ export function outfitText(group: AutoPickGroup, roster: RosterItem[]): string {
 
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
+/** Pants-like bottoms: a copy of one in legs is the same garment, which stays in bottom (hosiery stays in legs). */
+const TROUSERS = /^(?:\w*pants|jeans|leggings|shorts|overalls|jumpsuit|hakama|skirt)$/;
+const FOOTWEAR = /(?:shoe|boot|heel|sneaker|loafer|sandal|slipper|pump|flat|jane|clog|geta|zori|uwabaki)s?$/;
+
+/**
+ * One garment, one part (Asset Maid's rule: one-pieces top, separate bottoms bottom, hosiery legs, footwear feet). A
+ * garment the model repeats in two parts ("white leggings" in bottom and legs, a leotard in top and bottom) is kept once.
+ */
+export function dedupeParts(outfit: AutoPickParts): AutoPickParts {
+  const chunks = Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, partChunks(outfit[p])])) as Record<(typeof AUTOPICK_PARTS)[number], string[]>;
+  const key = (chunk: string) => partGarments(chunk).map((g) => `${[...g.colors].sort().join("+")} ${g.noun}`).sort().join("|") || squash(chunk);
+  const noun = (chunk: string) => partGarments(chunk).at(-1)?.noun ?? "";
+  AUTOPICK_PARTS.forEach((a, i) => {
+    for (const b of AUTOPICK_PARTS.slice(i + 1)) {
+      for (const chunk of [...chunks[b]]) {
+        const twin = chunks[a].find((c) => key(c) === key(chunk));
+        if (!twin) continue;
+        const later = (a === "bottom" && b === "legs" && !TROUSERS.test(noun(chunk))) || (a === "legs" && b === "feet" && FOOTWEAR.test(noun(chunk)));
+        if (later) chunks[a] = chunks[a].filter((c) => c !== twin);
+        else chunks[b] = chunks[b].filter((c) => c !== chunk);
+      }
+    }
+  });
+  return Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, chunks[p].join(", ")])) as unknown as AutoPickParts;
+}
+
 function parseTile(t: Record<string, unknown>, candidate: number): AutoPickTags {
   const o = (t.outfit && typeof t.outfit === "object" ? t.outfit : {}) as Record<string, unknown>;
-  const outfit = Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, str(o[p])])) as unknown as AutoPickParts;
+  const outfit = dedupeParts(Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, str(o[p])])) as unknown as AutoPickParts);
   return {
     candidate,
     framing: str(t.framing),

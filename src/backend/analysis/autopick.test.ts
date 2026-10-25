@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createEmptyCharacterDocument, proposedParts, resolveCharacterForms, type AutoPickTags } from "../../shared/contract/index.js";
 import type { AmSource, CharacterImageAsset, LlmCompleteRequest } from "../services/types.js";
 import { AnalysisJobs } from "./jobs.js";
-import { AUTOPICK_PATH, applyAutoPick, getAutoPick, namedAssets, outfitText, readAutoPickState, representativeScore, runOutfitAutoPick } from "./autopick.js";
+import { AUTOPICK_PATH, applyAutoPick, dedupeParts, getAutoPick, namedAssets, outfitText, readAutoPickState, representativeScore, runOutfitAutoPick } from "./autopick.js";
 import { ALICE, BOB, CHAR, asset, buildTestSource, createAnalysisFixture, lore } from "./testing/fixtures.js";
 import { projectRoster } from "./workspace.js";
 
@@ -124,6 +124,23 @@ describe("outfit auto-picker: plan", () => {
 });
 
 describe("outfit auto-picker: tag", () => {
+  test("each garment stays in one part: one-pieces top, separate bottoms bottom, hosiery legs, footwear feet", () => {
+    const parts = (p: Partial<Record<"head" | "top" | "bottom" | "legs" | "feet", string>>) => ({ head: "", top: "", bottom: "", legs: "", feet: "", ...p });
+    // Live argon output for a sportswear sprite: the leggings are the bottom.
+    expect(dedupeParts(parts({ top: "black cropped tank top", bottom: "white striped leggings, black jacket tied around waist", legs: "white striped leggings" })))
+      .toEqual(parts({ top: "black cropped tank top", bottom: "white striped leggings, black jacket tied around waist" }));
+    // A leotard repeated as bottom stays in top; the pantyhose stay in legs.
+    expect(dedupeParts(parts({ top: "pink bunny leotard, white collar", bottom: "pink bunny leotard", legs: "sheer white pantyhose" })))
+      .toEqual(parts({ top: "pink bunny leotard, white collar", legs: "sheer white pantyhose" }));
+    // Tights under a skirt are hosiery; boots are footwear even when tagged on the legs too.
+    expect(dedupeParts(parts({ bottom: "black skirt, black tights", legs: "black tights" }))).toEqual(parts({ bottom: "black skirt", legs: "black tights" }));
+    expect(dedupeParts(parts({ legs: "black thighhigh boots", feet: "black thigh-high boots" }))).toEqual(parts({ feet: "black thigh-high boots" }));
+    expect(dedupeParts(parts({ legs: "white socks", feet: "white socks, brown loafers" }))).toEqual(parts({ legs: "white socks", feet: "brown loafers" }));
+    // Different garments are left alone.
+    const different = parts({ bottom: "black leggings", legs: "white leggings", feet: "black boots" });
+    expect(dedupeParts(different)).toEqual(different);
+  });
+
   test("outfit text: own lines naming the outfit, then entries titled after the character, else clothing sentences", () => {
     const roster = projectRoster(source(), createEmptyCharacterDocument(CHAR, new Date(0)));
     const group = (promptKey: string, outfit: string) => ({ id: "", promptKey, characterToken: "", outfit, nude: false, assetCount: 1, candidates: [] });

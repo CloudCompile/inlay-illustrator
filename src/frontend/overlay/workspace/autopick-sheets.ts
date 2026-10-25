@@ -6,10 +6,13 @@ import { AUTOPICK_SHEETS_PER_JOB, AUTOPICK_TILES_PER_SHEET, type AutoPickCandida
 
 export interface SheetTile { groupId: string; candidate: number; url: string }
 
-/** Untagged groups of the chosen characters, 25 tiles per sheet, `AUTOPICK_SHEETS_PER_JOB` sheets per job. */
+/**
+ * Untagged groups of the chosen characters, 25 tiles per sheet, `AUTOPICK_SHEETS_PER_JOB` sheets per job. Groups whose
+ * file names already say nude are left out: a tile would only confirm that (no garments, no label).
+ */
 export function planSheets(groups: AutoPickGroup[], promptKeys: ReadonlySet<string>, candidateOf: (group: AutoPickGroup) => number): SheetTile[][][] {
   const tiles = groups
-    .filter((g) => g.promptKey && promptKeys.has(g.promptKey) && !g.tags && g.candidates.length)
+    .filter((g) => g.promptKey && promptKeys.has(g.promptKey) && !g.tags && !g.nude && g.candidates.length)
     .map((g) => {
       const candidate = Math.min(candidateOf(g), g.candidates.length - 1);
       return { groupId: g.id, candidate, url: tileUrl(g.candidates[candidate]!) };

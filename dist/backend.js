@@ -59311,39 +59311,6 @@ async function setCharxRegexDetectors(services, characterId, detectors) {
   return { analysis: config.characterPrompt.charxAssetRegexAnalysis[characterId] };
 }
 
-// src/backend/pipeline/records.ts
-function sidecarPath(chatId) {
-  return `${STORAGE_PATHS.chatDir(chatId)}pipeline.json`;
-}
-function emptySidecar() {
-  return { schema: "inlay-illustrator.pipeline", version: 1, records: {}, drafts: {} };
-}
-function normalize(raw) {
-  const r = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  const obj = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-  return { ...emptySidecar(), records: obj(r.records), drafts: obj(r.drafts) };
-}
-async function readSidecar(storage, chatId) {
-  return normalize(await storage.readJson(sidecarPath(chatId), emptySidecar()));
-}
-async function updateSidecar(storage, chatId, mutate, tree) {
-  return storage.updateJson(sidecarPath(chatId), emptySidecar(), (current) => {
-    const next = normalize(current);
-    mutate(next);
-    return tree ? pruneSidecar(next, tree) : next;
-  });
-}
-function pruneSidecar(raw, tree) {
-  const next = normalize(raw);
-  for (const id of Object.keys(next.records))
-    if (!tree.entriesById[id])
-      delete next.records[id];
-  for (const id of Object.keys(next.drafts))
-    if (!tree.slotsById[id])
-      delete next.drafts[id];
-  return next;
-}
-
 // src/backend/pipeline/outfit-garments.ts
 var OUTFIT_PARTS2 = ["head", "top", "bottom", "legs", "feet"];
 var WEIGHTED = /^\s*-?\d+(?:\.\d+)?::([\s\S]*?)::\s*$/;
@@ -59583,6 +59550,39 @@ function sameOutfit(registered, proposal) {
     shared += 1;
   }
   return shared > 0;
+}
+
+// src/backend/pipeline/records.ts
+function sidecarPath(chatId) {
+  return `${STORAGE_PATHS.chatDir(chatId)}pipeline.json`;
+}
+function emptySidecar() {
+  return { schema: "inlay-illustrator.pipeline", version: 1, records: {}, drafts: {} };
+}
+function normalize(raw) {
+  const r = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const obj = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  return { ...emptySidecar(), records: obj(r.records), drafts: obj(r.drafts) };
+}
+async function readSidecar(storage, chatId) {
+  return normalize(await storage.readJson(sidecarPath(chatId), emptySidecar()));
+}
+async function updateSidecar(storage, chatId, mutate, tree) {
+  return storage.updateJson(sidecarPath(chatId), emptySidecar(), (current) => {
+    const next = normalize(current);
+    mutate(next);
+    return tree ? pruneSidecar(next, tree) : next;
+  });
+}
+function pruneSidecar(raw, tree) {
+  const next = normalize(raw);
+  for (const id of Object.keys(next.records))
+    if (!tree.entriesById[id])
+      delete next.records[id];
+  for (const id of Object.keys(next.drafts))
+    if (!tree.slotsById[id])
+      delete next.drafts[id];
+  return next;
 }
 
 // src/backend/analysis/outfit-evidence.ts
@@ -60386,7 +60386,7 @@ Return JSON only: {"tiles":[...]} with one entry per tile, in number order:
  "legs_visible": true when the legs below the knees are visible, "feet_visible": true when the feet are visible,
  "nude": true when the person wears no clothing on the torso and hips,
  "explicit": true for sexual activity or exposed genitals,
- "outfit": {"head": "", "top": "", "bottom": "", "legs": "", "feet": ""} garments the image shows, as short comma-separated tags with colors (legwear such as thighhighs or pantyhose goes in legs when it shows on the thighs); "" when nothing is worn there or the body part is not visible. Never take garments from outfit_text here.
+ "outfit": {"head": "", "top": "", "bottom": "", "legs": "", "feet": ""} garments the image shows, as short comma-separated tags with colors; "" when nothing is worn there or the body part is not visible. Each garment goes in exactly one part: hats, glasses and hair ornaments head; dresses, leotards, bodysuits and other one-pieces top; separate skirts, shorts, pants and leggings bottom; hosiery (socks, thighhighs, stockings, tights, pantyhose) legs; footwear, boots included, feet. Never take garments from outfit_text here.
  "text_legs", "text_feet": the legwear / footwear that outfit_text names for THIS outfit as short tags with colors, "" when it names none or describes a different outfit. Never take these from the image.
  "label": a 2-5 word English name for the outfit ("" for nude)}`;
 function outfitText(group, roster) {
@@ -60412,9 +60412,31 @@ function outfitText(group, roster) {
   return own?.content ? clothingSentences(own.content, 500).join(" ") : "";
 }
 var str2 = (v) => typeof v === "string" ? v.trim() : "";
+var TROUSERS = /^(?:\w*pants|jeans|leggings|shorts|overalls|jumpsuit|hakama|skirt)$/;
+var FOOTWEAR2 = /(?:shoe|boot|heel|sneaker|loafer|sandal|slipper|pump|flat|jane|clog|geta|zori|uwabaki)s?$/;
+function dedupeParts(outfit) {
+  const chunks = Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, partChunks(outfit[p])]));
+  const key = (chunk) => partGarments(chunk).map((g) => `${[...g.colors].sort().join("+")} ${g.noun}`).sort().join("|") || squash(chunk);
+  const noun = (chunk) => partGarments(chunk).at(-1)?.noun ?? "";
+  AUTOPICK_PARTS.forEach((a, i) => {
+    for (const b of AUTOPICK_PARTS.slice(i + 1)) {
+      for (const chunk of [...chunks[b]]) {
+        const twin = chunks[a].find((c) => key(c) === key(chunk));
+        if (!twin)
+          continue;
+        const later = a === "bottom" && b === "legs" && !TROUSERS.test(noun(chunk)) || a === "legs" && b === "feet" && FOOTWEAR2.test(noun(chunk));
+        if (later)
+          chunks[a] = chunks[a].filter((c) => c !== twin);
+        else
+          chunks[b] = chunks[b].filter((c) => c !== chunk);
+      }
+    }
+  });
+  return Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, chunks[p].join(", ")]));
+}
 function parseTile(t, candidate) {
   const o = t.outfit && typeof t.outfit === "object" ? t.outfit : {};
-  const outfit = Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, str2(o[p])]));
+  const outfit = dedupeParts(Object.fromEntries(AUTOPICK_PARTS.map((p) => [p, str2(o[p])])));
   return {
     candidate,
     framing: str2(t.framing),

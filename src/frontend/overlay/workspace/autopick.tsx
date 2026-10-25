@@ -64,7 +64,7 @@ function GroupCard({ group, value, disabled, onChange }: { group: AutoPickGroup;
         </button>
         <div class="pointer-events-none absolute top-1 left-1 flex flex-wrap gap-1">
           {group.appliedOutfitId ? <OverlayBadge tone="success">{L.added}</OverlayBadge> : null}
-          {!group.tags ? <OverlayBadge>{L.untagged}</OverlayBadge> : null}
+          {!group.tags && !group.nude ? <OverlayBadge>{L.untagged}</OverlayBadge> : null}
           {group.nude || group.tags?.nude ? <OverlayBadge tone="warning">{L.nude}</OverlayBadge> : null}
           {group.tags?.explicit ? <OverlayBadge tone="danger">{L.explicit}</OverlayBadge> : null}
         </div>
