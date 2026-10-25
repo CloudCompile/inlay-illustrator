@@ -402,7 +402,8 @@ export const ANALYZER_ERROR_LABELS = {
     "metadata-check": "Asset metadata check error",
     reclassification: "AI reclassification error",
     "unique-tag-search": "Unique tag search error",
-    "representative-pick": "Representative image error"
+    "representative-pick": "Representative image error",
+    "outfit-autopick": "Outfit auto-pick error"
   } as Record<AnalysisKind, string>,
   /** Statuses that open the modal (AM skips idle, running and cancelled). */
   errorStatuses: ["error"] as JobStatus[]

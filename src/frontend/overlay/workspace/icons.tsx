@@ -27,6 +27,7 @@ export const KeyIcon = (p: IconProps) => <Icon {...p}><circle cx="7.5" cy="15.5"
 export const TagIcon = (p: IconProps) => <Icon {...p}><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z" /><circle cx="7.5" cy="7.5" r=".5" /></Icon>;
 export const TypeIcon = (p: IconProps) => <Icon {...p}><path d="M4 7V4h16v3" /><path d="M9 20h6" /><path d="M12 4v16" /></Icon>;
 export const ShuffleIcon = (p: IconProps) => <Icon {...p}><path d="m18 14 4 4-4 4" /><path d="m18 2 4 4-4 4" /><path d="M2 18h1.97a4 4 0 0 0 3.3-1.7l5.45-8.6a4 4 0 0 1 3.3-1.7H22" /><path d="M2 6h1.97a4 4 0 0 1 3.3 1.7l.43.7" /><path d="M22 18h-5.9a4 4 0 0 1-3.3-1.7l-.4-.7" /></Icon>;
+export const LayoutGridIcon = (p: IconProps) => <Icon {...p}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></Icon>;
 export const PlayIcon = (p: IconProps) => <Icon {...p}><path d="M6 3l14 9-14 9z" /></Icon>;
 export const UploadIcon = (p: IconProps) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m17 8-5-5-5 5" /><path d="M12 3v12" /></Icon>;
 export const MinusIcon = (p: IconProps) => <Icon {...p}><path d="M5 12h14" /></Icon>;

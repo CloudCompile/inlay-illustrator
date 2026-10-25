@@ -28,6 +28,7 @@ import {
 import { assetUrl, clearMetadataRecords, clearSelections, inspectMetadata, listAssets, saveCrop, setReference, setSelection, uploadAsset } from "../../analysis/assets.js";
 import type { AnalysisController } from "../../analysis/index.js";
 import { setCharxRegexDetectors } from "../../analysis/charx-regex.js";
+import { applyAutoPick, getAutoPick } from "../../analysis/autopick.js";
 
 function analysis(ctx: RpcContext): AnalysisController {
   const module = (ctx.modules as { analysis?: AnalysisController }).analysis;
@@ -142,6 +143,8 @@ export const workspaceHandlers: HandlerGroup = {
     return { ok: true };
   },
   "analysis.listActive": (_p, ctx) => ({ jobs: analysis(ctx).listActive() }),
+  "autopick.get": (p, ctx) => getAutoPick(ctx, { characterId: requireId(p.characterId, "characterId"), ...(p.chatId ? { chatId: p.chatId } : {}) }),
+  "autopick.apply": (p, ctx) => applyAutoPick(ctx, { characterId: requireId(p.characterId, "characterId"), items: Array.isArray(p.items) ? p.items : [] }),
   "uniqueTags.apply": async (p, ctx) => {
     await applyUniqueTags(ctx, requireId(p.characterId, "characterId"), p.choices ?? []);
     return { ok: true };

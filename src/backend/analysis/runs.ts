@@ -14,6 +14,7 @@
  * | representative-pick | `Fve` L134052 (no LLM) + toast `ewt` L134836              | L155676                       |
  * | reclassification    | `dhe` L98781 with the prompts adapter `Ddt` L107990 (personas: `oIt` L149087) | Prompts tab L154235 |
  * | charx-regex         | `h0t.analyzeRegex` L138174, scripts = Lumiverse regex scripts | settings                  |
+ * | outfit-autopick     | Inlay addition (autopick.ts): naming scheme + contact sheets, no AM controller | Prompts tab |
  * | unique-tag-search   | dropped (Danbooru HF space, PORT-PLAN) -> unsupported     |                               |
  */
 import { rpcError, type AnalysisStartParams, type JobStatus, type ProgressInfo, type RowNotice } from "../../shared/contract/index.js";
@@ -23,6 +24,7 @@ import { buildPersonaCatalog, createAmAnalyzer, openAnalysisSession, rememberVis
 import { amLabel, amMessage } from "./labels.js";
 import type { JobContext, JobOutcome } from "./jobs.js";
 import { runCharxRegex } from "./charx-regex.js";
+import { runOutfitAutoPick } from "./autopick.js";
 import { loreBodiesByPromptKey, withOutfitEvidence } from "./outfit-evidence.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -376,10 +378,12 @@ export async function runAnalysis(ctx: JobContext, params: AnalysisStartParams):
       return runReclassification(ctx, params);
     case "charx-regex":
       return runCharxRegex(ctx, { force: params.force === true });
+    case "outfit-autopick":
+      return runOutfitAutoPick(ctx, params);
     default:
       return fail("unsupported", `Analysis kind "${params.kind}" is not available in this version.`);
   }
 }
 
 /** Kinds `analysis.start` accepts (validated before a job is created). */
-export const SUPPORTED_ANALYSIS_KINDS = new Set(["character-prompts", "references", "persona", "asset-matching", "metadata-check", "artist-extraction", "representative-pick", "reclassification", "charx-regex"]);
+export const SUPPORTED_ANALYSIS_KINDS = new Set(["character-prompts", "references", "persona", "asset-matching", "metadata-check", "artist-extraction", "representative-pick", "reclassification", "charx-regex", "outfit-autopick"]);

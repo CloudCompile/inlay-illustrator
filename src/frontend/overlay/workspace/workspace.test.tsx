@@ -145,6 +145,38 @@ describe("prompts tab", () => {
     expect(byLabel(aside, "Add outfit").hasAttribute("disabled")).toBe(true);
     unmount();
   });
+
+  test("auto-pick: scans names, reviews a tagged group and adds it as an outfit with its reference", async () => {
+    const { root, mock, characterId, unmount } = await mount("prompts");
+    const buttonText = (text: string) => [...root.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent?.trim() === text);
+    byLabel(root, "Auto-pick outfits from card images").click();
+    (await until(() => buttonText("Scan image names"), "scan button")).click();
+    const section = await until(() => root.querySelector("[data-autopick-character]"), "character section");
+    const state = workspaceMockState(mock.db).autopick[characterId]!;
+    const group = state.groups.find((g) => g.promptKey === section.getAttribute("data-autopick-character"))!;
+    expect(root.querySelector("[data-autopick-toolbar]")!.textContent).toContain(`Tag ${state.groups.length} outfit`);
+    // Simulate a finished tag job, then reopen: the review shows the image's garments and the text's legwear.
+    state.groups = state.groups.map((g) => (g.id === group.id ? { ...g, tags: { candidate: 0, framing: "cowboy shot", nude: false, explicit: false, legsVisible: false, feetVisible: true, label: "Sailor", outfit: { head: "", top: "white blouse", bottom: "navy skirt", legs: "", feet: "brown loafers" }, textLegs: "black thighhighs", textFeet: "white sneakers", taggedAt: "" } } : g));
+    buttonText("Close")!.click();
+    await wait();
+    byLabel(root, "Auto-pick outfits from card images").click();
+    const card = await until(() => [...root.querySelectorAll("[data-autopick-group]")].find((e) => e.getAttribute("data-autopick-group") === group.id), "group card");
+    const field = (label: string) => [...card.querySelectorAll<HTMLInputElement>("input")].find((i) => i.getAttribute("aria-label") === label)!;
+    await until(() => field("Legs")?.value === "black thighhighs", "tags shown");
+    expect(field("Feet").value).toBe("brown loafers");
+    expect(card.textContent).toContain("text");
+    const name = field("Outfit name");
+    name.value = "Sailor uniform";
+    name.dispatchEvent(new win.Event("input", { bubbles: true }) as unknown as Event);
+    await wait();
+    (await until(() => buttonText("Add 1 outfit"), "add button")).click();
+    await until(() => state.groups.find((g) => g.id === group.id)?.appliedOutfitId, "applied");
+    const outfits = documentFor(mock.db, characterId).characterPrompt.characterForms[group.promptKey]!.forms[0]!.outfits;
+    const outfit = outfits.find((o) => o.label === "Sailor uniform")!;
+    expect(outfit).toMatchObject({ top: "white blouse", bottom: "navy skirt", legs: "black thighhighs", feet: "brown loafers", referenceEnabled: true });
+    expect(outfit.referenceAsset?.name).toBe(group.candidates[0]!.asset.name);
+    unmount();
+  });
 });
 
 describe("persona tab", () => {

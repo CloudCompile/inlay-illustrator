@@ -29,6 +29,7 @@ import type { CharxSettingField } from "./character.js";
 import type { GenerationOrigin, HistoryTree } from "./history.js";
 import type { ChatMessageUiState } from "./chat-dom.js";
 import type { WebtoonStripView } from "./webtoon.js";
+import type { AutoPickApplyItem, AutoPickSheet, AutoPickState } from "./autopick.js";
 
 export const RPC_PROTOCOL_VERSION = 1;
 /** Message `type` used on the Spindle frontend/backend channel. */
@@ -134,7 +135,8 @@ export type AnalysisKind =
   | "reclassification" // AM prompt partitions (ope session)
   | "unique-tag-search" // AM Oct session (Danbooru character tag)
   | "representative-pick" // AM sve (no LLM)
-  | "charx-regex"; // AM charxRegexAnalysis (detect asset tokens in the character's regex scripts)
+  | "charx-regex" // AM charxRegexAnalysis (detect asset tokens in the character's regex scripts)
+  | "outfit-autopick"; // Inlay addition: outfits with reference images from the card's asset names (autopick.ts)
 /** One charx asset regex detector (AM `charxAssetRegexAnalysis[id].detectors[]`, `sH` 120727: `new RegExp(in, flags)`). */
 export interface CharxRegexDetector { /** Pattern source (AM `in`). */ in: string; flags?: string; scriptName?: string; scriptIndex?: number; source?: "manual" | "script"; [key: string]: unknown }
 /** AM `charxAssetRegexAnalysis[characterId]` (status done/manual enables the detectors). */
@@ -158,6 +160,8 @@ export interface AnalysisStartParams {
   selection?: unknown;
   /** artist-extraction: image to read. */
   asset?: AssetRef;
+  /** outfit-autopick: "plan" reads the naming scheme and groups the assets; "tag" reads the contact sheets. */
+  autopick?: { phase: "plan" | "tag"; sheets?: AutoPickSheet[] };
 }
 
 export interface ProgressInfo {
@@ -443,6 +447,10 @@ export interface RpcMethods {
   "analysis.start": { params: AnalysisStartParams; result: { jobId: string } };
   "analysis.cancel": { params: { jobId?: string; kind?: AnalysisKind }; result: Ok };
   "analysis.listActive": { params: Empty; result: { jobs: { jobId: string; kind: AnalysisKind; characterId: string; status: JobStatus; progress: ProgressInfo }[] } };
+  /** Outfit auto-picker state; `seenPromptKeys` = prompt keys of this character's actors in `chatId`'s images. */
+  "autopick.get": { params: { characterId: string; chatId?: string }; result: { state: AutoPickState; seenPromptKeys: string[] } };
+  /** Add accepted groups as outfits (reference image = the chosen candidate) to their prompt key's default form. */
+  "autopick.apply": { params: { characterId: string; items: AutoPickApplyItem[] }; result: { added: number; skipped: number; state: AutoPickState } };
   /** Unique tag search: write the chosen Danbooru tag into `identity.character_tag`. */
   "uniqueTags.apply": { params: { characterId: string; choices: { promptKey: string; formId: string; tag: string }[] }; result: Ok };
 
@@ -605,7 +613,7 @@ export const RPC_METHODS = [
   "customCharacters.create", "customCharacters.update", "customCharacters.remove", "customCharacters.setRosterRegistered", "customCharacters.setWorkspaceEnabled", "customCharacters.promote",
   "prompts.saveForms", "prompts.setReferenceEnabled", "prompts.setAnalyzeEnabled", "prompts.setSeed", "prompts.setFramingWeights",
   "assets.list", "assets.setSelection", "assets.clearSelections", "assets.setReference", "assets.inspectMetadata", "assets.clearMetadataRecords", "assets.upload", "assets.saveCrop", "assets.getUrl",
-  "analysis.start", "analysis.cancel", "analysis.listActive", "uniqueTags.apply",
+  "analysis.start", "analysis.cancel", "analysis.listActive", "autopick.get", "autopick.apply", "uniqueTags.apply",
   "artists.list", "artists.upsertNovelAI", "artists.deleteNovelAI", "artists.upsertAnima", "artists.deleteAnima", "artists.select",
   "personas.list", "personas.saveForms", "personas.setSettings",
   "outfitImage.generate", "outfitImage.history", "outfitImage.save",

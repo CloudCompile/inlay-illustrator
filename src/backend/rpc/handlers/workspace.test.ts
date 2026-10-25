@@ -17,7 +17,7 @@ const WORKSPACE_METHODS = [
   "customCharacters.create", "customCharacters.update", "customCharacters.remove", "customCharacters.setRosterRegistered", "customCharacters.setWorkspaceEnabled", "customCharacters.promote",
   "prompts.saveForms", "prompts.setReferenceEnabled", "prompts.setAnalyzeEnabled", "prompts.setSeed", "prompts.setFramingWeights",
   "assets.list", "assets.setSelection", "assets.clearSelections", "assets.setReference", "assets.inspectMetadata", "assets.clearMetadataRecords", "assets.upload", "assets.saveCrop", "assets.getUrl",
-  "analysis.start", "analysis.cancel", "analysis.listActive", "uniqueTags.apply",
+  "analysis.start", "analysis.cancel", "analysis.listActive", "autopick.get", "autopick.apply", "uniqueTags.apply",
   "outfitImage.generate", "outfitImage.history", "outfitImage.save", "charxRegex.setDetectors",
 ];
 

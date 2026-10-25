@@ -13,6 +13,7 @@ import {
   patchForm,
   patchOutfit,
   personaPromptKey,
+  replaceEmptyDefaultOutfit,
   resolveCharacterForms,
   resolveNovelAIArtistSelection,
   resolvePersonaForms,
@@ -21,6 +22,7 @@ import {
   type FormCollection,
   type StoredAssetRef
 } from "../../../shared/contract/character.js";
+import { autoPickGroupId, emptyAutoPickState, type AutoPickState } from "../../../shared/contract/autopick.js";
 import type {
   AnalysisKind,
   AnalysisStartParams,
@@ -42,6 +44,8 @@ interface WorkspaceMockState {
   jobs: Record<string, MockJob>;
   uploads: Record<string, AssetListItem[]>;
   outfitHistory: Record<string, OutfitImageResult[]>;
+  /** Outfit auto-pick state per character (backend: characters/<id>/autopick.json). */
+  autopick: Record<string, AutoPickState>;
   /** Step duration of simulated jobs (ms, before timeScale). */
   jobStepMs: number;
   jobSteps: number;
@@ -50,7 +54,7 @@ interface WorkspaceMockState {
 
 /** Area state inside the shared db (scenes may tune `jobStepMs`). */
 export function workspaceMockState(db: MockDb): WorkspaceMockState {
-  return ((db.extra.workspace as WorkspaceMockState | undefined) ??= { jobs: {}, uploads: {}, outfitHistory: {}, jobStepMs: 600, jobSteps: 5, seq: 0 });
+  return ((db.extra.workspace as WorkspaceMockState | undefined) ??= { jobs: {}, uploads: {}, outfitHistory: {}, autopick: {}, jobStepMs: 600, jobSteps: 5, seq: 0 });
 }
 
 function allAssets(db: MockDb, characterId: string): AssetListItem[] {
@@ -139,7 +143,8 @@ const ANALYSIS_TEXT: Record<AnalysisKind, { running: string; done: string }> = {
   reclassification: { running: "AI reclassifying", done: "AI reclassification complete" },
   "unique-tag-search": { running: "Searching unique tags", done: "Unique tag search complete" },
   "representative-pick": { running: "Picking representative images", done: "Representative images picked" },
-  "charx-regex": { running: "Analyzing charx regex", done: "charx regex analysis complete" }
+  "charx-regex": { running: "Analyzing charx regex", done: "charx regex analysis complete" },
+  "outfit-autopick": { running: "Auto-picking outfits", done: "Outfit auto-pick complete" }
 };
 
 /** Effects of a finished analysis on the mock data. Returns the finished message. */
@@ -192,11 +197,44 @@ function applyAnalysis(ctx: MockContext, params: AnalysisStartParams): { message
     }
     case "metadata-check":
       return { message: "Meta check complete · 3/9", rows };
+    case "outfit-autopick":
+      return { message: mockAutoPick(db, params), rows };
     case "asset-matching":
       return { message: `Asset classification complete · ${keys.length} prompts · 0 rules · no body identity evidence 0`, rows };
     default:
       return { message: ANALYSIS_TEXT[params.kind].done, rows };
   }
+}
+
+/** Plan: one group per roster person from their candidate assets. Tag: fixed garments, legwear only from "text". */
+function mockAutoPick(db: MockDb, params: AnalysisStartParams): string {
+  const state = workspaceMockState(db);
+  const now = new Date().toISOString();
+  const current = state.autopick[params.characterId] ?? emptyAutoPickState();
+  if (params.autopick?.phase === "tag") {
+    const ids = new Set((params.autopick.sheets ?? []).flatMap((s) => s.tiles.map((t) => t.groupId)));
+    current.groups = current.groups.map((g) => ids.has(g.id)
+      ? { ...g, tags: { candidate: 0, framing: "cowboy shot", nude: false, explicit: false, legsVisible: false, feetVisible: false, label: "School uniform", outfit: { head: "", top: "white blouse", bottom: "navy pleated skirt", legs: "", feet: "" }, textLegs: "black thighhighs", textFeet: "brown loafers", taggedAt: now } }
+      : g);
+    state.autopick[params.characterId] = { ...current, updatedAt: now };
+    return `Tagged ${ids.size} outfit group(s)`;
+  }
+  const all = allAssets(db, params.characterId);
+  const groups = buildSnapshot(db, params.characterId).roster.flatMap((row) => {
+    const words = candidateWords(db, params.characterId, row.promptKey);
+    const items = all.filter((item) => matchesFilter(item, "candidate", words));
+    if (!items.length) return [];
+    const candidates = items.slice(0, 3).map((item) => ({ asset: item.asset, name: item.asset.name, url: item.url, thumbnailUrl: item.thumbnailUrl || item.url }));
+    return [{ id: autoPickGroupId(row.promptKey, "uniform"), promptKey: row.promptKey, characterToken: words[0] ?? "", outfit: "uniform", nude: false, assetCount: items.length, candidates }];
+  });
+  state.autopick[params.characterId] = {
+    version: 1,
+    scheme: { regex: "^(?<character>[a-z]+)_(?<expression>[a-z]+)$", singleCharacterKey: "", aliases: {}, notes: "mock", coverage: 1, assetCount: all.length, calls: 1, createdAt: now },
+    groups,
+    unmatched: [],
+    updatedAt: now
+  };
+  return `${groups.length} outfit group(s) from ${all.length} images`;
 }
 
 async function runJob(ctx: MockContext, job: MockJob, params: AnalysisStartParams): Promise<void> {
@@ -362,6 +400,27 @@ export function workspaceMockHandlers(): MockHandlers {
     "analysis.listActive": (_p, { db }) => ({
       jobs: Object.values(workspaceMockState(db).jobs).filter((j) => j.status === "running" || j.status === "queued").map((j) => ({ jobId: j.jobId, kind: j.kind, characterId: j.characterId, status: j.status, progress: j.progress }))
     }),
+    "autopick.get": ({ characterId }, { db }) => ({ state: workspaceMockState(db).autopick[characterId] ?? emptyAutoPickState(), seenPromptKeys: [] }),
+    "autopick.apply": ({ characterId, items }, ctx) => {
+      const state = workspaceMockState(ctx.db);
+      const current = state.autopick[characterId] ?? emptyAutoPickState();
+      let added = 0;
+      let skipped = 0;
+      for (const item of items) {
+        const group = current.groups.find((g) => g.id === item.groupId);
+        const candidate = group?.candidates[item.candidate] ?? group?.candidates[0];
+        if (!group?.promptKey || !candidate) { skipped += 1; continue; }
+        const c = characterForms(ctx.db, characterId, group.promptKey);
+        const options = { label: item.label || group.outfit || "Outfit", patch: { ...item.parts, candidateEnabled: true, referenceAsset: toStoredAssetRef(candidate.asset), referenceEnabled: true, sourceAssetName: candidate.asset.name } };
+        let result = replaceEmptyDefaultOutfit(c, c.defaultFormId, options);
+        if (!result.outfitId) result = addOutfit(c, c.defaultFormId, options);
+        setCharacterForms(ctx.db, characterId, group.promptKey, result.collection);
+        group.appliedOutfitId = result.outfitId;
+        added += 1;
+      }
+      touchDoc(ctx, characterId, "outfit-autopick");
+      return { added, skipped, state: current };
+    },
     "uniqueTags.apply": ({ characterId, choices }, ctx) => {
       for (const choice of choices) {
         const c = characterForms(ctx.db, characterId, choice.promptKey);

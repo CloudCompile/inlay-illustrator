@@ -301,7 +301,8 @@ export const ANALYSIS_LABELS = {
     reclassification: "AI reclassification", // AI 재분류
     "unique-tag-search": "Unique tag search", // 고유태그검색
     "representative-pick": "Representative image pick", // 대표 이미지 선택
-    "charx-regex": "charx regex analysis" // charx 정규식 분석
+    "charx-regex": "charx regex analysis", // charx 정규식 분석
+    "outfit-autopick": "Outfit auto-pick"
   } as Record<string, string>,
   errorTitles: {
     "asset-matching": "Asset & character matching error", // 에셋&캐릭터 매칭 오류
@@ -309,7 +310,8 @@ export const ANALYSIS_LABELS = {
     persona: "Persona prompt analysis error", // Persona 프롬프트 분석 오류
     references: "Reference analysis error", // 레퍼런스 분석 오류
     "artist-extraction": "Artist prompt extraction error", // 작가 프롬프트 추출 오류
-    reclassification: "AI reclassification error" // AI 재분류 오류
+    reclassification: "AI reclassification error", // AI 재분류 오류
+    "outfit-autopick": "Outfit auto-pick error"
   } as Record<string, string>,
   errorFallbackTitle: "AI analysis error", // AI 분석 오류
   errorDescription: "Check the error details and try again.", // 오류 내용을 확인하고 다시 시도하세요.

@@ -2,7 +2,7 @@
  * Prompts tab (AM `Cct` 104296 list, `Pct` 103997 row, `BIt` 154107 dock -> `wpe` 97197).
  * Rows edit the form collection draft of each registered person; "Save prompts" saves every dirty draft.
  */
-import { useMemo } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
 import type { RosterItem } from "../../../shared/contract/rpc.js";
 import { useAppState } from "../../state/app-state.js";
 import { FilterPopover, SearchField, useFilteredList, type FilterValues } from "../shell/filters.js";
@@ -11,7 +11,9 @@ import { IconButton } from "../ui/index.js";
 import { useWorkspaceCtx, type WorkspaceCtx } from "./context.js";
 import { formSaver } from "./data.js";
 import { draftKeyForCharacter, useDraftsSummary } from "./drafts.js";
-import { BadgeCheckIcon, ShirtIcon, ShuffleIcon, SparklesIcon } from "./icons.js";
+import { AutoPickDialog } from "./autopick.js";
+import { BadgeCheckIcon, LayoutGridIcon, ShirtIcon, ShuffleIcon, SparklesIcon } from "./icons.js";
+import { AUTOPICK_LABELS } from "./labels/autopick.js";
 import { COMMON_LABELS, FORM_LABELS, GENDER_LABELS } from "./labels/common.js";
 import { PROMPTS_LABELS } from "./labels/prompts.js";
 import { FILTER_GROUPS, characterCollection, findForm, formReferenceAsset, formReferenceEnabled, hasEmptyForm, isRosterActive, matchesFilters, registeredRows, rosterOrigin, triState } from "./model.js";
@@ -119,6 +121,7 @@ export function PromptsDock() {
   const { app, characterId, workspace, session, sessions, sourceUi, ui, drafts, provider } = ctx;
   const summary = useDraftsSummary(drafts, `char:${characterId}:`);
   const running = useRunningJob(characterId, ["character-prompts", "references", "reclassification"]);
+  const [autoPickOpen, setAutoPickOpen] = useState(false);
   const reclass = session.reclass.prompts;
   const evidence = session.evidence.prompts;
   const doc = workspace?.document;
@@ -149,6 +152,8 @@ export function PromptsDock() {
       <FilterPopover compact={false} label={PROMPTS_LABELS.filter} groups={FILTER_GROUPS.prompts} values={sourceUi.filters[FILTER_SCOPE] ?? {}}
         onChange={(g, v) => ui.setFilter(characterId, FILTER_SCOPE, { ...(sourceUi.filters[FILTER_SCOPE] ?? {}), [g]: v })}
         onReset={() => ui.setFilter(characterId, FILTER_SCOPE, {})} onRefresh={() => sessions.bumpFilter(characterId, FILTER_SCOPE)} />
+      <IconButton size="command" variant="ghost" label={AUTOPICK_LABELS.open} disabled={!characterId} onClick={() => setAutoPickOpen(true)}><LayoutGridIcon /></IconButton>
+      <AutoPickDialog open={autoPickOpen} onOpenChange={setAutoPickOpen} />
     </>
   );
   const controls = (
