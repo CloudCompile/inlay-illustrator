@@ -281,7 +281,7 @@ export const CHAT_EDGE_CONTROLS_CLASS = "ii-am-chat-history-edge-controls";
 
 /**
  * Chat-side actions. Footer: generate (attempt kind from `ChatMessageUiState.attempt`), cancel, revision pager.
- * Image edge: history pager, regenerate, zoom (click on the image), delete slot (from zoom).
+ * Image edge: history pager, regenerate, animate (puppet toggle), zoom (click on the image), delete slot (from zoom).
  */
 export const CHAT_ACTIONS = [
   "generate",
@@ -291,6 +291,7 @@ export const CHAT_ACTIONS = [
   "history-previous",
   "history-next",
   "regenerate",
+  "animate",
   "zoom",
   "delete-slot",
 ] as const;
@@ -303,6 +304,7 @@ export type ChatAction = (typeof CHAT_ACTIONS)[number];
  * - revision-*        -> `history.selectRevision {chatId, messageKey, revisionId}` (wraps around like AM; the backend re-bakes)
  * - history-*         -> `history.selectEntry {chatId, slotId, entryId}` (wraps around; persisted - port fix; the backend re-bakes)
  * - regenerate        -> `generation.regenerateSlot {chatId, messageKey, slotId, entryId}` (new random seed, AM keepSeed:false)
+ * - animate           -> `puppet.rig {imageId}` the first time (and after a failure), then `puppet.setEnabled {imageId, enabled}`
  * - zoom              -> `zoom.getDetails {chatId, slotId, entryId}` then the overlay's zoom viewer
  * - delete-slot       -> `history.prepareSlotDeletion` then `history.deleteSlot {previewToken}`
  */
@@ -314,6 +316,7 @@ export const CHAT_ACTION_RPC: Readonly<Record<ChatAction, readonly RpcMethod[]>>
   "history-previous": ["history.selectEntry"],
   "history-next": ["history.selectEntry"],
   regenerate: ["generation.regenerateSlot"],
+  animate: ["puppet.rig", "puppet.setEnabled"],
   zoom: ["zoom.getDetails"],
   "delete-slot": ["history.prepareSlotDeletion", "history.deleteSlot"],
 });

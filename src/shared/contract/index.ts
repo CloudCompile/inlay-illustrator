@@ -12,4 +12,5 @@ export * from "./rpc.js";
 export * from "./chat-dom.js";
 export * from "./bridge.js";
 export * from "./webtoon.js";
+export * from "./puppet.js";
 export * from "./autopick.js";

@@ -2,11 +2,14 @@
  * Dev mock handlers for the chat-side UI + zoom viewer (generation, history, zoom, chatState, chatDom).
  * Chat data lives in `db.extra.chatMock` (one chat, a few messages with Image History) and is created lazily.
  * Owner: chat-zoom sub-agent. The preview chat DOM is drawn by ../chat-fixture.ts from the same data.
+ * Puppet states (animate toggle) live in `db.extra.puppets`; `db.extra.puppetRigs` (imageId -> rig) lets a scene supply
+ * real rigs, `db.extra.puppetFail` (imageId -> failure code) a failed answer; other images get a generic rig.
  */
 import { createEmptyActorState, type CurrentActorState } from "../../../shared/contract/chat.js";
 import type { ChatMessageUiState, ChatSlotUi, FooterAttempt } from "../../../shared/contract/chat-dom.js";
 import type { GenerationOrigin } from "../../../shared/contract/history.js";
 import type { AttemptKind, GenerationJobSnapshot, GenerationPhase, RegenerationOverrides, ZoomDetails, ZoomPromptSection } from "../../../shared/contract/rpc.js";
+import { emptyPuppetState, PUPPET_FAILURE_MESSAGES, type PuppetRig, type PuppetState } from "../../../shared/contract/puppet.js";
 import { MockRpcError, type MockContext, type MockHandlers } from "../mock-backend.js";
 import { svgImage, type MockDb } from "./fixtures.js";
 
@@ -427,6 +430,22 @@ function requestedCount(db: MockDb): number {
   return policy.mode === "range" ? Math.max(policy.min, Math.round((policy.min + policy.max) / 2)) : policy.max;
 }
 
+/** Generic rig for mock images: head, torso and one raised forearm. */
+export const MOCK_PUPPET_RIG: PuppetRig = {
+  version: 1,
+  model: "mock-vision",
+  createdAt: "2026-01-01T00:00:00.000Z",
+  parts: [
+    { label: "torso", character: 0, box: [0.25, 0.4, 0.75, 1], outline: [], pivot: [0.5, 0.95], parent: -1 },
+    { label: "head", character: 0, box: [0.3, 0.05, 0.7, 0.42], outline: [], pivot: [0.5, 0.42], parent: 0 },
+    { label: "forearm", character: 0, box: [0.62, 0.45, 0.85, 0.75], outline: [], pivot: [0.7, 0.74], parent: 0 },
+  ],
+};
+
+function puppetStore(db: MockDb): Record<string, PuppetState> {
+  return ((db.extra.puppets as Record<string, PuppetState> | undefined) ??= {});
+}
+
 export function chatMockHandlers(): MockHandlers {
   return {
     "chatDom.getMessageStates": ({ chatId, messageIds }, ctx) => {
@@ -607,6 +626,27 @@ export function chatMockHandlers(): MockHandlers {
         chat.actorState = { revision: chat.actorState.revision + 1, actors };
       }
       return { actorState: chat.actorState };
+    },
+    "puppet.get": ({ imageIds }, ctx) => ({ states: Object.fromEntries(imageIds.map((id) => [id, puppetStore(ctx.db)[id] ?? emptyPuppetState(id)])) }),
+    "puppet.rig": async ({ imageId, force }, ctx) => {
+      const store = puppetStore(ctx.db);
+      const current = store[imageId];
+      if (current?.status === "ready" && !force) return { state: (store[imageId] = { ...current, enabled: true }) };
+      await ctx.delay(900);
+      const failure = (ctx.db.extra.puppetFail as Record<string, keyof typeof PUPPET_FAILURE_MESSAGES> | undefined)?.[imageId];
+      const at = new Date().toISOString();
+      if (failure) return { state: (store[imageId] = { imageId, status: "failed", enabled: false, failure: { code: failure, message: PUPPET_FAILURE_MESSAGES[failure] }, updatedAt: at }) };
+      const rig = (ctx.db.extra.puppetRigs as Record<string, PuppetRig> | undefined)?.[imageId] ?? MOCK_PUPPET_RIG;
+      return { state: (store[imageId] = { imageId, status: "ready", enabled: true, rig, updatedAt: at }) };
+    },
+    "puppet.setEnabled": ({ imageId, enabled }, ctx) => {
+      const store = puppetStore(ctx.db);
+      const current = store[imageId];
+      if (current?.status !== "ready") {
+        if (enabled) return ctx.fail("not-found", "This image has no animation rig yet.");
+        return { state: current ?? emptyPuppetState(imageId) };
+      }
+      return { state: (store[imageId] = { ...current, enabled }) };
     }
   };
 }

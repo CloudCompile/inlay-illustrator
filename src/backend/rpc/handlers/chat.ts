@@ -1,10 +1,12 @@
 /**
  * RPC handlers owned by the `pipeline` module: generation.*, history.*, zoom.*, chatState.*, chatDom.*, webtoon.* (see ./index.ts).
- * Every handler delegates to `ctx.modules.pipeline` (src/backend/pipeline/controller.ts).
+ * Every handler delegates to `ctx.modules.pipeline` (src/backend/pipeline/controller.ts), except puppet.* (chat image
+ * animation, src/backend/puppet/puppet.ts), which only needs the user's services.
  */
 import { fail } from "../errors.js";
 import type { HandlerGroup, RpcContext } from "../types.js";
 import type { ChatPipeline } from "../../pipeline/index.js";
+import { puppetService } from "../../puppet/puppet.js";
 
 function pipelineOf(ctx: RpcContext): ChatPipeline {
   const pipeline = (ctx.modules as { pipeline?: ChatPipeline }).pipeline;
@@ -90,6 +92,11 @@ export const chatHandlers: HandlerGroup = {
 
   /* chat DOM */
   "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
+
+  /* image puppet (Inlay addition) */
+  "puppet.get": async (params, ctx) => ({ states: await puppetService(ctx).get(Array.isArray(params.imageIds) ? params.imageIds : []) }),
+  "puppet.rig": async (params, ctx) => ({ state: await puppetService(ctx).rig(need(params.imageId, "imageId"), { force: params.force === true }) }),
+  "puppet.setEnabled": async (params, ctx) => ({ state: await puppetService(ctx).setEnabled(need(params.imageId, "imageId"), params.enabled === true) }),
 
   /* webtoon (experimental) */
   "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), stripWidth(params.width)),

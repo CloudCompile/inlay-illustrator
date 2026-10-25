@@ -30,6 +30,7 @@ import type { GenerationOrigin, HistoryTree } from "./history.js";
 import type { ChatMessageUiState } from "./chat-dom.js";
 import type { WebtoonStripView } from "./webtoon.js";
 import type { AutoPickApplyItem, AutoPickSheet, AutoPickState } from "./autopick.js";
+import type { PuppetState } from "./puppet.js";
 
 export const RPC_PROTOCOL_VERSION = 1;
 /** Message `type` used on the Spindle frontend/backend channel. */
@@ -537,6 +538,12 @@ export interface RpcMethods {
 
   /* experimental webtoon mode (strip per message swipe, see webtoon.ts) */
   /** `width`: layout width in strip px (`stripLayoutWidth` of the shown width; default 690). */
+  /* image puppet (Inlay addition, contract puppet.ts): animate toggle over chat images */
+  /** Stored states of up to PUPPET_GET_MAX_IDS images (status "none" when never rigged). */
+  "puppet.get": { params: { imageIds: string[] }; result: { states: Record<string, PuppetState> } };
+  /** Rig the image with the analysis model (one vision call; reused when stored unless `force`) and turn its animation on. */
+  "puppet.rig": { params: { imageId: string; force?: boolean }; result: { state: PuppetState } };
+  "puppet.setEnabled": { params: { imageId: string; enabled: boolean }; result: { state: PuppetState } };
   "webtoon.get": { params: { chatId: string; messageKey: string; width?: number }; result: { strip: WebtoonStripView | null } };
   /** New image for one panel (new seed), as a regenerate job; the strip is laid out again when it finishes. */
   "webtoon.rerollPanel": { params: { chatId: string; messageKey: string; panelId: string }; result: { jobId: string } };
@@ -625,6 +632,7 @@ export const RPC_METHODS = [
   "chatState.get", "chatState.clear", "chatState.set",
   "chatDom.getMessageStates",
   "webtoon.get", "webtoon.rerollPanel", "webtoon.editText", "webtoon.selectTake",
+  "puppet.get", "puppet.rig", "puppet.setEnabled",
 ] as const satisfies readonly RpcMethod[];
 
 export const RPC_EVENTS = [

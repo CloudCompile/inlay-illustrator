@@ -31,6 +31,13 @@ export const RetryIcon = () => (
   </svg>
 );
 
+/** lucide sparkle (animate toggle). */
+export const AnimateIcon = () => (
+  <svg {...svgProps}>
+    <path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0Z" />
+  </svg>
+);
+
 function actionAttr(action: ChatAction): Record<string, string> {
   return { [CHAT_ACTION_ATTR]: action };
 }
@@ -126,7 +133,14 @@ export function historyPosition(attrs: IllustrationAttributes, slot: ChatSlotUi 
   return { index: count > 0 ? Math.min(count, Math.max(1, attrs.entryIndex)) - 1 : -1, count };
 }
 
-export type EdgeAction = Extract<ChatAction, "history-previous" | "history-next" | "regenerate">;
+export type EdgeAction = Extract<ChatAction, "history-previous" | "history-next" | "regenerate" | "animate">;
+
+/**
+ * Animate toggle of one image: off (never rigged or turned off), rigging (model call running), playing, paused (on, but
+ * the system asks for reduced motion), failed (the model found nothing usable; clicking tries again).
+ */
+export type PuppetMode = "off" | "rigging" | "playing" | "paused" | "failed";
+export interface PuppetButton { mode: PuppetMode; title: string }
 
 export interface EdgeControlsProps {
   attrs: IllustrationAttributes;
@@ -135,16 +149,18 @@ export interface EdgeControlsProps {
   busy?: boolean;
   /** Whole-message job running (controls are greyed, AM `wIe`). */
   messageBusy?: boolean;
+  /** Animate toggle (absent when the image has no id to rig). */
+  puppet?: PuppetButton;
   onAction: (action: EdgeAction) => void;
 }
 
 /** Edge controls over one baked image (AM `Ybe`). */
-export function EdgeControls({ attrs, slot, busy, messageBusy, onAction }: EdgeControlsProps) {
+export function EdgeControls({ attrs, slot, busy, messageBusy, puppet, onAction }: EdgeControlsProps) {
   const { index, count } = historyPosition(attrs, slot);
   const hasHistory = count > 1;
   const canRegenerate = (slot?.canRegenerate ?? attrs.canRegenerate) === true;
   const regenerating = !!busy || !!slot?.regenerating;
-  if (!hasHistory && !canRegenerate && !regenerating) return null;
+  if (!hasHistory && !canRegenerate && !regenerating && !puppet) return null;
   const groupLabel = hasHistory ? fill(EDGE_LABELS.group, { i: index + 1, n: count }) : EDGE_LABELS.controls;
   const click = (action: EdgeAction) => (event: MouseEvent) => {
     event.preventDefault();
@@ -157,6 +173,7 @@ export function EdgeControls({ attrs, slot, busy, messageBusy, onAction }: EdgeC
       data-ii-slot-id={attrs.slotId}
       data-ii-busy={regenerating ? "true" : "false"}
       data-ii-dimmed={messageBusy ? "true" : undefined}
+      data-ii-puppet={puppet?.mode}
       role="group"
       aria-label={groupLabel}
     >
@@ -181,6 +198,21 @@ export function EdgeControls({ attrs, slot, busy, messageBusy, onAction }: EdgeC
             {canRegenerate ? (
               <button type="button" class="ii-am-chat-edge__regenerate" {...actionAttr("regenerate")} aria-label={EDGE_LABELS.regenerate} title={EDGE_LABELS.regenerate} onClick={click("regenerate")}>
                 <span aria-hidden="true">&#10227;</span>
+              </button>
+            ) : null}
+            {puppet ? (
+              <button
+                type="button"
+                class="ii-am-chat-edge__animate"
+                {...actionAttr("animate")}
+                data-ii-puppet={puppet.mode}
+                aria-pressed={puppet.mode === "playing" || puppet.mode === "paused" ? "true" : "false"}
+                aria-busy={puppet.mode === "rigging" ? "true" : undefined}
+                aria-label={puppet.title}
+                title={puppet.title}
+                onClick={click("animate")}
+              >
+                {puppet.mode === "rigging" ? <span class="ii-am-chat-edge__mini-spinner" aria-hidden="true" /> : <AnimateIcon />}
               </button>
             ) : null}
           </span>

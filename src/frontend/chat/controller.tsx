@@ -7,18 +7,20 @@
 import type { SpindleFrontendContext } from "lumiverse-spindle-types";
 import { render } from "preact";
 import { CHAT_IMAGE_WIDTH_VAR, pagerStep, type ChatMessageUiState } from "../../shared/contract/chat-dom.js";
+import { PUPPET_GET_MAX_IDS, type PuppetRig, type PuppetState } from "../../shared/contract/puppet.js";
 import type { GenerationJobSnapshot } from "../../shared/contract/rpc.js";
 import { toRpcError } from "../rpc/client.js";
 import type { AppController } from "../state/app-state.js";
 import { zoomVisibility } from "../zoom/signal.js";
 import { bakedBlocks, findBakedImage, footerTarget, historyIdOfKey, isStreamingBubble, jobForMessage, regenerateJobsForMessage, uniqueBubbles, type BakedBlock, type MessageElementLike } from "./dom.js";
-import { CHAT_ERROR_LABELS, ERROR_DIALOG_LABELS } from "./labels.js";
+import { CHAT_ERROR_LABELS, ERROR_DIALOG_LABELS, PUPPET_LABELS } from "./labels.js";
+import { createPuppetRenderer, type PuppetHandle, type PuppetRenderer, type PuppetRendererOptions } from "../puppet/renderer.js";
 import { ChatRuntime, type ToastCommand } from "./runtime.js";
 import { ChatRuntimeStore, errorDialogTitle } from "./runtime-store.js";
 import { CHAT_SIDE_CSS } from "./styles.js";
 import type { RuntimeToastModel } from "./toast-model.js";
 import type { RuntimeCornerPreference } from "./corner.js";
-import { ChatFooter, EdgeControls, revisionPosition, type EdgeAction, type FooterAction } from "./widgets.js";
+import { ChatFooter, EdgeControls, revisionPosition, type EdgeAction, type FooterAction, type PuppetButton } from "./widgets.js";
 import { createWebtoonStrips } from "./webtoon/strip-controller.js";
 import { WEBTOON_CSS } from "./webtoon/styles.js";
 
@@ -45,6 +47,8 @@ export interface ChatSideInternalOptions extends ChatSideOptions {
   debounceMs?: number;
   /** Keeps the optimistic busy state of a footer click until a job shows up (ms). */
   pendingTimeoutMs?: number;
+  /** Puppet renderer factory (tests: no WebGL in happy-dom). */
+  createPuppetRenderer?: (options: PuppetRendererOptions) => PuppetRenderer;
 }
 
 export interface ChatSideController {
@@ -99,6 +103,14 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
   /** jobId -> slotId of single-slot regenerations started here. */
   const regenJobs = new Map<string, string>();
   const recentErrors = new Map<string, number>();
+  /** imageId -> stored puppet state (null: none / unknown). Image ids are global, so the cache survives chat switches. */
+  const puppetStates = new Map<string, PuppetState | null>();
+  const puppetInflight = new Set<string>();
+  /** imageIds with a `puppet.rig` call running. */
+  const rigging = new Set<string>();
+  /** frame -> canvas layer playing that frame's image. */
+  const puppets = new Map<Element, { wrapper: Element; imageId: string; rig: PuppetRig; handle: PuppetHandle }>();
+  let puppetRenderer: PuppetRenderer | null = null;
 
   disposers.push(ctx.dom.addStyle(CHAT_SIDE_CSS));
   disposers.push(ctx.dom.addStyle(WEBTOON_CSS));
@@ -205,6 +217,74 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     }
   }
 
+  async function fetchPuppets(ids: string[]): Promise<void> {
+    for (const id of ids) puppetInflight.add(id);
+    try {
+      for (let i = 0; i < ids.length; i += PUPPET_GET_MAX_IDS) {
+        const chunk = ids.slice(i, i + PUPPET_GET_MAX_IDS);
+        const { states } = await app.call("puppet.get", { imageIds: chunk });
+        for (const id of chunk) puppetStates.set(id, states[id] ?? null);
+      }
+    } catch (error) {
+      for (const id of ids) if (!puppetStates.has(id)) puppetStates.set(id, null);
+      console.warn("[Inlay Illustrator] puppet.get failed:", error);
+    } finally {
+      for (const id of ids) puppetInflight.delete(id);
+      schedule(0);
+    }
+  }
+
+  function renderer(): PuppetRenderer {
+    puppetRenderer ??= (options.createPuppetRenderer ?? createPuppetRenderer)({
+      doc,
+      onUnavailable: () => runtime.notice({ tone: "warning", message: PUPPET_LABELS.unavailable }),
+    });
+    return puppetRenderer;
+  }
+
+  function reducedMotion(): boolean {
+    return typeof win.matchMedia === "function" && win.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  /** Animate toggle of an image (undefined: no image id, nothing to rig). */
+  function puppetButton(imageId: string): PuppetButton | undefined {
+    if (!imageId) return undefined;
+    if (rigging.has(imageId)) return { mode: "rigging", title: PUPPET_LABELS.rigging };
+    const state = puppetStates.get(imageId);
+    if (state?.status === "ready" && state.enabled) {
+      if (puppetRenderer && !puppetRenderer.available) return { mode: "paused", title: PUPPET_LABELS.unavailable };
+      return reducedMotion() ? { mode: "paused", title: PUPPET_LABELS.reducedMotion } : { mode: "playing", title: PUPPET_LABELS.stop };
+    }
+    if (state?.status === "failed") return { mode: "failed", title: `${state.failure?.message ?? PUPPET_LABELS.failedTitle} ${PUPPET_LABELS.retry}` };
+    return { mode: "off", title: PUPPET_LABELS.animate };
+  }
+
+  function dropPuppet(frame: Element): void {
+    const current = puppets.get(frame);
+    if (!current) return;
+    puppets.delete(frame);
+    current.handle.destroy();
+    uninject(current.wrapper);
+  }
+
+  /** Puts a canvas layer over the image while its animation is on; removes it otherwise. */
+  function syncPuppet(block: BakedBlock): void {
+    const imageId = block.attrs.imageId;
+    const state = imageId ? puppetStates.get(imageId) : null;
+    const rig = state?.status === "ready" && state.enabled ? state.rig : undefined;
+    const current = puppets.get(block.frame);
+    if (current && (current.imageId !== imageId || current.rig !== rig || current.wrapper.parentElement !== block.frame)) dropPuppet(block.frame);
+    if (!rig || !block.image || puppets.has(block.frame)) return;
+    const r = renderer();
+    if (!r.available) return;
+    const wrapper = inject(block.frame, "beforeend");
+    const canvas = doc.createElement("canvas");
+    canvas.className = "ii-am-puppet-canvas";
+    canvas.setAttribute("aria-hidden", "true");
+    wrapper.appendChild(canvas);
+    puppets.set(block.frame, { wrapper, imageId, rig, handle: r.attach({ canvas, image: block.image }, rig) });
+  }
+
   const strips = createWebtoonStrips(ctx, app, { doc, notice: (title, error) => chatError(title, error), schedule: () => schedule(0) });
   disposers.push(() => strips.destroy());
 
@@ -224,6 +304,9 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     const bubbles = chatId ? listBubbles() : [];
     const missing = bubbles.map((b) => b.messageId).filter((id) => !states.has(id) && !inflight.has(id));
     if (missing.length) void fetchStates(missing);
+    const blocksByBubble = new Map(bubbles.map((b) => [b.element, bakedBlocks(b.element)] as const));
+    const unknownImages = [...new Set([...blocksByBubble.values()].flat().map((b) => b.attrs.imageId))].filter((id) => id && !puppetStates.has(id) && !puppetInflight.has(id));
+    if (unknownImages.length) void fetchPuppets(unknownImages);
 
     const jobs = app.state.generationJobs;
     const now = Date.now();
@@ -232,7 +315,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     const liveFrames = new Set<Element>();
     for (const { messageId, element } of bubbles) {
       const state = states.get(messageId) ?? null;
-      const blocks = bakedBlocks(element);
+      const blocks = blocksByBubble.get(element) ?? [];
       if (state && state.eligible && !isStreamingBubble(element)) {
         liveFooters.add(messageId);
         renderFooter(messageId, element, state, jobs);
@@ -240,6 +323,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
       for (const block of blocks) {
         liveFrames.add(block.frame);
         renderEdge(block, state, jobs);
+        syncPuppet(block);
       }
     }
     strips.sync(chatId, bubbles.map((b) => ({ ...b, state: isStreamingBubble(b.element) ? null : (states.get(b.messageId) ?? null) })), jobs);
@@ -255,6 +339,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
         edges.delete(frame);
       }
     }
+    for (const frame of [...puppets.keys()]) if (!liveFrames.has(frame) || !frame.isConnected) dropPuppet(frame);
   }
 
   function renderFooter(messageId: string, bubble: Element, state: ChatMessageUiState, jobs: Record<string, GenerationJobSnapshot>): void {
@@ -296,7 +381,7 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     const busy = busySlots.has(block.attrs.slotId) || slotRegenerating || regenRunning;
     const messageBusy = !!state && (state.busy || !!jobForMessage(jobs, state));
     const attrs = block.attrs;
-    render(<EdgeControls attrs={attrs} slot={slot} busy={busy} messageBusy={messageBusy} onAction={(action) => void onEdgeAction(attrs.messageId, block, action)} />, wrapper);
+    render(<EdgeControls attrs={attrs} slot={slot} busy={busy} messageBusy={messageBusy} puppet={puppetButton(attrs.imageId)} onAction={(action) => void onEdgeAction(attrs.messageId, block, action)} />, wrapper);
   }
 
   /* ---------------- actions ---------------- */
@@ -352,6 +437,10 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
     const targetChat = attrs.chatId || chatId;
     if (!targetChat) return;
     const state = states.get(messageId) ?? null;
+    if (action === "animate") {
+      await onAnimate(attrs.imageId);
+      return;
+    }
     if (action === "regenerate") {
       if (busySlots.has(attrs.slotId)) return;
       busySlots.add(attrs.slotId);
@@ -381,6 +470,38 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
       chatError(CHAT_ERROR_LABELS.historyFailed, error);
     } finally {
       busySlots.delete(attrs.slotId);
+      schedule(0);
+    }
+  }
+
+  /** First click rigs the image (one analysis-model call) and turns it on; later clicks toggle the stored rig. */
+  async function onAnimate(imageId: string): Promise<void> {
+    if (!imageId || rigging.has(imageId)) return;
+    const state = puppetStates.get(imageId) ?? null;
+    if (state?.status === "ready") {
+      const enabled = !state.enabled;
+      puppetStates.set(imageId, { ...state, enabled });
+      schedule(0);
+      try {
+        puppetStates.set(imageId, (await app.call("puppet.setEnabled", { imageId, enabled })).state);
+      } catch (error) {
+        puppetStates.set(imageId, state);
+        chatError(PUPPET_LABELS.toggleFailed, error);
+      } finally {
+        schedule(0);
+      }
+      return;
+    }
+    rigging.add(imageId);
+    schedule(0);
+    try {
+      const { state: next } = await app.call("puppet.rig", { imageId }, { timeoutMs: 300_000 });
+      puppetStates.set(imageId, next);
+      if (next.status === "failed") runtime.notice({ tone: "warning", message: PUPPET_LABELS.failedTitle, detail: next.failure?.message ?? "" });
+    } catch (error) {
+      chatError(PUPPET_LABELS.rigFailed, error);
+    } finally {
+      rigging.delete(imageId);
       schedule(0);
     }
   }
@@ -553,6 +674,8 @@ export function createChatSide(ctx: SpindleFrontendContext, app: AppController, 
       }
       for (const wrapper of footers.values()) uninject(wrapper);
       for (const wrapper of edges.values()) uninject(wrapper);
+      for (const frame of [...puppets.keys()]) dropPuppet(frame);
+      puppetRenderer?.destroy();
       footers.clear();
       edges.clear();
       render(null, hostRoot);

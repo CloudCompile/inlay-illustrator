@@ -219,6 +219,48 @@ export const CHAT_SIDE_CSS = String.raw`
   pointer-events: auto;
 }
 .ii-am-root.ii-am-chat-edge .ii-am-chat-edge__regenerate:hover { background: rgba(72, 33, 42, .96); }
+/* animate toggle (Inlay addition) + the puppet canvas over the image */
+.ii-am-root.ii-am-chat-edge[data-ii-puppet="rigging"] { opacity: 1; }
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(32, 21, 27, .72);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .24);
+  color: var(--ii-am-chat-control-fg);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate svg { width: 16px; height: 16px; }
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate:hover { background: rgba(72, 33, 42, .96); }
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate[aria-pressed="true"] { background: var(--lumiverse-primary, #c9a45c); color: #1d1418; }
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate[data-ii-puppet="failed"] { color: var(--ii-am-chat-muted); }
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate[data-ii-puppet="failed"] svg { opacity: .55; }
+.ii-am-root.ii-am-chat-edge .ii-am-chat-edge__mini-spinner {
+  display: block;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid rgba(242, 223, 204, .26);
+  border-top-color: #f2dfcc;
+  border-radius: 999px;
+  animation: ii-am-chat-spin .8s linear infinite;
+}
+.inlay-illustrator-frame canvas.ii-am-puppet-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  pointer-events: none;
+  visibility: hidden;
+}
 .ii-am-root.ii-am-chat-edge .ii-am-chat-edge__loading {
   position: absolute;
   top: 10px;
@@ -243,6 +285,7 @@ export const CHAT_SIDE_CSS = String.raw`
 }
 @media (max-width: 640px) {
   .ii-am-root.ii-am-chat-edge .ii-am-chat-edge__regenerate { width: 36px; height: 36px; }
+  .ii-am-root.ii-am-chat-edge .ii-am-chat-edge__animate { width: 36px; height: 36px; }
   .ii-am-root.ii-am-chat-edge .ii-am-chat-edge__count { height: 32px; }
 }
 

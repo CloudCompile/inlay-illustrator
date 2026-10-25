@@ -58,11 +58,13 @@ export const STORAGE_PATHS = {
   chatData: (chatId: string) => `chats/${safePathSegment(chatId)}/chat-data.json`,
   chatDir: (chatId: string) => `chats/${safePathSegment(chatId)}/`,
   /** User-uploaded images (reference/outfit uploads) when not stored as Lumiverse images. */
+  /** Puppet rig + animate toggle of a chat image (Inlay addition, contract puppet.ts). */
+  puppet: (imageId: string) => `puppets/${safePathSegment(imageId)}.json`,
   upload: (uploadId: string, extension: string) => `uploads/${safePathSegment(uploadId)}.${safePathSegment(extension.replace(/^\./u, "").toLowerCase() || "png")}`,
 } as const;
 
 /** Prefixes listed for a full reset (AM factory reset deletes every `asset_maid:v1:*` key). */
-export const STORAGE_RESET_PREFIXES = ["config/", "characters/", "chats/", "uploads/", STORAGE_SCHEMA_PATH] as const;
+export const STORAGE_RESET_PREFIXES = ["config/", "characters/", "chats/", "uploads/", "puppets/", STORAGE_SCHEMA_PATH] as const;
 /** Per-character reset (AM "reset current charx"): character document, metadata cache, crops. Chats and images stay. */
 export function characterResetPaths(characterId: string): string[] {
   return [STORAGE_PATHS.characterDocument(characterId), STORAGE_PATHS.characterMetadataCache(characterId), `${STORAGE_PATHS.characterDir(characterId)}reference-crops/`];

@@ -32,6 +32,19 @@ export const EDGE_LABELS = {
   openZoom: "Open image viewer" // (port) 확대 보기
 } as const;
 
+/** Animate toggle over each image (Inlay addition: puppet rig + live warp, src/frontend/puppet). */
+export const PUPPET_LABELS = {
+  animate: "Animate image", // 이미지 움직이기
+  stop: "Stop animation", // 애니메이션 중지
+  rigging: "Preparing the animation", // 애니메이션 준비 중
+  retry: "Click to try again.", // 다시 시도하려면 클릭하세요.
+  reducedMotion: "Animation paused: your system asks for reduced motion.", // 동작 줄이기 설정으로 애니메이션이 일시 중지되었습니다.
+  failedTitle: "This image can't be animated", // 이 이미지는 움직일 수 없습니다
+  rigFailed: "Could not animate the image", // 이미지 애니메이션 실패
+  toggleFailed: "Could not change the animation", // 애니메이션 변경 실패
+  unavailable: "This browser can't play image animations (WebGL is unavailable).", // 이 브라우저에서는 이미지 애니메이션을 재생할 수 없습니다.
+} as const;
+
 /** Error toasts raised by chat-side clicks (spec/ui.md §5.1.4, §5.1.6). */
 export const CHAT_ERROR_LABELS = {
   regenerateFailed: CHAT_FOOTER_LABELS.regenerateFailed.en, // 이미지 재생성 실패

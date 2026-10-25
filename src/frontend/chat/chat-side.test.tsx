@@ -107,6 +107,55 @@ describe("chat side (DOM, dev mock)", () => {
     await until(() => q('[data-message-id="msg-2"] .ii-am-chat-edge__count')?.textContent === "3/3");
   });
 
+  test("animate: the first click rigs and plays the image, the next one stops it, a failed rig says why", async () => {
+    const attached: Array<{ canvas: HTMLCanvasElement; destroyed: boolean }> = [];
+    const renderer = {
+      available: true,
+      reducedMotion: false,
+      playing: 0,
+      attach(target: { canvas: HTMLCanvasElement }) {
+        const entry = { canvas: target.canvas, destroyed: false };
+        attached.push(entry);
+        return { destroy: () => void (entry.destroyed = true) };
+      },
+      destroy() {},
+    };
+    const r = rig({ createPuppetRenderer: () => renderer } as Partial<ChatSideOptions>);
+    const blocks = await until(() => doc.querySelectorAll('[data-message-id="msg-2"] [data-inlay-illustrator="true"]').length === 2 && [...doc.querySelectorAll('[data-message-id="msg-2"] [data-inlay-illustrator="true"]')]);
+    const imageIds = blocks.map((b) => b.getAttribute("data-inlay-illustrator-image-id")!);
+    const animate = (i: number) => blocks[i]!.querySelector<HTMLElement>(".ii-am-chat-edge__animate");
+    await until(() => animate(0)?.getAttribute("data-ii-puppet") === "off");
+    expect(animate(0)!.getAttribute("aria-label")).toBe("Animate image");
+    expect(calls(r, "puppet.get").flatMap((c) => (c.params as { imageIds: string[] }).imageIds)).toEqual(expect.arrayContaining(imageIds));
+
+    animate(0)!.click();
+    await until(() => animate(0)?.getAttribute("data-ii-puppet") === "playing");
+    expect(calls(r, "puppet.rig").map((c) => c.params)).toEqual([{ imageId: imageIds[0] }]);
+    expect(animate(0)!.getAttribute("aria-pressed")).toBe("true");
+    expect(animate(0)!.getAttribute("aria-label")).toBe("Stop animation");
+    // A canvas layer over that image only, handed to the shared renderer.
+    const canvas = await until(() => blocks[0]!.querySelector<HTMLCanvasElement>(".inlay-illustrator-frame canvas.ii-am-puppet-canvas"));
+    expect(blocks[1]!.querySelector("canvas.ii-am-puppet-canvas")).toBeNull();
+    expect(attached.map((a) => a.canvas)).toEqual([canvas]);
+
+    animate(0)!.click();
+    await until(() => animate(0)?.getAttribute("data-ii-puppet") === "off");
+    expect(calls(r, "puppet.setEnabled").at(-1)!.params).toEqual({ imageId: imageIds[0], enabled: false });
+    await until(() => !blocks[0]!.querySelector("canvas.ii-am-puppet-canvas"));
+    expect(attached[0]!.destroyed).toBe(true);
+    // Turning it back on reuses the stored rig.
+    animate(0)!.click();
+    await until(() => animate(0)?.getAttribute("data-ii-puppet") === "playing");
+    expect(calls(r, "puppet.rig")).toHaveLength(1);
+
+    r.mock.db.extra.puppetFail = { [imageIds[1]!]: "comic" };
+    animate(1)!.click();
+    await until(() => animate(1)?.getAttribute("data-ii-puppet") === "failed");
+    expect(animate(1)!.getAttribute("title")).toBe("Comic pages with several panels can't be animated. Click to try again.");
+    await until(() => doc.body.textContent?.includes("This image can't be animated"));
+    expect(blocks[1]!.querySelector("canvas.ii-am-puppet-canvas")).toBeNull();
+  });
+
   test("regenerate calls generation.regenerateSlot and shows the spinner", async () => {
     const r = rig();
     mockChat(r.mock.db).holdJobs = true;

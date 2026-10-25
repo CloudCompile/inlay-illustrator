@@ -5303,9 +5303,10 @@ var STORAGE_PATHS = {
   characterDir: (characterId) => `characters/${safePathSegment(characterId)}/`,
   chatData: (chatId) => `chats/${safePathSegment(chatId)}/chat-data.json`,
   chatDir: (chatId) => `chats/${safePathSegment(chatId)}/`,
+  puppet: (imageId) => `puppets/${safePathSegment(imageId)}.json`,
   upload: (uploadId, extension) => `uploads/${safePathSegment(uploadId)}.${safePathSegment(extension.replace(/^\./u, "").toLowerCase() || "png")}`
 };
-var STORAGE_RESET_PREFIXES = ["config/", "characters/", "chats/", "uploads/", STORAGE_SCHEMA_PATH];
+var STORAGE_RESET_PREFIXES = ["config/", "characters/", "chats/", "uploads/", "puppets/", STORAGE_SCHEMA_PATH];
 function characterResetPaths(characterId) {
   return [STORAGE_PATHS.characterDocument(characterId), STORAGE_PATHS.characterMetadataCache(characterId), `${STORAGE_PATHS.characterDir(characterId)}reference-crops/`];
 }
@@ -5485,7 +5486,10 @@ var RPC_METHODS = [
   "webtoon.get",
   "webtoon.rerollPanel",
   "webtoon.editText",
-  "webtoon.selectTake"
+  "webtoon.selectTake",
+  "puppet.get",
+  "puppet.rig",
+  "puppet.setEnabled"
 ];
 var RPC_EVENTS = [
   "status.changed",
@@ -5609,6 +5613,7 @@ var CHAT_ACTION_RPC = Object.freeze({
   "history-previous": ["history.selectEntry"],
   "history-next": ["history.selectEntry"],
   regenerate: ["generation.regenerateSlot"],
+  animate: ["puppet.rig", "puppet.setEnabled"],
   zoom: ["zoom.getDetails"],
   "delete-slot": ["history.prepareSlotDeletion", "history.deleteSlot"]
 });
@@ -5642,6 +5647,141 @@ var STRIP_MIN_LAYOUT_WIDTH = 360;
 var STRIP_SPEECH_PX = 19;
 var MANGA_PAGE_WIDTH = 1100;
 var MANGA_SPEECH_PX = 20;
+// src/shared/contract/puppet.ts
+var PUPPET_APPENDAGE_KINDS = ["wing", "tail", "antenna", "ear", "ribbon", "cape"];
+var PUPPET_MAX_PARTS = 12;
+var PUPPET_GET_MAX_IDS = 64;
+var PUPPET_FAILURE_MESSAGES = Object.freeze({
+  comic: "Comic pages with several panels can't be animated.",
+  "nothing-found": "No character parts to animate were found in this image.",
+  declined: "The analysis model declined to read this image."
+});
+function emptyPuppetState(imageId) {
+  return { imageId, status: "none", enabled: false, updatedAt: "" };
+}
+var LABEL_ALIASES = {
+  torso: { label: "torso" },
+  body: { label: "torso" },
+  chest: { label: "torso" },
+  head: { label: "head" },
+  face: { label: "head" },
+  hair: { label: "hair" },
+  forearm: { label: "forearm" },
+  hand: { label: "forearm" },
+  arm: { label: "forearm" },
+  item: { label: "item" },
+  object: { label: "item" },
+  prop: { label: "item" },
+  held_item: { label: "item" },
+  appendage: { label: "appendage" },
+  wing: { label: "appendage", kind: "wing" },
+  wings: { label: "appendage", kind: "wing" },
+  tail: { label: "appendage", kind: "tail" },
+  antenna: { label: "appendage", kind: "antenna" },
+  antennae: { label: "appendage", kind: "antenna" },
+  ear: { label: "appendage", kind: "ear" },
+  ears: { label: "appendage", kind: "ear" },
+  ribbon: { label: "appendage", kind: "ribbon" },
+  cape: { label: "appendage", kind: "cape" }
+};
+function priority(part) {
+  if (part.label === "head")
+    return 0;
+  if (part.label === "forearm")
+    return part.resting ? 6 : 1;
+  return { item: 2, torso: 3, appendage: 4, hair: 5 }[part.label] ?? 7;
+}
+var clamp01 = (v) => Math.min(1, Math.max(0, v));
+var round4 = (v) => Math.round(v * 1e4) / 1e4;
+var num = (v) => typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : NaN;
+function point(value) {
+  if (!Array.isArray(value) || value.length < 2)
+    return null;
+  const y = num(value[0]), x = num(value[1]);
+  return Number.isFinite(x) && Number.isFinite(y) ? [clamp01(x / 1000), clamp01(y / 1000)] : null;
+}
+function box(value) {
+  if (!Array.isArray(value) || value.length < 4)
+    return null;
+  const [a, b, c, d] = value.slice(0, 4).map(num);
+  if (![a, b, c, d].every(Number.isFinite))
+    return null;
+  const x0 = clamp01(Math.min(b, d) / 1000), x1 = clamp01(Math.max(b, d) / 1000);
+  const y0 = clamp01(Math.min(a, c) / 1000), y1 = clamp01(Math.max(a, c) / 1000);
+  return x1 - x0 >= 0.01 && y1 - y0 >= 0.01 ? [x0, y0, x1, y1] : null;
+}
+function defaultPivot(label, b) {
+  const cx = (b[0] + b[2]) / 2;
+  if (label === "head")
+    return [cx, b[3]];
+  if (label === "torso")
+    return [cx, b[3]];
+  return [cx, (b[1] + b[3]) / 2];
+}
+function sanitizePuppetRig(raw) {
+  const answer = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : Array.isArray(raw) ? { parts: raw } : {};
+  if (answer.comic === true || num(answer.panels) > 1)
+    return { failure: "comic" };
+  const list = Array.isArray(answer.parts) ? answer.parts : [];
+  const kept = [];
+  const torsoOf = new Set;
+  list.forEach((item, source) => {
+    if (!item || typeof item !== "object")
+      return;
+    const r = item;
+    const alias = LABEL_ALIASES[String(r.label ?? "").trim().toLowerCase()];
+    const b = box(r.box_2d ?? r.box);
+    if (!alias || !b)
+      return;
+    const character = Math.max(0, Math.trunc(num(r.character)) || 0);
+    if (alias.label === "torso") {
+      if (torsoOf.has(character))
+        return;
+      torsoOf.add(character);
+    }
+    const kindRaw = String(r.kind ?? "").trim().toLowerCase();
+    const kind = alias.kind ?? PUPPET_APPENDAGE_KINDS.find((k) => kindRaw === k || kindRaw === `${k}s`);
+    const outline = (Array.isArray(r.outline) ? r.outline : []).map(point).filter((p) => !!p).slice(0, 80);
+    const distinct = new Set(outline.map(([x, y]) => `${x.toFixed(3)},${y.toFixed(3)}`)).size;
+    let pivot = point(r.pivot) ?? defaultPivot(alias.label, b);
+    const padX = (b[2] - b[0]) * 0.5, padY = (b[3] - b[1]) * 0.5;
+    pivot = [Math.min(b[2] + padX, Math.max(b[0] - padX, pivot[0])), Math.min(b[3] + padY, Math.max(b[1] - padY, pivot[1]))];
+    const part = {
+      label: alias.label,
+      character,
+      box: b.map(round4),
+      outline: distinct >= 3 ? outline.map(([x, y]) => [round4(x), round4(y)]) : [],
+      pivot: [round4(pivot[0]), round4(pivot[1])],
+      parent: -1
+    };
+    if (alias.label === "appendage" && kind)
+      part.kind = kind;
+    if (alias.label === "forearm" && r.resting === true)
+      part.resting = true;
+    const parentRaw = num(r.attached_to ?? r.parent);
+    kept.push({ part, source, rawParent: Number.isInteger(parentRaw) ? parentRaw : -1 });
+  });
+  const chosen = [...kept].sort((a, b) => priority(a.part) - priority(b.part) || a.part.character - b.part.character || a.source - b.source).slice(0, PUPPET_MAX_PARTS).sort((a, b) => a.source - b.source);
+  const indexOfSource = new Map(chosen.map((c, i) => [c.source, i]));
+  const parts = chosen.map((c) => ({ ...c.part, parent: c.part.label === "torso" ? -1 : indexOfSource.get(c.rawParent) ?? -1 }));
+  parts.forEach((p, i) => {
+    if (p.parent === i || p.parent >= 0 && parts[p.parent].label === "torso")
+      p.parent = -1;
+  });
+  parts.forEach((p, i) => {
+    const seen = new Set([i]);
+    for (let at = p.parent;at >= 0; at = parts[at].parent) {
+      if (seen.has(at)) {
+        p.parent = -1;
+        break;
+      }
+      seen.add(at);
+    }
+  });
+  if (!parts.some((p) => p.label !== "torso"))
+    return { failure: "nothing-found" };
+  return { parts };
+}
 // src/shared/contract/autopick.ts
 var AUTOPICK_PARTS = ["head", "top", "bottom", "legs", "feet"];
 function emptyAutoPickState() {
@@ -65042,7 +65182,7 @@ class ProviderRunRegistry {
 }
 var rec5 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str5 = (v) => v == null ? "" : String(v).trim();
-var num = (v, fallback, min, max) => {
+var num2 = (v, fallback, min, max) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 };
@@ -65146,8 +65286,8 @@ function normalizeCharacterPrompts(value) {
     return {
       prompt: str5(r.prompt),
       uc: str5(r.uc),
-      centerX: num(r.centerX, 0.5, 0, 1),
-      centerY: num(r.centerY, 0.5, 0, 1),
+      centerX: num2(r.centerX, 0.5, 0, 1),
+      centerY: num2(r.centerY, 0.5, 0, 1),
       actorSlot: str5(r.actorSlot) || undefined,
       coordinateMode: r.coordinateMode === "automatic" ? "automatic" : "fixed"
     };
@@ -65185,7 +65325,7 @@ function buildNovelAIRequest(request, ctx, extras = {}) {
   const novelai = {
     sampler: str5(config.sampler) || "k_euler_ancestral",
     noiseSchedule: str5(config.noiseSchedule) || "karras",
-    steps: Math.round(num(config.steps, 28, 1, 50)),
+    steps: Math.round(num2(config.steps, 28, 1, 50)),
     scale: Number(config.scale) || 6,
     cfgRescale: Number.isFinite(Number(config.cfgRescale)) ? Number(config.cfgRescale) : 0.5,
     qualityToggle: config.qualityToggle !== false,
@@ -65234,8 +65374,8 @@ async function prepareReferences(services, refs, signal) {
       const type = str5(r.type);
       references.push({
         ...prepared,
-        strength: num(r.strength, 0.6, 0, 1),
-        fidelity: num(r.fidelity, 1, 0, 1),
+        strength: num2(r.strength, 0.6, 0, 1),
+        fidelity: num2(r.fidelity, 1, 0, 1),
         type: type === "style" || type === "character&style" ? type : "character"
       });
     } catch (error) {
@@ -65265,7 +65405,7 @@ function createNovelAIAdapter(services, registry) {
         throw Object.assign(new Error("NovelAI img2img source image is empty."), { code: "NOVELAI_IMG2IMG_EMPTY", retryable: false });
       const build = buildNovelAIRequest(request, ctx, {
         characterReferences: prepared.references,
-        ...i2iImage ? { imageToImage: { ...i2iImage, strength: num(i2iRaw.strength, 0.4, 0.4, 1), noise: num(i2iRaw.noise, 0, 0, 1) } } : {}
+        ...i2iImage ? { imageToImage: { ...i2iImage, strength: num2(i2iRaw.strength, 0.4, 0.4, 1), noise: num2(i2iRaw.noise, 0, 0, 1) } } : {}
       });
       onEvent?.({ type: "stage", provider: "novelai", requestId: "", stage: "generating" });
       const result = await generateImage(services, build.request, { signal, onProgress: (p) => emitProgress("novelai", onEvent, ctx, p) });
@@ -67202,7 +67342,7 @@ var FRAMINGS = ["portrait", "upper body", "cowboy shot", "lower body", "full bod
 var TEXT_TYPES = ["speech", "thought", "narration", "sfx"];
 var GRID = [0.1, 0.3, 0.5, 0.7, 0.9];
 var str7 = { type: "string" };
-var num2 = { type: "number" };
+var num3 = { type: "number" };
 var textItem = {
   type: "object",
   properties: { type: { type: "string", enum: [...TEXT_TYPES] }, speaker: { type: ["string", "null"] }, text: str7, anchor: { type: "string", enum: [...ANCHORS] } },
@@ -67239,8 +67379,8 @@ var STORYBOARD_JSON_SCHEMA = {
                   type: "object",
                   properties: {
                     name: str7,
-                    x: num2,
-                    y: num2,
+                    x: num3,
+                    y: num3,
                     framing: { type: "string", enum: [...FRAMINGS] },
                     shoes_off: { type: "boolean" },
                     drop_outfit: { type: "array", items: str7 },
@@ -71795,6 +71935,148 @@ var coreHandlers = {
   }
 };
 
+// src/backend/puppet/puppet.ts
+var PUPPET_CONCURRENCY = 2;
+var PUPPET_SYSTEM = `You rig illustrations for a very subtle idle animation (a puppet warp: parts gently sway, the background stays still).
+Locate the movable parts of every character precisely. Coordinates are normalized to 0-1000 over the image.
+Boxes are [ymin, xmin, ymax, xmax]; points are [y, x].`;
+var PUPPET_INSTRUCTIONS = `Return JSON only: {"comic": boolean, "parts": [Part, ...]} where Part is
+{"label": string, "character": integer (0 for the first character), "box_2d": [ymin, xmin, ymax, xmax], "outline": [[y, x], ...], "pivot": [y, x], "attached_to": integer | null}.
+"comic" is true when the image is a comic page or a layout of several separate panels (then "parts" may be empty).
+"outline" is a closed polygon of 12-30 points tracing the visible silhouette of the part (follow fingers, hair tips and held objects closely).
+"attached_to" is the index in "parts" of the part this one hangs from (null when none).
+
+Labels (only the ones that exist; one part per instance):
+- "torso": chest, shoulders and belly (no arms, no head). pivot: the waist center.
+- "head": the head with face, ears, horns, hair on top of the head and hair accessories, but not hair hanging below the chin. pivot: the base of the neck, between the chin and the collarbones (not the face). attached_to: the torso.
+- "hair": each long lock of hair hanging below the chin (left lock, right lock, back hair). pivot: where the lock leaves the head. attached_to: the head.
+- "forearm": each visible hand together with its fingers and forearm, from the elbow to the fingertips. pivot: the elbow (where the forearm enters the frame or the body when the elbow is hidden). attached_to: the torso. Add "resting": true when the hand rests in or on something (pocket, hip, lap, table, railing, another person) and false when it is free or raised.
+- "item": each object held in a hand. pivot: the grip point. attached_to: the forearm holding it.
+- "appendage": wings, tails, antennae, animal ears not covered by the head, ribbons, capes. Add "kind" (wing, tail, antenna, ear, ribbon, cape). pivot: where it attaches to the body. attached_to: the head or torso it grows from. List every one of these as its own part even when it overlaps the head or torso box; the head outline excludes them.
+Skip parts that are not visible. Do not include the background. Return {"comic": false, "parts": []} when no character is visible.`;
+var byUser = new WeakMap;
+function puppetService(services) {
+  let service = byUser.get(services.storage);
+  if (!service)
+    byUser.set(services.storage, service = createPuppetService(services));
+  return service;
+}
+function needId(value) {
+  if (typeof value !== "string" || !value.trim())
+    fail2("bad-request", "imageId is required.");
+  const id = value.trim();
+  try {
+    STORAGE_PATHS.puppet(id);
+  } catch {
+    fail2("bad-request", `Invalid imageId: ${id}`);
+  }
+  return id;
+}
+function normalize2(imageId, raw) {
+  const r = raw && typeof raw === "object" ? raw : null;
+  if (!r || r.status !== "ready" && r.status !== "failed")
+    return emptyPuppetState(imageId);
+  if (r.status === "ready" && !(r.rig && Array.isArray(r.rig.parts) && r.rig.parts.length))
+    return emptyPuppetState(imageId);
+  return { ...r, imageId, status: r.status, enabled: r.status === "ready" && r.enabled === true, updatedAt: String(r.updatedAt ?? "") };
+}
+var FILTERED = /safety|prohibited|blocked|blocklist|content[ _-]?filter|recitation/iu;
+function createPuppetService(services, options = {}) {
+  const now = options.now ?? (() => new Date().toISOString());
+  const inflight = new Map;
+  let running = 0;
+  const waiting = [];
+  const acquire = () => running < PUPPET_CONCURRENCY ? (running++, Promise.resolve()) : new Promise((resolve) => waiting.push(() => (running++, resolve())));
+  const release = () => {
+    running--;
+    waiting.shift()?.();
+  };
+  const read = async (imageId) => normalize2(imageId, await services.storage.readJson(STORAGE_PATHS.puppet(imageId), null));
+  const update = (imageId, mutate) => services.storage.updateJson(STORAGE_PATHS.puppet(imageId), null, (raw) => mutate(normalize2(imageId, raw))).then((saved) => normalize2(imageId, saved));
+  const failed = (imageId, code) => update(imageId, () => ({ imageId, status: "failed", enabled: false, failure: { code, message: PUPPET_FAILURE_MESSAGES[code] }, updatedAt: now() }));
+  async function runRig(imageId, signal) {
+    if (!await services.llm.supportsVision())
+      fail2("unsupported", "The analysis model can't read images. Choose a model with vision in the analysis settings to animate images.");
+    const image = await services.imageBytes.getImage({ url: imageResultUrl(imageId) }, signal ? { signal } : {});
+    let result;
+    try {
+      result = await services.llm.complete({
+        purpose: "image-puppet",
+        messages: [
+          { role: "system", content: PUPPET_SYSTEM },
+          { role: "user", content: [{ type: "image", data: image.data, mime_type: image.mimeType }, { type: "text", text: PUPPET_INSTRUCTIONS }] }
+        ],
+        responseMode: "json",
+        maxTokens: 24000,
+        visionFallback: "fail"
+      }, signal ? { signal } : {});
+    } catch (error) {
+      if (isAbortLike(error))
+        throw error;
+      const rpc = toRpcError(error);
+      if (rpc.detailCode === "ANALYZER_CONTENT_FILTERED" || rpc.code !== "unsupported" && FILTERED.test(rpc.message))
+        return failed(imageId, "declined");
+      throw error;
+    }
+    if (FILTERED.test(result.finishReason))
+      return failed(imageId, "declined");
+    const cleaned = sanitizePuppetRig(result.parsed);
+    if ("failure" in cleaned) {
+      services.log.append("info", "puppet", `No rig for ${imageId}: ${cleaned.failure}`);
+      return failed(imageId, cleaned.failure);
+    }
+    services.log.append("info", "puppet", `Rigged ${imageId}: ${cleaned.parts.map((p) => p.kind ?? p.label).join(", ")} (${result.model}, ${Math.round(result.latencyMs / 1000)} s)`);
+    const at = now();
+    return update(imageId, () => ({ imageId, status: "ready", enabled: true, rig: { version: 1, parts: cleaned.parts, model: result.model, createdAt: at }, updatedAt: at }));
+  }
+  return {
+    async get(imageIds) {
+      const ids = [...new Set(imageIds.filter((id) => typeof id === "string" && id.trim()).map((id) => id.trim()))];
+      if (ids.length > PUPPET_GET_MAX_IDS)
+        fail2("bad-request", `At most ${PUPPET_GET_MAX_IDS} images per request.`);
+      const states = {};
+      await Promise.all(ids.map(async (id) => {
+        try {
+          states[id] = await read(needId(id));
+        } catch (error) {
+          services.log.append("warn", "puppet", `Unreadable puppet state ${id}: ${toRpcError(error).message}`);
+          states[id] = emptyPuppetState(id);
+        }
+      }));
+      return states;
+    },
+    async rig(rawId, options = {}) {
+      const imageId = needId(rawId);
+      const running = inflight.get(imageId);
+      if (running)
+        return running;
+      const task = (async () => {
+        const current = await read(imageId);
+        if (current.status === "ready" && !options.force)
+          return update(imageId, (s) => ({ ...s, enabled: true, updatedAt: now() }));
+        await acquire();
+        try {
+          return await runRig(imageId, options.signal);
+        } finally {
+          release();
+        }
+      })().finally(() => inflight.delete(imageId));
+      inflight.set(imageId, task);
+      return task;
+    },
+    async setEnabled(rawId, enabled) {
+      const imageId = needId(rawId);
+      const current = await read(imageId);
+      if (current.status !== "ready") {
+        if (enabled)
+          fail2("not-found", "This image has no animation rig yet.");
+        return current;
+      }
+      return update(imageId, (s) => ({ ...s, enabled, updatedAt: now() }));
+    }
+  };
+}
+
 // src/backend/rpc/handlers/chat.ts
 function pipelineOf(ctx) {
   const pipeline = ctx.modules.pipeline;
@@ -71870,6 +72152,9 @@ var chatHandlers = {
     return pipelineOf(ctx).setChatState(need(params.chatId, "chatId"), params.actorState, params.baseRevision);
   },
   "chatDom.getMessageStates": (params, ctx) => pipelineOf(ctx).getMessageStates(need(params.chatId, "chatId"), params.messageIds),
+  "puppet.get": async (params, ctx) => ({ states: await puppetService(ctx).get(Array.isArray(params.imageIds) ? params.imageIds : []) }),
+  "puppet.rig": async (params, ctx) => ({ state: await puppetService(ctx).rig(need(params.imageId, "imageId"), { force: params.force === true }) }),
+  "puppet.setEnabled": async (params, ctx) => ({ state: await puppetService(ctx).setEnabled(need(params.imageId, "imageId"), params.enabled === true) }),
   "webtoon.get": (params, ctx) => pipelineOf(ctx).getWebtoon(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), stripWidth(params.width)),
   "webtoon.rerollPanel": (params, ctx) => pipelineOf(ctx).rerollWebtoonPanel(need(params.chatId, "chatId"), need(params.messageKey, "messageKey"), need(params.panelId, "panelId")),
   "webtoon.editText": (params, ctx) => {
