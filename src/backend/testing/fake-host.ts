@@ -82,6 +82,8 @@ export interface FakeHost {
   /* image generation */
   imageConnections: ImageGenConnectionDTO[];
   imageModels: Record<string, Array<{ id: string; label: string }>>;
+  /** Served by imageGen.getProviders: capability schemas used to discover a provider's reference-image parameter. */
+  imageProviders: Array<{ id: string; capabilities: { parameters: Record<string, { type: string }> } }>;
   imageGenCalls: FakeImageGenCall[];
   imageGenQueue: Array<Scripted<ImageGenRequestDTO, ImageGenResultDTO>>;
   scriptImageGen(...replies: Array<Scripted<ImageGenRequestDTO, ImageGenResultDTO>>): void;
@@ -164,6 +166,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
   fake.decisionModels = {};
   fake.imageConnections = [];
   fake.imageModels = {};
+  fake.imageProviders = [];
   fake.imageGenCalls = [];
   fake.imageGenQueue = [];
   fake.scriptImageGen = (...replies) => { fake.imageGenQueue.push(...replies); };
@@ -466,7 +469,7 @@ export function createFakeHost(options: { userId?: string; granted?: string[] } 
       async listConnections() { return fake.imageConnections.map((c) => ({ ...c })); },
       async getConnection(id: string) { const c = fake.imageConnections.find((x) => x.id === id); return c ? { ...c } : null; },
       async getModels(id: string) { return fake.imageModels[id] ?? []; },
-      async getProviders() { return []; },
+      async getProviders() { return fake.imageProviders.map((p) => ({ ...p, capabilities: { ...p.capabilities, parameters: { ...p.capabilities.parameters } } })); },
     },
     images: {
       async list(opts: { characterId?: string; chatId?: string; onlyOwned?: boolean; limit?: number; offset?: number } = {}) {

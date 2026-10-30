@@ -142,6 +142,23 @@ export function ImageModelSettingsPage() {
       {kind === "generic" ? (
         <Card title={I.genericBox} data-image-provider-settings-box="generic">
           <p class="text-xs leading-relaxed text-muted-foreground">{I.genericNote}</p>
+          <Columns>
+            <Column>
+              <Field label={I.referenceSource} hint={I.referenceSourceHint}>
+                <Select aria-label={I.referenceSource} value={config.image.characterReferenceSource}
+                  options={[{ value: "avatar", label: I.referenceSourceOptions.avatar }, { value: "gallery", label: I.referenceSourceOptions.gallery }]}
+                  onValueChange={(value) => void form.apply({ image: { characterReferenceSource: value === "gallery" ? "gallery" : "avatar" } })} />
+              </Field>
+            </Column>
+            <Column>
+              {config.image.characterReferenceSource === "gallery" ? (
+                <Field label={I.referenceGalleryIndex}>
+                  <NumberField aria-label={I.referenceGalleryIndexAria} value={config.image.characterReferenceGalleryIndex} min={0} max={999} step={1}
+                    onValueChange={(value) => form.draft({ image: { characterReferenceGalleryIndex: Math.max(0, Math.round(value)) } })} />
+                </Field>
+              ) : null}
+            </Column>
+          </Columns>
         </Card>
       ) : null}
     </SettingsFrame>

@@ -13,873 +13,6 @@ var __export = (target, all) => {
     });
 };
 
-// src/backend/analysis/core/analysis-core.ts
-var exports_analysis_core = {};
-__export(exports_analysis_core, {
-  $$e: () => $$e,
-  $2e: () => $2e,
-  $4e: () => $4e,
-  $9e: () => $9e2,
-  $Q: () => $Q2,
-  $R: () => $R,
-  $X: () => $X,
-  $it: () => $it,
-  $me: () => $me2,
-  $oe: () => $oe,
-  $p: () => $p2,
-  $pe: () => $pe,
-  $ut: () => $ut2,
-  $wt: () => $wt,
-  A0t: () => A0t,
-  A2e: () => A2e2,
-  A4: () => A4,
-  A4e: () => A4e,
-  A5: () => A5,
-  A8: () => A8,
-  A8e: () => A8e2,
-  AC: () => AC2,
-  AF: () => AF,
-  AH: () => AH2,
-  AK: () => AK,
-  AQ: () => AQ2,
-  ASe: () => ASe,
-  Ac: () => Ac2,
-  Act: () => Act,
-  Ag: () => Ag2,
-  Ah: () => Ah,
-  Ap: () => Ap,
-  Aqe: () => Aqe,
-  Av: () => Av2,
-  Awt: () => Awt,
-  B$e: () => B$e,
-  B1e: () => B1e,
-  B2e: () => B2e,
-  B3: () => B3,
-  B4e: () => B4e,
-  B9e: () => B9e2,
-  BI: () => BI,
-  BR: () => BR,
-  Bc: () => Bc2,
-  Bit: () => Bit,
-  Bme: () => Bme2,
-  Bn: () => Bn,
-  Boe: () => Boe,
-  Bpe: () => Bpe,
-  But: () => But2,
-  Bv: () => Bv2,
-  Bw: () => Bw2,
-  Bwt: () => Bwt,
-  C0t: () => C0t,
-  C2e: () => C2e,
-  C4e: () => C4e,
-  CI: () => CI,
-  CK: () => CK,
-  CQ: () => CQ2,
-  Cct: () => Cct,
-  Ci: () => Ci,
-  Cm: () => Cm2,
-  Cqe: () => Cqe,
-  D$e: () => D$e,
-  D1e: () => D1e,
-  D2e: () => D2e2,
-  D3: () => D32,
-  D4e: () => D4e,
-  DA: () => DA,
-  DD: () => DD2,
-  DI: () => DI,
-  DN: () => DN,
-  DQ: () => DQ,
-  DR: () => DR,
-  Df: () => Df,
-  Dit: () => Dit2,
-  Dm: () => Dm2,
-  Doe: () => Doe,
-  Dot: () => Dot2,
-  Dpe: () => Dpe,
-  Dre: () => Dre2,
-  Ds: () => Ds2,
-  Dst: () => Dst,
-  Dve: () => Dve,
-  Dwt: () => Dwt,
-  E4e: () => E4e,
-  E8e: () => E8e,
-  EI: () => EI,
-  EQ: () => EQ2,
-  E_t: () => E_t,
-  Ep: () => Ep,
-  Epe: () => Epe2,
-  Eqe: () => Eqe2,
-  Ere: () => Ere2,
-  Eu: () => Eu,
-  Ewt: () => Ewt,
-  F2: () => F22,
-  F2e: () => F2e,
-  F3: () => F3,
-  F4e: () => F4e,
-  F9e: () => F9e2,
-  FD: () => FD2,
-  FI: () => FI,
-  FN: () => FN,
-  FQ: () => NOVELAI_V45_RAW_CATALOG,
-  FR: () => FR,
-  Fa: () => Fa2,
-  Fit: () => Fit2,
-  Foe: () => Foe,
-  Fpe: () => Fpe,
-  Fst: () => Fst,
-  Fut: () => Fut2,
-  Fve: () => Fve,
-  Fwt: () => Fwt,
-  G$e: () => G$e,
-  G2e: () => G2e,
-  G4e: () => G4e,
-  GC: () => GC,
-  GDe: () => GDe,
-  GR: () => GR,
-  Gd: () => Gd2,
-  Gl: () => Gl,
-  Gmt: () => Gmt2,
-  Goe: () => Goe,
-  Gpe: () => Gpe,
-  Gr: () => Gr2,
-  Gt: () => Gt,
-  Gut: () => Gut2,
-  Gv: () => Gv,
-  Gw: () => Gw,
-  Gwt: () => Gwt,
-  Gx: () => Gx2,
-  H$e: () => H$e,
-  H1e: () => H1e,
-  H2e: () => H2e,
-  H3: () => H3,
-  H4e: () => H4e,
-  Hit: () => Hit,
-  Hoe: () => Hoe,
-  Hpe: () => Hpe,
-  Hre: () => Hre,
-  Hs: () => Hs2,
-  Hut: () => Hut2,
-  Hv: () => Hv2,
-  Hw: () => Hw,
-  Hwt: () => Hwt,
-  I2e: () => I2e2,
-  I5: () => I5,
-  I7: () => I7,
-  I8: () => I8,
-  I8e: () => I8e2,
-  IK: () => IK,
-  Iae: () => Iae2,
-  Iqe: () => Iqe2,
-  Is: () => Is,
-  Iv: () => Iv2,
-  Iwe: () => Iwe,
-  Iwt: () => Iwt,
-  Ix: () => Ix,
-  J$e: () => J$e,
-  J2: () => J2,
-  J2e: () => J2e2,
-  J4e: () => J4e,
-  J6: () => J62,
-  J8: () => J82,
-  JE: () => JE2,
-  Ja: () => Ja2,
-  Jit: () => Jit,
-  Jl: () => Jl2,
-  Jmt: () => Jmt2,
-  Joe: () => Joe,
-  Jpe: () => Jpe,
-  Jre: () => Jre,
-  Jwt: () => Jwt,
-  K$e: () => K$e,
-  K1e: () => K1e,
-  K2e: () => K2e,
-  K3: () => K3,
-  K4e: () => K4e,
-  K9e: () => K9e2,
-  KI: () => KI,
-  KK: () => KK2,
-  KN: () => KN,
-  KQ: () => KQ2,
-  KR: () => KR,
-  Kc: () => Kc2,
-  Kit: () => Kit2,
-  Koe: () => Koe,
-  Kpe: () => Kpe,
-  Kst: () => Kst,
-  Kut: () => Kut2,
-  Kve: () => Kve,
-  Kw: () => Kw,
-  Kwt: () => Kwt,
-  L$e: () => L$e,
-  L1e: () => L1e,
-  L2: () => L22,
-  L2e: () => L2e2,
-  L4e: () => L4e,
-  LD: () => LD2,
-  LI: () => LI,
-  LN: () => LN,
-  LQ: () => LQ2,
-  LR: () => LR2,
-  Lf: () => Lf,
-  Lh: () => Lh,
-  Lit: () => Lit2,
-  Lj: () => Lj,
-  Loe: () => Loe,
-  Lpe: () => Lpe,
-  Lre: () => Lre2,
-  Ls: () => Ls,
-  Lst: () => Lst,
-  Lve: () => Lve,
-  Lvt: () => Lvt,
-  Lwt: () => Lwt,
-  M1e: () => M1e2,
-  M3: () => M3,
-  M4e: () => M4e,
-  M8e: () => M8e,
-  MA: () => MA,
-  MI: () => MI,
-  MK: () => MK,
-  MN: () => MN,
-  Mc: () => Mc,
-  Mhe: () => Mhe,
-  Mj: () => Mj,
-  Mp: () => Mp2,
-  Mpe: () => Mpe2,
-  Mst: () => Mst,
-  Mvt: () => Mvt,
-  Mwt: () => Mwt,
-  Mx: () => Mx,
-  Mye: () => Mye2,
-  N4e: () => N4e,
-  N8e: () => N8e,
-  NC: () => NC2,
-  NI: () => NI,
-  NQ: () => NQ2,
-  Nf: () => Nf2,
-  Not: () => Not,
-  Npe: () => Npe2,
-  Nre: () => Nre,
-  Nu: () => Nu,
-  Nvt: () => Nvt,
-  Nwt: () => Nwt,
-  Nx: () => Nx,
-  O4e: () => O4e,
-  O8: () => O82,
-  O8e: () => O8e,
-  O9e: () => O9e,
-  OI: () => OI2,
-  OK: () => OK,
-  OQ: () => OQ2,
-  Ob: () => Ob,
-  Oct: () => Oct,
-  Oi: () => Oi,
-  Oqe: () => Oqe,
-  Owt: () => Owt,
-  P0t: () => P0t,
-  P2e: () => P2e,
-  P4e: () => P4e,
-  P8: () => P8,
-  P8e: () => P8e2,
-  PH: () => PH,
-  PK: () => PK,
-  PQ: () => PQ2,
-  Pct: () => Pct,
-  Pf: () => Pf,
-  Pi: () => Pi,
-  Pl: () => Pl2,
-  Pqe: () => Pqe,
-  Pwt: () => Pwt,
-  Q$e: () => Q$e,
-  Q2e: () => Q2e2,
-  Q4e: () => Q4e,
-  Q6: () => Q6,
-  QDe: () => QDe2,
-  QE: () => QE2,
-  QQ: () => QQ2,
-  QV: () => QV,
-  Qit: () => Qit,
-  Ql: () => Ql2,
-  Qmt: () => Qmt2,
-  Qoe: () => Qoe,
-  Qpe: () => Qpe,
-  Qre: () => Qre,
-  Qu: () => Qu2,
-  Qvt: () => Qvt,
-  Qwt: () => Qwt,
-  R4e: () => R4e,
-  R8e: () => R8e,
-  RI: () => RI,
-  RK: () => RK,
-  Rot: () => Rot,
-  Rpe: () => Rpe2,
-  Rv: () => Rv,
-  Rvt: () => Rvt,
-  Rwt: () => Rwt,
-  Rx: () => Rx,
-  Rye: () => Rye2,
-  S5: () => S5,
-  S8: () => S8,
-  S8e: () => S8e2,
-  SK: () => SK,
-  Sae: () => Sae2,
-  Sft: () => Sft2,
-  Sh: () => Sh,
-  Sv: () => Sv2,
-  Swe: () => Swe,
-  Swt: () => Swt,
-  T$e: () => T$e,
-  T2e: () => T2e2,
-  T4e: () => T4e,
-  TA: () => TA,
-  TD: () => TD2,
-  TI: () => TI,
-  TN: () => TN,
-  TQ: () => TQ,
-  TR: () => TR,
-  T_: () => T_2,
-  Ta: () => Ta2,
-  Td: () => Td,
-  The: () => The,
-  Ti: () => Ti2,
-  Tj: () => Tj,
-  Toe: () => Toe,
-  Tp: () => Tp2,
-  Tre: () => Tre2,
-  Ts: () => Ts,
-  Tst: () => Tst,
-  Tve: () => Tve,
-  Tvt: () => Tvt,
-  Twt: () => Twt,
-  U$e: () => U$e,
-  U2: () => U2,
-  U2e: () => U2e,
-  U3: () => U3,
-  U4e: () => U4e,
-  UDe: () => UDe,
-  Uee: () => Uee,
-  Umt: () => Umt2,
-  Uoe: () => Uoe,
-  Upe: () => Upe,
-  Us: () => Us2,
-  Uu: () => Uu2,
-  Uut: () => Uut2,
-  Uv: () => Uv2,
-  Uw: () => Uw,
-  Uwt: () => Uwt,
-  Ux: () => Ux2,
-  V$e: () => V$e,
-  V1e: () => V1e,
-  V2e: () => V2e2,
-  V4e: () => V4e,
-  VC: () => VC,
-  VDe: () => VDe,
-  VQ: () => VQ2,
-  Vi: () => Vi2,
-  Vl: () => Vl,
-  Vmt: () => Vmt2,
-  Voe: () => Voe,
-  Vpe: () => Vpe,
-  Vw: () => Vw,
-  Vwt: () => Vwt,
-  Vx: () => Vx2,
-  W$e: () => W$e,
-  W1: () => W1,
-  W2: () => W22,
-  W2e: () => W2e2,
-  W4e: () => W4e,
-  W8: () => W8,
-  WD: () => WD,
-  WDe: () => WDe,
-  WE: () => WE2,
-  WV: () => WV,
-  Wd: () => Wd2,
-  Wmt: () => Wmt2,
-  Wo: () => Wo,
-  Woe: () => Woe,
-  Wpe: () => Wpe,
-  Wre: () => Wre,
-  Ws: () => Ws2,
-  Ww: () => Ww,
-  Wwt: () => Wwt,
-  Wye: () => Wye,
-  X$e: () => X$e,
-  X1e: () => X1e,
-  X2: () => X22,
-  X2e: () => X2e2,
-  X4e: () => X4e,
-  X8: () => X8,
-  XC: () => XC,
-  XD: () => XD,
-  XDe: () => XDe,
-  XOt: () => XOt,
-  XV: () => XV2,
-  Xd: () => Xd,
-  Xg: () => Xg2,
-  Xmt: () => Xmt2,
-  Xoe: () => Xoe,
-  Xre: () => Xre,
-  Xw: () => Xw,
-  Xwt: () => Xwt,
-  Xx: () => Xx,
-  Y$e: () => Y$e,
-  Y1e: () => Y1e,
-  Y2e: () => Y2e,
-  Y4e: () => Y4e,
-  Y8: () => Y82,
-  YDe: () => YDe,
-  YOt: () => YOt,
-  YP: () => YP2,
-  Yc: () => Yc2,
-  Yee: () => Yee2,
-  Yf: () => Yf,
-  Yi: () => Yi2,
-  Yit: () => Yit,
-  Ymt: () => Ymt2,
-  Yoe: () => Yoe,
-  Ype: () => Ype,
-  Yr: () => Yr2,
-  Yre: () => Yre,
-  Ywt: () => Ywt,
-  Z$e: () => Z$e,
-  Z1e: () => Z1e,
-  Z2e: () => Z2e2,
-  Z4e: () => Z4e,
-  Z6: () => Z6,
-  Z8: () => Z82,
-  ZDe: () => ZDe,
-  ZE: () => ZE2,
-  ZOt: () => ZOt,
-  ZT$96: () => ZT$962,
-  Zc: () => Zc2,
-  Zf: () => Zf,
-  Zit: () => Zit,
-  Zmt: () => Zmt2,
-  Zoe: () => Zoe,
-  Zpe: () => Zpe,
-  Zre: () => Zre,
-  Zwt: () => Zwt,
-  _5: () => _5,
-  _8: () => _8,
-  _9e: () => _9e,
-  _A: () => _A,
-  _I: () => _I2,
-  _K: () => _K,
-  _ae: () => _ae2,
-  _l: () => _l2,
-  _qe: () => _qe,
-  _we: () => _we,
-  _y: () => _y2,
-  a1: () => a12,
-  a3e: () => a3e,
-  a7: () => a7,
-  a8e: () => a8e2,
-  a9e: () => a9e,
-  aF: () => aF2,
-  aN: () => aN2,
-  aR: () => aR2,
-  aU: () => aU,
-  aX: () => aX,
-  aae: () => aae,
-  ahe: () => ahe,
-  apt: () => apt2,
-  ast: () => ast,
-  ate: () => ate,
-  awe: () => awe,
-  ay: () => ay2,
-  aye: () => aye2,
-  b3e: () => b3e2,
-  b9e: () => b9e,
-  bK: () => bK,
-  bb: () => bb,
-  bft: () => bft2,
-  bwe: () => bwe,
-  bwt: () => bwt,
-  by: () => by2,
-  c0t: () => c0t,
-  c1: () => c1,
-  c7: () => c7,
-  c9e: () => c9e,
-  cA: () => cA2,
-  cC: () => cC,
-  cF: () => cF,
-  cG: () => cG,
-  cU: () => cU,
-  cc: () => cc2,
-  cft: () => cft2,
-  che: () => che,
-  cht: () => cht2,
-  cst: () => cst,
-  cte: () => cte,
-  cw: () => cw,
-  cwe: () => cwe,
-  cy: () => cy2,
-  d0t: () => d0t,
-  d1: () => d1,
-  d7: () => d72,
-  d8e: () => d8e2,
-  d9e: () => d9e,
-  dC: () => dC,
-  dH: () => dH2,
-  dU: () => dU,
-  dce: () => dce,
-  dft: () => dft2,
-  dhe: () => dhe,
-  dht: () => dht2,
-  dst: () => dst,
-  dte: () => dte,
-  dw: () => dw,
-  dwe: () => dwe,
-  e0t: () => e0t,
-  e2: () => e22,
-  e3e: () => e3e,
-  e7: () => e7,
-  e9e: () => e9e,
-  eH: () => eH2,
-  eN: () => eN2,
-  eR: () => eR2,
-  eX: () => eX,
-  e_: () => e_,
-  ea: () => ea2,
-  eae: () => eae,
-  ed: () => ed2,
-  ehe: () => ehe,
-  el: () => el2,
-  ene: () => ene,
-  ept: () => ept2,
-  est: () => est,
-  eu: () => eu,
-  ewe: () => ewe,
-  ewt: () => ewt,
-  f0: () => f0,
-  f0t: () => f0t,
-  f1: () => f1,
-  f7: () => f7,
-  f8e: () => f8e2,
-  f9e: () => f9e,
-  fF: () => fF,
-  fH: () => fH2,
-  fS: () => fS,
-  fX: () => fX,
-  fae: () => fae,
-  fc: () => fc2,
-  fce: () => fce,
-  fft: () => fft2,
-  fht: () => fht,
-  fm: () => fm2,
-  fst: () => fst,
-  fte: () => fte,
-  fwe: () => fwe,
-  fwt: () => fwt,
-  g8e: () => g8e2,
-  g9e: () => g9e,
-  gc: () => gc,
-  gft: () => gft2,
-  goe: () => goe,
-  gst: () => gst,
-  gte: () => gte,
-  gwe: () => gwe,
-  gwt: () => gwt,
-  h0t: () => h0t,
-  h2: () => h2,
-  h8e: () => h8e2,
-  h9e: () => h9e,
-  hft: () => hft2,
-  hp: () => hp,
-  hst: () => hst,
-  hte: () => hte,
-  hwe: () => hwe,
-  hwt: () => hwt,
-  i1: () => i1,
-  i3e: () => i3e,
-  i7: () => i7,
-  i9e: () => i9e,
-  iC: () => iC,
-  iF: () => iF2,
-  iR: () => iR2,
-  iU: () => iU,
-  iae: () => iae,
-  ib: () => ib,
-  ice: () => ice2,
-  ihe: () => ihe,
-  ist: () => ist,
-  iw: () => iw2,
-  iwe: () => iwe,
-  iy: () => iy2,
-  iye: () => iye2,
-  j4e: () => j4e,
-  j8e: () => j8e,
-  j9e: () => j9e,
-  jFe: () => jFe,
-  jI: () => jI2,
-  jN: () => jN,
-  jQ: () => jQ2,
-  ja: () => ja2,
-  jf: () => jf,
-  jpe: () => jpe2,
-  jqe: () => jqe,
-  jre: () => jre2,
-  jwe: () => jwe,
-  jwt: () => jwt,
-  jye: () => jye2,
-  k4: () => k4,
-  k5: () => k5,
-  k8: () => k8,
-  k8e: () => k8e2,
-  kK: () => kK,
-  kSe: () => kSe,
-  ka: () => ka,
-  kct: () => kct,
-  kft: () => kft2,
-  kg: () => kg,
-  kh: () => kh,
-  kn: () => kn2,
-  koe: () => koe,
-  kwt: () => kwt,
-  l0t: () => l0t,
-  l1: () => l1,
-  l7: () => l7,
-  l8e: () => l8e2,
-  l9e: () => l9e,
-  lC: () => lC,
-  lF: () => lF,
-  lG: () => lG,
-  lH: () => lH,
-  lN: () => lN,
-  lPe: () => lPe2,
-  lU: () => lU,
-  lb: () => lb2,
-  lc: () => lc2,
-  lhe: () => lhe,
-  lht: () => lht2,
-  lst: () => lst,
-  lte: () => lte,
-  lw: () => lw,
-  lwe: () => lwe,
-  ly: () => ly,
-  lz: () => lz2,
-  m0: () => m0,
-  m2: () => m2,
-  m7: () => m7,
-  m8e: () => m8e2,
-  m9e: () => m9e,
-  mC: () => mC,
-  mF: () => mF,
-  mH: () => mH,
-  mS: () => mS,
-  mc: () => mc,
-  mce: () => mce,
-  mft: () => mft2,
-  mht: () => mht,
-  mp: () => mp,
-  mst: () => mst,
-  mte: () => mte,
-  mwe: () => mwe,
-  mwt: () => mwt,
-  n0t: () => n0t,
-  n2: () => n2,
-  n3e: () => n3e,
-  n7: () => n7,
-  n8e: () => n8e2,
-  n9: () => n9,
-  n9e: () => n9e,
-  nC: () => nC2,
-  nF: () => nF2,
-  nR: () => nR,
-  nU: () => nU,
-  nX: () => nX,
-  nae: () => nae,
-  nb: () => nb,
-  nf: () => nf,
-  npt: () => npt2,
-  nst: () => nst,
-  nte: () => nte,
-  nwe: () => nwe,
-  o0t: () => o0t,
-  o3e: () => o3e,
-  o7: () => o7,
-  o9e: () => o9e,
-  oC: () => oC,
-  oF: () => oF2,
-  oR: () => oR2,
-  oU: () => oU,
-  oX: () => oX,
-  oae: () => oae,
-  oi: () => oi2,
-  opt: () => opt2,
-  ost: () => ost,
-  ote: () => ote,
-  owe: () => owe,
-  oye: () => oye2,
-  p0t: () => p0t,
-  p7: () => p7,
-  p8e: () => p8e2,
-  p9e: () => p9e,
-  pU: () => pU,
-  pce: () => pce,
-  pf: () => pf2,
-  pft: () => pft2,
-  pl: () => pl,
-  po: () => po2,
-  pp: () => pp,
-  pst: () => pst,
-  pte: () => pte,
-  pwe: () => pwe,
-  pwt: () => pwt,
-  q$e: () => q$e,
-  q2e: () => q2e,
-  q3: () => q3,
-  q4e: () => q4e,
-  qC: () => qC,
-  qD: () => qD,
-  qDe: () => qDe,
-  qOt: () => qOt,
-  qd: () => qd2,
-  qdt: () => qdt,
-  qmt: () => qmt2,
-  qoe: () => qoe,
-  qpe: () => qpe,
-  qu: () => qu,
-  qut: () => qut2,
-  qv: () => qv,
-  qw: () => qw,
-  qwt: () => qwt,
-  qx: () => qx,
-  r0t: () => r0t,
-  r2: () => r2,
-  r3e: () => r3e,
-  r5e: () => r5e,
-  r7: () => r7,
-  r8e: () => r8e2,
-  r9e: () => r9e,
-  rF: () => rF2,
-  rS: () => rS2,
-  rU: () => rU,
-  rX: () => rX,
-  rae: () => rae,
-  rb: () => rb2,
-  rd: () => rd,
-  rpt: () => rpt2,
-  rst: () => rst,
-  rte: () => rte,
-  rwe: () => rwe,
-  s0t: () => s0t,
-  s1: () => s1,
-  s3e: () => s3e,
-  s7: () => s7,
-  s9e: () => s9e,
-  sA: () => sA,
-  sC: () => sC,
-  sF: () => sF,
-  sG: () => sG,
-  sO: () => sO,
-  sR: () => sR2,
-  sU: () => sU,
-  sce: () => sce,
-  she: () => she,
-  si: () => si,
-  sn: () => sn2,
-  sst: () => sst,
-  ste: () => ste,
-  sw: () => sw2,
-  swe: () => swe,
-  sy: () => sy2,
-  t0t: () => t0t,
-  t3e: () => t3e,
-  t5e: () => t5e2,
-  t7: () => t7,
-  t8e: () => t8e2,
-  t9e: () => t9e,
-  tN: () => tN2,
-  tR: () => tR2,
-  tX: () => tX,
-  tae: () => tae,
-  td: () => td2,
-  tf: () => tf,
-  the: () => the,
-  tne: () => tne,
-  tpt: () => tpt2,
-  tst: () => tst,
-  twe: () => twe,
-  ty: () => ty,
-  u0t: () => u0t,
-  u1: () => u1,
-  u9e: () => u9e,
-  uA: () => uA2,
-  uF: () => uF,
-  uH: () => uH2,
-  uN: () => uN,
-  uU: () => uU,
-  uce: () => uce,
-  uft: () => uft2,
-  uht: () => uht,
-  ust: () => ust,
-  ute: () => ute,
-  uw: () => uw,
-  uwe: () => uwe,
-  v3e: () => v3e2,
-  v9e: () => v9e,
-  vK: () => vK,
-  vd: () => vd2,
-  vft: () => vft2,
-  vk: () => vk2,
-  vqe: () => vqe,
-  vst: () => vst,
-  vwe: () => vwe,
-  vwt: () => vwt,
-  vy: () => vy,
-  w8: () => w82,
-  w9e: () => w9e,
-  wA: () => wA,
-  wK: () => wK,
-  wa: () => wa,
-  wl: () => wl,
-  wn: () => wn,
-  wqe: () => wqe,
-  wst: () => wst,
-  wte: () => wte2,
-  ww: () => ww2,
-  wwe: () => wwe,
-  wwt: () => wwt,
-  wy: () => wy,
-  x5: () => x5,
-  x8: () => x8,
-  xA: () => xA,
-  xK: () => xK,
-  xR: () => xR,
-  xk: () => xk,
-  xqe: () => xqe,
-  xst: () => xst,
-  xte: () => xte2,
-  xwe: () => xwe,
-  xx: () => xx2,
-  y3e: () => y3e2,
-  y9e: () => y9e,
-  y_: () => y_2,
-  yb: () => yb,
-  yft: () => yft2,
-  yst: () => yst2,
-  yte: () => yte,
-  ywe: () => ywe,
-  ywt: () => ywt,
-  yy: () => yy2,
-  z4e: () => z4e,
-  z8e: () => z8e,
-  zD: () => zD2,
-  zI: () => zI,
-  zK: () => zK,
-  zQ: () => zQ,
-  za: () => za,
-  zf: () => zf2,
-  zhe: () => zhe,
-  zit: () => zit2,
-  zp: () => zp2,
-  zst: () => zst,
-  zv: () => zv,
-  zvt: () => zvt,
-  zwt: () => zwt,
-  zye: () => zye
-});
-
 // src/shared/contract/common.ts
 function isPlainObject(value) {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -2126,8 +1259,8 @@ function normalizeCharacterPrompt(value, characterId = "") {
   const framing = jsonClone(base.outfitPartFramingWeights);
   for (const part of OUTFIT_PARTS) {
     const w = asRecord(weights[part]);
-    for (const [frame, value] of Object.entries(w)) {
-      const n = Number(value);
+    for (const [frame, value2] of Object.entries(w)) {
+      const n = Number(value2);
       if (Number.isFinite(n))
         framing[part][frame] = n;
     }
@@ -4599,8 +3732,8 @@ function normalizeDirectionSetting(value, kind) {
     const target = sceneId ? presets.find((p) => p.id === r.selectedPresetId && p.scenePresetId === sceneId) ?? presets.find((p) => p.scenePresetId === sceneId) : undefined;
     if (sceneId && overrides)
       presets = presets.map((p) => p.id === target?.id ? { ...p, controlOverrides: overrides } : p);
-    const selected = legacyArtistCg ? "scene-default" : sceneId ? target?.id : typeof r.selectedPresetId === "string" && presets.some((p) => p.id === r.selectedPresetId) ? r.selectedPresetId : presets[0].id;
-    return selectDirectionPreset({ presets }, selected);
+    const selected2 = legacyArtistCg ? "scene-default" : sceneId ? target?.id : typeof r.selectedPresetId === "string" && presets.some((p) => p.id === r.selectedPresetId) ? r.selectedPresetId : presets[0].id;
+    return selectDirectionPreset({ presets }, selected2);
   }
   const list = builtIns.map((p) => p.scenePresetId === sceneId && overrides ? { ...p, controlOverrides: overrides } : p);
   const selected = kind === "scene" && sceneId ? `scene-${sceneId}` : list[0]?.id;
@@ -4665,7 +3798,7 @@ function createDefaultConfig() {
       characterPrompts: [],
       negativePrompt: ""
     },
-    image: { connectionId: "", provider: "", model: "", comfyuiWorkflowId: "", parameters: {} },
+    image: { connectionId: "", provider: "", model: "", comfyuiWorkflowId: "", characterReferenceSource: "avatar", characterReferenceGalleryIndex: 0, parameters: {} },
     animaArtists: createDefaultAnimaArtists(),
     presetCatalog: { rawJson: "", lastError: "" },
     characterPrompt: {
@@ -4811,6 +3944,8 @@ function normalizeConfigWithIssues(raw) {
     provider: trimString(imageIn.provider).toLowerCase() || (trimString(asRecord(input.runtime).generationProvider) === "novelai" ? "novelai" : trimString(asRecord(input.runtime).generationProvider) === "comfy-ui" ? "comfyui" : ""),
     model: trimString(imageIn.model) || legacyModel,
     comfyuiWorkflowId: trimString(imageIn.comfyuiWorkflowId),
+    characterReferenceSource: imageIn.characterReferenceSource === "gallery" ? "gallery" : "avatar",
+    characterReferenceGalleryIndex: clampInt(imageIn.characterReferenceGalleryIndex, 0, 0, 999),
     parameters: isPlainObject(imageIn.parameters) ? jsonClone(imageIn.parameters) : {}
   };
   const n = asRecord(merged.novelai);
@@ -5858,10 +4993,10 @@ class AnalysisJobs {
       try {
         outcome = await run(ctx);
       } catch (error) {
-        const rpc = toRpcError(error);
-        outcome = isAbortLike(error) || controller.signal.aborted ? { status: "cancelled", message: "Analysis cancelled." } : { status: "error", message: rpc.message, ...rpc.messageKo ? { messageKo: rpc.messageKo } : {}, error: rpc };
+        const rpc2 = toRpcError(error);
+        outcome = isAbortLike(error) || controller.signal.aborted ? { status: "cancelled", message: "Analysis cancelled." } : { status: "error", message: rpc2.message, ...rpc2.messageKo ? { messageKo: rpc2.messageKo } : {}, error: rpc2 };
         if (outcome.status === "error")
-          this.services.log.append("error", "analysis", `${kind} failed: ${rpc.message}`, rpc);
+          this.services.log.append("error", "analysis", `${kind} failed: ${rpc2.message}`, rpc2);
       } finally {
         this.jobs.delete(jobId);
       }
@@ -18034,6 +17169,34 @@ function Fs(e) {
 `).trim() : "";
 }
 var pN = Object.freeze([1, 2, 5]);
+function hN(e) {
+  if (e === "imageRatio") {
+    const t = NOVELAI_V5_RAW_CONFIG.analysisPresets.imageRatio;
+    return [
+      {
+        id: "image-ratio-default",
+        name: t.default.presentation.label,
+        instruction: t.default.instruction,
+        allowedSizeIds: [...pN]
+      },
+      {
+        id: "image-ratio-unspecified",
+        name: t.unspecified.presentation.label,
+        instruction: t.unspecified.instruction,
+        allowedSizeIds: [...t.unspecified.allowedSizeIds]
+      }
+    ];
+  }
+  return [
+    { id: "scene-default", name: dee.label, instruction: lee },
+    ...uee.map(({ id: t, instruction: r, presentation: n }) => ({
+      id: `scene-${t}`,
+      name: n.label,
+      instruction: r,
+      scenePresetId: t
+    }))
+  ];
+}
 function pA(e) {
   if (e?.presets?.length)
     return e.presets.find(({ id: t }) => t === e.selectedPresetId) ?? e.presets[0];
@@ -18041,6 +17204,24 @@ function pA(e) {
 function F5e(e) {
   const t = pA(e)?.allowedSizeIds ?? pN, r = [...new Set(t.filter((n) => Number.isInteger(n) && n >= 1 && n <= 5 || Av(n)))];
   return Object.freeze(r.length ? r : [...pN]);
+}
+function selectV5DirectionPreset(e, t, r = "preset") {
+  const n = e.presets?.find(({ id: o }) => o === t) ?? e.presets?.[0];
+  return {
+    mode: r,
+    ...n ? { selectedPresetId: n.id } : {},
+    presets: e.presets ?? [],
+    ...r === "preset" && n?.scenePresetId ? { presetId: n.scenePresetId } : {},
+    ...r === "preset" && n?.controlOverrides ? { controlOverrides: n.controlOverrides } : {},
+    customText: r === "preset" ? n?.instruction ?? "" : ""
+  };
+}
+function createDefaultV5UserDirectionSettings() {
+  const e = hN("scene"), t = hN("imageRatio");
+  return {
+    scene: selectV5DirectionPreset({ mode: "preset", selectedPresetId: e[0]?.id, presets: e, customText: "" }, e[0]?.id),
+    imageRatio: selectV5DirectionPreset({ mode: "preset", selectedPresetId: t[0]?.id, presets: t, customText: "" }, t[0]?.id)
+  };
 }
 function H5e(e) {
   return e?.enabled ? Fs(e.text) : "";
@@ -28759,7 +27940,7 @@ function vet(e) {
 }
 function compileNovelAIV5Catalog(e) {
   assertNovelAIV5RawConfig(e);
-  const t = e, { stages: r, modifierLibrary: n } = t, o = r.interaction.definitions, a = Object.freeze([]), i = xc(r.frame_placement.sizes.map((z) => [
+  const t = e, r = t.stages, n = t.modifierLibrary, o = r.interaction.definitions, a = Object.freeze([]), i = xc(r.frame_placement.sizes.map((z) => [
     z.id,
     Object.freeze({
       id: z.id,
@@ -41586,7 +40767,7 @@ function createGenerationBatchExecutor(e, t, r) {
                 t.assertActivePhase(o, "saving", "resumed-image-saved"), l.pendingGeneratedImages.delete(x.sourceImageToken), f.push(A), t.setPhase(o, "generating", "resumed-image-saved", { imageIndex: _, imageCount: I });
                 continue;
               }
-              const P = x.providerRef.providerId, k = zgt(P), { seed: O, seedFixed: j } = v, C = y ? { ...x.promptPlan, sizeId: y.id, width: y.width, height: y.height } : x.promptPlan, R = x.createNovelAIConfig(O), M = y ? { ...R, width: y.width, height: y.height } : R, L = P === "comfy-ui" ? eH(l.comfyUI?.workflowProfileId) : null, Y = P === "comfy-ui" ? l.outfitReference?.(x.actors) ?? null : null, V = P === "comfy-ui" ? l.characterReference?.(x.actors) ?? null : null, K = P === "novelai" ? l.references?.(x.actors) ?? [] : [Y, V].filter((q) => q !== null), T = P === "novelai" && l.novelAIImageToImage ? {
+              const P = x.providerRef.providerId, k = zgt(P), O = v.seed, j = v.seedFixed, C = y ? { ...x.promptPlan, sizeId: y.id, width: y.width, height: y.height } : x.promptPlan, R = x.createNovelAIConfig(O), M = y ? { ...R, width: y.width, height: y.height } : R, L = P === "comfy-ui" ? eH(l.comfyUI?.workflowProfileId) : null, Y = P === "comfy-ui" ? l.outfitReference?.(x.actors) ?? null : null, V = P === "comfy-ui" ? l.characterReference?.(x.actors) ?? null : null, K = P === "novelai" ? l.references?.(x.actors) ?? [] : [Y, V].filter((q) => q !== null), T = P === "novelai" && l.novelAIImageToImage ? {
                 image: await l.novelAIImageToImage(),
                 strength: l.novelAIImageToImageStrength ?? CC.strength,
                 noise: l.novelAIImageToImageNoise ?? CC.noise
@@ -46192,7 +45373,7 @@ function ES(e, t = "") {
     reference: o.reference,
     outfits: o.outfits,
     defaultOutfitId: o.defaultOutfitId ?? o.default_outfit_id
-  }), s = i.forms.find((h) => h.id === i.defaultFormId) ?? i.forms[0], c = [...s.outfits], l = Qt(s.defaultOutfitId), d = c.some((h) => Qt(h.id) === l) ? l : Qt(c[0]?.id), { gender: u, basePromptGroups: f } = s, m = Yi(f, u) || (r ? n1t : "");
+  }), s = i.forms.find((h) => h.id === i.defaultFormId) ?? i.forms[0], c = [...s.outfits], l = Qt(s.defaultOutfitId), d = c.some((h) => Qt(h.id) === l) ? l : Qt(c[0]?.id), u = s.gender, f = s.basePromptGroups, m = Yi(f, u) || (r ? n1t : "");
   return {
     key: r ? `persona::${r}` : "",
     prompt: m,
@@ -46871,11 +46052,876 @@ function buildIllustrationSlots(e) {
 }
 
 // src/engine/compose/weights.ts
-function applyNonArtistWeightToRequest2(body, config) {
-  return applyNonArtistWeightToRequest(body, config);
+function applyNonArtistWeightToRequest2(body, config2) {
+  return applyNonArtistWeightToRequest(body, config2);
 }
 
 // src/backend/analysis/core/analysis-core.ts
+var exports_analysis_core = {};
+__export(exports_analysis_core, {
+  zye: () => zye,
+  zwt: () => zwt,
+  zvt: () => zvt,
+  zv: () => zv,
+  zst: () => zst,
+  zp: () => zp2,
+  zit: () => zit2,
+  zhe: () => zhe,
+  zf: () => zf2,
+  za: () => za,
+  zQ: () => zQ,
+  zK: () => zK,
+  zI: () => zI,
+  zD: () => zD2,
+  z8e: () => z8e,
+  z4e: () => z4e,
+  yy: () => yy2,
+  ywt: () => ywt,
+  ywe: () => ywe,
+  yte: () => yte,
+  yst: () => yst2,
+  yft: () => yft2,
+  yb: () => yb,
+  y_: () => y_2,
+  y9e: () => y9e,
+  y3e: () => y3e2,
+  xx: () => xx2,
+  xwe: () => xwe,
+  xte: () => xte2,
+  xst: () => xst,
+  xqe: () => xqe,
+  xk: () => xk,
+  xR: () => xR,
+  xK: () => xK,
+  xA: () => xA,
+  x8: () => x8,
+  x5: () => x5,
+  wy: () => wy,
+  wwt: () => wwt,
+  wwe: () => wwe,
+  ww: () => ww2,
+  wte: () => wte2,
+  wst: () => wst,
+  wqe: () => wqe,
+  wn: () => wn,
+  wl: () => wl,
+  wa: () => wa,
+  wK: () => wK,
+  wA: () => wA,
+  w9e: () => w9e,
+  w8: () => w82,
+  vy: () => vy,
+  vwt: () => vwt,
+  vwe: () => vwe,
+  vst: () => vst,
+  vqe: () => vqe,
+  vk: () => vk2,
+  vft: () => vft2,
+  vd: () => vd2,
+  vK: () => vK,
+  v9e: () => v9e,
+  v3e: () => v3e2,
+  uwe: () => uwe,
+  uw: () => uw,
+  ute: () => ute,
+  ust: () => ust,
+  uht: () => uht,
+  uft: () => uft2,
+  uce: () => uce,
+  uU: () => uU,
+  uN: () => uN,
+  uH: () => uH2,
+  uF: () => uF,
+  uA: () => uA2,
+  u9e: () => u9e,
+  u1: () => u1,
+  u0t: () => u0t,
+  ty: () => ty,
+  twe: () => twe,
+  tst: () => tst,
+  tpt: () => tpt2,
+  tne: () => tne,
+  the: () => the,
+  tf: () => tf,
+  td: () => td2,
+  tae: () => tae,
+  tX: () => tX,
+  tR: () => tR2,
+  tN: () => tN2,
+  t9e: () => t9e,
+  t8e: () => t8e2,
+  t7: () => t7,
+  t5e: () => t5e2,
+  t3e: () => t3e,
+  t0t: () => t0t,
+  sy: () => sy2,
+  swe: () => swe,
+  sw: () => sw2,
+  ste: () => ste,
+  sst: () => sst,
+  sn: () => sn2,
+  si: () => si,
+  she: () => she,
+  sce: () => sce,
+  sU: () => sU,
+  sR: () => sR2,
+  sO: () => sO,
+  sG: () => sG,
+  sF: () => sF,
+  sC: () => sC,
+  sA: () => sA,
+  s9e: () => s9e,
+  s7: () => s7,
+  s3e: () => s3e,
+  s1: () => s1,
+  s0t: () => s0t,
+  rwe: () => rwe,
+  rte: () => rte,
+  rst: () => rst,
+  rpt: () => rpt2,
+  rd: () => rd,
+  rb: () => rb2,
+  rae: () => rae,
+  rX: () => rX,
+  rU: () => rU,
+  rS: () => rS2,
+  rF: () => rF2,
+  r9e: () => r9e,
+  r8e: () => r8e2,
+  r7: () => r7,
+  r5e: () => r5e,
+  r3e: () => r3e,
+  r2: () => r2,
+  r0t: () => r0t,
+  qx: () => qx,
+  qwt: () => qwt,
+  qw: () => qw,
+  qv: () => qv,
+  qut: () => qut2,
+  qu: () => qu,
+  qpe: () => qpe,
+  qoe: () => qoe,
+  qmt: () => qmt2,
+  qdt: () => qdt,
+  qd: () => qd2,
+  qOt: () => qOt,
+  qDe: () => qDe,
+  qD: () => qD,
+  qC: () => qC,
+  q4e: () => q4e,
+  q3: () => q3,
+  q2e: () => q2e,
+  q$e: () => q$e,
+  pwt: () => pwt,
+  pwe: () => pwe,
+  pte: () => pte,
+  pst: () => pst,
+  pp: () => pp,
+  po: () => po2,
+  pl: () => pl,
+  pft: () => pft2,
+  pf: () => pf2,
+  pce: () => pce,
+  pU: () => pU,
+  p9e: () => p9e,
+  p8e: () => p8e2,
+  p7: () => p7,
+  p0t: () => p0t,
+  oye: () => oye2,
+  owe: () => owe,
+  ote: () => ote,
+  ost: () => ost,
+  opt: () => opt2,
+  oi: () => oi2,
+  oae: () => oae,
+  oX: () => oX,
+  oU: () => oU,
+  oR: () => oR2,
+  oF: () => oF2,
+  oC: () => oC,
+  o9e: () => o9e,
+  o7: () => o7,
+  o3e: () => o3e,
+  o0t: () => o0t,
+  nwe: () => nwe,
+  nte: () => nte,
+  nst: () => nst,
+  npt: () => npt2,
+  nf: () => nf,
+  nb: () => nb,
+  nae: () => nae,
+  nX: () => nX,
+  nU: () => nU,
+  nR: () => nR,
+  nF: () => nF2,
+  nC: () => nC2,
+  n9e: () => n9e,
+  n9: () => n9,
+  n8e: () => n8e2,
+  n7: () => n7,
+  n3e: () => n3e,
+  n2: () => n2,
+  n0t: () => n0t,
+  mwt: () => mwt,
+  mwe: () => mwe,
+  mte: () => mte,
+  mst: () => mst,
+  mp: () => mp,
+  mht: () => mht,
+  mft: () => mft2,
+  mce: () => mce,
+  mc: () => mc,
+  mS: () => mS,
+  mH: () => mH,
+  mF: () => mF,
+  mC: () => mC,
+  m9e: () => m9e,
+  m8e: () => m8e2,
+  m7: () => m7,
+  m2: () => m2,
+  m0: () => m0,
+  lz: () => lz2,
+  ly: () => ly,
+  lwe: () => lwe,
+  lw: () => lw,
+  lte: () => lte,
+  lst: () => lst,
+  lht: () => lht2,
+  lhe: () => lhe,
+  lc: () => lc2,
+  lb: () => lb2,
+  lU: () => lU,
+  lPe: () => lPe2,
+  lN: () => lN,
+  lH: () => lH,
+  lG: () => lG,
+  lF: () => lF,
+  lC: () => lC,
+  l9e: () => l9e,
+  l8e: () => l8e2,
+  l7: () => l7,
+  l1: () => l1,
+  l0t: () => l0t,
+  kwt: () => kwt,
+  koe: () => koe,
+  kn: () => kn2,
+  kh: () => kh,
+  kg: () => kg,
+  kft: () => kft2,
+  kct: () => kct,
+  ka: () => ka,
+  kSe: () => kSe,
+  kK: () => kK,
+  k8e: () => k8e2,
+  k8: () => k8,
+  k5: () => k5,
+  k4: () => k4,
+  jye: () => jye2,
+  jwt: () => jwt,
+  jwe: () => jwe,
+  jre: () => jre2,
+  jqe: () => jqe,
+  jpe: () => jpe2,
+  jf: () => jf,
+  ja: () => ja2,
+  jQ: () => jQ2,
+  jN: () => jN,
+  jI: () => jI2,
+  jFe: () => jFe,
+  j9e: () => j9e,
+  j8e: () => j8e,
+  j4e: () => j4e,
+  iye: () => iye2,
+  iy: () => iy2,
+  iwe: () => iwe,
+  iw: () => iw2,
+  ist: () => ist,
+  ihe: () => ihe,
+  ice: () => ice2,
+  ib: () => ib,
+  iae: () => iae,
+  iU: () => iU,
+  iR: () => iR2,
+  iF: () => iF2,
+  iC: () => iC,
+  i9e: () => i9e,
+  i7: () => i7,
+  i3e: () => i3e,
+  i1: () => i1,
+  hwt: () => hwt,
+  hwe: () => hwe,
+  hte: () => hte,
+  hst: () => hst,
+  hp: () => hp,
+  hft: () => hft2,
+  h9e: () => h9e,
+  h8e: () => h8e2,
+  h2: () => h2,
+  h0t: () => h0t,
+  gwt: () => gwt,
+  gwe: () => gwe,
+  gte: () => gte,
+  gst: () => gst,
+  goe: () => goe,
+  gft: () => gft2,
+  gc: () => gc,
+  g9e: () => g9e,
+  g8e: () => g8e2,
+  fwt: () => fwt,
+  fwe: () => fwe,
+  fte: () => fte,
+  fst: () => fst,
+  fm: () => fm2,
+  fht: () => fht,
+  fft: () => fft2,
+  fce: () => fce,
+  fc: () => fc2,
+  fae: () => fae,
+  fX: () => fX,
+  fS: () => fS,
+  fH: () => fH2,
+  fF: () => fF,
+  f9e: () => f9e,
+  f8e: () => f8e2,
+  f7: () => f7,
+  f1: () => f1,
+  f0t: () => f0t,
+  f0: () => f0,
+  ewt: () => ewt,
+  ewe: () => ewe,
+  eu: () => eu,
+  est: () => est,
+  ept: () => ept2,
+  ene: () => ene,
+  el: () => el2,
+  ehe: () => ehe,
+  ed: () => ed2,
+  eae: () => eae,
+  ea: () => ea2,
+  e_: () => e_,
+  eX: () => eX,
+  eR: () => eR2,
+  eN: () => eN2,
+  eH: () => eH2,
+  e9e: () => e9e,
+  e7: () => e7,
+  e3e: () => e3e,
+  e2: () => e22,
+  e0t: () => e0t,
+  dwe: () => dwe,
+  dw: () => dw,
+  dte: () => dte,
+  dst: () => dst,
+  dht: () => dht2,
+  dhe: () => dhe,
+  dft: () => dft2,
+  dce: () => dce,
+  dU: () => dU,
+  dH: () => dH2,
+  dC: () => dC,
+  d9e: () => d9e,
+  d8e: () => d8e2,
+  d7: () => d72,
+  d1: () => d1,
+  d0t: () => d0t,
+  cy: () => cy2,
+  cwe: () => cwe,
+  cw: () => cw,
+  cte: () => cte,
+  cst: () => cst,
+  cht: () => cht2,
+  che: () => che,
+  cft: () => cft2,
+  cc: () => cc2,
+  cU: () => cU,
+  cG: () => cG,
+  cF: () => cF,
+  cC: () => cC,
+  cA: () => cA2,
+  c9e: () => c9e,
+  c7: () => c7,
+  c1: () => c1,
+  c0t: () => c0t,
+  by: () => by2,
+  bwt: () => bwt,
+  bwe: () => bwe,
+  bft: () => bft2,
+  bb: () => bb,
+  bK: () => bK,
+  b9e: () => b9e,
+  b3e: () => b3e2,
+  aye: () => aye2,
+  ay: () => ay2,
+  awe: () => awe,
+  ate: () => ate,
+  ast: () => ast,
+  apt: () => apt2,
+  ahe: () => ahe,
+  aae: () => aae,
+  aX: () => aX,
+  aU: () => aU,
+  aR: () => aR2,
+  aN: () => aN2,
+  aF: () => aF2,
+  a9e: () => a9e,
+  a8e: () => a8e2,
+  a7: () => a7,
+  a3e: () => a3e,
+  a1: () => a12,
+  _y: () => _y2,
+  _we: () => _we,
+  _qe: () => _qe,
+  _l: () => _l2,
+  _ae: () => _ae2,
+  _K: () => _K,
+  _I: () => _I2,
+  _A: () => _A,
+  _9e: () => _9e,
+  _8: () => _8,
+  _5: () => _5,
+  Zwt: () => Zwt,
+  Zre: () => Zre,
+  Zpe: () => Zpe,
+  Zoe: () => Zoe,
+  Zmt: () => Zmt2,
+  Zit: () => Zit,
+  Zf: () => Zf,
+  Zc: () => Zc2,
+  ZT$96: () => ZT$962,
+  ZOt: () => ZOt,
+  ZE: () => ZE2,
+  ZDe: () => ZDe,
+  Z8: () => Z82,
+  Z6: () => Z6,
+  Z4e: () => Z4e,
+  Z2e: () => Z2e2,
+  Z1e: () => Z1e,
+  Z$e: () => Z$e,
+  Ywt: () => Ywt,
+  Yre: () => Yre,
+  Yr: () => Yr2,
+  Ype: () => Ype,
+  Yoe: () => Yoe,
+  Ymt: () => Ymt2,
+  Yit: () => Yit,
+  Yi: () => Yi2,
+  Yf: () => Yf,
+  Yee: () => Yee2,
+  Yc: () => Yc2,
+  YP: () => YP2,
+  YOt: () => YOt,
+  YDe: () => YDe,
+  Y8: () => Y82,
+  Y4e: () => Y4e,
+  Y2e: () => Y2e,
+  Y1e: () => Y1e,
+  Y$e: () => Y$e,
+  Xx: () => Xx,
+  Xwt: () => Xwt,
+  Xw: () => Xw,
+  Xre: () => Xre,
+  Xoe: () => Xoe,
+  Xmt: () => Xmt2,
+  Xg: () => Xg2,
+  Xd: () => Xd,
+  XV: () => XV2,
+  XOt: () => XOt,
+  XDe: () => XDe,
+  XD: () => XD,
+  XC: () => XC,
+  X8: () => X8,
+  X4e: () => X4e,
+  X2e: () => X2e2,
+  X2: () => X22,
+  X1e: () => X1e,
+  X$e: () => X$e,
+  Wye: () => Wye,
+  Wwt: () => Wwt,
+  Ww: () => Ww,
+  Ws: () => Ws2,
+  Wre: () => Wre,
+  Wpe: () => Wpe,
+  Woe: () => Woe,
+  Wo: () => Wo,
+  Wmt: () => Wmt2,
+  Wd: () => Wd2,
+  WV: () => WV,
+  WE: () => WE2,
+  WDe: () => WDe,
+  WD: () => WD,
+  W8: () => W8,
+  W4e: () => W4e,
+  W2e: () => W2e2,
+  W2: () => W22,
+  W1: () => W1,
+  W$e: () => W$e,
+  Vx: () => Vx2,
+  Vwt: () => Vwt,
+  Vw: () => Vw,
+  Vpe: () => Vpe,
+  Voe: () => Voe,
+  Vmt: () => Vmt2,
+  Vl: () => Vl,
+  Vi: () => Vi2,
+  VQ: () => VQ2,
+  VDe: () => VDe,
+  VC: () => VC,
+  V4e: () => V4e,
+  V2e: () => V2e2,
+  V1e: () => V1e,
+  V$e: () => V$e,
+  Ux: () => Ux2,
+  Uwt: () => Uwt,
+  Uw: () => Uw,
+  Uv: () => Uv2,
+  Uut: () => Uut2,
+  Uu: () => Uu2,
+  Us: () => Us2,
+  Upe: () => Upe,
+  Uoe: () => Uoe,
+  Umt: () => Umt2,
+  Uee: () => Uee,
+  UDe: () => UDe,
+  U4e: () => U4e,
+  U3: () => U3,
+  U2e: () => U2e,
+  U2: () => U2,
+  U$e: () => U$e,
+  Twt: () => Twt,
+  Tvt: () => Tvt,
+  Tve: () => Tve,
+  Tst: () => Tst,
+  Ts: () => Ts,
+  Tre: () => Tre2,
+  Tp: () => Tp2,
+  Toe: () => Toe,
+  Tj: () => Tj,
+  Ti: () => Ti2,
+  The: () => The,
+  Td: () => Td,
+  Ta: () => Ta2,
+  T_: () => T_2,
+  TR: () => TR,
+  TQ: () => TQ,
+  TN: () => TN,
+  TI: () => TI,
+  TD: () => TD2,
+  TA: () => TA,
+  T4e: () => T4e,
+  T2e: () => T2e2,
+  T$e: () => T$e,
+  Swt: () => Swt,
+  Swe: () => Swe,
+  Sv: () => Sv2,
+  Sh: () => Sh,
+  Sft: () => Sft2,
+  Sae: () => Sae2,
+  SK: () => SK,
+  S8e: () => S8e2,
+  S8: () => S8,
+  S5: () => S5,
+  Rye: () => Rye2,
+  Rx: () => Rx,
+  Rwt: () => Rwt,
+  Rvt: () => Rvt,
+  Rv: () => Rv,
+  Rpe: () => Rpe2,
+  Rot: () => Rot,
+  RK: () => RK,
+  RI: () => RI,
+  R8e: () => R8e,
+  R4e: () => R4e,
+  Qwt: () => Qwt,
+  Qvt: () => Qvt,
+  Qu: () => Qu2,
+  Qre: () => Qre,
+  Qpe: () => Qpe,
+  Qoe: () => Qoe,
+  Qmt: () => Qmt2,
+  Ql: () => Ql2,
+  Qit: () => Qit,
+  QV: () => QV,
+  QQ: () => QQ2,
+  QE: () => QE2,
+  QDe: () => QDe2,
+  Q6: () => Q6,
+  Q4e: () => Q4e,
+  Q2e: () => Q2e2,
+  Q$e: () => Q$e,
+  Pwt: () => Pwt,
+  Pqe: () => Pqe,
+  Pl: () => Pl2,
+  Pi: () => Pi,
+  Pf: () => Pf,
+  Pct: () => Pct,
+  PQ: () => PQ2,
+  PK: () => PK,
+  PH: () => PH,
+  P8e: () => P8e2,
+  P8: () => P8,
+  P4e: () => P4e,
+  P2e: () => P2e,
+  P0t: () => P0t,
+  Owt: () => Owt,
+  Oqe: () => Oqe,
+  Oi: () => Oi,
+  Oct: () => Oct,
+  Ob: () => Ob,
+  OQ: () => OQ2,
+  OK: () => OK,
+  OI: () => OI2,
+  O9e: () => O9e,
+  O8e: () => O8e,
+  O8: () => O82,
+  O4e: () => O4e,
+  Nx: () => Nx,
+  Nwt: () => Nwt,
+  Nvt: () => Nvt,
+  Nu: () => Nu,
+  Nre: () => Nre,
+  Npe: () => Npe2,
+  Not: () => Not,
+  Nf: () => Nf2,
+  NQ: () => NQ2,
+  NI: () => NI,
+  NC: () => NC2,
+  N8e: () => N8e,
+  N4e: () => N4e,
+  Mye: () => Mye2,
+  Mx: () => Mx,
+  Mwt: () => Mwt,
+  Mvt: () => Mvt,
+  Mst: () => Mst,
+  Mpe: () => Mpe2,
+  Mp: () => Mp2,
+  Mj: () => Mj,
+  Mhe: () => Mhe,
+  Mc: () => Mc,
+  MN: () => MN,
+  MK: () => MK,
+  MI: () => MI,
+  MA: () => MA,
+  M8e: () => M8e,
+  M4e: () => M4e,
+  M3: () => M3,
+  M1e: () => M1e2,
+  Lwt: () => Lwt,
+  Lvt: () => Lvt,
+  Lve: () => Lve,
+  Lst: () => Lst,
+  Ls: () => Ls,
+  Lre: () => Lre2,
+  Lpe: () => Lpe,
+  Loe: () => Loe,
+  Lj: () => Lj,
+  Lit: () => Lit2,
+  Lh: () => Lh,
+  Lf: () => Lf,
+  LR: () => LR2,
+  LQ: () => LQ2,
+  LN: () => LN,
+  LI: () => LI,
+  LD: () => LD2,
+  L4e: () => L4e,
+  L2e: () => L2e2,
+  L2: () => L22,
+  L1e: () => L1e,
+  L$e: () => L$e,
+  Kwt: () => Kwt,
+  Kw: () => Kw,
+  Kve: () => Kve,
+  Kut: () => Kut2,
+  Kst: () => Kst,
+  Kpe: () => Kpe,
+  Koe: () => Koe,
+  Kit: () => Kit2,
+  Kc: () => Kc2,
+  KR: () => KR,
+  KQ: () => KQ2,
+  KN: () => KN,
+  KK: () => KK2,
+  KI: () => KI,
+  K9e: () => K9e2,
+  K4e: () => K4e,
+  K3: () => K3,
+  K2e: () => K2e,
+  K1e: () => K1e,
+  K$e: () => K$e,
+  Jwt: () => Jwt,
+  Jre: () => Jre,
+  Jpe: () => Jpe,
+  Joe: () => Joe,
+  Jmt: () => Jmt2,
+  Jl: () => Jl2,
+  Jit: () => Jit,
+  Ja: () => Ja2,
+  JE: () => JE2,
+  J8: () => J82,
+  J6: () => J62,
+  J4e: () => J4e,
+  J2e: () => J2e2,
+  J2: () => J2,
+  J$e: () => J$e,
+  Ix: () => Ix,
+  Iwt: () => Iwt,
+  Iwe: () => Iwe,
+  Iv: () => Iv2,
+  Is: () => Is,
+  Iqe: () => Iqe2,
+  Iae: () => Iae2,
+  IK: () => IK,
+  I8e: () => I8e2,
+  I8: () => I8,
+  I7: () => I7,
+  I5: () => I5,
+  I2e: () => I2e2,
+  Hwt: () => Hwt,
+  Hw: () => Hw,
+  Hv: () => Hv2,
+  Hut: () => Hut2,
+  Hs: () => Hs2,
+  Hre: () => Hre,
+  Hpe: () => Hpe,
+  Hoe: () => Hoe,
+  Hit: () => Hit,
+  H4e: () => H4e,
+  H3: () => H3,
+  H2e: () => H2e,
+  H1e: () => H1e,
+  H$e: () => H$e,
+  Gx: () => Gx2,
+  Gwt: () => Gwt,
+  Gw: () => Gw,
+  Gv: () => Gv,
+  Gut: () => Gut2,
+  Gt: () => Gt,
+  Gr: () => Gr2,
+  Gpe: () => Gpe,
+  Goe: () => Goe,
+  Gmt: () => Gmt2,
+  Gl: () => Gl,
+  Gd: () => Gd2,
+  GR: () => GR,
+  GDe: () => GDe,
+  GC: () => GC,
+  G4e: () => G4e,
+  G2e: () => G2e,
+  G$e: () => G$e,
+  Fwt: () => Fwt,
+  Fve: () => Fve,
+  Fut: () => Fut2,
+  Fst: () => Fst,
+  Fpe: () => Fpe,
+  Foe: () => Foe,
+  Fit: () => Fit2,
+  Fa: () => Fa2,
+  FR: () => FR,
+  FQ: () => NOVELAI_V45_RAW_CATALOG,
+  FN: () => FN,
+  FI: () => FI,
+  FD: () => FD2,
+  F9e: () => F9e2,
+  F4e: () => F4e,
+  F3: () => F3,
+  F2e: () => F2e,
+  F2: () => F22,
+  Ewt: () => Ewt,
+  Eu: () => Eu,
+  Ere: () => Ere2,
+  Eqe: () => Eqe2,
+  Epe: () => Epe2,
+  Ep: () => Ep,
+  E_t: () => E_t,
+  EQ: () => EQ2,
+  EI: () => EI,
+  E8e: () => E8e,
+  E4e: () => E4e,
+  Dwt: () => Dwt,
+  Dve: () => Dve,
+  Dst: () => Dst,
+  Ds: () => Ds2,
+  Dre: () => Dre2,
+  Dpe: () => Dpe,
+  Dot: () => Dot2,
+  Doe: () => Doe,
+  Dm: () => Dm2,
+  Dit: () => Dit2,
+  Df: () => Df,
+  DR: () => DR,
+  DQ: () => DQ,
+  DN: () => DN,
+  DI: () => DI,
+  DD: () => DD2,
+  DA: () => DA,
+  D4e: () => D4e,
+  D3: () => D32,
+  D2e: () => D2e2,
+  D1e: () => D1e,
+  D$e: () => D$e,
+  Cqe: () => Cqe,
+  Cm: () => Cm2,
+  Ci: () => Ci,
+  Cct: () => Cct,
+  CQ: () => CQ2,
+  CK: () => CK,
+  CI: () => CI,
+  C4e: () => C4e,
+  C2e: () => C2e,
+  C0t: () => C0t,
+  Bwt: () => Bwt,
+  Bw: () => Bw2,
+  Bv: () => Bv2,
+  But: () => But2,
+  Bpe: () => Bpe,
+  Boe: () => Boe,
+  Bn: () => Bn,
+  Bme: () => Bme2,
+  Bit: () => Bit,
+  Bc: () => Bc2,
+  BR: () => BR,
+  BI: () => BI,
+  B9e: () => B9e2,
+  B4e: () => B4e,
+  B3: () => B3,
+  B2e: () => B2e,
+  B1e: () => B1e,
+  B$e: () => B$e,
+  Awt: () => Awt,
+  Av: () => Av2,
+  Aqe: () => Aqe,
+  Ap: () => Ap,
+  Ah: () => Ah,
+  Ag: () => Ag2,
+  Act: () => Act,
+  Ac: () => Ac2,
+  ASe: () => ASe,
+  AQ: () => AQ2,
+  AK: () => AK,
+  AH: () => AH2,
+  AF: () => AF,
+  AC: () => AC2,
+  A8e: () => A8e2,
+  A8: () => A8,
+  A5: () => A5,
+  A4e: () => A4e,
+  A4: () => A4,
+  A2e: () => A2e2,
+  A0t: () => A0t,
+  $wt: () => $wt,
+  $ut: () => $ut2,
+  $pe: () => $pe,
+  $p: () => $p2,
+  $oe: () => $oe,
+  $me: () => $me2,
+  $it: () => $it,
+  $X: () => $X,
+  $R: () => $R,
+  $Q: () => $Q2,
+  $9e: () => $9e2,
+  $4e: () => $4e,
+  $2e: () => $2e,
+  $$e: () => $$e
+});
 function Mc(e, t, r, n) {
   if (Object.is(e, t) || JSON.stringify(e) === JSON.stringify(t))
     return r;
@@ -47193,7 +47239,7 @@ var aX = function(e, t, r, n) {
       var se = new Ts(Math.max(ae * 2, he));
       se.set(r), r = se;
     }
-  }, d = t.f || 0, u = t.p || 0, f = t.b || 0, { l: m, d: h, m: y, n: v } = t, w = o * 8;
+  }, d = t.f || 0, u = t.p || 0, f = t.b || 0, m = t.l, h = t.d, y = t.m, v = t.n, w = o * 8;
   do {
     if (!m) {
       d = qu(e, u, 1);
@@ -58402,18 +58448,18 @@ async function persistAmConfigChange(services, characterId, before, after, optio
     }, { reason: options.reason ?? "analysis", ...options.expectedUpdatedAt ? { expectedUpdatedAt: options.expectedUpdatedAt } : {} });
   }
   if (diff.global.length) {
-    await services.storage.updateConfig((config) => {
-      const cp = { ...config.characterPrompt };
+    await services.storage.updateConfig((config2) => {
+      const cp = { ...config2.characterPrompt };
       for (const field of diff.global)
         patchField(cp, field, before.characterPrompt[field], after.characterPrompt[field]);
-      return { ...config, characterPrompt: cp };
+      return { ...config2, characterPrompt: cp };
     });
   }
   if (diff.metadata) {
     const b = before.characterPrompt.assetMetadataAvailability ?? {};
     const a = after.characterPrompt.assetMetadataAvailability ?? {};
-    await services.storage.updateJson(metadataCachePath(characterId), {}, (current) => {
-      const holder = { m: isPlainObject(current) ? current : {} };
+    await services.storage.updateJson(metadataCachePath(characterId), {}, (current2) => {
+      const holder = { m: isPlainObject(current2) ? current2 : {} };
       patchField(holder, "m", b, a);
       return holder.m;
     });
@@ -58503,37 +58549,37 @@ class AmConfigStore {
 
 // src/backend/analysis/bridge/asset-index.ts
 function createAmPriorityAssets(store, getSource) {
-  const X$e = amFn("X$e");
-  const Gt = amFn("Gt");
-  const Pi = amFn("Pi");
-  const Bn = amFn("Bn");
-  const uw = amFn("uw");
-  const t9e = amFn("t9e");
-  const kK = amFn("kK");
+  const X$e2 = amFn("X$e");
+  const Gt2 = amFn("Gt");
+  const Pi2 = amFn("Pi");
+  const Bn2 = amFn("Bn");
+  const uw2 = amFn("uw");
+  const t9e2 = amFn("t9e");
+  const kK2 = amFn("kK");
   const MZ = (asset) => amFn("oi")(asset) !== "original";
-  const GR = amFn("GR");
+  const GR2 = amFn("GR");
   const matching = amFn("G2e")(store);
   let matchingRevision = 0;
   let metadataRevision = 0;
   const indexes = new Map;
   const rules = (source) => {
     const cp = store.getCurrentSnapshot().characterPrompt;
-    const active = t9e(source, cp).map(Bn).filter(Boolean);
-    const single = kK(source);
+    const active = t9e2(source, cp).map(Bn2).filter(Boolean);
+    const single = kK2(source);
     const implicit = single && active.length === 1 && active[0] === single ? single : "";
     const activeSet = new Set(active);
     const profiles = matching.getRecord(source.id)?.profiles ?? [];
-    const byKey = new Map(profiles.map((p) => [Bn(p.promptKey), p]));
+    const byKey = new Map(profiles.map((p) => [Bn2(p.promptKey), p]));
     const prepared = matching.prepareScope(source.id, [...activeSet]);
     return {
       matchingRevision,
       rulesRevision: ["workspace", "prompts", "asset-matching"].map((d) => store.getDomainRevision(d)).join(":"),
       activePromptKeys: activeSet,
       implicitPromptKey: implicit,
-      matchingProfilePromptKeys: new Set(profiles.map((p) => Bn(p.promptKey)).filter((k) => !!k && activeSet.has(k))),
+      matchingProfilePromptKeys: new Set(profiles.map((p) => Bn2(p.promptKey)).filter((k) => !!k && activeSet.has(k))),
       getFilenameIdentityAliases: (k) => byKey.get(k)?.identityAliases ?? [],
       getCustomLorebookKeys: (k) => store.getCurrentSnapshot().characterPrompt.customLorebookKeys?.[k],
-      decideMatchingPromptKeys: (asset) => prepared(asset.name).matchedPromptKeys.map(Bn).filter(Boolean)
+      decideMatchingPromptKeys: (asset) => prepared(asset.name).matchedPromptKeys.map(Bn2).filter(Boolean)
     };
   };
   const indexFor = (sourceId) => {
@@ -58543,7 +58589,7 @@ function createAmPriorityAssets(store, getSource) {
     const generation = String(source.assetGeneration ?? "");
     let cached = indexes.get(source.id);
     if (!cached || cached.generation !== generation) {
-      cached = { generation, index: X$e(source, rules(source)) };
+      cached = { generation, index: X$e2(source, rules(source)) };
       indexes.set(source.id, cached);
     } else
       cached.index.ensureClassified(rules(source));
@@ -58552,7 +58598,7 @@ function createAmPriorityAssets(store, getSource) {
   const availability = (asset, kind) => {
     if (kind !== "original" && MZ(asset))
       return { hasMetadata: true, metadataState: "with" };
-    const record = amFn("Ep")(store.getCurrentSnapshot().characterPrompt.assetMetadataAvailability).get(Gt(asset));
+    const record = amFn("Ep")(store.getCurrentSnapshot().characterPrompt.assetMetadataAvailability).get(Gt2(asset));
     if (record?.checkedAt)
       return record.hasMetadata ? { hasMetadata: true, metadataState: "with" } : { hasMetadata: false, metadataState: "without" };
     return { hasMetadata: false, metadataState: "unknown" };
@@ -58569,15 +58615,15 @@ function createAmPriorityAssets(store, getSource) {
     ...availability(raw.asset, raw.generatedKind)
   });
   const resolveDescriptor = (d) => {
-    const sourceId = Bn(d.sourceId);
+    const sourceId = Bn2(d.sourceId);
     const found = indexFor(sourceId);
     if (!found)
       return null;
-    const member = found.source.members.find((m) => m.key === Bn(d.memberKey)) ?? found.source.members[0];
+    const member = found.source.members.find((m) => m.key === Bn2(d.memberKey)) ?? found.source.members[0];
     if (!member)
       return null;
-    const promptKey = Bn(d.candidateProfileKey) || Bn(d.promptKey) || uw(member, member.lorebooks[0]?.id ?? "");
-    const filter = d.filter === "metadata" ? "all" : Bn(d.filter) || "all";
+    const promptKey = Bn2(d.candidateProfileKey) || Bn2(d.promptKey) || uw2(member, member.lorebooks[0]?.id ?? "");
+    const filter = d.filter === "metadata" ? "all" : Bn2(d.filter) || "all";
     const metadataOnly = d.metadataOnly === true || d.filter === "metadata";
     return { ...found, member, promptKey, filter, metadataOnly };
   };
@@ -58614,14 +58660,14 @@ function createAmPriorityAssets(store, getSource) {
       return entriesOf(d).slice(start, start + n);
     },
     resolveSelection(sourceId, memberKey, assets, names = []) {
-      const list = Pi(assets ?? []);
-      const extraNames = [...new Set((names ?? []).map(Bn).filter(Boolean))];
-      const assetNames = [...new Set([...list.map((a) => Bn(a.name)).filter(Boolean), ...extraNames])];
-      const found = indexFor(Bn(sourceId));
+      const list = Pi2(assets ?? []);
+      const extraNames = [...new Set((names ?? []).map(Bn2).filter(Boolean))];
+      const assetNames = [...new Set([...list.map((a) => Bn2(a.name)).filter(Boolean), ...extraNames])];
+      const found = indexFor(Bn2(sourceId));
       const member = found?.source.members.find((m) => m.key === memberKey);
       if (!found || !member) {
-        const have = new Set(list.map((a) => GR(a.name)));
-        return { assets: list, assetNames, unresolvedAssetNames: extraNames.filter((n) => !have.has(GR(n))) };
+        const have = new Set(list.map((a) => GR2(a.name)));
+        return { assets: list, assetNames, unresolvedAssetNames: extraNames.filter((n) => !have.has(GR2(n))) };
       }
       const resolved = new Map;
       const resolvedNames = new Set;
@@ -58629,23 +58675,23 @@ function createAmPriorityAssets(store, getSource) {
         const i = found.index.findEntryIndex(memberKey, asset);
         const byName = i === null ? [...found.index.findEntryIndicesByNames(memberKey, [asset.name])].map((x) => found.index.getEntry(x)?.asset).filter(Boolean) : [];
         const target = i === null ? AM.f1(AM.OK(asset), byName) ?? asset : found.index.getEntry(i)?.asset ?? asset;
-        const key = Gt(target);
+        const key = Gt2(target);
         if (key)
           resolved.set(key, target);
-        const nm = GR(target.name);
+        const nm = GR2(target.name);
         if (nm)
           resolvedNames.add(nm);
       }
       const unresolved = [];
       for (const name of extraNames) {
-        if (resolvedNames.has(GR(name)))
+        if (resolvedNames.has(GR2(name)))
           continue;
         const hits = [...found.index.findEntryIndicesByNames(memberKey, [name])].map((x) => found.index.getEntry(x)?.asset).filter(Boolean);
         if (hits.length) {
-          const key = Gt(hits[0]);
+          const key = Gt2(hits[0]);
           if (key && !resolved.has(key))
             resolved.set(key, hits[0]);
-          resolvedNames.add(GR(name));
+          resolvedNames.add(GR2(name));
         } else
           unresolved.push(name);
       }
@@ -58653,10 +58699,10 @@ function createAmPriorityAssets(store, getSource) {
     },
     getLorebookThumbnailAsset(sourceId, promptKey) {
       const cp = store.getCurrentSnapshot().characterPrompt;
-      const selected = Pi(cp.assetSelections?.[promptKey]?.selectedAssets ?? []);
+      const selected = Pi2(cp.assetSelections?.[promptKey]?.selectedAssets ?? []);
       if (selected.length)
         return selected[0];
-      const found = indexFor(Bn(sourceId));
+      const found = indexFor(Bn2(sourceId));
       if (!found)
         return null;
       found.index.prepareLorebookThumbnail(promptKey);
@@ -58830,11 +58876,11 @@ var PERSONA_OUTFIT_HISTORY_PATH = "config/persona-outfit-images.json";
 var historyKey = (target, formId, outfitId) => `${target.kind === "character" ? target.promptKey : target.personaId}|${formId}|${outfitId ?? ""}`;
 var historyPath = (target) => target.kind === "character" ? CHARACTER_OUTFIT_HISTORY_PATH(target.characterId) : PERSONA_OUTFIT_HISTORY_PATH;
 var emptyHistory = () => ({ version: 1, targets: {} });
-function buildOutfitPrompt(config, ctx, draft) {
-  const provider = config.runtime.generationProvider;
-  const charx = AM.Ci(config, ctx.sourceId);
+function buildOutfitPrompt(config2, ctx, draft) {
+  const provider = config2.runtime.generationProvider;
+  const charx = AM.Ci(config2, ctx.sourceId);
   const anima = AM.Ds(provider) === true;
-  const artist = AM.nb(config, { sourceId: ctx.sourceId, promptKey: ctx.persona ? `persona:${ctx.promptKey}` : ctx.promptKey });
+  const artist = AM.nb(config2, { sourceId: ctx.sourceId, promptKey: ctx.persona ? `persona:${ctx.promptKey}` : ctx.promptKey });
   const parts = { head: draft.head, top: draft.top, bottom: draft.bottom, legs: draft.legs, feet: draft.feet, humanlike: ctx.humanlike };
   const gender = ctx.gender === "male" ? "1boy" : ctx.gender === "female" ? "1girl" : "";
   const pose = ctx.humanlike === false ? AM.uN.freeform : AM.uN.humanlike;
@@ -58843,18 +58889,18 @@ function buildOutfitPrompt(config, ctx, draft) {
   let mainPrompt;
   if (ctx.persona) {
     mainPrompt = draft.nsfw ? AM.A4(["nsfw", ctx.mainPrompt]) : ctx.mainPrompt;
-    positivePrompt = AM.A4([artist.prompt, gender, ...pose, anima ? "" : charx.fixedPositivePrompt, mainPrompt, AM.ZOt(config, parts)]);
+    positivePrompt = AM.A4([artist.prompt, gender, ...pose, anima ? "" : charx.fixedPositivePrompt, mainPrompt, AM.ZOt(config2, parts)]);
     if (!positivePrompt)
       fail2("bad-request", "No prompt available for persona outfit generation.", { messageKo: "페르소나 의상 생성에 사용할 프롬프트가 없습니다." });
     negativePrompt = AM.A4([anima ? "" : charx.negativePrompt, anima ? "" : artist.negativePrompt, ctx.formNegativePrompt]);
   } else {
     mainPrompt = AM.qdt(ctx.mainPrompt, draft.nsfw === true);
-    positivePrompt = AM.sG([artist.prompt, gender, ...pose, anima ? "" : charx.fixedPositivePrompt, mainPrompt, AM.XOt(config, parts)]);
+    positivePrompt = AM.sG([artist.prompt, gender, ...pose, anima ? "" : charx.fixedPositivePrompt, mainPrompt, AM.XOt(config2, parts)]);
     if (!positivePrompt)
       fail2("bad-request", "No prompt available for outfit generation.", { messageKo: "의상 생성에 사용할 프롬프트가 없습니다." });
     negativePrompt = anima ? "" : AM.sG([charx.negativePrompt, artist.negativePrompt]);
   }
-  const referenceAllowed = AM.Qu(provider, config.novelai.characterReferenceEnabled, config.runtime.comfyuiCharacterReferenceEnabled) === true;
+  const referenceAllowed = AM.Qu(provider, config2.novelai.characterReferenceEnabled, config2.runtime.comfyuiCharacterReferenceEnabled) === true;
   return {
     positivePrompt,
     negativePrompt,
@@ -58869,13 +58915,13 @@ function buildOutfitPrompt(config, ctx, draft) {
     nonArtistConfig: { nonArtistPromptWeight: artist.nonArtistPromptWeight, nonArtistPromptWeightArtist: { id: artist.id, name: artist.name, positive: artist.prompt, negative: artist.negativePrompt } }
   };
 }
-function providerPromptFor(config, plan) {
+function providerPromptFor(config2, plan) {
   const provider = plan.provider;
   const prompt = AM.PH(AM.J2({
     provider,
     plan: { globalPositive: plan.positivePrompt.trim(), bodyAction: "", negativePrompt: plan.negativePrompt, characters: [] },
-    novelAIModel: config.novelai.naiModel,
-    comfyUIProfile: provider === "comfy-ui" ? AM.eH(config.runtime.comfyuiWorkflowProfileId) : null,
+    novelAIModel: config2.novelai.naiModel,
+    comfyUIProfile: provider === "comfy-ui" ? AM.eH(config2.runtime.comfyuiWorkflowProfileId) : null,
     outfitReferenceEnabled: false,
     animaPositivePrefix: plan.charx.animaPositivePrompt,
     animaNegativePrefix: plan.charx.animaNegativePrompt
@@ -58886,18 +58932,18 @@ function draftGender(draft) {
   return draft.gender === "female" || draft.gender === "male" || draft.gender === "unknown" ? draft.gender : undefined;
 }
 function draftReferenceSettings(draft) {
-  const num = (v) => typeof v === "number" && Number.isFinite(v) ? v : undefined;
+  const num2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : undefined;
   const type = draft.referenceType === "character" || draft.referenceType === "style" || draft.referenceType === "character&style" ? draft.referenceType : undefined;
-  const strength = num(draft.referenceStrength);
-  const fidelity = num(draft.referenceFidelity);
+  const strength = num2(draft.referenceStrength);
+  const fidelity = num2(draft.referenceFidelity);
   return { ...type ? { type } : {}, ...strength !== undefined ? { strength } : {}, ...fidelity !== undefined ? { fidelity } : {} };
 }
-async function resolveTargetContext(services, config, target, formId, draft) {
+async function resolveTargetContext(services, config2, target, formId, draft) {
   if (target.kind === "character") {
-    const cp = config.characterPrompt;
-    const collection = resolveCharacterForms(cp, target.promptKey);
-    const form = collection.forms.find((f) => f.id === formId);
-    if (!form)
+    const cp = config2.characterPrompt;
+    const collection2 = resolveCharacterForms(cp, target.promptKey);
+    const form2 = collection2.forms.find((f) => f.id === formId);
+    if (!form2)
       fail2("not-found", "The target form no longer exists.", { messageKo: "대상 폼 또는 의상이 변경되어 생성 결과를 폐기했습니다." });
     let characterName = target.promptKey;
     try {
@@ -58911,19 +58957,19 @@ async function resolveTargetContext(services, config, target, formId, draft) {
       sourceId: target.characterId,
       promptKey: target.promptKey,
       characterName,
-      collection,
-      formId: form.id,
-      gender: draftGender(draft) ?? form.gender,
-      humanlike: form.humanlike !== false,
-      mainPrompt: compileMainPrompt(form.basePromptGroups, draftGender(draft) ?? form.gender),
-      formNegativePrompt: form.negativePrompt,
-      reference: draft.useCharacterReference && form.reference?.defaultAsset ? AM.sn(form.reference.defaultAsset) : null,
+      collection: collection2,
+      formId: form2.id,
+      gender: draftGender(draft) ?? form2.gender,
+      humanlike: form2.humanlike !== false,
+      mainPrompt: compileMainPrompt(form2.basePromptGroups, draftGender(draft) ?? form2.gender),
+      formNegativePrompt: form2.negativePrompt,
+      reference: draft.useCharacterReference && form2.reference?.defaultAsset ? AM.sn(form2.reference.defaultAsset) : null,
       persona: false
     };
   }
   const sourceId = target.characterId || (await services.sources.getActiveChat().catch(() => null))?.characterId || "";
-  const settings = config.characterPrompt.personaSettings;
-  const collection = resolvePersonaForms(settings, config.characterPrompt.personaGender, target.personaId);
+  const settings = config2.characterPrompt.personaSettings;
+  const collection = resolvePersonaForms(settings, config2.characterPrompt.personaGender, target.personaId);
   const form = collection.forms.find((f) => f.id === formId);
   if (!form)
     fail2("not-found", "The target form no longer exists.");
@@ -58952,17 +58998,17 @@ async function referenceBytes(services, asset) {
 async function prepareConfig(services, characterId) {
   const imageTarget = await services.images.resolveTarget();
   const parts = characterId ? await loadAmConfigParts(services, characterId) : { global: await services.storage.loadConfig(), document: createEmptyCharacterDocument(""), metadata: {} };
-  const config = buildAmConfig(parts);
-  config.runtime = { ...config.runtime, generationProvider: imageTarget.generationProvider };
-  config.novelai = { ...config.novelai, naiModel: imageTarget.model };
+  const config2 = buildAmConfig(parts);
+  config2.runtime = { ...config2.runtime, generationProvider: imageTarget.generationProvider };
+  config2.novelai = { ...config2.novelai, naiModel: imageTarget.model };
   if (!AM.Ap(imageTarget.generationProvider))
     fail2("unsupported", "The selected provider does not support outfit image generation.");
-  return { config, imageTarget };
+  return { config: config2, imageTarget };
 }
 async function requestFromContext(services, characterId, prepared, context, draft, referenceSettings = {}) {
-  const { config, imageTarget } = prepared;
-  const plan = buildOutfitPrompt(config, context, draft);
-  const prompt = providerPromptFor(config, plan);
+  const { config: config2, imageTarget } = prepared;
+  const plan = buildOutfitPrompt(config2, context, draft);
+  const prompt = providerPromptFor(config2, plan);
   const useReference = !!(plan.referenceAllowed && draft.useCharacterReference && context.reference);
   const seed = draft.seedFixed ? String(draft.seed ?? "").trim() : "";
   const request = {
@@ -58974,7 +59020,7 @@ async function requestFromContext(services, characterId, prepared, context, draf
     seed,
     ...characterId ? { ownerCharacterId: characterId } : {}
   };
-  const clamp01 = (v, fallback) => Number.isFinite(Number(v)) ? Math.max(0, Math.min(1, Number(v))) : fallback;
+  const clamp012 = (v, fallback) => Number.isFinite(Number(v)) ? Math.max(0, Math.min(1, Number(v))) : fallback;
   if (imageTarget.generationProvider === "novelai") {
     const body = {
       input: request.prompt,
@@ -59009,9 +59055,9 @@ async function requestFromContext(services, characterId, prepared, context, draf
         characterReferences: [
           {
             ...await referenceBytes(services, context.reference),
-            type: referenceSettings.type ?? config.novelai.characterReferenceType ?? "character",
-            strength: clamp01(referenceSettings.strength ?? config.novelai.characterReferenceStrength, 0.6),
-            fidelity: clamp01(referenceSettings.fidelity ?? config.novelai.characterReferenceFidelity, 1)
+            type: referenceSettings.type ?? config2.novelai.characterReferenceType ?? "character",
+            strength: clamp012(referenceSettings.strength ?? config2.novelai.characterReferenceStrength, 0.6),
+            fidelity: clamp012(referenceSettings.fidelity ?? config2.novelai.characterReferenceFidelity, 1)
           }
         ]
       } : {}
@@ -59102,8 +59148,8 @@ function createOutfitImageController(services) {
   const progress = (jobId, p) => services.events.emit("outfitImage.progress", { jobId, progress: p });
   const appendHistory = async (target, formId, outfitId, result) => {
     const key = historyKey(target, formId, outfitId);
-    await services.storage.updateJson(historyPath(target), emptyHistory(), (current) => {
-      const file = current && typeof current === "object" && current.targets ? current : emptyHistory();
+    await services.storage.updateJson(historyPath(target), emptyHistory(), (current2) => {
+      const file = current2 && typeof current2 === "object" && current2.targets ? current2 : emptyHistory();
       return { version: 1, targets: { ...file.targets, [key]: [result, ...file.targets[key] ?? []].slice(0, OUTFIT_HISTORY_LIMIT) } };
     });
   };
@@ -59139,10 +59185,10 @@ function createOutfitImageController(services) {
           await appendHistory(params.target, params.formId, params.outfitId, result);
           services.events.emit("outfitImage.finished", { jobId, result });
         } catch (error) {
-          const rpc = isAbortLike(error) || controller.signal.aborted ? { code: "cancelled", message: "Outfit image generation was cancelled." } : toRpcError(error);
-          if (rpc.code !== "cancelled")
-            services.log.append("error", "outfit-image", `Outfit image generation failed: ${rpc.message}`, rpc);
-          services.events.emit("outfitImage.finished", { jobId, error: rpc });
+          const rpc2 = isAbortLike(error) || controller.signal.aborted ? { code: "cancelled", message: "Outfit image generation was cancelled." } : toRpcError(error);
+          if (rpc2.code !== "cancelled")
+            services.log.append("error", "outfit-image", `Outfit image generation failed: ${rpc2.message}`, rpc2);
+          services.events.emit("outfitImage.finished", { jobId, error: rpc2 });
         } finally {
           jobs.delete(jobId);
         }
@@ -59191,21 +59237,21 @@ function createOutfitImageController(services) {
       if (params.target.kind === "character") {
         const { characterId, promptKey } = params.target;
         const base = await services.storage.loadCharacterDocument(characterId);
-        let saved = null;
+        let saved2 = null;
         await services.storage.updateCharacterDocument(characterId, (doc) => {
-          const current = resolveCharacterForms(doc.characterPrompt, promptKey);
-          saved = apply(current);
-          return { ...doc, characterPrompt: { ...doc.characterPrompt, characterForms: { ...doc.characterPrompt.characterForms, [promptKey]: saved } } };
+          const current2 = resolveCharacterForms(doc.characterPrompt, promptKey);
+          saved2 = apply(current2);
+          return { ...doc, characterPrompt: { ...doc.characterPrompt, characterForms: { ...doc.characterPrompt.characterForms, [promptKey]: saved2 } } };
         }, { expectedUpdatedAt: base.updatedAt, reason: "outfit-image" });
-        return { collection: saved };
+        return { collection: saved2 };
       }
       const personaId = params.target.personaId;
       let saved = null;
-      await services.storage.updateConfig((config) => {
-        const settings = config.characterPrompt.personaSettings;
-        saved = apply(resolvePersonaForms(settings, config.characterPrompt.personaGender, personaId));
+      await services.storage.updateConfig((config2) => {
+        const settings = config2.characterPrompt.personaSettings;
+        saved = apply(resolvePersonaForms(settings, config2.characterPrompt.personaGender, personaId));
         const profile = { ...settings.profiles[personaId] ?? {}, forms: saved };
-        return { ...config, characterPrompt: { ...config.characterPrompt, personaSettings: { ...settings, profiles: { ...settings.profiles, [personaId]: profile } } } };
+        return { ...config2, characterPrompt: { ...config2.characterPrompt, personaSettings: { ...settings, profiles: { ...settings.profiles, [personaId]: profile } } } };
       });
       return { collection: saved };
     },
@@ -59286,14 +59332,14 @@ var RULES = [
   [/이미지 대체 메타 분석/gu, "Image fallback metadata analysis"],
   [/메타데이터 fallback/gu, "Metadata fallback"],
   [/텍스트 fallback/gu, "Text fallback"],
-  [/(텍스트|메타데이터|이미지) AI 배치/gu, (_m, k) => `${mode(k)[0].toUpperCase()}${mode(k).slice(1)} AI batch`],
-  [/프롬프트 (메타데이터|이미지|텍스트) AI 분석 배치/gu, (_m, k) => `Prompt ${mode(k)} AI analysis batch`],
-  [/프롬프트 (메타데이터|이미지|텍스트) AI 분석 준비 중/gu, (_m, k) => `Preparing prompt ${mode(k)} AI analysis`],
-  [/프롬프트 (메타데이터|이미지|텍스트) AI 분석 중/gu, (_m, k) => `Prompt ${mode(k)} AI analysis`],
-  [/프롬프트 (메타데이터|이미지|텍스트) 분석 완료/gu, (_m, k) => `Prompt ${mode(k)} analysis complete`],
-  [/프롬프트 (메타데이터|이미지|텍스트) 분석 일부 완료/gu, (_m, k) => `Prompt ${mode(k)} analysis partly complete`],
-  [/프롬프트 (메타데이터|이미지|텍스트) 분석 입력을 준비하지 못했습니다\./gu, (_m, k) => `Could not prepare the prompt ${mode(k)} analysis input.`],
-  [/프롬프트 (메타데이터|이미지|텍스트) 분석 준비 중/gu, (_m, k) => `Preparing prompt ${mode(k)} analysis`],
+  [/(텍스트|메타데이터|이미지) AI 배치/gu, (_m2, k) => `${mode(k)[0].toUpperCase()}${mode(k).slice(1)} AI batch`],
+  [/프롬프트 (메타데이터|이미지|텍스트) AI 분석 배치/gu, (_m2, k) => `Prompt ${mode(k)} AI analysis batch`],
+  [/프롬프트 (메타데이터|이미지|텍스트) AI 분석 준비 중/gu, (_m2, k) => `Preparing prompt ${mode(k)} AI analysis`],
+  [/프롬프트 (메타데이터|이미지|텍스트) AI 분석 중/gu, (_m2, k) => `Prompt ${mode(k)} AI analysis`],
+  [/프롬프트 (메타데이터|이미지|텍스트) 분석 완료/gu, (_m2, k) => `Prompt ${mode(k)} analysis complete`],
+  [/프롬프트 (메타데이터|이미지|텍스트) 분석 일부 완료/gu, (_m2, k) => `Prompt ${mode(k)} analysis partly complete`],
+  [/프롬프트 (메타데이터|이미지|텍스트) 분석 입력을 준비하지 못했습니다\./gu, (_m2, k) => `Could not prepare the prompt ${mode(k)} analysis input.`],
+  [/프롬프트 (메타데이터|이미지|텍스트) 분석 준비 중/gu, (_m2, k) => `Preparing prompt ${mode(k)} analysis`],
   [/레퍼런스 분석 실패/gu, "Reference analysis failed"],
   [/레퍼런스 분석 완료/gu, "Reference analysis complete"],
   [/레퍼런스 분석 준비 중/gu, "Preparing reference analysis"],
@@ -59351,27 +59397,27 @@ var RULES = [
   [/ 배치 (\d+):/gu, " batch $1:"],
   [/폼 (\d+)/gu, "Form $1"],
   [/기본 의상/gu, "Default outfit"],
-  [/(메타데이터|이미지|텍스트)/gu, (_m, k) => mode(k)],
+  [/(메타데이터|이미지|텍스트)/gu, (_m2, k) => mode(k)],
   [/준비 중/gu, "preparing"],
   [/완료/gu, "complete"],
   [/실패/gu, "failed"],
   [/취소됨/gu, "cancelled"]
 ];
-function translateAmText(text) {
-  if (!text || !HANGUL.test(text))
-    return text;
-  let out = text;
+function translateAmText(text3) {
+  if (!text3 || !HANGUL.test(text3))
+    return text3;
+  let out = text3;
   for (const [re, rep] of RULES)
     out = out.replace(re, rep);
   return out;
 }
-function amLabel(text) {
-  const label = translateAmText(text);
-  return label === text ? { label } : { label, labelKo: text };
+function amLabel(text3) {
+  const label = translateAmText(text3);
+  return label === text3 ? { label } : { label, labelKo: text3 };
 }
-function amMessage(text) {
-  const message = translateAmText(text);
-  return message === text ? { message } : { message, messageKo: text };
+function amMessage(text3) {
+  const message = translateAmText(text3);
+  return message === text3 ? { message } : { message, messageKo: text3 };
 }
 
 // src/backend/analysis/charx-regex.ts
@@ -59393,8 +59439,8 @@ async function loadCharacterScripts(services, characterId) {
       services.log.append("warn", "charx-regex", `Regex scripts API unavailable, using the character card scripts: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-  const character = await services.sources.getCharacter(characterId);
-  const scripts = character.extensions.regex_scripts;
+  const character2 = await services.sources.getCharacter(characterId);
+  const scripts = character2.extensions.regex_scripts;
   return (Array.isArray(scripts) ? scripts : []).filter((s) => s && s.disabled !== true).map((s) => {
     const r = splitRegexLiteral(String(s.findRegex ?? s.find_regex ?? s.in ?? ""), String(s.flags ?? ""));
     const placement = Array.isArray(s.placement) ? s.placement : [];
@@ -59403,15 +59449,15 @@ async function loadCharacterScripts(services, characterId) {
   });
 }
 async function charxRegexCharacter(services, characterId) {
-  const character = await services.sources.getCharacter(characterId);
-  return { chaId: characterId, name: character.name, type: "character", customscript: await loadCharacterScripts(services, characterId) };
+  const character2 = await services.sources.getCharacter(characterId);
+  return { chaId: characterId, name: character2.name, type: "character", customscript: await loadCharacterScripts(services, characterId) };
 }
 async function runCharxRegex(ctx, params) {
   const session = await openAnalysisSession(ctx.services, ctx.characterId, { reason: "charx-regex" });
-  const character = await charxRegexCharacter(ctx.services, ctx.characterId);
+  const character2 = await charxRegexCharacter(ctx.services, ctx.characterId);
   const controller = AM.h0t({
-    data: { getCurrentCharacter: async () => character },
-    sourceCatalog: { ...session.sourceCatalog, getCachedCharacter: () => ({ character }) },
+    data: { getCurrentCharacter: async () => character2 },
+    sourceCatalog: { ...session.sourceCatalog, getCachedCharacter: () => ({ character: character2 }) },
     analyzer: createAmAnalyzer(ctx.services, {
       purpose: "charx-regex",
       onRetry: (info) => ctx.progress({ label: `Retrying (${info.attempt}/${info.total})`, labelKo: "재시도", retry: { attempt: info.attempt, total: info.total }, retryCount: `${info.attempt}/${info.total}` })
@@ -59427,7 +59473,7 @@ async function runCharxRegex(ctx, params) {
   ctx.signal.addEventListener("abort", onAbort, { once: true });
   try {
     ctx.signal.throwIfAborted();
-    await controller.analyzeRegex({ scope: "current-character", currentCharacter: character, force: params.force === true });
+    await controller.analyzeRegex({ scope: "current-character", currentCharacter: character2, force: params.force === true });
     await session.store.flushSave();
     const snap = controller.getSnapshot();
     const stored = AM.T_(session.store.getCurrentSnapshot().characterPrompt.charxAssetRegexAnalysis?.[ctx.characterId]);
@@ -59463,12 +59509,12 @@ async function setCharxRegexDetectors(services, characterId, detectors) {
     }
     return { scriptIndex: source === "script" ? Number(d.scriptIndex) : -1, in: pattern, source, flags, ...d.scriptName ? { scriptName: String(d.scriptName) } : {} };
   });
-  const { config } = await mutateAmConfig(services, characterId, (c) => {
-    const current = AM.T_(c.characterPrompt.charxAssetRegexAnalysis?.[characterId]);
-    const next = { ...current, status: list.length ? "done" : "not_applicable", analyzedAt: new Date().toISOString(), detectors: list, error: "" };
+  const { config: config2 } = await mutateAmConfig(services, characterId, (c) => {
+    const current2 = AM.T_(c.characterPrompt.charxAssetRegexAnalysis?.[characterId]);
+    const next = { ...current2, status: list.length ? "done" : "not_applicable", analyzedAt: new Date().toISOString(), detectors: list, error: "" };
     return { ...c, characterPrompt: { ...c.characterPrompt, charxAssetRegexAnalysis: { ...c.characterPrompt.charxAssetRegexAnalysis ?? {}, [characterId]: next } } };
   }, { reason: "charx-regex" });
-  return { analysis: config.characterPrompt.charxAssetRegexAnalysis[characterId] };
+  return { analysis: config2.characterPrompt.charxAssetRegexAnalysis[characterId] };
 }
 
 // src/backend/pipeline/outfit-garments.ts
@@ -59478,18 +59524,18 @@ function unweight(chunk) {
   const m = WEIGHTED.exec(chunk);
   return (m ? m[1] : chunk).trim();
 }
-function partChunks(text) {
-  return text.split(",").map((c) => c.trim()).filter(Boolean);
+function partChunks(text3) {
+  return text3.split(",").map((c) => c.trim()).filter(Boolean);
 }
 var ABSENCE = /^(?:bare[ -]?legs?|legs? bare|bare (?:thighs?|knees?|calf|calves|shins?|ankles?|toes|soles?)|bare[ -]?feet|feet bare|bare[ -]?foot(?:ed)?|barefoot(?:ed)?|shoeless|sockless|no (?:shoes|socks|legwear|footwear|stockings|tights|pantyhose|headwear|hat|leg ?wear|foot ?wear)|without (?:shoes|socks|legwear|footwear)|none|nothing|n\/a|-)$/i;
 function isAbsenceChunk(chunk) {
   return ABSENCE.test(unweight(chunk));
 }
-function withoutAbsence(text) {
-  return partChunks(text).filter((c) => !isAbsenceChunk(c)).join(", ");
+function withoutAbsence(text3) {
+  return partChunks(text3).filter((c) => !isAbsenceChunk(c)).join(", ");
 }
-function isAbsencePart(text) {
-  return !withoutAbsence(text ?? "");
+function isAbsencePart(text3) {
+  return !withoutAbsence(text3 ?? "");
 }
 var LEGWEAR = [
   ["thighhighs", String.raw`thigh[- ]?highs|thigh[- ]?high (?:socks|stockings)|over[- ]?the[- ]?knee (?:socks|stockings)|overknee socks`],
@@ -59568,11 +59614,11 @@ var SCAN = {
 };
 var COLOR_RE = new RegExp(String.raw`\b(${COLOR_WORDS.join("|")})\b`, "gi");
 var LEADING_FILLER = /^(?:(?:her|his|their|the|a|pair of|pairs of|and|,)\s+)+/i;
-function garmentsIn(text, slot) {
+function garmentsIn(text3, slot) {
   const { re, table } = SCAN[slot];
   const out = [];
   re.lastIndex = 0;
-  for (let m = re.exec(text);m; m = re.exec(text)) {
+  for (let m = re.exec(text3);m; m = re.exec(text3)) {
     let phrase = m[0];
     let start = m.index;
     const filler = LEADING_FILLER.exec(phrase);
@@ -59654,8 +59700,8 @@ function garmentsConflict(registered, mention) {
 }
 function registeredGarments(partText, slot) {
   return partChunks(partText ?? "").filter((c) => !isAbsenceChunk(c)).flatMap((chunk) => {
-    const text = unweight(chunk);
-    return garmentsIn(text, slot).map((g) => ({ ...g, chunk: text }));
+    const text3 = unweight(chunk);
+    return garmentsIn(text3, slot).map((g) => ({ ...g, chunk: text3 }));
   });
 }
 function legwearCoversFeet(partText) {
@@ -59724,12 +59770,12 @@ function normalize(raw) {
   const obj = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
   return { ...emptySidecar(), records: obj(r.records), drafts: obj(r.drafts) };
 }
-async function readSidecar(storage, chatId) {
-  return normalize(await storage.readJson(sidecarPath(chatId), emptySidecar()));
+async function readSidecar(storage2, chatId) {
+  return normalize(await storage2.readJson(sidecarPath(chatId), emptySidecar()));
 }
-async function updateSidecar(storage, chatId, mutate, tree) {
-  return storage.updateJson(sidecarPath(chatId), emptySidecar(), (current) => {
-    const next = normalize(current);
+async function updateSidecar(storage2, chatId, mutate, tree) {
+  return storage2.updateJson(sidecarPath(chatId), emptySidecar(), (current2) => {
+    const next = normalize(current2);
     mutate(next);
     return tree ? pruneSidecar(next, tree) : next;
   });
@@ -59749,8 +59795,8 @@ function pruneSidecar(raw, tree) {
 var rec2 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var arr = (v) => Array.isArray(v) ? v : [];
 var CLOTHING = /\b(?:wear(?:s|ing)?|wore|dressed|clothes|clothing|attire|outfit|uniform|skirt|shirt|blouse|dress|jacket|coat|blazer|sweater|cardigan|hoodie|vest|pants|trousers|shorts|jeans|socks?|stockings?|tights|pantyhose|thigh-?highs?|knee-?highs?|leggings|leg ?warmers|shoes?|boots?|loafers?|sneakers?|heels|sandals?|slippers?|uwabaki|footwear|legwear|gloves?|hat|cap|beret|ribbons?|neckerchief|necktie|tie|scarf|apron|kimono|yukata|bikini|swimsuit|leotard|bodysuit|armor|robe|gown|collar|choker|hairband|headband)\b/i;
-function clothingSentences(text, max = 1200) {
-  const plain = text.replace(/<[^>]*>/g, " ").replace(/\{\{[^}]*\}\}/g, " ").replace(/[ \t]+/g, " ");
+function clothingSentences(text3, max = 1200) {
+  const plain = text3.replace(/<[^>]*>/g, " ").replace(/\{\{[^}]*\}\}/g, " ").replace(/[ \t]+/g, " ");
   const out = [];
   let total = 0;
   for (const raw of plain.split(/(?<=[.!?])\s+|\n+/)) {
@@ -59790,11 +59836,11 @@ function cleanPart(part, value) {
 }
 function responseOutfits(parsed) {
   const out = [];
-  arr(rec2(parsed).characters).forEach((c, ci) => {
-    const character = rec2(c);
-    const id = typeof character.analysis_id === "string" ? character.analysis_id : `#${ci}`;
-    arr(character.outfits).forEach((o, oi) => out.push({ id, key: `${id}\x00-\x00${oi}`, outfit: rec2(o) }));
-    arr(character.observations).forEach((obs, bi) => arr(rec2(obs).outfits).forEach((o, oi) => out.push({ id, key: `${id}\x00${bi}\x00${oi}`, outfit: rec2(o) })));
+  arr(rec2(parsed).characters).forEach((c, ci2) => {
+    const character2 = rec2(c);
+    const id = typeof character2.analysis_id === "string" ? character2.analysis_id : `#${ci2}`;
+    arr(character2.outfits).forEach((o, oi3) => out.push({ id, key: `${id}\x00-\x00${oi3}`, outfit: rec2(o) }));
+    arr(character2.observations).forEach((obs, bi2) => arr(rec2(obs).outfits).forEach((o, oi3) => out.push({ id, key: `${id}\x00${bi2}\x00${oi3}`, outfit: rec2(o) })));
   });
   return out;
 }
@@ -59837,7 +59883,7 @@ function completeFromTextAnswer(imageOnly, withText, ids) {
 }
 function addTextEvidence(payload, loreFor) {
   const ids = [];
-  arr(payload.characters).forEach((c, ci) => {
+  arr(payload.characters).forEach((c, ci2) => {
     const r = rec2(c);
     if (r.evidence_mode !== "image" && r.evidence_mode !== "metadata")
       return;
@@ -59848,7 +59894,7 @@ function addTextEvidence(payload, loreFor) {
     if (!sentences.length)
       return;
     r.text_clothing_evidence = sentences;
-    ids.push(typeof r.analysis_id === "string" ? r.analysis_id : `#${ci}`);
+    ids.push(typeof r.analysis_id === "string" ? r.analysis_id : `#${ci2}`);
   });
   return ids;
 }
@@ -59885,9 +59931,9 @@ ${TEXT_CLOTHING_ADDENDUM}` } : m) };
 }
 function withOutfitEvidence(client, loreFor, onApplied) {
   return {
-    async complete(config, messages, options = {}) {
+    async complete(config2, messages, options = {}) {
       const kind = rec2(options.diagnostic).analysisKind;
-      const result = await client.complete(config, messages, options);
+      const result = await client.complete(config2, messages, options);
       if (kind !== "character-prompt" && kind !== "reference-image")
         return result;
       const strippedParts = stripAbsenceFromAnalysis(result.parsed);
@@ -59896,7 +59942,7 @@ function withOutfitEvidence(client, loreFor, onApplied) {
       const gaps = evidence && responseOutfits(result.parsed).some((o) => evidence.ids.has(o.id) && completable(o.outfit).length > 0);
       if (evidence && gaps) {
         try {
-          const withText = await client.complete(config, evidence.messages, options);
+          const withText = await client.complete(config2, evidence.messages, options);
           stripAbsenceFromAnalysis(withText.parsed);
           completedParts = completeFromTextAnswer(result.parsed, withText.parsed, evidence.ids);
         } catch {}
@@ -59928,19 +59974,19 @@ function imageUrlIndex(images) {
   return (asset) => {
     if (!asset)
       return null;
-    const hit = asset.key && byKey.get(asset.key) || asset.name && byName.get(asset.name);
-    return hit ? hit.thumbnailUrl || hit.url : null;
+    const hit2 = asset.key && byKey.get(asset.key) || asset.name && byName.get(asset.name);
+    return hit2 ? hit2.thumbnailUrl || hit2.url : null;
   };
 }
 function projectRoster(source, document2, options = {}) {
-  const Hs = amFn("Hs");
+  const Hs3 = amFn("Hs");
   const cp = document2.characterPrompt;
   const customs = new Map(document2.customCharacters.map((c) => [c.id, c]));
   const rows = [];
   const seen = new Set;
   for (const member of source.members) {
     for (const lore of member.lorebooks) {
-      const promptKey = Hs(member, lore);
+      const promptKey = Hs3(member, lore);
       if (!promptKey || seen.has(promptKey))
         continue;
       seen.add(promptKey);
@@ -60005,7 +60051,7 @@ function summarizeAssetMetadata(raw) {
 async function loadWorkspaceSnapshot(services, characterId, options = {}) {
   if (options.reload)
     services.sources.invalidate(characterId);
-  const [character, parts, images] = await Promise.all([
+  const [character2, parts, images] = await Promise.all([
     services.sources.getCharacter(characterId),
     loadAmConfigParts(services, characterId),
     services.sources.listCharacterImages(characterId).catch(() => [])
@@ -60034,7 +60080,7 @@ async function loadWorkspaceSnapshot(services, characterId, options = {}) {
   });
   return {
     characterId,
-    characterName: character.name,
+    characterName: character2.name,
     document: document2,
     roster,
     sources,
@@ -60102,7 +60148,7 @@ async function setRecognitionKeys(services, characterId, promptKey, keys) {
     await updateCustomCharacterEntry(services, characterId, custom.id, { title: custom.title, recognitionKeys: keys, appearanceDescription: custom.appearanceDescription });
     return;
   }
-  await mutateAmConfig(services, characterId, (config) => amFn("Loe")(config, { id: characterId }, promptKey, keys), { reason: "recognition-keys" });
+  await mutateAmConfig(services, characterId, (config2) => amFn("Loe")(config2, { id: characterId }, promptKey, keys), { reason: "recognition-keys" });
 }
 function stripFlags(c) {
   return { id: c.id, title: c.title, recognitionKeys: [...c.recognitionKeys], appearanceDescription: c.appearanceDescription, ...c.origin === "ai-auto" ? { origin: "ai-auto" } : {} };
@@ -60203,11 +60249,11 @@ function currentForms(document2, promptKey) {
 async function saveForms(services, characterId, promptKey, collection, baseRevision) {
   let saved = null;
   await services.storage.updateCharacterDocument(characterId, (doc) => {
-    const current = currentForms(doc, promptKey);
-    if (formCollectionRevision(current) !== baseRevision) {
-      fail2("conflict", "The appearance forms were changed elsewhere. Reload and apply your edit again.", { detailCode: "FORM_COLLECTION_CHANGED", details: { promptKey, revision: formCollectionRevision(current) } });
+    const current2 = currentForms(doc, promptKey);
+    if (formCollectionRevision(current2) !== baseRevision) {
+      fail2("conflict", "The appearance forms were changed elsewhere. Reload and apply your edit again.", { detailCode: "FORM_COLLECTION_CHANGED", details: { promptKey, revision: formCollectionRevision(current2) } });
     }
-    saved = normalizeFormCollection(collection, { fallbackGender: current.forms[0]?.gender });
+    saved = normalizeFormCollection(collection, { fallbackGender: current2.forms[0]?.gender });
     const cp = { ...doc.characterPrompt, characterForms: { ...doc.characterPrompt.characterForms, [promptKey]: saved } };
     for (const map of LEGACY_PROMPT_MAPS) {
       if (cp[map] && Object.hasOwn(cp[map], promptKey)) {
@@ -60280,10 +60326,10 @@ function namedAssets(images) {
   return out.sort((a, b) => a.stem.localeCompare(b.stem));
 }
 async function loadRoster(services, characterId) {
-  const [character, parts] = await Promise.all([services.sources.getCharacter(characterId), loadAmConfigParts(services, characterId)]);
+  const [character2, parts] = await Promise.all([services.sources.getCharacter(characterId), loadAmConfigParts(services, characterId)]);
   const rawSource = await services.sources.buildSource(characterId, parts.document);
   const source = amFn("y_")(rawSource, parts.document.customCharacters, "all") ?? rawSource;
-  return { name: character.name, roster: projectRoster(source, parts.document) };
+  return { name: character2.name, roster: projectRoster(source, parts.document) };
 }
 async function readAutoPickState(services, characterId) {
   const raw = await services.storage.readJson(AUTOPICK_PATH(characterId), emptyAutoPickState());
@@ -60444,8 +60490,8 @@ var EMOTION_TIER = new Map;
 (VOCAB.emotion?.tiers ?? []).forEach((tier, i) => tier.forEach((w) => EMOTION_TIER.has(norm(w)) || EMOTION_TIER.set(norm(w), i)));
 var FALLBACK_TIER = VOCAB.emotion?.fallbackTier ?? 5;
 function representativeScore(stem, fields, nudeGroup) {
-  const text = norm([fields.expression, fields.pose, fields.state].filter(Boolean).join(" ") || stem.replace(fields.character ?? "", " ").replace(fields.outfit ?? "", " "));
-  const words = text.split(" ").filter(Boolean);
+  const text3 = norm([fields.expression, fields.pose, fields.state].filter(Boolean).join(" ") || stem.replace(fields.character ?? "", " ").replace(fields.outfit ?? "", " "));
+  const words = text3.split(" ").filter(Boolean);
   const known = (p) => TAGS.has(p) || EMOTION_TIER.has(p) || MARKERS.has(p);
   const phrases = [];
   for (let i = 0;i < words.length; i += 1) {
@@ -60670,8 +60716,8 @@ async function runTag(ctx, sheets, delays = RETRY_DELAYS_MS) {
         updates.set(t.groupId, parseTile(a, t.candidate));
     }
     tagged += updates.size;
-    const current = await readAutoPickState(ctx.services, ctx.characterId);
-    state = await writeAutoPickState(ctx.services, ctx.characterId, { ...current, groups: current.groups.map((g) => updates.has(g.id) ? { ...g, tags: updates.get(g.id) } : g) });
+    const current2 = await readAutoPickState(ctx.services, ctx.characterId);
+    state = await writeAutoPickState(ctx.services, ctx.characterId, { ...current2, groups: current2.groups.map((g) => updates.has(g.id) ? { ...g, tags: updates.get(g.id) } : g) });
   }
   const message = `Tagged ${tagged} outfit group(s) from ${sheets.length} contact sheet(s)${failed ? `; ${failed} sheet(s) failed` : ""}.`;
   ctx.progress({ label: message, done: sheets.length, total: sheets.length, fraction: 1 });
@@ -60738,9 +60784,9 @@ async function applyAutoPick(services, params) {
     }
     return { ...doc, characterPrompt: { ...doc.characterPrompt, characterForms: forms } };
   }, { expectedUpdatedAt: base.updatedAt, reason: "outfit-autopick" });
-  const current = await readAutoPickState(services, characterId);
-  const groups = current.groups.map((g) => applied.has(g.id) ? { ...g, appliedOutfitId: applied.get(g.id) } : g);
-  const next = await writeAutoPickState(services, characterId, { ...current, groups: await withLiveOutfits(services, characterId, groups) });
+  const current2 = await readAutoPickState(services, characterId);
+  const groups = current2.groups.map((g) => applied.has(g.id) ? { ...g, appliedOutfitId: applied.get(g.id) } : g);
+  const next = await writeAutoPickState(services, characterId, { ...current2, groups: await withLiveOutfits(services, characterId, groups) });
   services.log.append("info", "outfit-autopick", `Added ${added} outfit(s) with reference images; ${skipped} already present or skipped.`);
   return { added, skipped, state: next };
 }
@@ -60976,7 +61022,7 @@ async function runReclassification(ctx, params) {
     config: session.store,
     analyzer: analyzer(ctx, "prompt-reclassification"),
     blocked: () => false,
-    drafts: { flush() {}, projectPending: (config) => config },
+    drafts: { flush() {}, projectPending: (config2) => config2 },
     adapter,
     context: () => ({ sourceId: ctx.characterId, targets: keys.map((promptKey) => ({ promptKey })), generation: 0, available: keys.length > 0 })
   });
@@ -61292,26 +61338,26 @@ function messageUiState(doc, input) {
 function buildAnalyzerContextInputs2(input) {
   return buildAnalyzerContextInputs(input);
 }
-function resolveSourceGenerationSettings2(config, sourceId) {
-  return resolveSourceGenerationSettings(config, sourceId);
+function resolveSourceGenerationSettings2(config2, sourceId) {
+  return resolveSourceGenerationSettings(config2, sourceId);
 }
-function isFreeOutfitGenerationEnabled(config, sourceId) {
-  return mR(config, sourceId);
+function isFreeOutfitGenerationEnabled(config2, sourceId) {
+  return mR(config2, sourceId);
 }
-function resolveNovelAIRunConfig2(config, options = {}) {
-  return resolveNovelAIRunConfig(config, options);
+function resolveNovelAIRunConfig2(config2, options = {}) {
+  return resolveNovelAIRunConfig(config2, options);
 }
 function toPlannerImageToken(token) {
   return tPt(token);
 }
-function withCustomCharacterMembers(source, customCharacters, mode = "active") {
-  return y_(source, customCharacters, mode);
+function withCustomCharacterMembers(source, customCharacters, mode2 = "active") {
+  return y_(source, customCharacters, mode2);
 }
 function resolvePresetScope(provider, comfyuiOutfitReferenceEnabled) {
   return ZQ(provider, comfyuiOutfitReferenceEnabled);
 }
-function resolveOutfitCreationMode(config) {
-  return S1t(config);
+function resolveOutfitCreationMode(config2) {
+  return S1t(config2);
 }
 function buildKnownIdentities(source, personaRecords = []) {
   return V1t(source, personaRecords);
@@ -61413,8 +61459,8 @@ function readLocalLoreActorState(e) {
     if (!o.actors || Array.isArray(o.actors) || typeof o.actors != "object" || !Number.isSafeInteger(o.revision) || Number(o.revision) < 1)
       throw new Error;
     const a = {};
-    for (const [i, s] of Object.entries(dc(o.actors))) {
-      const c = dc(s);
+    for (const [i, s2] of Object.entries(dc(o.actors))) {
+      const c = dc(s2);
       if (!i || /^(?:primary|secondary|actor_\d+|female_\d+|male_\d+)$/u.test(i) || !c.groups || Array.isArray(c.groups) || typeof c.groups != "object" || !c.ttl || Array.isArray(c.ttl) || typeof c.ttl != "object" || !Number.isSafeInteger(c.count) || Number(c.count) < 0)
         throw new Error;
       for (const l of a_) {
@@ -61473,11 +61519,11 @@ function computeDeferredVisualContinuity2(input) {
 function rebuildContinuityAtMessage2(store, chatKey, messageIds, messageId) {
   return rebuildContinuityAtMessage(store, chatKey, messageIds, messageId);
 }
-function readLocalLoreActorState2(chat) {
-  return readLocalLoreActorState(chat);
+function readLocalLoreActorState2(chat2) {
+  return readLocalLoreActorState(chat2);
 }
-function writeLocalLoreActorState2(chat, payload) {
-  writeLocalLoreActorState(chat, payload);
+function writeLocalLoreActorState2(chat2, payload) {
+  writeLocalLoreActorState(chat2, payload);
 }
 function mergeLocalLoreActorState2(characters, payload) {
   return mergeLocalLoreActorState(characters, payload);
@@ -61488,12 +61534,12 @@ function toLocalLoreActorEntry2(state) {
 function isPersistableActorKey(key) {
   return !!key.trim() && key === key.trim() && !/^(?:primary|secondary|actor_\d+|female_\d+|male_\d+)$/u.test(key);
 }
-function commitContinuityCheckpoint(store, chat, next, chatKey, messageId, historyRevisionId, basisRevision) {
+function commitContinuityCheckpoint(store, chat2, next, chatKey, messageId, historyRevisionId, basisRevision) {
   const generation = store.messages[messageId]?.generations.find((g) => g.id === historyRevisionId);
   if (generation?.stateCommitRevision !== undefined || generation?.stateCommitSkipped === true)
     return "already-committed";
-  const current = readLocalLoreActorState2(chat);
-  if (current.revision !== basisRevision) {
+  const current2 = readLocalLoreActorState2(chat2);
+  if (current2.revision !== basisRevision) {
     if (generation)
       generation.stateCommitSkipped = true;
     return "skipped";
@@ -61502,28 +61548,28 @@ function commitContinuityCheckpoint(store, chat, next, chatKey, messageId, histo
   const compact = checkpoint ? EBe(checkpoint) : undefined;
   if (generation && compact)
     generation.continuity = compact;
-  const actors = { ...current.actors };
+  const actors = { ...current2.actors };
   for (const [key, value] of Object.entries(next.characters[chatKey] ?? {}))
     if (isPersistableActorKey(key))
       actors[key] = toLocalLoreActorEntry2(value);
-  const payload = { revision: current.revision + 1, actors };
-  writeLocalLoreActorState2(chat, payload);
+  const payload = { revision: current2.revision + 1, actors };
+  writeLocalLoreActorState2(chat2, payload);
   if (generation)
     generation.stateCommitRevision = payload.revision;
   return "committed";
 }
 // src/engine/text/slots.ts
-function splitParagraphSlots2(messageKey, text, options = {}) {
-  return splitParagraphSlots(messageKey, text, options);
+function splitParagraphSlots2(messageKey, text3, options = {}) {
+  return splitParagraphSlots(messageKey, text3, options);
 }
 function buildIllustrationSlots2(input) {
   return buildIllustrationSlots(input);
 }
-function detectNativeAssetMarkups2(text, options = {}) {
-  return detectNativeAssetMarkups(text, options);
+function detectNativeAssetMarkups2(text3, options = {}) {
+  return detectNativeAssetMarkups(text3, options);
 }
-function detectImageTokens(text, options = {}) {
-  return oP(text, options);
+function detectImageTokens(text3, options = {}) {
+  return oP(text3, options);
 }
 function buildCharxAssetRegexDetectors2(input) {
   return buildCharxAssetRegexDetectors(input);
@@ -61568,7 +61614,7 @@ function createAssetMaidEngine(options) {
   const v45 = createV45Orchestrator(v45Analyzer, promptCompiler, sessions, executor);
   const v5Analyzer = createV5Analyzer(options.analyzerClient, undefined, options.jev);
   const v5 = createV5Orchestrator(v5Analyzer, sessions, executor, undefined, {
-    onSplitResumeState: (key, state) => options.onSplitResumeState?.(key, state)
+    onSplitResumeState: (key, state2) => options.onSplitResumeState?.(key, state2)
   });
   const orchestrator = createProfileOrchestrator({
     v45,
@@ -61597,9 +61643,386 @@ function createAssetMaidEngine(options) {
     }
   };
 }
+// src/engine/v5/index.ts
+var exports_v5 = {};
+__export(exports_v5, {
+  validateV5RawConfig: () => validateV5RawConfig,
+  toV5WirePayload: () => toV5WirePayload,
+  toV5ContinuitySnapshot: () => toV5ContinuitySnapshot,
+  serializeV5PromptPlan: () => serializeV5PromptPlan2,
+  selectV5DirectionPreset: () => selectV5DirectionPreset2,
+  runV5RulePhases: () => runV5RulePhases2,
+  resolveV5UserDirections: () => resolveV5UserDirections2,
+  resolveV5Directions: () => resolveV5Directions,
+  renderV5SplitPhaseSystemInstruction: () => renderV5SplitPhaseSystemInstruction2,
+  renderV5AnalyzerSystemInstruction: () => renderV5AnalyzerSystemInstruction2,
+  recoverV5AnalyzerResponse: () => recoverV5AnalyzerResponse,
+  reconcileV5Continuity: () => reconcileV5Continuity,
+  prepareV5ProviderPrompt: () => prepareV5ProviderPrompt2,
+  planV5SplitBatches: () => planV5SplitBatches,
+  planV5Scene: () => planV5Scene,
+  isV5RawValidationError: () => isV5RawValidationError,
+  getV5CatalogFingerprint: () => getV5CatalogFingerprint,
+  getSharedV5RuleRuntime: () => getSharedV5RuleRuntime,
+  getDefaultV5CatalogHashes: () => getDefaultV5CatalogHashes,
+  getDefaultV5Catalog: () => getDefaultV5Catalog,
+  formatV5NovelAIPrompt: () => formatV5NovelAIPrompt2,
+  fnv1a64V5: () => fnv1a64V5,
+  finalizeV5ProviderPrompt: () => finalizeV5ProviderPrompt,
+  evaluateV5RuleCondition: () => evaluateV5RuleCondition2,
+  createV5SplitAnalysisRunner: () => createV5SplitAnalysisRunner2,
+  createV5RuleRuntime: () => createV5RuleRuntime,
+  createV5NovelAIConfig: () => createV5NovelAIConfig2,
+  createV5ContinuityBasis: () => createV5ContinuityBasis2,
+  createV5Compiler: () => createV5Compiler,
+  createV5Analyzer: () => createV5Analyzer2,
+  createDefaultV5DirectionSettings: () => createDefaultV5DirectionSettings,
+  continuityStorageKey: () => continuityStorageKey,
+  composeV5Images: () => composeV5Images,
+  compileV5Scene: () => compileV5Scene,
+  compileV5Catalog: () => compileV5Catalog,
+  canonicalizeV5: () => canonicalizeV5,
+  canonicalV5Json: () => canonicalV5Json,
+  buildV5ResponseSchema: () => buildV5ResponseSchema,
+  buildV5PromptView: () => buildV5PromptView2,
+  buildV5PromptSegments: () => buildV5PromptSegments2,
+  buildV5PromptProjection: () => buildV5PromptProjection2,
+  buildV5PromptContext: () => buildV5PromptContext2,
+  buildV5InstructionModules: () => buildV5InstructionModules2,
+  buildV5ImageActors: () => buildV5ImageActors2,
+  buildV5IdentityEntries: () => buildV5IdentityEntries2,
+  buildV5HistoryDecision: () => buildV5HistoryDecision2,
+  buildV5ExecutedPromptPlan: () => buildV5ExecutedPromptPlan2,
+  buildV5CandidateBindings: () => buildV5CandidateBindings,
+  buildV5AnalyzerRequest: () => buildV5AnalyzerRequest,
+  buildV5AnalyzerMessages: () => buildV5AnalyzerMessages2,
+  assertV5RawConfig: () => assertV5RawConfig,
+  applyV5Continuity: () => applyV5Continuity,
+  V5_RAW_CONFIG: () => V5_RAW_CONFIG,
+  V5_COMPILER_VERSION: () => V5_COMPILER_VERSION,
+  V5_BUNDLED_COMFY_PROFILE: () => V5_BUNDLED_COMFY_PROFILE,
+  V5_ANALYSIS_PRESETS: () => V5_ANALYSIS_PRESETS2,
+  NovelAIV5RawValidationError: () => NovelAIV5RawValidationError2
+});
+
+// src/engine/v5/catalog.ts
+var V5_COMPILER_VERSION = NOVELAI_V5_COMPILER_VERSION;
+var V5_RAW_CONFIG = NOVELAI_V5_RAW_CONFIG;
+var NovelAIV5RawValidationError2 = NovelAIV5RawValidationError;
+function isV5RawValidationError(error) {
+  return error instanceof NovelAIV5RawValidationError;
+}
+function validateV5RawConfig(raw) {
+  return validateNovelAIV5RawConfig(raw);
+}
+function assertV5RawConfig(raw) {
+  assertNovelAIV5RawConfig(raw);
+}
+function compileV5Catalog(raw) {
+  return compileNovelAIV5Catalog(raw);
+}
+function getDefaultV5Catalog() {
+  return getDefaultNovelAIV5Catalog();
+}
+function getDefaultV5CatalogHashes() {
+  return getDefaultV5Catalog().hashes;
+}
+function getV5CatalogFingerprint(catalog = getDefaultV5Catalog()) {
+  return Aot(catalog);
+}
+function canonicalizeV5(value) {
+  return canonicalizeV5Value(value);
+}
+function canonicalV5Json(value) {
+  return canonicalJsonStringify(value);
+}
+function fnv1a64V5(value) {
+  return fnv1a64Hash(value);
+}
+// src/engine/v5/runtime.ts
+function createV5RuleRuntime(options = {}) {
+  return createNovelAIV5RuleRuntime(options);
+}
+var shared;
+function getSharedV5RuleRuntime() {
+  return shared ??= createV5RuleRuntime();
+}
+function createV5Compiler(catalog = getDefaultV5Catalog()) {
+  return createV5SceneCompiler(catalog);
+}
+function compileV5Scene(graph, context2, catalog = getDefaultV5Catalog()) {
+  return createV5Compiler(catalog).compile(graph, context2);
+}
+function runV5RulePhases2(graph, context2, catalog = getDefaultV5Catalog()) {
+  return runV5RulePhases(graph, catalog, context2.actorHumanlike, context2);
+}
+function evaluateV5RuleCondition2(...args) {
+  return evaluateV5RuleCondition(...args);
+}
+function createV5ContinuityBasis2(snapshot) {
+  return createV5ContinuityBasis(snapshot);
+}
+function toV5ContinuitySnapshot(state2) {
+  return Fce(state2, "novelai-v5");
+}
+function applyV5Continuity(input) {
+  return applyV5SceneContinuity({ ...input, catalog: input.catalog ?? getDefaultV5Catalog() });
+}
+function reconcileV5Continuity(draft, applied, options = {}, catalog = getDefaultV5Catalog()) {
+  return reconcileV5SceneContinuity(draft, applied, catalog, options);
+}
+var withCatalog = (input) => ({ ...input, catalog: input.catalog ?? getDefaultV5Catalog() });
+function buildV5PromptProjection2(input) {
+  return buildV5PromptProjection(withCatalog(input));
+}
+function serializeV5PromptPlan2(projection) {
+  return serializeV5PromptPlan(projection);
+}
+function buildV5ExecutedPromptPlan2(input) {
+  return buildV5ExecutedPromptPlan(withCatalog(input));
+}
+function planV5Scene(input) {
+  const catalog = input.catalog ?? getDefaultV5Catalog();
+  const ctx = input.promptContext;
+  const actorsState = input.state.actors;
+  const ruleContext = {
+    selectionKey: input.selectionKey,
+    actorHumanlike: ctx.actorHumanlike,
+    provider: input.provider,
+    completelyNudeActorIds: ctx.completelyNudeActorIds,
+    ruleContinuityByActorId: Object.fromEntries(input.graph.actors.flatMap((actor) => {
+      const key = actor.continuityIdentity ? continuityStorageKey(actor.continuityIdentity) : undefined;
+      const entry = key ? actorsState[key] : undefined;
+      return entry ? [[actor.actorId, { groups: entry.groups, counters: entry.counters }]] : [];
+    })),
+    ...input.requestedSizeId ? { requestedSizeId: input.requestedSizeId } : {}
+  };
+  const draft = compileV5Scene(input.graph, ruleContext, catalog);
+  const applied = applyV5Continuity({
+    scene: input.graph,
+    draft,
+    catalog,
+    state: input.state,
+    eventScopeId: input.eventScopeId,
+    advanceTurn: input.advanceTurn,
+    stateAccumulationEnabled: input.stateAccumulationEnabled,
+    completelyNudeActorIds: ctx.completelyNudeActorIds
+  });
+  let state2 = applied.continuity.state;
+  const reconciled = reconcileV5Continuity(draft, applied, { completelyNudeActorIds: ctx.completelyNudeActorIds }, catalog);
+  state2 = Wfe(bve(state2, input.graph, ctx), input.graph);
+  const promptPlan = buildV5ExecutedPromptPlan2({
+    reconciled,
+    catalog,
+    includeRegisteredActorSexTags: input.includeRegisteredActorSexTags ?? true,
+    actorHumanlike: ctx.actorHumanlike,
+    externalEntries: ctx.externalEntries,
+    globalNegativePrompt: ctx.globalNegativePrompt,
+    actorNegativePrompts: ctx.actorNegativePrompts
+  });
+  return { ruleContext, draft, applied, reconciled, promptPlan, state: state2 };
+}
+function continuityStorageKey(identity) {
+  return hf(identity);
+}
 // src/engine/v5/analyzer.ts
-function buildV5CandidateBindings(context, continuitySnapshot) {
-  return buildV5ActorCandidates(context, continuitySnapshot ?? null);
+var V5_ANALYSIS_PRESETS2 = V5_ANALYSIS_PRESETS;
+function createDefaultV5DirectionSettings() {
+  return createDefaultV5UserDirectionSettings();
+}
+function selectV5DirectionPreset2(list, presetId, mode2 = "preset") {
+  return selectV5DirectionPreset(list, presetId, mode2);
+}
+function resolveV5UserDirections2(input) {
+  return resolveV5UserDirections(input);
+}
+function resolveV5Directions(settings) {
+  return resolveV5UserDirections2({ novelAIConfig: { v5UserDirections: settings } });
+}
+function buildV5CandidateBindings(context2, continuitySnapshot) {
+  return buildV5ActorCandidates(context2, continuitySnapshot ?? null);
+}
+function buildV5AnalyzerRequest(input) {
+  const runtime = input.runtime ?? getSharedV5RuleRuntime();
+  const { context: context2, splitStage } = input;
+  const snapshot = input.continuitySnapshot ?? null;
+  const userDirections = input.userDirections ?? {};
+  const provider = input.config?.provider;
+  const u = buildV5ActorCandidates(context2, snapshot);
+  const slotMap = !splitStage && (provider === "ollama_local" || provider === "ollama_cloud");
+  const m = resolveV5ImageCount(context2);
+  const h = buildV5SceneSlots(context2, u.candidateKeyByHint);
+  const y = Zyt(snapshot, u);
+  const v = createV5ContinuityBasis(snapshot);
+  const w = xrt(v, u.response, runtime.catalog);
+  const x = _rt(v, runtime.catalog);
+  const nl = krt(v, u.response, { excludePersona: userDirections.scenePresetId === "pov" });
+  const requestContext = {
+    freeCharacterGenerationEnabled: context2.freeCharacterGenerationEnabled,
+    freeOutfitGenerationEnabled: context2.freeOutfitGenerationEnabled,
+    knownCharacterIdentities: context2.knownCharacterIdentities,
+    scene: h.scene,
+    imageCount: m,
+    actorCandidates: u.request,
+    actorCandidateOverlay: u.overlay,
+    ...u.activePersonaCandidateKey ? { activePersonaCandidateKey: u.activePersonaCandidateKey } : {},
+    outfitCatalog: u.outfitCatalog,
+    generatedOutfitCandidates: u.generatedOutfitCandidates,
+    outfitContinuity: u.outfitContinuity,
+    ...y.length ? { layoutContinuity: y } : {},
+    ...w.length ? { actorModifierContinuity: w } : {},
+    ...x ? { sceneModifierContinuity: x } : {},
+    ...nl ? { naturalLanguageContinuity: nl } : {},
+    ...h.slotHints ? { slotHints: h.slotHints } : {},
+    ...slotMap ? { responseEnvelopeMode: "slot-map" } : {}
+  };
+  const request = runtime.buildAnalyzerRequest(requestContext, userDirections);
+  const slotNumbers = splitStage?.assignedSlots ?? (context2.candidateSlots.length ? context2.candidateSlots.map(({ slot_number }) => slot_number) : [0]);
+  const schema = buildV5StructuredOutputSchema({
+    slotNumbers,
+    imageCount: splitStage?.assignedSlots?.length ?? m,
+    requestPayload: splitStage?.phase === "detail" ? Xyt(request.payload, splitStage.plan) : request.payload
+  });
+  const structuredOutputSchema = splitStage?.phase === "initial" ? Byt(schema) : splitStage?.phase === "detail" ? Uyt(schema, splitStage.plan) : schema;
+  return { runtime, candidates: u, imageCount: m, scene: h, requestContext, request, structuredOutputSchema, slotNumbers };
+}
+function buildV5AnalyzerMessages2(request, options = {}) {
+  return buildV5AnalyzerMessages(request, options.imageParts ?? [], options.revisionDirection ?? "", options.revisionPromptChannels ?? [], options.splitStage, options.rosterSnapshot, options.rosterDetail ?? false);
+}
+function toV5WirePayload(payload) {
+  return toV5AnalyzerWirePayload(payload);
+}
+function buildV5ResponseSchema(input) {
+  return buildV5StructuredOutputSchema(input);
+}
+function renderV5AnalyzerSystemInstruction2(modules) {
+  return renderV5AnalyzerSystemInstruction(modules);
+}
+function buildV5InstructionModules2(input) {
+  return buildV5InstructionModules(input);
+}
+function recoverV5AnalyzerResponse(response, build, options = {}) {
+  return build.runtime.recoverAnalyzerResponse(response, build.candidates.response, build.request.enabledModifierRefs, build.request.payload.scene, build.request.localRecovery, build.request.payload.slot_hints, build.slotNumbers, options.mode ?? "complete-from-request", options.freeCharacterGenerationEnabled ?? build.requestContext.freeCharacterGenerationEnabled === true);
+}
+function createV5Analyzer2(client, runtime, jev) {
+  return createV5Analyzer(client, runtime ?? undefined, jev);
+}
+function planV5SplitBatches(totalCount, batchSize) {
+  return pbt(totalCount, batchSize);
+}
+function renderV5SplitPhaseSystemInstruction2(request, phase) {
+  return renderV5SplitPhaseSystemInstruction(request, phase);
+}
+function createV5SplitAnalysisRunner2(analyzer2, onResumeState) {
+  return createV5SplitAnalysisRunner(analyzer2, onResumeState);
+}
+// src/engine/v5/compose.ts
+function buildV5PromptContext2(input) {
+  return buildV5PromptContext(input);
+}
+function buildV5IdentityEntries2(identity, actorId) {
+  return buildV5IdentityEntries(identity, actorId);
+}
+function createV5NovelAIConfig2(run, plan, seed, characterCoordinates, activePersonaCandidateKey) {
+  return createV5NovelAIConfig(run, plan, seed, characterCoordinates, activePersonaCandidateKey);
+}
+function prepareV5ProviderPrompt2(input) {
+  return prepareV5ProviderPrompt(input);
+}
+function formatV5NovelAIPrompt2(input) {
+  return formatV5NovelAIPrompt(input);
+}
+function finalizeV5ProviderPrompt(input) {
+  return attachActorIdsToCharacterPrompts(applyNsfwPrefixPolicy(prepareV5ProviderPrompt2(input), input.forceNsfwPrefix === true, input.actors.length), input.actors);
+}
+function buildV5PromptView2(plan, context2) {
+  return buildV5PromptView(plan, context2);
+}
+function buildV5PromptSegments2(plan, artistNegativePrompt = "") {
+  return buildV5PromptSegments(plan, artistNegativePrompt);
+}
+function buildV5ImageActors2(promptView) {
+  return buildV5ImageActors(promptView);
+}
+function buildV5HistoryDecision2(input) {
+  return buildV5HistoryDecision(input);
+}
+var V5_BUNDLED_COMFY_PROFILE = F2;
+async function composeV5Images(input) {
+  const runtime = input.runtime ?? createV5RuleRuntime();
+  let analysis = input.analysis;
+  const analyzer2 = input.client ? createV5Analyzer2(input.client, runtime) : {
+    runtime,
+    captureSelectionSettings: () => {
+      return;
+    },
+    async run() {
+      if (!analysis)
+        throw new Error("composeV5Images requires `client` or `analysis`.");
+      return analysis;
+    }
+  };
+  const sessions = createGenerationSessions();
+  const requests = [];
+  const dispatcher = {
+    providerRef: (providerId, queueScopeKey) => Cve(providerId, queueScopeKey),
+    async generate(request) {
+      const { signal: _signal, session: _session, ...rest } = request;
+      requests.push(rest);
+      return input.fakeResult?.(rest, requests.length - 1) ?? {
+        provider: request.provider,
+        bytes: new Uint8Array(0),
+        mimeType: "image/png",
+        extension: "png",
+        seed: request.seed,
+        width: request.width,
+        height: request.height,
+        requestId: `fake-${requests.length}`,
+        providerMetadata: {},
+        providerRef: request.providerRef
+      };
+    }
+  };
+  const executor = createGenerationBatchExecutor(dispatcher, sessions, { prepare: async () => {
+    return;
+  } });
+  const plans = [];
+  const orchestrator = createV5Orchestrator(analyzer2, sessions, executor, {
+    build: (x) => {
+      const plan = buildV5ExecutedPromptPlan(x);
+      plans.push(plan);
+      return plan;
+    }
+  });
+  const events = [];
+  let continuity;
+  const userOnEvent = input.run.onEvent;
+  const result = await orchestrator.run({
+    ...input.run,
+    applyV5Continuity: async (state2) => {
+      continuity = state2;
+    },
+    onEvent: (event) => {
+      const { session: _session, ...rest } = event;
+      events.push(rest);
+      userOnEvent?.(event);
+    }
+  });
+  analysis = result.analyzer;
+  orchestrator.dispose();
+  const images = result.images.map((image, index) => ({
+    image,
+    executedPromptPlan: plans[index],
+    request: requests[index]
+  }));
+  return {
+    images,
+    analysis,
+    ...continuity ? { continuity, continuitySnapshot: toV5ContinuitySnapshot(continuity) } : {},
+    executedPromptPlans: plans,
+    requests,
+    events
+  };
 }
 // src/engine/v45/analyzer.ts
 var V45_SCHEMA_IDS = Object.freeze({
@@ -61638,11 +62061,11 @@ function partsFromList(list) {
 }
 var idKey = (identityKey, formId, outfitId) => `${identityKey}\x00${formId || DEFAULT_FORM}\x00${outfitId}`;
 var wireKey = (candidateKey, formRef, outfitRef) => `${candidateKey}\x00${formRef}\x00${outfitRef}`;
-function createRunOutfitIndex(context) {
-  const ctx = rec3(context);
+function createRunOutfitIndex(context2) {
+  const ctx = rec3(context2);
   const byIdentity = new Map;
   const labels = new Map;
-  const put = (identityKey, formId, outfitId, parts, label) => {
+  const put2 = (identityKey, formId, outfitId, parts, label) => {
     if (!identityKey || !outfitId)
       return;
     const k = idKey(identityKey, formId, outfitId);
@@ -61655,14 +62078,14 @@ function createRunOutfitIndex(context) {
     for (const c of arr2(list).map(rec3))
       for (const f of arr2(c.appearanceForms).map(rec3))
         for (const o of arr2(f.outfits).map(rec3))
-          put(str3(c.key), str3(f.formId), str3(o.outfitId), partsOf(o), str3(o.label));
+          put2(str3(c.key), str3(f.formId), str3(o.outfitId), partsOf(o), str3(o.label));
   for (const list of [ctx.v5OutfitCatalogCandidates, ctx.outfitCandidates])
     for (const o of arr2(list).map(rec3))
-      put(str3(o.lorebook_prompt_key), str3(o.form_id), str3(o.id), partsOf(o), str3(o.label));
+      put2(str3(o.lorebook_prompt_key), str3(o.form_id), str3(o.id), partsOf(o), str3(o.label));
   const wire = new Map;
   let bindings = {};
   try {
-    bindings = rec3(buildV5CandidateBindings(ctx, null));
+    bindings = rec3(exports_v5.buildV5CandidateBindings(ctx, null));
   } catch {}
   const sourceKeys = rec3(bindings.sourceKeyByCandidateKey);
   for (const r of arr2(bindings.response).map(rec3)) {
@@ -61793,9 +62216,9 @@ var FREEFORM_CLOTHING_POLICY = Object.freeze({
   clothing_state: "When an actor's legs or feet are visible and the registered legwear or footwear is not simply worn, say so explicitly in that actor's free tags (barefoot, no shoes, bare legs)."
 });
 var OUTFIT_PARTS_INPUT_DEFAULT = "forms[].outfit_parts maps an outfit ID to its registered garments by body part; an omitted part has no registered garment.";
-function augmentCatalog(catalog, lookup) {
+function augmentCatalog(catalog3, lookup) {
   let added = false;
-  for (const entry of arr2(catalog)) {
+  for (const entry of arr2(catalog3)) {
     const e = rec3(entry);
     const candidateKey = str3(e.candidateKey);
     if (!candidateKey)
@@ -61835,11 +62258,11 @@ function augmentV5AnalyzerPayload(payload, lookup) {
     contract.inputDefaults.outfit_parts = OUTFIT_PARTS_INPUT_DEFAULT;
   return true;
 }
-function parseObject(text) {
-  if (!text.startsWith("{"))
+function parseObject(text3) {
+  if (!text3.startsWith("{"))
     return null;
   try {
-    const v = JSON.parse(text);
+    const v = JSON.parse(text3);
     return v && typeof v === "object" && !Array.isArray(v) ? v : null;
   } catch {
     return null;
@@ -61879,7 +62302,7 @@ function augmentV5AnalyzerMessages(messages, lookup) {
 }
 function withOutfitAwareness(client, registry, onAugment) {
   return {
-    complete(config, messages, options) {
+    complete(config2, messages, options) {
       let outfits = 0;
       const augmented = registry.size ? augmentV5AnalyzerMessages(messages, (k, f, o) => {
         const parts = registry.wire(k, f, o);
@@ -61889,7 +62312,7 @@ function withOutfitAwareness(client, registry, onAugment) {
       }) : null;
       if (augmented)
         onAugment?.(outfits);
-      return client.complete(config, augmented ?? messages, options);
+      return client.complete(config2, augmented ?? messages, options);
     }
   };
 }
@@ -61901,17 +62324,17 @@ function Mc2(e, t, r, n) {
   if (e === undefined && Yf2(t) && Yf2(r) && (e = {}), Array.isArray(e) && Array.isArray(t) && Array.isArray(r)) {
     const o = n && [...e, ...t, ...r].map(n);
     if (n && o?.every(Boolean) && [e, t, r].every((a) => new Set(a.map(n)).size === a.length)) {
-      const a = new Map(e.map((d) => [n(d), d])), i = new Map(r.map((d) => [n(d), d])), s = t.flatMap((d) => {
+      const a = new Map(e.map((d) => [n(d), d])), i = new Map(r.map((d) => [n(d), d])), s2 = t.flatMap((d) => {
         const u = n(d);
         return a.has(u) && !i.has(u) && JSON.stringify(a.get(u)) === JSON.stringify(d) ? [] : [a.has(u) && i.has(u) ? Mc2(a.get(u), d, i.get(u), n) : structuredClone(d)];
       }), c = new Set(t.map(n));
-      s.push(...r.filter((d) => !a.has(n(d)) && !c.has(n(d))));
+      s2.push(...r.filter((d) => !a.has(n(d)) && !c.has(n(d))));
       const l = e.map(n).filter((d) => c.has(d));
       if (JSON.stringify(l) === JSON.stringify(t.slice(0, l.length).map(n))) {
-        const d = new Map(s.map((u) => [n(u), u]));
-        return [...r.flatMap((u) => d.has(n(u)) ? [d.get(n(u))] : []), ...s.filter((u) => !i.has(n(u)))];
+        const d = new Map(s2.map((u) => [n(u), u]));
+        return [...r.flatMap((u) => d.has(n(u)) ? [d.get(n(u))] : []), ...s2.filter((u) => !i.has(n(u)))];
       }
-      return s;
+      return s2;
     }
     return structuredClone(t);
   }
@@ -61933,8 +62356,8 @@ function mp2(e, t, r, n) {
   if (o(e, t) || o(e, r) || o(t, r))
     return false;
   if (e === undefined && Yf2(t) && Yf2(r) && (e = {}), Array.isArray(e) && Array.isArray(t) && Array.isArray(r) && n && [...e, ...t, ...r].every((a) => n(a))) {
-    const a = new Map(e.map((c) => [n(c), c])), i = new Map(r.map((c) => [n(c), c])), s = new Map(t.map((c) => [n(c), c]));
-    return [...new Set([...a.keys(), ...s.keys()])].some((c) => mp2(a.get(c), s.get(c), i.get(c), n));
+    const a = new Map(e.map((c) => [n(c), c])), i = new Map(r.map((c) => [n(c), c])), s2 = new Map(t.map((c) => [n(c), c]));
+    return [...new Set([...a.keys(), ...s2.keys()])].some((c) => mp2(a.get(c), s2.get(c), i.get(c), n));
   }
   return Yf2(e) && Yf2(t) && Yf2(r) ? [...new Set([...Object.keys(e), ...Object.keys(t)])].some((a) => mp2(e[a], t[a], r[a], n)) : true;
 }
@@ -61991,7 +62414,7 @@ function A2e3(e, t, r) {
   return n || (Xg3(e || t).split(/[\\/.]/g).at(-1)?.toLowerCase() ?? "");
 }
 function sn3(e) {
-  const t = Array.isArray(e) ? e : [], r = NQ3(e), n = typeof e == "string" ? e : "", o = Xg3(r.name ?? t[0]), a = Xg3(r.key ?? t[1] ?? n), i = NQ3(r.characterTarget ?? r.character_target), s = Xg3(i.chaId ?? i.cha_id), c = Number(i.indexHint ?? i.index_hint);
+  const t = Array.isArray(e) ? e : [], r = NQ3(e), n = typeof e == "string" ? e : "", o = Xg3(r.name ?? t[0]), a = Xg3(r.key ?? t[1] ?? n), i = NQ3(r.characterTarget ?? r.character_target), s2 = Xg3(i.chaId ?? i.cha_id), c = Number(i.indexHint ?? i.index_hint);
   return {
     name: o,
     key: a,
@@ -62000,7 +62423,7 @@ function sn3(e) {
     moduleId: Xg3(r.moduleId ?? r.module_id),
     moduleName: Xg3(r.moduleName ?? r.module_name),
     ...Number.isInteger(Number(r.characterIndex ?? r.character_index)) ? { characterIndex: Number(r.characterIndex ?? r.character_index) } : {},
-    ...s ? { characterTarget: { chaId: s, ...Number.isInteger(c) && c >= 0 ? { indexHint: c } : {} } } : {},
+    ...s2 ? { characterTarget: { chaId: s2, ...Number.isInteger(c) && c >= 0 ? { indexHint: c } : {} } } : {},
     ..."cropReference" in r || "crop_reference" in r ? { cropReference: r.cropReference ?? r.crop_reference } : {}
   };
 }
@@ -62474,19 +62897,19 @@ function y3e3(e) {
   return !e.name || oi3(e) !== "original" ? null : { kind: "original", name: e.name, extension: e.extension, sourceType: e.sourceType, moduleName: e.moduleName };
 }
 function b3e3(e, t = {}) {
-  const r = sn3(e), n = r.key ? r : null, o = O83(t.runtimeOwner) || "current-owner", a = O83(t.semanticId) || "reference", i = xte3({ runtimeOwner: o, semanticId: a }), s = oi3(r), c = n ? {
+  const r = sn3(e), n = r.key ? r : null, o = O83(t.runtimeOwner) || "current-owner", a = O83(t.semanticId) || "reference", i = xte3({ runtimeOwner: o, semanticId: a }), s2 = oi3(r), c = n ? {
     kind: "local-asset",
     bindingKey: i,
     runtimeOwner: o,
     semanticId: a,
     assetKey: n.key,
     ...n.cropReference === undefined ? {} : { cropReference: n.cropReference }
-  } : null, l = n && s !== "original" ? {
+  } : null, l = n && s2 !== "original" ? {
     kind: "generated-image",
     bindingKey: i,
     runtimeOwner: o,
     semanticId: a,
-    generatedKind: s,
+    generatedKind: s2,
     assetKey: n.key
   } : null;
   return { asset: n, originalLocator: y3e3(r), localBinding: c, artifactBinding: l };
@@ -62590,11 +63013,11 @@ function a8e3(e, t, r, n, o = false, a = true) {
     return i;
   if (e.mode === "freeform")
     return a ? i.slice(0, jre3(e)) : i;
-  const s = new Map((e.options ?? []).flatMap((l) => {
+  const s2 = new Map((e.options ?? []).flatMap((l) => {
     const d = fm3(l.id), u = fm3(l.prompt), f = [];
     return d && f.push([d, l]), u && f.push([u, l]), f;
   })), c = i.flatMap((l) => {
-    const d = s.get(l);
+    const d = s2.get(l);
     return d ? r && d.genders?.length && !d.genders.includes(r) ? [] : n && d.evidence_modes?.length && !d.evidence_modes.includes(n) ? [] : [fm3(d.prompt ?? d.id)] : [];
   });
   return a ? c.slice(0, jre3(e)) : c;
@@ -62692,7 +63115,7 @@ function tR3(e) {
     const o = iy3(r);
     if (!o || !Array.isArray(n))
       continue;
-    const a = new Set(n.map(iy3).filter((s) => f8e3.has(s))), i = zp3.filter((s) => a.has(s));
+    const a = new Set(n.map(iy3).filter((s2) => f8e3.has(s2))), i = zp3.filter((s2) => a.has(s2));
     i.length && (t[o] = [...i]);
   }
   return t;
@@ -62847,7 +63270,7 @@ function Lre3(e) {
 function A8e3(e, t, r, n) {
   const o = Tp3(e), a = iR3(kn3(o.id ?? o.outfitId ?? o.outfit_id)), i = a && !n.has(a) ? a : a ? sR3(`${a}_copy`, n) : r === 0 ? iF3(t, n) : Vx3(t, o.label ?? o.name ?? `outfit-${r + 1}`, n);
   n.add(i);
-  const s = {
+  const s2 = {
     ...cy3(o),
     id: i,
     label: kn3(o.label ?? o.name) || (r === 0 ? "기본 의상" : `의상 ${r + 1}`),
@@ -62859,15 +63282,15 @@ function A8e3(e, t, r, n) {
     legs: kn3(o.legs),
     feet: kn3(o.feet)
   };
-  return delete s.outfitId, delete s.outfit_id, delete s.name, delete s.candidate_enabled, s;
+  return delete s2.outfitId, delete s2.outfit_id, delete s2.name, delete s2.candidate_enabled, s2;
 }
 function P8e3(e, t, r, n, o) {
-  const a = Tp3(e), i = ay3(a.gender, o), s = (Array.isArray(a.outfits) ? a.outfits : []).map((f, m) => A8e3(f, t, m, n));
-  if (!s.length) {
+  const a = Tp3(e), i = ay3(a.gender, o), s2 = (Array.isArray(a.outfits) ? a.outfits : []).map((f, m) => A8e3(f, t, m, n));
+  if (!s2.length) {
     const f = aF3(iF3(t, n));
-    n.add(f.id), s.push(f);
+    n.add(f.id), s2.push(f);
   }
-  const c = iR3(a.defaultOutfitId ?? a.default_outfit_id), l = s.some((f) => f.id === c) ? c : s[0].id, d = s.findIndex((f) => f.id === l), u = d > 0 ? [s[d], ...s.filter((f, m) => m !== d)] : s;
+  const c = iR3(a.defaultOutfitId ?? a.default_outfit_id), l = s2.some((f) => f.id === c) ? c : s2[0].id, d = s2.findIndex((f) => f.id === l), u = d > 0 ? [s2[d], ...s2.filter((f, m) => m !== d)] : s2;
   return {
     id: t,
     label: kn3(a.label ?? a.name) || (t === "form_default" ? "기본" : `폼 ${r}`),
@@ -62882,14 +63305,14 @@ function P8e3(e, t, r, n, o) {
   };
 }
 function po3(e, t = {}) {
-  const r = Tp3(e), n = t.fallbackGender ?? "female", o = Array.isArray(r.forms) ? r.forms : [], a = oF3(r.defaultFormId ?? r.default_form_id, "form"), i = o.length ? o : [{}], s = [], c = new Set, l = new Set;
+  const r = Tp3(e), n = t.fallbackGender ?? "female", o = Array.isArray(r.forms) ? r.forms : [], a = oF3(r.defaultFormId ?? r.default_form_id, "form"), i = o.length ? o : [{}], s2 = [], c = new Set, l = new Set;
   for (const [d, u] of i.entries()) {
     const f = Tp3(u), m = iR3(f.id) === "form_default" && !c.has("form_default") || !o.length && d === 0 ? Bc3 : Tre3(f.label ?? f.name ?? `form-${d + 1}`, c, f.id);
-    c.add(m), s.push(P8e3(f, m, d + 1, l, n));
+    c.add(m), s2.push(P8e3(f, m, d + 1, l, n));
   }
   return {
-    defaultFormId: s.some((d) => d.id === a) ? a : s.some((d) => d.id === "form_default") ? Bc3 : s[0].id,
-    forms: s
+    defaultFormId: s2.some((d) => d.id === a) ? a : s2.some((d) => d.id === "form_default") ? Bc3 : s2[0].id,
+    forms: s2
   };
 }
 function Dre3(e) {
@@ -62923,7 +63346,7 @@ function Gv2(e, t, r) {
   const o = e.forms[n], a = Object.hasOwn(r, "label") ? kn3(r.label) : o.label;
   if (!a)
     return e;
-  const i = Object.hasOwn(r, "gender") ? ay3(r.gender, o.gender) : o.gender, s = {
+  const i = Object.hasOwn(r, "gender") ? ay3(r.gender, o.gender) : o.gender, s2 = {
     ...o,
     label: a,
     description: Object.hasOwn(r, "description") ? kn3(r.description) : o.description,
@@ -62933,29 +63356,29 @@ function Gv2(e, t, r) {
     negativePrompt: Object.hasOwn(r, "negativePrompt") ? String(r.negativePrompt ?? "") : o.negativePrompt,
     reference: Object.hasOwn(r, "reference") ? Lre3(r.reference) : o.reference
   };
-  return { ...e, forms: e.forms.map((c, l) => l === n ? s : c) };
+  return { ...e, forms: e.forms.map((c, l) => l === n ? s2 : c) };
 }
 function O8e2(e, t, r) {
   return po3(e).forms.find((n) => n.id === kn3(t))?.outfits.find((n) => n.id === kn3(r)) ?? null;
 }
 function ly2(e, t, r, n) {
-  const o = po3(e), a = kn3(t), i = kn3(r), s = o.forms.findIndex((m) => m.id === a);
-  if (s < 0)
+  const o = po3(e), a = kn3(t), i = kn3(r), s2 = o.forms.findIndex((m) => m.id === a);
+  if (s2 < 0)
     return o;
-  const c = o.forms[s], l = c.outfits.findIndex((m) => m.id === i);
+  const c = o.forms[s2], l = c.outfits.findIndex((m) => m.id === i);
   if (l < 0)
     return o;
   const d = c.outfits[l], u = Object.hasOwn(n, "label") && kn3(n.label) || d.label, f = { ...d, ...cy3(n), id: d.id, label: u };
   return po3({
     ...o,
-    forms: o.forms.map((m, h) => h === s ? { ...m, outfits: m.outfits.map((y, v) => v === l ? f : y) } : m)
+    forms: o.forms.map((m, h) => h === s2 ? { ...m, outfits: m.outfits.map((y, v) => v === l ? f : y) } : m)
   });
 }
 function Hre2(e, t, r = {}) {
   const n = po3(e), o = kn3(t), a = n.forms.findIndex((m) => m.id === o);
   if (a < 0)
     return { collection: n, outfitId: "" };
-  const i = n.forms[a], s = i.outfits.findIndex((m) => m.id === i.defaultOutfitId), c = i.outfits[s];
+  const i = n.forms[a], s2 = i.outfits.findIndex((m) => m.id === i.defaultOutfitId), c = i.outfits[s2];
   if (!c || !aR3(c))
     return { collection: n, outfitId: "" };
   const l = new Set(n.forms.flatMap((m) => m.outfits.map((h) => h.id)));
@@ -62964,7 +63387,7 @@ function Hre2(e, t, r = {}) {
   return {
     collection: po3({
       ...n,
-      forms: n.forms.map((m, h) => h === a ? { ...m, defaultOutfitId: u, outfits: m.outfits.map((y, v) => v === s ? f : y) } : m)
+      forms: n.forms.map((m, h) => h === a ? { ...m, defaultOutfitId: u, outfits: m.outfits.map((y, v) => v === s2 ? f : y) } : m)
     }),
     outfitId: u
   };
@@ -62990,24 +63413,24 @@ function fF2(e, t, r) {
   };
 }
 function DA2(e, t, r) {
-  const n = Is2(e), o = (i, s, c) => {
+  const n = Is2(e), o = (i, s2, c) => {
     const l = { ...Is2(i) };
-    for (const d of new Set([...Object.keys(s), ...Object.keys(c)]))
-      JSON.stringify(Is2(s)[d]) !== JSON.stringify(Is2(c)[d]) && (Object.hasOwn(c, d) ? l[d] = Is2(c)[d] : delete l[d]);
+    for (const d of new Set([...Object.keys(s2), ...Object.keys(c)]))
+      JSON.stringify(Is2(s2)[d]) !== JSON.stringify(Is2(c)[d]) && (Object.hasOwn(c, d) ? l[d] = Is2(c)[d] : delete l[d]);
     return l;
   }, a = n.forms;
-  return Array.isArray(a) && a.every((i) => t.forms.some((s) => s.id === Is2(i).id)) ? {
+  return Array.isArray(a) && a.every((i) => t.forms.some((s2) => s2.id === Is2(i).id)) ? {
     ...n,
     ...o(n, t, r),
     forms: r.forms.map((i) => {
-      const s = t.forms.find((d) => d.id === i.id), c = a.find((d) => Is2(d).id === i.id);
-      if (!s || !c)
+      const s2 = t.forms.find((d) => d.id === i.id), c = a.find((d) => Is2(d).id === i.id);
+      if (!s2 || !c)
         return i;
-      const l = o(c, s, i);
-      if (JSON.stringify(s.basePromptGroups) !== JSON.stringify(i.basePromptGroups) && (l.basePromptGroups = o(Is2(c).basePromptGroups, s.basePromptGroups, i.basePromptGroups)), JSON.stringify(s.outfits) !== JSON.stringify(i.outfits)) {
+      const l = o(c, s2, i);
+      if (JSON.stringify(s2.basePromptGroups) !== JSON.stringify(i.basePromptGroups) && (l.basePromptGroups = o(Is2(c).basePromptGroups, s2.basePromptGroups, i.basePromptGroups)), JSON.stringify(s2.outfits) !== JSON.stringify(i.outfits)) {
         const d = Is2(c).outfits;
         l.outfits = i.outfits.map((u) => {
-          const f = s.outfits.find((h) => h.id === u.id), m = Array.isArray(d) ? d.find((h) => Is2(h).id === u.id) : undefined;
+          const f = s2.outfits.find((h) => h.id === u.id), m = Array.isArray(d) ? d.find((h) => Is2(h).id === u.id) : undefined;
           return f && m ? o(m, f, u) : u;
         });
       }
@@ -63125,7 +63548,7 @@ function F8e(e, t, r, n = Bc3) {
     forms: o.forms.map((a) => a.id === n ? {
       ...a,
       outfits: r,
-      defaultOutfitId: r.some((i, s) => Wx(i, s) === a.defaultOutfitId) ? a.defaultOutfitId : r[0] ? Wx(r[0], 0) : ""
+      defaultOutfitId: r.some((i, s2) => Wx(i, s2) === a.defaultOutfitId) ? a.defaultOutfitId : r[0] ? Wx(r[0], 0) : ""
     } : a)
   })) : e;
 }
@@ -63153,9 +63576,9 @@ function K8e(e, t = "") {
 function ane(e, t, r, n = Bc3) {
   const o = Vv2(r, t, n);
   for (const [a, i] of dR(e, t, n).entries()) {
-    const s = Wx(i, a);
-    if (one(i, r, o) || s === `auto_outfit_${o}`)
-      return { id: s, score: 1 };
+    const s2 = Wx(i, a);
+    if (one(i, r, o) || s2 === `auto_outfit_${o}`)
+      return { id: s2, score: 1 };
   }
   return null;
 }
@@ -63167,10 +63590,10 @@ function fR(e, t, r = Bc3) {
   return o >= 0 ? Wx(n[o], o) : "";
 }
 function ine(e, t, r, n, o, a = Bc3) {
-  const i = Ss2(a) || "form_default", s = hl(e, t);
-  if (!s.forms.some(({ id: y }) => y === i))
+  const i = Ss2(a) || "form_default", s2 = hl(e, t);
+  if (!s2.forms.some(({ id: y }) => y === i))
     throw new Error(`Appearance form '${i}' no longer exists for '${t}'.`);
-  const c = dR(e, t, i), l = Vv2(r, t, i), d = c.findIndex((y) => one(y, r, l)), u = d >= 0 ? c[d] ?? {} : {}, f = d >= 0 ? Wx(u, d) : "", m = f || D8e(s.forms.flatMap((y) => y.outfits.map(FA2)), K8e(r)), h = {
+  const c = dR(e, t, i), l = Vv2(r, t, i), d = c.findIndex((y) => one(y, r, l)), u = d >= 0 ? c[d] ?? {} : {}, f = d >= 0 ? Wx(u, d) : "", m = f || D8e(s2.forms.flatMap((y) => y.outfits.map(FA2)), K8e(r)), h = {
     ...u,
     id: m,
     label: r.name,
@@ -63237,7 +63660,7 @@ function xfe2(e, t = {}) {
   let i = [...new Set(a.flatMap((w) => typeof w == "string" && Nw2(w) ? [Nw2(w)] : []))];
   if (a.length !== i.length && r.push(Wc2("generated-character-recognition-key-omitted", "recovered", ".recognitionKeys", "Omitted empty, invalid, or duplicate recognition keys.")), i.length || (i = [...new Set((t.recognitionKeys ?? []).map(Nw2).filter(Boolean))], i.length && r.push(Wc2("generated-character-recognition-key-meaning-recovered", "recovered", ".recognitionKeys", "Recovered recognition keys from the generated Actor identity."))), !i.length)
     return wfe2(r, ".recognitionKeys", "A persistent generated character requires at least one valid recognition key.");
-  const s = LP2(n, "formLabel", r), c = typeof s == "string" ? Nw2(s) : "", l = LP2(n, "humanlike", r);
+  const s2 = LP2(n, "formLabel", r), c = typeof s2 == "string" ? Nw2(s2) : "", l = LP2(n, "humanlike", r);
   let d;
   typeof l == "boolean" ? d = l : typeof l == "string" && /^(?:true|false)$/iu.test(l.trim()) ? (d = l.trim().toLocaleLowerCase() === "true", r.push(Wc2("generated-character-humanlike-canonicalized", "recovered", ".humanlike", "Canonicalized an unambiguous humanlike string to a boolean."))) : (l === 1 || l === 0 || typeof l == "string" && /^(?:yes|no|1|0)$/iu.test(l.trim())) && (d = /^(?:yes|1)$/iu.test(String(l).trim()), r.push(Wc2("generated-character-humanlike-canonicalized", "recovered", ".humanlike", "Recovered an explicit boolean-equivalent humanlike value."))), d === undefined && (d = true, r.push(Wc2("generated-character-humanlike-defaulted", "recovered", ".humanlike", "Used the existing appearance-form default for an unspecified humanlike value.")));
   const u = fT2(LP2(n, "basePromptGroups", r)) ?? {}, f = {};
@@ -63350,17 +63773,17 @@ function jI3(e, t) {
 }
 function Kit3(e, t, r, n) {
   for (const [o, a] of Object.entries(nC3(e))) {
-    const i = Fa3(Fa3(Fa3(Fa3(a).personas)[t]).outfitReferences), s = Fa3(i[jI3(r, n)] ?? (r === "form_default" ? i[n] : undefined));
-    if (!Object.hasOwn(s, "referenceAsset") || s.referenceAsset === null)
+    const i = Fa3(Fa3(Fa3(Fa3(a).personas)[t]).outfitReferences), s2 = Fa3(i[jI3(r, n)] ?? (r === "form_default" ? i[n] : undefined));
+    if (!Object.hasOwn(s2, "referenceAsset") || s2.referenceAsset === null)
       continue;
-    const c = Ta3(s.referenceAsset, { runtimeOwner: o, semanticId: `persona:${t}:outfit:${n}:reference` });
+    const c = Ta3(s2.referenceAsset, { runtimeOwner: o, semanticId: `persona:${t}:outfit:${n}:reference` });
     if (c)
       return c;
   }
   return null;
 }
 function Mpe3(e, t, r) {
-  const n = Yc3(t), o = n ? J63(e, n, r.key) : {}, a = Object.hasOwn(o, "referenceAsset"), i = OI3(e, r.key), s = Rpe3(i), c = Npe3(i), l = s ? Ta3(c, { runtimeOwner: r.key, semanticId: "persona-reference" }) : null, d = s && c === null, u = l?.sourceType === "risu-persona", f = !d && (u || !s && !a) ? Dit3(e, r.key) : null, m = d ? null : u && f ? f : s ? l : a ? Ta3(o.referenceAsset, { runtimeOwner: n, semanticId: `persona:${r.key}:reference` }) : f || (r.imageAsset ?? null);
+  const n = Yc3(t), o = n ? J63(e, n, r.key) : {}, a = Object.hasOwn(o, "referenceAsset"), i = OI3(e, r.key), s2 = Rpe3(i), c = Npe3(i), l = s2 ? Ta3(c, { runtimeOwner: r.key, semanticId: "persona-reference" }) : null, d = s2 && c === null, u = l?.sourceType === "risu-persona", f = !d && (u || !s2 && !a) ? Dit3(e, r.key) : null, m = d ? null : u && f ? f : s2 ? l : a ? Ta3(o.referenceAsset, { runtimeOwner: n, semanticId: `persona:${r.key}:reference` }) : f || (r.imageAsset ?? null);
   return {
     enabled: a ? o.referenceEnabled !== false : i.referenceEnabled !== false && i.reference_enabled !== false,
     analysisEnabled: a ? o.referenceAnalysisEnabled !== false : i.analysisEnabled !== false && i.referenceAnalysisEnabled !== false && i.reference_analysis_enabled !== false,
@@ -63368,9 +63791,9 @@ function Mpe3(e, t, r) {
   };
 }
 function Bw3(e, t, r, n, o) {
-  const a = Yc3(t), i = Fa3((a ? J63(e, a, r) : {}).outfitReferences), s = Fa3(i[jI3(n, o)] ?? (n === "form_default" ? i[o] : undefined)), c = Object.hasOwn(s, "referenceAsset"), l = Fit3(e, r, n, o), d = Rpe3(l), u = o === (e23(e, r).forms.find((h) => h.id === n)?.defaultOutfitId || Yc3(OI3(e, r).defaultOutfitId) || Epe3(jpe3(OI3(e, r).outfits).map(Fa3)[0] ?? {}, 0)) ? Ta3(l.imageAsset ?? l.image_asset, { runtimeOwner: r, semanticId: `persona-outfit:${o}:default-image` }) : null, f = d || c ? null : Kit3(e, r, n, o), m = d ? Ta3(Npe3(l), { runtimeOwner: r, semanticId: `persona-outfit:${o}:reference` }) : c ? Ta3(s.referenceAsset, { runtimeOwner: a, semanticId: `persona:${r}:outfit:${o}:reference` }) : f || (u?.sourceType === "risu-persona" ? u : null);
+  const a = Yc3(t), i = Fa3((a ? J63(e, a, r) : {}).outfitReferences), s2 = Fa3(i[jI3(n, o)] ?? (n === "form_default" ? i[o] : undefined)), c = Object.hasOwn(s2, "referenceAsset"), l = Fit3(e, r, n, o), d = Rpe3(l), u = o === (e23(e, r).forms.find((h) => h.id === n)?.defaultOutfitId || Yc3(OI3(e, r).defaultOutfitId) || Epe3(jpe3(OI3(e, r).outfits).map(Fa3)[0] ?? {}, 0)) ? Ta3(l.imageAsset ?? l.image_asset, { runtimeOwner: r, semanticId: `persona-outfit:${o}:default-image` }) : null, f = d || c ? null : Kit3(e, r, n, o), m = d ? Ta3(Npe3(l), { runtimeOwner: r, semanticId: `persona-outfit:${o}:reference` }) : c ? Ta3(s2.referenceAsset, { runtimeOwner: a, semanticId: `persona:${r}:outfit:${o}:reference` }) : f || (u?.sourceType === "risu-persona" ? u : null);
   return {
-    analysisEnabled: c ? s.referenceAnalysisEnabled !== false : l.referenceAnalysisEnabled !== false && l.reference_analysis_enabled !== false,
+    analysisEnabled: c ? s2.referenceAnalysisEnabled !== false : l.referenceAnalysisEnabled !== false && l.reference_analysis_enabled !== false,
     asset: m
   };
 }
@@ -63381,14 +63804,14 @@ function rb3(e, t, r, n) {
   const o = Pl3(e, r.key), a = o.forms.find((d) => d.id === (n || o.defaultFormId));
   if (!a)
     return { asset: null, enabled: false, analysisEnabled: false };
-  const i = a.id === o.defaultFormId ? Mpe3(e, t, r) : { asset: null, enabled: false, analysisEnabled: true }, s = Ws3(a.reference), c = Ws3(Ws3(Ws3(Ws3(Ws3(e.characterPrompt.personaSettings.sourceScopes[t]).personas)[r.key]).formReferences)[a.id]), l = a.reference !== null && a.reference !== undefined;
+  const i = a.id === o.defaultFormId ? Mpe3(e, t, r) : { asset: null, enabled: false, analysisEnabled: true }, s2 = Ws3(a.reference), c = Ws3(Ws3(Ws3(Ws3(Ws3(e.characterPrompt.personaSettings.sourceScopes[t]).personas)[r.key]).formReferences)[a.id]), l = a.reference !== null && a.reference !== undefined;
   return {
-    asset: l ? Ta3(Object.hasOwn(s, "defaultAsset") ? s.defaultAsset : s.asset ?? s.referenceAsset, {
+    asset: l ? Ta3(Object.hasOwn(s2, "defaultAsset") ? s2.defaultAsset : s2.asset ?? s2.referenceAsset, {
       runtimeOwner: r.key,
       semanticId: `persona-form:${a.id}:reference`
     }) : i.asset,
-    enabled: l ? s.enabled !== false && s.referenceEnabled !== false : i.enabled,
-    analysisEnabled: Object.hasOwn(c, "analysisEnabled") ? c.analysisEnabled !== false : s.referenceAnalysisEnabled === false ? false : i.analysisEnabled
+    enabled: l ? s2.enabled !== false && s2.referenceEnabled !== false : i.enabled,
+    analysisEnabled: Object.hasOwn(c, "analysisEnabled") ? c.analysisEnabled !== false : s2.referenceAnalysisEnabled === false ? false : i.analysisEnabled
   };
 }
 function RI2(e, t, r, n) {
@@ -63396,9 +63819,9 @@ function RI2(e, t, r, n) {
   for (const a of Pl3(e, r.key).forms) {
     const i = rb3(e, t, r, a.id);
     o.push({ formId: a.id, outfitId: null, asset: i.asset, enabled: i.analysisEnabled });
-    for (const s of a.outfits) {
-      const c = Bw3(e, t, r.key, a.id, s.id);
-      o.push({ formId: a.id, outfitId: s.id, asset: c.asset, enabled: c.analysisEnabled });
+    for (const s2 of a.outfits) {
+      const c = Bw3(e, t, r.key, a.id, s2.id);
+      o.push({ formId: a.id, outfitId: s2.id, asset: c.asset, enabled: c.analysisEnabled });
     }
   }
   return n === "reclassification" ? o : o.filter((a) => a.asset !== null);
@@ -63418,8 +63841,8 @@ function oC2(e, t, r) {
   }
   const o = new Map;
   for (const [a, i] of (Array.isArray(n.analysisAssets) ? n.analysisAssets : []).entries()) {
-    const s = Ta3(i, { runtimeOwner: r.key, semanticId: `persona-analysis:${a}` });
-    s && o.set(Gt2(s), s);
+    const s2 = Ta3(i, { runtimeOwner: r.key, semanticId: `persona-analysis:${a}` });
+    s2 && o.set(Gt2(s2), s2);
   }
   return { assets: [...o.values()], outfitAssetNames: [] };
 }
@@ -63498,16 +63921,16 @@ function x1t(e) {
     join(o) {
       o?.aborted && !r.size && t.abort(o.reason), o?.throwIfAborted(), t.signal.throwIfAborted();
       const a = Symbol();
-      return r.add(a), new Promise((i, s) => {
+      return r.add(a), new Promise((i, s2) => {
         const c = () => {
           r.delete(a), o?.removeEventListener("abort", l);
         }, l = () => {
-          c(), r.size || t.abort(o?.reason), s(o?.reason ?? new DOMException("Cancelled", "AbortError"));
+          c(), r.size || t.abort(o?.reason), s2(o?.reason ?? new DOMException("Cancelled", "AbortError"));
         };
         o?.addEventListener("abort", l, { once: true }), n.then((d) => {
           c(), i(d);
         }, (d) => {
-          c(), s(d);
+          c(), s2(d);
         }), o?.aborted && l();
       });
     }
@@ -63523,15 +63946,15 @@ function _1t(e) {
       const a = n.actors[o];
       if (!a || a.outfit_id)
         continue;
-      const i = t.get(c4(a.outfit_proposal_id)), s = c4(a.lorebook_prompt_key), c = c4(a.form_id) || "form_default";
-      if (!i || i.lorebook_prompt_key !== s || c4(i.form_id || "form_default") !== c)
+      const i = t.get(c4(a.outfit_proposal_id)), s2 = c4(a.lorebook_prompt_key), c = c4(a.form_id) || "form_default";
+      if (!i || i.lorebook_prompt_key !== s2 || c4(i.form_id || "form_default") !== c)
         continue;
-      const l = `${s}\x00${c}\x00${i.id}`, d = r.get(l);
+      const l = `${s2}\x00${c}\x00${i.id}`, d = r.get(l);
       if (d) {
         d.actors.push(a);
         continue;
       }
-      r.set(l, { promptKey: s, formId: c, representative: a, proposal: i, actors: [a] });
+      r.set(l, { promptKey: s2, formId: c, representative: a, proposal: i, actors: [a] });
     }
   return [...r.values()];
 }
@@ -63549,12 +63972,12 @@ function I1t(e) {
     const o = Tq(r.identityKey);
     if (!o)
       continue;
-    const a = Tq(r.formId) || "form_default", i = Vv2(n, r.identityKey, a), s = `${r.kind}:${o}:${a}:${i}`, c = t.get(s);
+    const a = Tq(r.formId) || "form_default", i = Vv2(n, r.identityKey, a), s2 = `${r.kind}:${o}:${a}:${i}`, c = t.get(s2);
     if (c) {
       c.actors.push(r);
       continue;
     }
-    t.set(s, { fingerprint: i, representative: r, proposal: n, actors: [r] });
+    t.set(s2, { fingerprint: i, representative: r, proposal: n, actors: [r] });
   }
   return [...t.values()];
 }
@@ -63602,16 +64025,16 @@ var dIe = (e) => ti(k1t(e).id) || undefined;
 function uIe(e, t, r, n) {
   let o = t;
   const a = [...new Set(n)].map((i) => {
-    const s = hl(e, i), c = hl(r, i), l = hl(t, i), d = { ...s, forms: s.forms.filter((f) => l.forms.some((m) => m.id === f.id)) }, u = {
+    const s2 = hl(e, i), c = hl(r, i), l = hl(t, i), d = { ...s2, forms: s2.forms.filter((f) => l.forms.some((m) => m.id === f.id)) }, u = {
       ...c,
-      forms: c.forms.filter((f) => l.forms.some((m) => m.id === f.id) || JSON.stringify(f) !== JSON.stringify(s.forms.find((m) => m.id === f.id)))
+      forms: c.forms.filter((f) => l.forms.some((m) => m.id === f.id) || JSON.stringify(f) !== JSON.stringify(s2.forms.find((m) => m.id === f.id)))
     };
-    return o = KA(o, i, qv2(d, u, l, IO)), { promptKey: i, before: s, after: c };
+    return o = KA(o, i, qv2(d, u, l, IO)), { promptKey: i, before: s2, after: c };
   });
   return {
     persisted: o,
     rebase(i) {
-      return a.reduce((s, { promptKey: c, before: l, after: d }) => KA(s, c, Mc2(l, hl(s, c), d, dIe)), i);
+      return a.reduce((s2, { promptKey: c, before: l, after: d }) => KA(s2, c, Mc2(l, hl(s2, c), d, dIe)), i);
     }
   };
 }
@@ -63619,10 +64042,10 @@ function Fq(e, t, r, n, o) {
   const a = hl(e, t), i = a.forms.find((c) => c.id === r)?.outfits.find((c) => c.id === n);
   if (!i)
     throw new Error(IO);
-  const s = o(i);
+  const s2 = o(i);
   return KA(e, t, {
     ...a,
-    forms: a.forms.map((c) => c.id === r ? { ...c, outfits: c.outfits.map((l) => l.id === n ? s : l) } : c)
+    forms: a.forms.map((c) => c.id === r ? { ...c, outfits: c.outfits.map((l) => l.id === n ? s2 : l) } : c)
   });
 }
 function j1t(e, t) {
@@ -63638,7 +64061,7 @@ function E1t(e, t, r) {
 function N1t({ config: e, generator: t, sourceCatalog: r, activity: n, log: o }) {
   const a = new Map;
   let i = false;
-  const s = () => {
+  const s2 = () => {
     if (i)
       throw new DOMException("의상 생성 작업이 종료되었습니다.", "AbortError");
   }, c = (v, w) => {
@@ -63664,7 +64087,7 @@ function N1t({ config: e, generator: t, sourceCatalog: r, activity: n, log: o })
     const O = [], j = [...new Set(v.map(({ actor: R }) => Lq(ti(R.lorebook_prompt_key)) ? "settings" : "prompts"))], C = [];
     try {
       await e.commitUpdate((R, M) => {
-        s(), I(), x?.throwIfAborted();
+        s2(), I(), x?.throwIfAborted();
         let L = R;
         const Y = [];
         return v.forEach(({ actor: V, proposal: K }, T) => {
@@ -63712,7 +64135,7 @@ function N1t({ config: e, generator: t, sourceCatalog: r, activity: n, log: o })
     V?.task?.aborted && (V = undefined), V || (V = { assertSource: tf2(e) }, a.set(Y, V));
     const K = V, T = x1t(async (B) => {
       const G = () => {
-        s(), B.throwIfAborted(), K.assertSource();
+        s2(), B.throwIfAborted(), K.assertSource();
       }, ee = (H) => NS(H, k, O)?.outfits.find(($) => $.id === K.outfitId), D = () => {
         if (G(), !ee(e.getCurrentSnapshot()) || !ee(e.getSavedSnapshot()))
           throw new Error(IO);
@@ -63821,7 +64244,7 @@ function N1t({ config: e, generator: t, sourceCatalog: r, activity: n, log: o })
       i || (i = true, d(), l());
     },
     async prepare({ routePlan: v, source: w, sourceId: x, signal: _, creationMode: I = "reference-image" }) {
-      s();
+      s2();
       const A = _1t(v);
       if (!A.length)
         return;
@@ -63849,7 +64272,7 @@ function N1t({ config: e, generator: t, sourceCatalog: r, activity: n, log: o })
       creationMode: I = "reference-image",
       onOutfitAllocated: A
     }) {
-      s();
+      s2();
       const P = {}, k = {};
       for (const R of v) {
         const M = ti(R.selectedOutfitId);
@@ -63899,7 +64322,7 @@ function QOt(e) {
       const a = t.get(o.owner) ?? { sourceId: o.sourceId, assertSource: tf2(e.config), allocations: new Map };
       t.set(o.owner, a);
       let i = false;
-      const s = () => {
+      const s2 = () => {
         if (n)
           throw new Error("인물 생성 작업이 종료되었습니다.");
         a.assertSource();
@@ -63911,7 +64334,7 @@ function QOt(e) {
         if (!Ci2(e.config.getCurrentSnapshot(), o.sourceId).freeCharacterGenerationEnabled)
           throw new Error("인물 자유생성이 해제되었습니다.");
       };
-      s();
+      s2();
       const c = new Set(o.knownIdentities.flatMap((y) => [y.name, ...y.keys]).map(PSe)), l = [];
       for (const y of o.actors) {
         const v = mtt(y.profile);
@@ -63949,7 +64372,7 @@ function QOt(e) {
         e.activity?.beginDefaultOutfits(d, l.map(({ initial: y }) => y.entry.title));
         for (const { initial: y, outfit: v } of l) {
           const w = () => {
-            s();
+            s2();
             const I = e.characters.getSnapshot(), A = I.sourceId === o.sourceId ? I.entries.find((P) => P.id === y.entry.id) : undefined;
             if (e.config.getSavedSnapshot().characterPrompt.characterForms[y.entry.id] && !A || A?.rosterRegistered === false || A?.workspaceEnabled === false)
               throw new Error("생성 중인 인물이 삭제되거나 비활성화되었습니다.");
@@ -63972,7 +64395,7 @@ function QOt(e) {
           }
           u.set(y.entry.id, { entry: y.entry, forms: _ }), e.activity?.advanceDefaultOutfit(d, x?.status === "failed");
         }
-        s();
+        s2();
       } catch (y) {
         throw e.activity?.fail(d, y), y;
       }
@@ -63980,7 +64403,7 @@ function QOt(e) {
       const h = (async () => {
         e.activity?.saving(d);
         let y = [];
-        await e.config.commitExternalUpdate(async () => (s(), y = await e.characters.createProfiles(o.sourceId, l.filter((v) => v.mayPersist).map((v) => v.initial), s), s(), (v) => ({
+        await e.config.commitExternalUpdate(async () => (s2(), y = await e.characters.createProfiles(o.sourceId, l.filter((v) => v.mayPersist).map((v) => v.initial), s2), s2(), (v) => ({
           ...v,
           characterPrompt: {
             ...v.characterPrompt,
@@ -63992,7 +64415,7 @@ function QOt(e) {
         })), { domains: ["prompts"] });
         for (const v of y)
           await f.get(v.entry.id)?.();
-        if (s(), y.length !== l.length)
+        if (s2(), y.length !== l.length)
           throw new Error("이름·인식 키가 겹치는 인물의 저장을 보류했습니다. 현재 이미지에는 생성한 인물을 적용합니다.");
         e.activity?.finish(d);
       })().catch((y) => {
@@ -64056,15 +64479,15 @@ function ejt(e) {
     const r = t.work, n = t.profile.entry.id, o = e.config.getSavedSnapshot().characterPrompt.characterForms[n];
     if (!o && !t.deferAttachment)
       return { status: "failed", message: "저장된 인물 외형을 찾을 수 없습니다." };
-    const a = po3(t.deferAttachment ? t.profile.forms : o), i = a?.forms.find((m) => m.id === a.defaultFormId), s = i?.outfits.find((m) => m.id === i.defaultOutfitId);
-    if (!i || !s)
+    const a = po3(t.deferAttachment ? t.profile.forms : o), i = a?.forms.find((m) => m.id === a.defaultFormId), s2 = i?.outfits.find((m) => m.id === i.defaultOutfitId);
+    if (!i || !s2)
       return { status: "failed", message: "기본 외형 또는 기본 의상을 찾을 수 없습니다." };
-    const c = Ta3(s.referenceAsset ?? s.reference_asset), l = OSe(i.reference);
+    const c = Ta3(s2.referenceAsset ?? s2.reference_asset), l = OSe(i.reference);
     if (c && l)
       return r.generated = undefined, r.asset = undefined, { status: "already-ready", asset: c };
     const d = (m) => {
       const h = m.characterPrompt.characterForms[n];
-      return !!(h && po3(h).forms.find((y) => y.id === i.id)?.outfits.some((y) => y.id === s.id));
+      return !!(h && po3(h).forms.find((y) => y.id === i.id)?.outfits.some((y) => y.id === s2.id));
     }, u = () => {
       t.assertCurrent();
       for (const m of [e.config.getCurrentSnapshot(), e.config.getSavedSnapshot()])
@@ -64090,14 +64513,14 @@ function ejt(e) {
         characterNegativePrompt: i.negativePrompt,
         gender: i.gender,
         humanlike: i.humanlike,
-        outfitId: s.id,
-        label: s.label,
+        outfitId: s2.id,
+        label: s2.label,
         description: "",
-        head: s.head,
-        top: s.top,
-        bottom: s.bottom,
-        legs: s.legs,
-        feet: s.feet,
+        head: s2.head,
+        top: s2.top,
+        bottom: s2.bottom,
+        legs: s2.legs,
+        feet: s2.feet,
         characterReference: null,
         referenceEnabled: false,
         referenceType: "character",
@@ -64110,8 +64533,8 @@ function ejt(e) {
         characterTarget: m,
         characterIndex: h,
         characterName: t.profile.entry.title,
-        outfitId: s.id,
-        label: s.label,
+        outfitId: s2.id,
+        label: s2.label,
         reuseSavedArtifact: true,
         assertCurrent: u
       }, r.generated)), u();
@@ -64124,10 +64547,10 @@ function ejt(e) {
           forms: _.forms.map((A) => {
             if (A.id !== i.id)
               return A;
-            const P = A.outfits.find((C) => C.id === s.id), k = Ta3(P.referenceAsset ?? P.reference_asset), O = Jl3.toStoredReference(k ?? y), j = CSe(A.reference);
+            const P = A.outfits.find((C) => C.id === s2.id), k = Ta3(P.referenceAsset ?? P.reference_asset), O = Jl3.toStoredReference(k ?? y), j = CSe(A.reference);
             return {
               ...A,
-              outfits: k ? A.outfits : A.outfits.map((C) => C.id === s.id ? { ...C, referenceAsset: O } : C),
+              outfits: k ? A.outfits : A.outfits.map((C) => C.id === s2.id ? { ...C, referenceAsset: O } : C),
               reference: OSe(A.reference) ? A.reference : { ...j, ...Object.hasOwn(j, "enabled") ? {} : { enabled: true }, defaultAsset: O }
             };
           })
@@ -64156,7 +64579,7 @@ function ejt(e) {
 }
 
 // src/backend/pipeline/auto.ts
-var fold = (s) => s.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ");
+var fold = (s2) => s2.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ");
 function amConfigStoreAdapter(services, characterId, onReload) {
   let store;
   let queue = Promise.resolve();
@@ -64172,9 +64595,9 @@ function amConfigStoreAdapter(services, characterId, onReload) {
     store = new AmConfigStore(services, characterId, parts, "chat-generation");
     onReload(parts.document);
   };
-  const commit = (apply) => serialize(async () => {
+  const commit = (apply2) => serialize(async () => {
     await reload();
-    await apply(store);
+    await apply2(store);
     await store.flushSave();
   });
   return {
@@ -64182,16 +64605,16 @@ function amConfigStoreAdapter(services, characterId, onReload) {
     settle: () => serialize(async () => {}),
     getCurrentSnapshot: () => store.getCurrentSnapshot(),
     getSavedSnapshot: () => store.getCurrentSnapshot(),
-    commitExternalUpdate: (fn, options = {}) => commit(async (s) => {
+    commitExternalUpdate: (fn, options = {}) => commit(async (s2) => {
       const mutate = await fn();
       if (typeof mutate === "function")
-        s.update(mutate, options);
+        s2.update(mutate, options);
     }),
-    commitUpdate: (fn, options = {}) => commit((s) => {
-      const snapshot = s.getCurrentSnapshot();
+    commitUpdate: (fn, options = {}) => commit((s2) => {
+      const snapshot = s2.getCurrentSnapshot();
       const result = fn(snapshot, snapshot);
       if (result)
-        s.update(() => result.persisted, options);
+        s2.update(() => result.persisted, options);
     }),
     subscribeDomain: (_domain, _listener) => () => {}
   };
@@ -64246,49 +64669,49 @@ function outfitGeneratorFrom(getModules, characterId) {
 var sharedGenerations = new WeakMap;
 function sharedGeneration(services, characterId) {
   const characters = customCharacterStore(services, characterId);
-  const config = amConfigStoreAdapter(services, characterId, (document2) => characters.reset(document2.customCharacters));
-  return { refs: 0, config, characters, controllers: new Map };
+  const config2 = amConfigStoreAdapter(services, characterId, (document2) => characters.reset(document2.customCharacters));
+  return { refs: 0, config: config2, characters, controllers: new Map };
 }
 async function openAutoGeneration(services, getModules, characterId) {
-  const open = sharedGenerations.get(services) ?? new Map;
-  sharedGenerations.set(services, open);
-  const shared = open.get(characterId) ?? sharedGeneration(services, characterId);
-  open.set(characterId, shared);
-  shared.refs += 1;
+  const open2 = sharedGenerations.get(services) ?? new Map;
+  sharedGenerations.set(services, open2);
+  const shared2 = open2.get(characterId) ?? sharedGeneration(services, characterId);
+  open2.set(characterId, shared2);
+  shared2.refs += 1;
   let released = false;
   const dispose = () => {
     if (released)
       return;
     released = true;
-    if ((shared.refs -= 1) > 0)
+    if ((shared2.refs -= 1) > 0)
       return;
-    if (open.get(characterId) === shared)
-      open.delete(characterId);
-    for (const controllers of shared.controllers.values())
-      controllers.dispose();
+    if (open2.get(characterId) === shared2)
+      open2.delete(characterId);
+    for (const controllers2 of shared2.controllers.values())
+      controllers2.dispose();
   };
   try {
-    await shared.config.reload();
+    await shared2.config.reload();
   } catch (error) {
     dispose();
     throw error;
   }
   const generator = outfitGeneratorFrom(getModules, characterId);
-  let controllers = shared.controllers.get(!!generator);
+  let controllers = shared2.controllers.get(!!generator);
   if (!controllers) {
-    const { config, characters } = shared;
+    const { config: config2, characters } = shared2;
     const log = (message) => {
       try {
         services.log.append("info", "pipeline", message);
       } catch {}
     };
-    const autoOutfit = N1t({ config, generator, sourceCatalog: { refreshCharacter: async () => null }, activity: undefined, log });
+    const autoOutfit = N1t({ config: config2, generator, sourceCatalog: { refreshCharacter: async () => null }, activity: undefined, log });
     const autoCharacter = QOt({
-      config,
+      config: config2,
       characters,
       isCurrentSource: (id) => id === characterId,
       activity: undefined,
-      ...generator ? { prepareInitialOutfit: ejt({ config, generator, resolveTarget: (id) => ({ chaId: id, indexHint: 0 }), refresh: async () => {
+      ...generator ? { prepareInitialOutfit: ejt({ config: config2, generator, resolveTarget: (id) => ({ chaId: id, indexHint: 0 }), refresh: async () => {
         return;
       }, log }) } : {}
     });
@@ -64300,10 +64723,10 @@ async function openAutoGeneration(services, getModules, characterId) {
         autoCharacter.dispose();
       }
     };
-    shared.controllers.set(!!generator, controllers);
+    shared2.controllers.set(!!generator, controllers);
   }
   return {
-    store: shared.config,
+    store: shared2.config,
     autoOutfit: controllers.autoOutfit,
     autoCharacter: controllers.autoCharacter,
     imagesAvailable: !!generator,
@@ -64331,10 +64754,10 @@ function stripInlayContent(content) {
     return content;
   return content.replace(LEGACY_BLOCK, "").replace(CURRENT_BLOCK, "").replace(MARKER_IMAGE_BLOCK, "").replace(PROMPT_PRE_BLOCK, "").replace(ORPHAN_MARKER, "").replace(PROMPT_ATTRIBUTE, "");
 }
-function fnvHex(text) {
+function fnvHex(text3) {
   let hash = 2166136261;
-  for (let i = 0;i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
+  for (let i = 0;i < text3.length; i += 1) {
+    hash ^= text3.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
@@ -64343,10 +64766,10 @@ function suppressionCarrierId(markup) {
   return `NAS1${fnvHex(markup).toUpperCase()}${markup.length.toString(36).toUpperCase()}`;
 }
 function encodeSuppressionCarrier(markup) {
-  const text = String(markup ?? "");
-  if (!text)
-    return text;
-  return `<span class="${SUPPRESSION_CLASS}" ${SUPPRESSION_ID_ATTR}="${suppressionCarrierId(text)}" ${SUPPRESSION_PAYLOAD_ATTR}="${encodeURIComponent(text)}" aria-hidden="true" hidden></span>`;
+  const text3 = String(markup ?? "");
+  if (!text3)
+    return text3;
+  return `<span class="${SUPPRESSION_CLASS}" ${SUPPRESSION_ID_ATTR}="${suppressionCarrierId(text3)}" ${SUPPRESSION_PAYLOAD_ATTR}="${encodeURIComponent(text3)}" aria-hidden="true" hidden></span>`;
 }
 var CARRIER_ATTRS = [
   [SUPPRESSION_ID_ATTR, SUPPRESSION_PAYLOAD_ATTR],
@@ -64372,16 +64795,16 @@ function decodeCarrier(html) {
   }
   return null;
 }
-function replaceCarriers(text, replace) {
-  if (!text || !text.includes(SUPPRESSION_ID_ATTR) && !text.includes("data-am-native-asset-suppression"))
-    return text;
-  return text.replace(CARRIER_PATTERN, (html) => replace(decodeCarrier(html)));
+function replaceCarriers(text3, replace) {
+  if (!text3 || !text3.includes(SUPPRESSION_ID_ATTR) && !text3.includes("data-am-native-asset-suppression"))
+    return text3;
+  return text3.replace(CARRIER_PATTERN, (html) => replace(decodeCarrier(html)));
 }
-function decodeSuppressionCarriers(text) {
-  return replaceCarriers(text, (decoded) => decoded ?? "");
+function decodeSuppressionCarriers(text3) {
+  return replaceCarriers(text3, (decoded) => decoded ?? "");
 }
-function removeSuppressionCarriers(text) {
-  return replaceCarriers(text, () => "");
+function removeSuppressionCarriers(text3) {
+  return replaceCarriers(text3, () => "");
 }
 function cleanInlayText(content) {
   return decodeSuppressionCarriers(stripInlayContent(content));
@@ -64394,8 +64817,8 @@ function cleanMessageContent(content) {
 function stripForInterceptor(messages) {
   return messages.map((message) => {
     if (typeof message.content === "string") {
-      const content = cleanMessageContent(message.content);
-      return content === message.content ? message : { ...message, content };
+      const content2 = cleanMessageContent(message.content);
+      return content2 === message.content ? message : { ...message, content: content2 };
     }
     if (!Array.isArray(message.content))
       return message;
@@ -64403,11 +64826,11 @@ function stripForInterceptor(messages) {
     const content = message.content.map((part) => {
       if (!part || part.type !== "text" || typeof part.text !== "string")
         return part;
-      const text = cleanMessageContent(part.text);
-      if (text === part.text)
+      const text3 = cleanMessageContent(part.text);
+      if (text3 === part.text)
         return part;
       changed = true;
-      return { ...part, text };
+      return { ...part, text: text3 };
     });
     return changed ? { ...message, content } : message;
   });
@@ -64416,9 +64839,9 @@ function messageSlots(messageKey, content, detectors = []) {
   const clean = cleanMessageContent(content);
   return { ...buildIllustrationSlots2({ messageKey, content: clean, nativeAssetDetectors: [...detectors] }), clean };
 }
-function splitWithoutMarkups(messageKey, text, markups) {
+function splitWithoutMarkups(messageKey, text3, markups) {
   const list = [...new Set(markups.map((m) => String(m ?? "")).filter(Boolean))].sort((a, b) => b.length - a.length);
-  return splitParagraphSlots2(messageKey, text, {
+  return splitParagraphSlots2(messageKey, text3, {
     paragraphText(raw) {
       let out = removeSuppressionCarriers(raw);
       for (const m of list)
@@ -64475,10 +64898,10 @@ function bakeMessage(input) {
     order: 1
   }));
   const all = [...wraps, ...inserts].sort((a, b) => b.start - a.start || a.order - b.order);
-  let text = all.reduce((acc, e) => `${acc.slice(0, e.start)}${e.value}${acc.slice(e.end)}`, clean);
+  let text3 = all.reduce((acc, e) => `${acc.slice(0, e.start)}${e.value}${acc.slice(e.end)}`, clean);
   if (orphan.length)
-    text = `${text}${text.trim() && !text.endsWith(sep) ? sep : ""}${orphan.join(sep)}`;
-  return { text, changed: text !== input.content, orphanSlotIndices };
+    text3 = `${text3}${text3.trim() && !text3.endsWith(sep) ? sep : ""}${orphan.join(sep)}`;
+  return { text: text3, changed: text3 !== input.content, orphanSlotIndices };
 }
 
 // src/backend/pipeline/labels.ts
@@ -64549,7 +64972,7 @@ var MANGA_TEXT = Object.freeze({
   reroll: { en: "Manga: redrawing panel {n}", ko: "만화: {n}컷 다시 그리는 중" }
 });
 function formatLabel(label, values = {}) {
-  const fill = (s) => s.replace(/\{(\w+)\}/gu, (_m, k) => String(values[k] ?? `{${k}}`));
+  const fill = (s2) => s2.replace(/\{(\w+)\}/gu, (_m2, k) => String(values[k] ?? `{${k}}`));
   return { en: fill(label.en), ko: fill(label.ko) };
 }
 function phaseProgress(phase, detail = {}) {
@@ -64587,16 +65010,16 @@ function labelError(code, label, extra = {}) {
 var rec4 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str4 = (v) => v == null ? "" : String(v).trim();
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
-function jevSelectionProgress(s) {
-  const status = s.status === "completed" || s.status === "failed" || s.status === "cancelled" ? s.status : "running";
-  const total = Math.max(0, Number(s.total) || 0);
-  const actors = Number(rec4(s.counts).actors);
+function jevSelectionProgress(s2) {
+  const status = s2.status === "completed" || s2.status === "failed" || s2.status === "cancelled" ? s2.status : "running";
+  const total = Math.max(0, Number(s2.total) || 0);
+  const actors = Number(rec4(s2.counts).actors);
   return {
     status,
-    completed: Math.min(total, Math.max(0, Number(s.completed) || 0)),
+    completed: Math.min(total, Math.max(0, Number(s2.completed) || 0)),
     total,
     ...Number.isFinite(actors) ? { selectedActors: actors } : {},
-    ...str4(s.error) ? { error: str4(s.error) } : {}
+    ...str4(s2.error) ? { error: str4(s2.error) } : {}
   };
 }
 function originForAttempt(kind) {
@@ -64643,10 +65066,10 @@ function assetHintsFrom(tokens, markups) {
     };
   });
 }
-function fnv(text) {
+function fnv(text3) {
   let h = 2166136261;
-  for (let i = 0;i < text.length; i += 1) {
-    h ^= text.charCodeAt(i);
+  for (let i = 0;i < text3.length; i += 1) {
+    h ^= text3.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
   return (h >>> 0).toString(36);
@@ -64665,8 +65088,8 @@ function nativeDetectorsFor(characterId, name, document2, memberIds = [character
     return [];
   }
 }
-async function speakingCharacterId(services, chat, message) {
-  const members = chat.groupCharacterIds.length ? chat.groupCharacterIds : [chat.characterId];
+async function speakingCharacterId(services, chat2, message) {
+  const members = chat2.groupCharacterIds.length ? chat2.groupCharacterIds : [chat2.characterId];
   if (members.length > 1 && message?.name) {
     for (const id of members) {
       try {
@@ -64676,7 +65099,7 @@ async function speakingCharacterId(services, chat, message) {
       } catch {}
     }
   }
-  return chat.characterId || members[0] || "";
+  return chat2.characterId || members[0] || "";
 }
 function mergeCharacterPrompts(primary, others) {
   const out = { ...primary };
@@ -64693,7 +65116,7 @@ function personaRecord(p) {
   return { key: p.personaId, id: p.personaId, name: p.name, ...p.avatarImageId ? { imageAsset: { key: p.avatarImageId, name: p.name, sourceType: "persona" } } : {} };
 }
 function continuityChat(messages, target, actorState) {
-  const chat = {
+  const chat2 = {
     message: messages.map((m, i) => ({
       role: m.role === "assistant" ? "char" : "user",
       data: m.content,
@@ -64702,8 +65125,8 @@ function continuityChat(messages, target, actorState) {
     localLore: []
   };
   if (actorState.revision >= 1)
-    writeLocalLoreActorState2(chat, actorState);
-  return chat;
+    writeLocalLoreActorState2(chat2, actorState);
+  return chat2;
 }
 function continuityLookbackIds(messages, target, historyId) {
   return messages.map((m, i) => i === target ? historyId : m.role === "assistant" ? `${m.id}@${m.swipeId}` : "");
@@ -64719,7 +65142,7 @@ async function generateMessageIllustrations(deps, req) {
     return empty(PIPELINE_TEXT.emptyContent);
   if (req.signal.aborted)
     throw new DOMException("Image generation preparation was cancelled.", "AbortError");
-  const config = req.config;
+  const config2 = req.config;
   const targetMessage = req.messages[req.target];
   const primaryId = await speakingCharacterId(services, req.chat, targetMessage);
   const memberIds = [...new Set([primaryId, ...req.chat.groupCharacterIds].filter(Boolean))];
@@ -64729,7 +65152,7 @@ async function generateMessageIllustrations(deps, req) {
   for (const id of memberIds)
     docs.set(id, await services.storage.loadCharacterDocument(id));
   const primaryDoc = docs.get(primaryId) ?? null;
-  const character = await services.sources.getCharacter(primaryId);
+  const character2 = await services.sources.getCharacter(primaryId);
   const rawSources = [];
   for (const id of memberIds)
     rawSources.push(await services.sources.buildSource(id, docs.get(id), { chatId: req.chatId }));
@@ -64737,7 +65160,7 @@ async function generateMessageIllustrations(deps, req) {
   const seenMembers = new Set;
   const source = {
     ...primarySource,
-    members: rawSources.flatMap((s) => s.members).filter((m) => seenMembers.has(m.key) ? false : (seenMembers.add(m.key), true))
+    members: rawSources.flatMap((s2) => s2.members).filter((m) => seenMembers.has(m.key) ? false : (seenMembers.add(m.key), true))
   };
   const customCharacters = [...docs.values()].flatMap((d) => d.customCharacters);
   let auto = null;
@@ -64752,18 +65175,18 @@ async function generateMessageIllustrations(deps, req) {
     let generatedForms = {};
     const otherPrompts = memberIds.slice(1).map((id) => rec4(docs.get(id)?.characterPrompt));
     const decorate = (base) => {
-      const runtime = jsonClone(base);
-      const novelai = rec4(runtime.novelai);
-      runtime.novelai = { ...novelai, naiModel: imageTarget.model, characterReferenceEnabled: imageTarget.isNovelAIV5 ? false : novelai.characterReferenceEnabled };
-      const cp = mergeCharacterPrompts(rec4(runtime.characterPrompt), otherPrompts);
-      runtime.characterPrompt = { ...cp, characterForms: { ...rec4(cp.characterForms), ...generatedForms } };
-      runtime.runtime = { ...rec4(runtime.runtime), generationProvider: engineProvider };
-      runtime.chatImageGenerationSettings = jsonClone(req.settings);
-      return runtime;
+      const runtime3 = jsonClone(base);
+      const novelai = rec4(runtime3.novelai);
+      runtime3.novelai = { ...novelai, naiModel: imageTarget.model, characterReferenceEnabled: imageTarget.isNovelAIV5 ? false : novelai.characterReferenceEnabled };
+      const cp = mergeCharacterPrompts(rec4(runtime3.characterPrompt), otherPrompts);
+      runtime3.characterPrompt = { ...cp, characterForms: { ...rec4(cp.characterForms), ...generatedForms } };
+      runtime3.runtime = { ...rec4(runtime3.runtime), generationProvider: engineProvider };
+      runtime3.chatImageGenerationSettings = jsonClone(req.settings);
+      return runtime3;
     };
-    const runtime = decorate(auto ? auto.store.getCurrentSnapshot() : buildRuntimeConfig(config, primaryDoc, { resolvedImageModel: imageTarget.model }));
-    const getConfig = () => auto ? decorate(auto.store.getCurrentSnapshot()) : runtime;
-    const amConfig = runtime;
+    const runtime2 = decorate(auto ? auto.store.getCurrentSnapshot() : buildRuntimeConfig(config2, primaryDoc, { resolvedImageModel: imageTarget.model }));
+    const getConfig = () => auto ? decorate(auto.store.getCurrentSnapshot()) : runtime2;
+    const amConfig = runtime2;
     const sourceId = primaryId;
     const ne = resolveSourceGenerationSettings2(amConfig, sourceId);
     const personas = await services.sources.listPersonas();
@@ -64782,7 +65205,7 @@ async function generateMessageIllustrations(deps, req) {
     const hr = rebuildContinuityAtMessage2(store, chatKey, liveIds, req.historyId);
     hr.characters[chatKey] = mergeLocalLoreActorState2(hr.characters[chatKey] ?? {}, req.chatData.actorState);
     const basisRevision = req.chatData.actorState.revision;
-    const detectors = nativeDetectorsFor(primaryId, character.name, primaryDoc, memberIds);
+    const detectors = nativeDetectorsFor(primaryId, character2.name, primaryDoc, memberIds);
     const tokens = detectImageTokens(req.clean, { customImageTokenDetectors: detectors });
     const markups = detectNativeAssetMarkups2(req.clean, { customImageTokenDetectors: detectors });
     const assetHints = assetHintsFrom(tokens, markups);
@@ -64795,12 +65218,12 @@ async function generateMessageIllustrations(deps, req) {
       messages: requestMessages,
       content: req.clean,
       imageTokens: tokens.map((t) => toPlannerImageToken(t)),
-      character: { name: character.name, description: character.description },
+      character: { name: character2.name, description: character2.description },
       source: sourceWithCustom,
       activePersona,
       personaRecords
     });
-    const profile = str4(rec4(runtime.novelai).analysisProfile);
+    const profile = str4(rec4(runtime2.novelai).analysisProfile);
     const freeCharacters = profile === "v5-hybrid" && ne.freeCharacterGenerationEnabled && !!auto;
     if (!(profile === "v5-hybrid" || ft.analyzerIdentityCandidates.length > 0 || ft.analyzerPersonaCandidates.length > 0 || freeCharacters))
       return { ...empty(PIPELINE_TEXT.noCandidates), assetHints };
@@ -64833,7 +65256,7 @@ async function generateMessageIllustrations(deps, req) {
       ...req.revision ? { revisionDirection: req.revision.direction, revisionPromptChannels: req.revision.currentPrompt, revisionEvidenceKey: req.revision.evidenceKey } : {}
     });
     assembled.context.freeCharacterGenerationEnabled = freeCharacters;
-    const outfitIndex = config.runtime.outfitAwarenessDisabled ? undefined : createRunOutfitIndex(assembled.context);
+    const outfitIndex = config2.runtime.outfitAwarenessDisabled ? undefined : createRunOutfitIndex(assembled.context);
     const revisionImage = req.revision?.image && await services.llm.supportsVision().catch(() => false) ? [await req.revision.image()] : [];
     if (req.signal.aborted)
       throw new DOMException("Image generation preparation was cancelled.", "AbortError");
@@ -64851,11 +65274,11 @@ async function generateMessageIllustrations(deps, req) {
     const persistContinuity = req.automatic || !(req.target >= 0 && req.target < lastAssistant);
     const continuityMessageId = `id:${req.historyId}`;
     const messageIndex = targetMessage?.index ?? req.target;
-    const commitWith = (apply) => async (doc, info) => {
+    const commitWith = (apply2) => async (doc, info) => {
       if (!persistContinuity)
         return;
       const chatObj = continuityChat(req.messages, { index: req.target, historyId: req.historyId }, doc.actorState);
-      const next = apply(info);
+      const next = apply2(info);
       const outcome = commitContinuityCheckpoint(doc.store, chatObj, next, chatKey, req.historyId, info.historyRevisionId, basisRevision);
       if (outcome === "skipped")
         services.log.append("info", "pipeline", "The chat state changed during the run; this run's continuity was not saved.");
@@ -64874,7 +65297,7 @@ async function generateMessageIllustrations(deps, req) {
       }
       return "";
     };
-    const comfyTimeout = Number(rec4(runtime.runtime).comfyuiCompletionTimeoutMs) || 600000;
+    const comfyTimeout = Number(rec4(runtime2.runtime).comfyuiCompletionTimeoutMs) || 600000;
     const creationMode = auto?.imagesAvailable ? resolveOutfitCreationMode(amConfig) : "tags-only";
     const prepareRoutePlan = auto ? (routePlan, signal) => auto.autoOutfit.prepare({ routePlan, source: sourceWithCustom, sourceId, signal, creationMode }) : undefined;
     const prepareOutfits = auto ? async ({ actors, signal }) => {
@@ -64900,14 +65323,14 @@ async function generateMessageIllustrations(deps, req) {
       return prepared;
     } : undefined;
     const knownIdentities = freeCharacters ? buildKnownIdentities(withCustomCharacterMembers(source, customCharacters, "all"), personaRecords) : [];
-    const prepareCharacters = freeCharacters ? async (input) => {
-      const prepared = await auto.autoCharacter.prepare({ ...input, sourceId, owner: req, knownIdentities });
+    const prepareCharacters = freeCharacters ? async (input2) => {
+      const prepared = await auto.autoCharacter.prepare({ ...input2, sourceId, owner: req, knownIdentities });
       generatedForms = Object.fromEntries(prepared.flatMap((p) => p.forms ? [[p.identityKey, p.forms]] : []));
       return prepared;
     } : undefined;
     const input = {
       automaticRetryManaged: true,
-      imageRetryCount: config.runtime.generationAutoRetryCount,
+      imageRetryCount: config2.runtime.generationAutoRetryCount,
       generationType: generationTypeFor(origin, !req.automatic, !!req.revision),
       sessionContext: {
         chatKey,
@@ -64915,12 +65338,12 @@ async function generateMessageIllustrations(deps, req) {
         messageIndex,
         messageId: continuityMessageId,
         displayName: req.activityLabel,
-        slotIds: req.slots.map((s) => s.slotId),
+        slotIds: req.slots.map((s2) => s2.slotId),
         targetImageCount: W.max,
         matchedAssetCount: W.min,
         totalAssetCount: W.max
       },
-      analysisConfig: config.analysis,
+      analysisConfig: config2.analysis,
       novelAIConfig: { ...resolveNovelAIRunConfig2(amConfig, { sourceId }), apiKey: "lumiverse-connection" },
       ...req.revision ? {
         revisionDirection: req.revision.direction,
@@ -64929,8 +65352,8 @@ async function generateMessageIllustrations(deps, req) {
         ...req.revision.imageToImage ? { novelAIImageToImage: req.revision.imageToImage, novelAIImageToImageStrength: req.revision.imageToImageStrength, novelAIImageToImageNoise: req.revision.imageToImageNoise } : {}
       } : {},
       generationProvider: engineProvider,
-      ...ne.fixedResolution.enabled ? { requestedSizeId: ne.fixedResolution.sizeId, requestedSize: resolveImageSize2(ne.fixedResolution.sizeId, config.runtime.customImageSizes ?? []) } : {},
-      customImageSizes: config.runtime.customImageSizes ?? [],
+      ...ne.fixedResolution.enabled ? { requestedSizeId: ne.fixedResolution.sizeId, requestedSize: resolveImageSize2(ne.fixedResolution.sizeId, config2.runtime.customImageSizes ?? []) } : {},
+      customImageSizes: config2.runtime.customImageSizes ?? [],
       forceAiChoiceCoordinates: ne.forceAiChoiceCoordinates,
       forceNsfwPrefix: ne.nsfwAlwaysEnabled,
       stateAccumulationEnabled: ne.stateAccumulationEnabled,
@@ -64945,7 +65368,7 @@ async function generateMessageIllustrations(deps, req) {
         animaNegativePrefix: ne.animaNegativePrompt
       },
       analyzerInput: {
-        executionMode: engine.executionMode(config),
+        executionMode: engine.executionMode(config2),
         checkpointPolicy: checkpointPolicyFor(req.attemptKind),
         ...assembled,
         ...revisionImage.length ? { imageParts: revisionImage } : {},
@@ -64985,11 +65408,11 @@ async function generateMessageIllustrations(deps, req) {
           outfitReferences
         }));
       },
-      applyV5Continuity: async (state) => {
+      applyV5Continuity: async (state2) => {
         await req.assertTarget();
         commitContinuity = commitWith((info) => persistV5ContinuityState({
           basisState: hr,
-          continuity: state,
+          continuity: state2,
           chatKey,
           chatIndex: 0,
           messageIndex,
@@ -65002,7 +65425,7 @@ async function generateMessageIllustrations(deps, req) {
         await req.assertTarget();
         const decision = rec4(image.decision);
         const slotNumber = Number(decision.slot_number ?? decision.slotNumber);
-        const slot = Number.isInteger(slotNumber) ? req.slots.find((s) => s.index === slotNumber) : undefined;
+        const slot = Number.isInteger(slotNumber) ? req.slots.find((s2) => s2.index === slotNumber) : undefined;
         if (!slot)
           throw new Error(PIPELINE_TEXT.slotMismatch.en);
         const generation = rec4(image.generation);
@@ -65012,7 +65435,7 @@ async function generateMessageIllustrations(deps, req) {
           throw new Error("The image provider returned no image id.");
         const actors = (Array.isArray(image.actors) ? image.actors : []).map(rec4);
         const key = str4(actors.find((a) => str4(a.identityKey))?.identityKey) || str4(decision.lorebook_prompt_key);
-        const label = idLabel(key) || str4(actors[0]?.identityName) || character.name;
+        const label = idLabel(key) || str4(actors[0]?.identityName) || character2.name;
         const assetName = createGeneratedAssetName({ label, kind: "chat", ...UUID_RE.test(imageId) ? { id: imageId } : {} });
         const width = Math.max(0, Math.round(Number(generation.width) || 0));
         const height = Math.max(0, Math.round(Number(generation.height) || 0));
@@ -65124,7 +65547,7 @@ async function generateMessageIllustrations(deps, req) {
         ownerCharacterId: primaryId,
         comfyuiWorkflowId: imageTarget.comfyuiWorkflowId,
         forceNsfwPrefix: () => ne.nsfwAlwaysEnabled
-      }, config);
+      }, config2);
       await req.assertTarget();
     } catch (e) {
       if (isCancellation(e) || req.signal.aborted)
@@ -65174,7 +65597,7 @@ function toMessageView(raw, fallbackIndex) {
   const isUser = raw.is_user === true;
   const role = raw.role === "system" || raw.role === "user" || raw.role === "assistant" ? raw.role : isUser ? "user" : "assistant";
   const content = typeof raw.content === "string" ? raw.content : "";
-  const swipes = Array.isArray(raw.swipes) && raw.swipes.length ? raw.swipes.map((s) => typeof s === "string" ? s : "") : [content];
+  const swipes = Array.isArray(raw.swipes) && raw.swipes.length ? raw.swipes.map((s2) => typeof s2 === "string" ? s2 : "") : [content];
   const swipeId = Number.isSafeInteger(raw.swipe_id) && raw.swipe_id >= 0 && raw.swipe_id < swipes.length ? raw.swipe_id : 0;
   return {
     id,
@@ -65203,8 +65626,8 @@ function swipeContent(view, swipeIndex) {
 function isIllustratableMessage(view, swipeIndex = view?.swipeId ?? 0) {
   if (!view || view.role !== "assistant" || view.isUser)
     return false;
-  const text = swipeContent(view, swipeIndex);
-  return !!text && !!text.trim();
+  const text3 = swipeContent(view, swipeIndex);
+  return !!text3 && !!text3.trim();
 }
 async function writeSwipeContent(host, chatId, view, swipeIndex, content) {
   if (swipeIndex === view.swipeId) {
@@ -65352,14 +65775,14 @@ class TtlCache {
     this.now = now;
   }
   get(key) {
-    const hit = this.map.get(key);
-    if (!hit)
+    const hit2 = this.map.get(key);
+    if (!hit2)
       return;
-    if (this.now() - hit.at > this.ttlMs) {
+    if (this.now() - hit2.at > this.ttlMs) {
       this.map.delete(key);
       return;
     }
-    return hit.value;
+    return hit2.value;
   }
   set(key, value) {
     if (this.map.size >= this.max && !this.map.has(key)) {
@@ -65405,10 +65828,10 @@ var SCOPE_PREFIX = "inlay-run:";
 class ProviderRunRegistry {
   runs = new Map;
   counter = 0;
-  register(context) {
+  register(context2) {
     this.counter += 1;
     const runId = `${Date.now().toString(36)}-${this.counter.toString(36)}`;
-    this.runs.set(runId, context);
+    this.runs.set(runId, context2);
     return runId;
   }
   release(runId) {
@@ -65542,47 +65965,47 @@ function buildNovelAIRequest(request, ctx, extras = {}) {
   const rawPrompt = typeof request.prompt === "string" ? request.prompt : "";
   const force = request.forceNsfwPrefix ?? ctx.forceNsfwPrefix();
   const prompt = force && rawPrompt.trim() ? prependNsfwTag2(rawPrompt) : rawPrompt;
-  const config = { ...rec5(request.config), width: request.width, height: request.height, negativePrompt: request.negativePrompt, seed: request.seed };
+  const config2 = { ...rec5(request.config), width: request.width, height: request.height, negativePrompt: request.negativePrompt, seed: request.seed };
   const input = str6(prompt);
   if (!input)
     throw Object.assign(new Error("NovelAI prompt is empty."), { code: "NOVELAI_PROMPT_EMPTY", retryable: false });
-  const model = str6(ctx.model) || str6(config.naiModel) || "nai-diffusion-5-full";
+  const model = str6(ctx.model) || str6(config2.naiModel) || "nai-diffusion-5-full";
   const v4 = /^nai-diffusion-(?:4|5)(?:-|$)/u.test(model);
-  const v5Profile = config.analysisProfile === "v5-hybrid";
+  const v5Profile = config2.analysisProfile === "v5-hybrid";
   if (v5Profile && !v4)
     throw Object.assign(new Error(`The NovelAI V5 analysis profile needs a V4 or later model (character captions); ${model} has none.`), { code: "NOVELAI_V5_PROFILE_MODEL", retryable: false });
-  const forced = config.forceCharacterCoordinates === true;
-  const characters = normalizeCharacterPrompts(config.characterPrompts);
+  const forced = config2.forceCharacterCoordinates === true;
+  const characters = normalizeCharacterPrompts(config2.characterPrompts);
   const anyFixed = characters.some((c) => c.coordinateMode !== "automatic");
-  const useCoords = forced ? characters.length > 0 && anyFixed : v5Profile ? !!config.useCoords && characters.length > 0 && anyFixed : !!config.useCoords && characters.length > 1 && anyFixed;
-  const negative = str6(config.negativePrompt);
+  const useCoords = forced ? characters.length > 0 && anyFixed : v5Profile ? !!config2.useCoords && characters.length > 0 && anyFixed : !!config2.useCoords && characters.length > 1 && anyFixed;
+  const negative = str6(config2.negativePrompt);
   const parameters = { negative_prompt: negative };
   if (v4) {
-    parameters.v4_prompt = { caption: { base_caption: input, char_captions: toNovelAICharacterCaptions2(characters, "prompt", v5Profile || forced) }, use_coords: useCoords, use_order: config.useOrder !== false };
+    parameters.v4_prompt = { caption: { base_caption: input, char_captions: toNovelAICharacterCaptions2(characters, "prompt", v5Profile || forced) }, use_coords: useCoords, use_order: config2.useOrder !== false };
     parameters.v4_negative_prompt = { caption: { base_caption: negative, char_captions: toNovelAICharacterCaptions2(characters, "uc", v5Profile || forced) }, legacy_uc: false };
   }
-  const weighted = applyNonArtistWeightToRequest2({ input, model, action: "generate", parameters }, config);
+  const weighted = applyNonArtistWeightToRequest2({ input, model, action: "generate", parameters }, config2);
   const body = weighted.body;
-  const seedText = normalizeSeed(config.seed);
+  const seedText = normalizeSeed(config2.seed);
   const seed = seedText ? Number(seedText) : randomSeed2();
   const pos = body.parameters.v4_prompt?.caption.char_captions ?? [];
   const neg = body.parameters.v4_negative_prompt?.caption.char_captions ?? [];
   const novelai = {
-    sampler: str6(config.sampler) || "k_euler_ancestral",
-    noiseSchedule: str6(config.noiseSchedule) || "karras",
-    steps: Math.round(num2(config.steps, 28, 1, 50)),
-    scale: Number(config.scale) || 6,
-    cfgRescale: Number.isFinite(Number(config.cfgRescale)) ? Number(config.cfgRescale) : 0.5,
-    qualityToggle: config.qualityToggle !== false,
+    sampler: str6(config2.sampler) || "k_euler_ancestral",
+    noiseSchedule: str6(config2.noiseSchedule) || "karras",
+    steps: Math.round(num2(config2.steps, 28, 1, 50)),
+    scale: Number(config2.scale) || 6,
+    cfgRescale: Number.isFinite(Number(config2.cfgRescale)) ? Number(config2.cfgRescale) : 0.5,
+    qualityToggle: config2.qualityToggle !== false,
     useCoords,
-    useOrder: config.useOrder !== false,
+    useOrder: config2.useOrder !== false,
     characters: v4 ? pos.map((c, i) => ({
       prompt: c.char_caption,
       negativePrompt: neg[i]?.char_caption ?? "",
       ...useCoords && c.centers[0] ? { center: { x: c.centers[0].x, y: c.centers[0].y } } : {}
     })) : []
   };
-  if (extras.characterReferences?.length && config.characterReferenceEnabled !== false && /^nai-diffusion-4-5/u.test(model))
+  if (extras.characterReferences?.length && config2.characterReferenceEnabled !== false && /^nai-diffusion-4-5/u.test(model))
     novelai.characterReferences = extras.characterReferences;
   if (extras.imageToImage)
     novelai.imageToImage = extras.imageToImage;
@@ -65590,8 +66013,8 @@ function buildNovelAIRequest(request, ctx, extras = {}) {
     purpose: ctx.purpose,
     prompt: body.input,
     negativePrompt: body.parameters.negative_prompt,
-    width: dim(config.width, 832),
-    height: dim(config.height, 1216),
+    width: dim(config2.width, 832),
+    height: dim(config2.height, 1216),
     seed,
     novelai,
     ...ctx.connectionId ? { connectionId: ctx.connectionId } : {},
@@ -65768,33 +66191,33 @@ var area = (a) => Math.max(0, a[2] - a[0]) * Math.max(0, a[3] - a[1]);
 var pad = (r, p) => [r[0] - p, r[1] - p, r[2] + p, r[3] + p];
 var shift = (r, dy) => [r[0], r[1] + dy, r[2], r[3] + dy];
 var clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-function defaultMeasure(text, font, size) {
+function defaultMeasure(text3, font, size) {
   const m = FONT_METRICS[font];
   let w = 0;
-  for (const ch of text)
+  for (const ch of text3)
     w += m[ch] ?? m["n"] ?? 500;
-  return w * size / 1000 + (font === "sfx" ? RULES2.sfx.letterSpacing * text.length : 0);
+  return w * size / 1000 + (font === "sfx" ? RULES2.sfx.letterSpacing * text3.length : 0);
 }
 function isShout(t) {
   const letters = [...t].filter((c) => /[a-z]/i.test(c));
   const caps = letters.filter((c) => c === c.toUpperCase()).length / Math.max(1, letters.length);
   return t.includes("?!") || t.includes("!!") || t.trimEnd().endsWith("!") && caps > 0.5;
 }
-function charGeometry(c, iw, ih, faces) {
+function charGeometry(c, iw3, ih2, faces) {
   const f = faces?.[c.name];
   if (f)
     return { head: [(f.left + f.right) / 2, (f.top + f.bottom) / 2], face: [f.left, f.top, f.right, f.bottom] };
-  const hd = HEAD[c.framing];
-  if (!hd)
+  const hd2 = HEAD[c.framing];
+  if (!hd2)
     return { head: [c.x, Math.max(0.05, c.y - 0.25)], face: null };
-  let [half, fh] = hd;
+  let [half, fh2] = hd2;
   if (c.framing !== "portrait")
     half = Math.min(half, c.y, 1 - c.y);
-  const hy = Math.max(fh / 2 + 0.01, c.y - half + 0.6 * fh);
-  const fw = fh * ih / iw * 1.3;
-  return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh / 2, c.x + fw / 2, hy + fh / 2] };
+  const hy = Math.max(fh2 / 2 + 0.01, c.y - half + 0.6 * fh2);
+  const fw = fh2 * ih2 / iw3 * 1.3;
+  return { head: [c.x, hy], face: [c.x - fw / 2, hy - fh2 / 2, c.x + fw / 2, hy + fh2 / 2] };
 }
-function layoutStrip(sb, images, opts = {}) {
+function layoutStrip(sb2, images, opts = {}) {
   const W = opts.width ?? STRIP_WIDTH;
   const k = W / STRIP_WIDTH;
   const measure = opts.measure ?? defaultMeasure;
@@ -65802,10 +66225,10 @@ function layoutStrip(sb, images, opts = {}) {
   const panelsOut = [];
   const items = [];
   let sfxI = 0;
-  const wrap = (text, font, size, maxw) => {
+  const wrap = (text3, font, size, maxw) => {
     const lines = [];
     let cur = "";
-    for (const w of text.split(/\s+/).filter(Boolean)) {
+    for (const w of text3.split(/\s+/).filter(Boolean)) {
       const t = (cur + " " + w).trim();
       if (measure(t, font, size) <= maxw || !cur)
         cur = t;
@@ -65818,40 +66241,40 @@ function layoutStrip(sb, images, opts = {}) {
       lines.push(cur);
     return lines;
   };
-  const fitText = (text, font, size, lh, aspect, minw, maxw) => {
-    const total = measure(text, font, size);
+  const fitText = (text3, font, size, lh, aspect, minw, maxw) => {
+    const total = measure(text3, font, size);
     const tw = clamp(Math.sqrt(total * lh * aspect), minw, maxw);
-    const lines = wrap(text, font, size, tw);
+    const lines = wrap(text3, font, size, tw);
     return { lines, w: Math.max(...lines.map((l) => measure(l, font, size))), h: lines.length * lh };
   };
-  function shape(p, iw, ih) {
+  function shape(p, iw3, ih2) {
     const lay = p.layout;
     let x = 0, w = W;
     if (lay === "inset_left" || lay === "inset_right") {
       w = Math.round(RULES2.insetW * k);
       x = lay === "inset_left" ? 0 : W - w;
     }
-    let h = Math.round(w * ih / iw);
+    let h = Math.round(w * ih2 / iw3);
     if (lay === "tight_crop")
       h = Math.min(h, RULES2.tightH * k);
     else if (lay === "wide_band")
       h = Math.min(h, RULES2.maxBandH * k);
     h = Math.round(Math.min(h, (lay === "title" ? RULES2.maxTitleH : lay.startsWith("inset") ? RULES2.maxInsetH : RULES2.maxPanelH) * k));
-    const vis = w / iw * ih;
+    const vis = w / iw3 * ih2;
     return { x, w, h, frac: h < vis - 1 ? h / vis : 1 };
   }
   function search(regions, score, step = 14) {
     let best = null;
-    for (let [xa, xb, ya, yb] of regions) {
+    for (let [xa, xb, ya, yb2] of regions) {
       [xa, xb] = [Math.min(xa, xb), Math.max(xa, xb)];
-      [ya, yb] = [Math.min(ya, yb), Math.max(ya, yb)];
-      const nx = Math.max(1, Math.floor((xb - xa) / step) + 1), ny = Math.max(1, Math.floor((yb - ya) / step) + 1);
+      [ya, yb2] = [Math.min(ya, yb2), Math.max(ya, yb2)];
+      const nx = Math.max(1, Math.floor((xb - xa) / step) + 1), ny = Math.max(1, Math.floor((yb2 - ya) / step) + 1);
       for (let i = 0;i < nx; i++)
         for (let j = 0;j < ny; j++) {
-          const cx = xa + (xb - xa) * (i / Math.max(1, nx - 1)), cy = ya + (yb - ya) * (j / Math.max(1, ny - 1));
-          const s = score(cx, cy);
-          if (s !== null && (!best || s < best[0]))
-            best = [s, cx, cy];
+          const cx = xa + (xb - xa) * (i / Math.max(1, nx - 1)), cy4 = ya + (yb2 - ya) * (j / Math.max(1, ny - 1));
+          const s2 = score(cx, cy4);
+          if (s2 !== null && (!best || s2 < best[0]))
+            best = [s2, cx, cy4];
         }
     }
     return best;
@@ -65877,10 +66300,10 @@ function layoutStrip(sb, images, opts = {}) {
       log.push(`p${p.id}: no image, skipped`);
       return;
     }
-    const { width: iw, height: ih } = img;
-    const { x: x0, w, h, frac } = shape(p, iw, ih);
+    const { width: iw3, height: ih2 } = img;
+    const { x: x0, w, h, frac } = shape(p, iw3, ih2);
     const chars = p.nai.characters;
-    const geo = new Map(chars.map((c) => [c.name, charGeometry(c, iw, ih, img.faces)]));
+    const geo = new Map(chars.map((c) => [c.name, charGeometry(c, iw3, ih2, img.faces)]));
     const speakers = p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.speaker);
     let focusYs = speakers.filter((n) => !!n && geo.has(n)).map((n) => geo.get(n).head[1]);
     if (!focusYs.length)
@@ -65892,21 +66315,21 @@ function layoutStrip(sb, images, opts = {}) {
     let crop = [0, 0, 1, 1];
     if (frac < 1) {
       const fy = focusYs.reduce((a, b) => a + b, 0) / focusYs.length;
-      const top = clamp(fy - frac / 2, 0, 1 - frac);
-      crop = [0, top, 1, top + frac];
+      const top2 = clamp(fy - frac / 2, 0, 1 - frac);
+      crop = [0, top2, 1, top2 + frac];
     }
     const toPx = (nx, ny) => [x0 + nx * w, (ny - crop[1]) / (crop[3] - crop[1]) * h];
     const facePx = new Map;
     for (const [n, g] of geo) {
-      const fb = g.face ? [...toPx(g.face[0], g.face[1]), ...toPx(g.face[2], g.face[3])] : null;
-      facePx.set(n, { head: toPx(...g.head), face: fb });
+      const fb2 = g.face ? [...toPx(g.face[0], g.face[1]), ...toPx(g.face[2], g.face[3])] : null;
+      facePx.set(n, { head: toPx(...g.head), face: fb2 });
     }
     const faces = [...facePx.values()].map((v) => v.face).filter((f) => !!f);
     const mask = img.cutout?.mask;
     const onChar = (r) => {
       if (!mask?.length)
         return 0;
-      let hit = 0;
+      let hit2 = 0;
       for (let i = 0;i < 7; i++)
         for (let j = 0;j < 7; j++) {
           const nx = (r[0] + (r[2] - r[0]) * (i + 0.5) / 7 - x0) / w, ny = crop[1] + (r[1] + (r[3] - r[1]) * (j + 0.5) / 7) / h * (crop[3] - crop[1]);
@@ -65914,9 +66337,9 @@ function layoutStrip(sb, images, opts = {}) {
             continue;
           const row = mask[Math.floor(ny * mask.length)];
           if (row[Math.floor(nx * row.length)] === "1")
-            hit++;
+            hit2++;
         }
-      return hit / 49;
+      return hit2 / 49;
     };
     const bodies = chars.filter((c) => c.framing !== "hands only").map((c) => {
       const g = facePx.get(c.name);
@@ -65927,9 +66350,9 @@ function layoutStrip(sb, images, opts = {}) {
     let frameBreak = null;
     let cutTop = 0;
     if (p.beat === "action" && img.cutout && chars.length === 1) {
-      const bb = img.cutout.bbox;
-      const [bl, bt] = toPx(bb.left, bb.top);
-      const [br] = toPx(bb.right, bb.bottom);
+      const bb2 = img.cutout.bbox;
+      const [bl, bt] = toPx(bb2.left, bb2.top);
+      const [br] = toPx(bb2.right, bb2.bottom);
       const depth = clamp(0.1 * h, RULES2.breakDepth[0] * k, RULES2.breakDepth[1] * k);
       const sideDepth = Math.min(depth, 0.12 * w);
       if (bt > 0.03 * h && bt <= RULES2.breakMaxTop * h) {
@@ -65955,9 +66378,9 @@ function layoutStrip(sb, images, opts = {}) {
     const nBalloons = p.text.filter((t) => t.type === "speech" || t.type === "thought").length;
     let sfxInPanel = 0;
     const anchorRegion = (anchor, rx, ry) => {
-      const L = 6 + rx, R = W - 6 - rx, mid = fx0 + fw / 2, fh = fb - ft;
+      const L = 6 + rx, R = W - 6 - rx, mid = fx0 + fw / 2, fh2 = fb - ft;
       const xs = { left: [L, mid], right: [mid, R], both: [L, R] };
-      const ys = { top: [ft + ry * 0.2, ft + fh * 0.38], mid: [ft + fh * 0.3, ft + fh * 0.7], bot: [ft + fh * 0.62, fb + ry * 0.35] };
+      const ys = { top: [ft + ry * 0.2, ft + fh2 * 0.38], mid: [ft + fh2 * 0.3, ft + fh2 * 0.7], bot: [ft + fh2 * 0.62, fb + ry * 0.35] };
       const A = {
         "top-left": [...xs.left, ...ys.top],
         "top-right": [...xs.right, ...ys.top],
@@ -65973,38 +66396,38 @@ function layoutStrip(sb, images, opts = {}) {
     };
     const placeBalloon = (t) => {
       const shout = t.type === "speech" && isShout(t.text);
-      const { lines, w: tw, h: th } = fitText(t.text, "speech", RULES2.speech.size, RULES2.speech.lh, 3.4, 96, 270);
-      const k = shout ? 1.25 : 1;
-      const rx = tw / 2 * 1.32 * k + 12, ry = th / 2 * 1.38 * k + 10;
+      const { lines, w: tw, h: th3 } = fitText(t.text, "speech", RULES2.speech.size, RULES2.speech.lh, 3.4, 96, 270);
+      const k2 = shout ? 1.25 : 1;
+      const rx = tw / 2 * 1.32 * k2 + 12, ry = th3 / 2 * 1.38 * k2 + 10;
       let sp = t.speaker ? facePx.get(t.speaker) : undefined;
       if (sp && !sp.face)
         sp = undefined;
       const target = sp?.head ?? null;
-      const score = (minArt) => (cx, cy) => {
-        const r = [cx - rx * 0.92, cy - ry * 0.92, cx + rx * 0.92, cy + ry * 0.92];
+      const score = (minArt) => (cx2, cy5) => {
+        const r = [cx2 - rx * 0.92, cy5 - ry * 0.92, cx2 + rx * 0.92, cy5 + ry * 0.92];
         if (r[0] < 4 || r[2] > W - 4)
           return null;
         if (faces.some((f) => inter(r, pad(f, 6)) > 0))
           return null;
         if (placed.some((q) => inter(r, pad(q, 8)) > 0))
           return null;
-        if (cy < prevCy + 30)
+        if (cy5 < prevCy + 30)
           return null;
         if (onArt(r) < minArt)
           return null;
         if (onChar(r) > RULES2.charMax)
           return null;
-        let s = 0;
+        let s2 = 0;
         if (target) {
-          const d = Math.hypot(cx - target[0], cy - target[1]) - Math.max(rx, ry);
-          s += Math.max(0, 30 - d, d - 160) * 1.5;
-          s += cy * (nBalloons > 1 ? 0.4 : 0.1);
-          if (cy > target[1] + 40)
-            s += 400;
+          const d = Math.hypot(cx2 - target[0], cy5 - target[1]) - Math.max(rx, ry);
+          s2 += Math.max(0, 30 - d, d - 160) * 1.5;
+          s2 += cy5 * (nBalloons > 1 ? 0.4 : 0.1);
+          if (cy5 > target[1] + 40)
+            s2 += 400;
         } else
-          s += Math.abs(cy - (ft + (fb - ft) * 0.15)) * 0.3;
-        s += (1 - onArt(r)) * 120;
-        return s;
+          s2 += Math.abs(cy5 - (ft + (fb - ft) * 0.15)) * 0.3;
+        s2 += (1 - onArt(r)) * 120;
+        return s2;
       };
       let fallback = null;
       let best = search(anchorRegion(t.anchor, rx, ry), score(RULES2.onArtMin));
@@ -66021,20 +66444,20 @@ function layoutStrip(sb, images, opts = {}) {
         fallback = "gutter";
         best = [0, W / 2, prevCy > -1e8 ? prevCy + 2 * ry + 20 : ft - ry - 14];
       }
-      const [, cx, cy] = best;
+      const [, cx, cy4] = best;
       let tail = null;
       if (target && sp) {
         const fbx = sp.face;
         const aim = [target[0], target[1] + (fbx[3] - fbx[1]) * 0.18];
-        const dx = aim[0] - cx, dy = aim[1] - cy, dist = Math.hypot(dx, dy) || 1;
+        const dx = aim[0] - cx, dy = aim[1] - cy4, dist = Math.hypot(dx, dy) || 1;
         const edge = Math.hypot(rx * dx / dist, ry * dy / dist);
         let L = dist - 14;
-        while (L > edge && fbx[0] - 4 < cx + dx / dist * L && cx + dx / dist * L < fbx[2] + 4 && fbx[1] - 4 < cy + dy / dist * L && cy + dy / dist * L < fbx[3] + 4)
+        while (L > edge && fbx[0] - 4 < cx + dx / dist * L && cx + dx / dist * L < fbx[2] + 4 && fbx[1] - 4 < cy4 + dy / dist * L && cy4 + dy / dist * L < fbx[3] + 4)
           L -= 4;
         L = Math.min(edge + RULES2.tailMax, Math.max(edge + 14, L));
-        tail = [cx + dx / dist * L, cy + dy / dist * L];
+        tail = [cx + dx / dist * L, cy4 + dy / dist * L];
       } else if (t.speaker) {
-        tail = [cx + (rx + 24) * (cx < W / 2 ? -1 : 1) * 0.6, cy < (ft + fb) / 2 ? cy - ry - 20 : cy + ry + 20];
+        tail = [cx + (rx + 24) * (cx < W / 2 ? -1 : 1) * 0.6, cy4 < (ft + fb) / 2 ? cy4 - ry - 20 : cy4 + ry + 20];
       }
       return {
         kind: t.type,
@@ -66044,34 +66467,34 @@ function layoutStrip(sb, images, opts = {}) {
         text: t.text,
         lines,
         cx,
-        cy,
+        cy: cy4,
         rx,
         ry,
         textW: tw,
-        textH: th,
+        textH: th3,
         tail,
         shout,
-        rect: [cx - rx, cy - ry, cx + rx, cy + ry],
+        rect: [cx - rx, cy4 - ry, cx + rx, cy4 + ry],
         fallback
       };
     };
     const placeNarr = (t) => {
-      const { lines, w: tw, h: th } = fitText(t.text, "narration", RULES2.narration.size, RULES2.narration.lh, 3.4, 60, 300);
-      const bw = tw + 36, bh = th + 24;
+      const { lines, w: tw, h: th3 } = fitText(t.text, "narration", RULES2.narration.size, RULES2.narration.lh, 3.4, 60, 300);
+      const bw = tw + 36, bh2 = th3 + 24;
       const a = t.anchor;
       const wantTop = !(a.startsWith("bottom") || a === "over-bottom-edge");
       const wantLeft = !a.includes("right");
-      const corner = (top, left) => {
+      const corner = (top2, left) => {
         const xIn = left ? fx0 : fx1 - bw;
-        const yIn = top ? ft : fb - bh;
-        const out = [[xIn, yIn], [left ? fx0 + 14 : fx1 - bw - 14, top ? ft - bh / 2 : fb - bh / 2]];
+        const yIn = top2 ? ft : fb - bh2;
+        const out = [[xIn, yIn], [left ? fx0 + 14 : fx1 - bw - 14, top2 ? ft - bh2 / 2 : fb - bh2 / 2]];
         if (col && (left && p.layout === "inset_right" || !left && p.layout === "inset_left"))
           out.push([left ? fx0 - bw * 0.5 : fx1 - bw * 0.5, yIn]);
         return out;
       };
       const cands = [...corner(wantTop, wantLeft), ...corner(wantTop, !wantLeft), ...corner(!wantTop, wantLeft), ...corner(!wantTop, !wantLeft)];
-      for (const [x, y0] of cands) {
-        const r = [x, y0, x + bw, y0 + bh];
+      for (const [x, y02] of cands) {
+        const r = [x, y02, x + bw, y02 + bh2];
         if (r[0] < 0 || r[2] > W)
           continue;
         if (faces.some((f) => inter(r, pad(f, 6)) > 0) || placed.some((q) => inter(r, pad(q, 8)) > 0))
@@ -66079,21 +66502,21 @@ function layoutStrip(sb, images, opts = {}) {
         return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: r, fallback: null };
       }
       const y0 = Math.max(fb + 16, ...placed.filter((q) => q[1] >= fb).map((q) => q[3] + 8));
-      return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [fx0 + 14, y0, fx0 + 14 + bw, y0 + bh], fallback: "gutter" };
+      return { kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [fx0 + 14, y0, fx0 + 14 + bw, y0 + bh2], fallback: "gutter" };
     };
     const placeSfx = (t) => {
       const action = p.beat === "action";
       const size = Math.round((action ? RULES2.sfx.action : RULES2.sfx.normal) * k);
       const tw = measure(t.text.toUpperCase(), "sfx", size);
-      const bw = tw + 10, bh = size + 10;
+      const bw = tw + 10, bh2 = size + 10;
       const breakEdge = action && sfxInPanel === 0;
-      const score = (cx, cy) => {
-        const r = [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2];
+      const score = (cx2, cy5) => {
+        const r = [cx2 - bw / 2, cy5 - bh2 / 2, cx2 + bw / 2, cy5 + bh2 / 2];
         if (r[0] < 4 || r[2] > W - 4)
           return null;
         if (faces.some((f) => inter(r, pad(f, 0.3 * (f[2] - f[0]))) > 0) || placed.some((q) => inter(r, pad(q, 6)) > 0))
           return null;
-        return bodies.reduce((s, b) => s + inter(r, b), 0) / area(r) * 100 + onChar(r) * 100;
+        return bodies.reduce((s2, b) => s2 + inter(r, b), 0) / area(r) * 100 + onChar(r) * 100;
       };
       const a = t.anchor;
       const left = a.includes("left"), right = a.includes("right");
@@ -66107,21 +66530,21 @@ function layoutStrip(sb, images, opts = {}) {
       if (breakEdge) {
         const edges = [];
         const bottomFirst = a.startsWith("bottom") || a === "over-bottom-edge" || a === "left" || a === "right";
-        const top = [xr[0], xr[1], ft, ft], bottom = [xr[0], xr[1], fb, fb];
-        edges.push(...bottomFirst ? [bottom, top] : [top, bottom]);
+        const top2 = [xr[0], xr[1], ft, ft], bottom2 = [xr[0], xr[1], fb, fb];
+        edges.push(...bottomFirst ? [bottom2, top2] : [top2, bottom2]);
         if (p.layout === "inset_left")
-          edges.push([fx1, fx1, ft + bh, fb - bh]);
+          edges.push([fx1, fx1, ft + bh2, fb - bh2]);
         if (p.layout === "inset_right")
-          edges.push([fx0, fx0, ft + bh, fb - bh]);
+          edges.push([fx0, fx0, ft + bh2, fb - bh2]);
         best = search(edges, score, 20);
         breaks = !!best;
       }
       if (!best) {
-        const regs = anchorRegion(a.startsWith("over") ? "left" : a, bw / 2, bh / 2).map(([xa, xb, ya, yb]) => [Math.max(xa, fx0 + bw / 2 + 6), Math.min(xb, fx1 - bw / 2 - 6), Math.max(ya, ft + bh / 2 + 6), Math.min(yb, fb - bh / 2 - 6)]);
-        best = search(regs, score, 20) ?? search([[fx0 + bw / 2 + 6, fx1 - bw / 2 - 6, ft + bh / 2 + 6, fb - bh / 2 - 6]], score, 20);
+        const regs = anchorRegion(a.startsWith("over") ? "left" : a, bw / 2, bh2 / 2).map(([xa, xb, ya, yb2]) => [Math.max(xa, fx0 + bw / 2 + 6), Math.min(xb, fx1 - bw / 2 - 6), Math.max(ya, ft + bh2 / 2 + 6), Math.min(yb2, fb - bh2 / 2 - 6)]);
+        best = search(regs, score, 20) ?? search([[fx0 + bw / 2 + 6, fx1 - bw / 2 - 6, ft + bh2 / 2 + 6, fb - bh2 / 2 - 6]], score, 20);
       }
-      const [cx, cy] = best ? [best[1], best[2]] : [fx0 + fw / 2, fb - bh];
-      const rot = breaks ? cx < W / 2 ? -14 : 12 : cx < W / 2 ? -10 : 8;
+      const [cx, cy4] = best ? [best[1], best[2]] : [fx0 + fw / 2, fb - bh2];
+      const rot2 = breaks ? cx < W / 2 ? -14 : 12 : cx < W / 2 ? -10 : 8;
       sfxInPanel++;
       return {
         kind: "sfx",
@@ -66129,11 +66552,11 @@ function layoutStrip(sb, images, opts = {}) {
         textIndex: p.text.indexOf(t),
         text: t.text,
         cx,
-        cy,
+        cy: cy4,
         size,
-        rot,
+        rot: rot2,
         color: RULES2.sfxColors[sfxI++ % RULES2.sfxColors.length],
-        rect: [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2],
+        rect: [cx - bw / 2, cy4 - bh2 / 2, cx + bw / 2, cy4 + bh2 / 2],
         breaksFrame: breaks
       };
     };
@@ -66176,7 +66599,7 @@ function layoutStrip(sb, images, opts = {}) {
       faces: facesOut
     });
     if (p.layout === "title") {
-      const [a, ...rest] = sb.title.split(":");
+      const [a, ...rest] = sb2.title.split(":");
       const b = rest.join(":").trim();
       items.push({ kind: "title", panel: p.id, small: b ? a.trim().toUpperCase() : "", big: b || a.trim(), y: oy + h * 0.13 });
     }
@@ -66194,7 +66617,7 @@ function layoutStrip(sb, images, opts = {}) {
     let side = 0;
     for (const t of p.text) {
       if (t.type === "sfx") {
-        const size = Math.round(RULES2.sfx.beat * k), tw = measure(t.text.toUpperCase(), "sfx", size);
+        const size = Math.round(RULES2.sfx.beat * k), tw2 = measure(t.text.toUpperCase(), "sfx", size);
         items.push({
           kind: "sfx",
           panel: p.id,
@@ -66205,46 +66628,46 @@ function layoutStrip(sb, images, opts = {}) {
           size,
           rot: -8,
           color: RULES2.sfxColors[sfxI++ % RULES2.sfxColors.length],
-          rect: [W / 2 - tw / 2, y, W / 2 + tw / 2, y + size],
+          rect: [W / 2 - tw2 / 2, y, W / 2 + tw2 / 2, y + size],
           breaksFrame: false
         });
         y += size + 30;
         continue;
       }
       if (t.type === "thought" || t.type === "speech") {
-        const { lines, w: tw, h: th } = fitText(t.text, "speech", RULES2.speech.size, RULES2.speech.lh, 3.4, 96, 270);
-        const rx = tw / 2 * 1.32 + 12, ry = th / 2 * 1.38 + 10, cx = side === 0 ? 70 + rx : W - 70 - rx, cy = y + ry;
+        const { lines: lines2, w: tw2, h: th4 } = fitText(t.text, "speech", RULES2.speech.size, RULES2.speech.lh, 3.4, 96, 270);
+        const rx = tw2 / 2 * 1.32 + 12, ry = th4 / 2 * 1.38 + 10, cx = side === 0 ? 70 + rx : W - 70 - rx, cy4 = y + ry;
         items.push({
           kind: t.type,
           panel: p.id,
           textIndex: p.text.indexOf(t),
           speaker: t.speaker,
           text: t.text,
-          lines,
+          lines: lines2,
           cx,
-          cy,
+          cy: cy4,
           rx,
           ry,
-          textW: tw,
-          textH: th,
+          textW: tw2,
+          textH: th4,
           tail: null,
           shout: false,
-          rect: [cx - rx, cy - ry, cx + rx, cy + ry],
+          rect: [cx - rx, cy4 - ry, cx + rx, cy4 + ry],
           fallback: null
         });
         y += 2 * ry + 30;
         side ^= 1;
         continue;
       }
-      const { lines, w: tw, h: th } = fitText(t.text, "narration", RULES2.narration.size, RULES2.narration.lh, 3.2, 60, 330);
-      const bw = tw + 40, bh = th + 28, x = side === 0 ? 70 : W - 70 - bw;
-      items.push({ kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [x, y, x + bw, y + bh], fallback: null });
-      y += bh + 40;
+      const { lines, w: tw, h: th3 } = fitText(t.text, "narration", RULES2.narration.size, RULES2.narration.lh, 3.2, 60, 330);
+      const bw = tw + 40, bh2 = th3 + 28, x = side === 0 ? 70 : W - 70 - bw;
+      items.push({ kind: "narration", panel: p.id, textIndex: p.text.indexOf(t), text: t.text, lines, rect: [x, y, x + bw, y + bh2], fallback: null });
+      y += bh2 + 40;
       side ^= 1;
     }
     y -= 40;
   }
-  sb.panels.forEach((p, i) => {
+  sb2.panels.forEach((p, i) => {
     y += gapBefore(p);
     if (p.kind === "image")
       imagePanel(p, i === 0);
@@ -66338,7 +66761,7 @@ function pageCells(t, top = 0) {
 var NAI_SIZES = [[1600, 640], [1472, 704], [1216, 832], [1024, 1024], [832, 1216], [704, 1472], [640, 1600]];
 function naiSizeFor(bbox) {
   const a = Math.log((bbox[2] - bbox[0]) / (bbox[3] - bbox[1]));
-  return NAI_SIZES.reduce((b, s) => Math.abs(Math.log(s[0] / s[1]) - a) < Math.abs(Math.log(b[0] / b[1]) - a) ? s : b);
+  return NAI_SIZES.reduce((b, s2) => Math.abs(Math.log(s2[0] / s2[1]) - a) < Math.abs(Math.log(b[0] / b[1]) - a) ? s2 : b);
 }
 function mangaPagePlan(panels) {
   const balloons = panels.map((p) => (p.text ?? []).filter((t) => t.type === "speech" || t.type === "thought").length);
@@ -66370,25 +66793,25 @@ var pad2 = (r, p) => [r[0] - p, r[1] - p, r[2] + p, r[3] + p];
 var clamp2 = (v, a, b) => Math.min(b, Math.max(a, v));
 var centre = (r) => [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
 var shrink = (r, k) => {
-  const [cx, cy] = centre(r);
-  return [cx - (r[2] - r[0]) / 2 * k, cy - (r[3] - r[1]) / 2 * k, cx + (r[2] - r[0]) / 2 * k, cy + (r[3] - r[1]) / 2 * k];
+  const [cx, cy4] = centre(r);
+  return [cx - (r[2] - r[0]) / 2 * k, cy4 - (r[3] - r[1]) / 2 * k, cx + (r[2] - r[0]) / 2 * k, cy4 + (r[3] - r[1]) / 2 * k];
 };
 function readBefore(next, prev) {
   const overlap = Math.min(next[3], prev[3]) - Math.max(next[1], prev[1]);
   const sameBand = overlap > Math.min(next[3] - next[1], prev[3] - prev[1]) / 3;
   return sameBand ? centre(next)[0] > centre(prev)[0] : centre(next)[1] < centre(prev)[1];
 }
-function layoutManga(sb, images, opts = {}) {
+function layoutManga(sb2, images, opts = {}) {
   const measure = opts.measure ?? defaultMeasure;
-  const panels = sb.panels.filter((p) => p.kind === "image");
+  const panels = sb2.panels.filter((p) => p.kind === "image");
   const byId = new Map(panels.map((p) => [p.id, p]));
-  const pages = sb.pages?.length ? sb.pages : mangaPagePlan(panels).pages;
+  const pages = sb2.pages?.length ? sb2.pages : mangaPagePlan(panels).pages;
   const phone = (opts.width ?? MANGA_PAGE_WIDTH) < MANGA_PAGE_WIDTH;
   const W = phone ? clamp2(Math.round(opts.width), STRIP_MIN_LAYOUT_WIDTH, STRIP_WIDTH) : MANGA_PAGE_WIDTH;
-  const ts = phone ? STRIP_SPEECH_PX / MANGA_SPEECH_PX : 1;
+  const ts2 = phone ? STRIP_SPEECH_PX / MANGA_SPEECH_PX : 1;
   const sfxScale = phone ? clamp2(W / 760, 0.6, 0.9) : 1;
   const log = [];
-  const slots = [];
+  const slots2 = [];
   const pageRects = [];
   let y = 0;
   for (const page of pages) {
@@ -66405,50 +66828,50 @@ function layoutManga(sb, images, opts = {}) {
         continue;
       }
       const rect = [0, y, W, y + PAGE.H];
-      slots.push(list.map((panel, k) => ({ panel, cell: cells[k], page: rect })));
+      slots2.push(list.map((panel, k) => ({ panel, cell: cells[k], page: rect })));
       pageRects.push(rect);
       y += PAGE.H;
     } else {
       const top = y;
       const cells = [];
       const w = W - 2 * PHONE.margin;
-      let cy = y + PHONE.top + (!pageRects.length && sb.title.trim() ? chapterBox(sb.title, ts, Math.min(380 * ts, w * 0.6), measure).bh + PHONE.gutter : 0);
+      let cy4 = y + PHONE.top + (!pageRects.length && sb2.title.trim() ? chapterBox(sb2.title, ts2, Math.min(380 * ts2, w * 0.6), measure).bh + PHONE.gutter : 0);
       for (const panel of list) {
-        const [iw, ih] = imageSize(panel, images);
-        const h = Math.round(clamp2(Math.max(w * ih / iw, textArea(panel, measure, ts) * PHONE.artPerText / w), PHONE.minH * w, PHONE.maxH * w));
-        const bbox = [PHONE.margin, cy, W - PHONE.margin, cy + h];
+        const [iw3, ih2] = imageSize(panel, images);
+        const h = Math.round(clamp2(Math.max(w * ih2 / iw3, textArea(panel, measure, ts2) * PHONE.artPerText / w), PHONE.minH * w, PHONE.maxH * w));
+        const bbox = [PHONE.margin, cy4, W - PHONE.margin, cy4 + h];
         cells.push({ poly: [[bbox[0], bbox[1]], [bbox[2], bbox[1]], [bbox[2], bbox[3]], [bbox[0], bbox[3]]], bbox, imp: panel.importance ?? "normal" });
-        cy += h + PHONE.gutter;
+        cy4 += h + PHONE.gutter;
       }
-      y = cy - PHONE.gutter + PHONE.top;
+      y = cy4 - PHONE.gutter + PHONE.top;
       const rect = [0, top, W, y];
-      slots.push(list.map((panel, k) => ({ panel, cell: cells[k], page: rect })));
+      slots2.push(list.map((panel, k) => ({ panel, cell: cells[k], page: rect })));
       pageRects.push(rect);
     }
   }
   const out = { panels: [], items: [] };
-  const first = slots[0]?.[0]?.panel.id;
-  for (const page of slots)
-    layoutPage(page, images, { measure, ts, sfxScale, phone, title: sb.title, titlePanel: first, log, out });
+  const first = slots2[0]?.[0]?.panel.id;
+  for (const page of slots2)
+    layoutPage(page, images, { measure, ts: ts2, sfxScale, phone, title: sb2.title, titlePanel: first, log, out });
   return { width: W, height: Math.round(y), panels: out.panels, items: out.items, log, format: "manga", pages: pageRects, ...opts.grey ? { grey: true } : {}, ...out.chapter ? { chapter: out.chapter } : {} };
 }
-function textArea(panel, measure, ts) {
+function textArea(panel, measure, ts2) {
   return panel.text.reduce((sum, t) => {
     if (t.type === "sfx")
       return sum;
     const narr = t.type === "narration";
     const font = narr ? TEXT.narration : TEXT.speech;
-    const text = measure(narr ? t.text : t.text.toUpperCase(), narr ? "narration" : "speech", font.size * ts) * font.lh * ts;
-    const tw = Math.sqrt(text * 2.2), th = text / tw;
-    const box = narr ? (tw + 36 * ts) * (th + 24 * ts) : (tw * 1.34 + 20 * ts) * (th * 1.38 + 18 * ts);
-    return sum + box * (t.type === "speech" && (t.tone === "shout" || isShout(t.text)) ? BURST_SPIKE ** 2 : 1);
+    const text3 = measure(narr ? t.text : t.text.toUpperCase(), narr ? "narration" : "speech", font.size * ts2) * font.lh * ts2;
+    const tw = Math.sqrt(text3 * 2.2), th3 = text3 / tw;
+    const box2 = narr ? (tw + 36 * ts2) * (th3 + 24 * ts2) : (tw * 1.34 + 20 * ts2) * (th3 * 1.38 + 18 * ts2);
+    return sum + box2 * (t.type === "speech" && (t.tone === "shout" || isShout(t.text)) ? BURST_SPIKE ** 2 : 1);
   }, 0);
 }
-function chapterBox(title, ts, maxw, measure) {
+function chapterBox(title, ts2, maxw, measure) {
   const [a, ...rest] = title.split(":");
   const big = (rest.length ? rest.join(":") : a).trim().toUpperCase();
   const small = rest.length ? a.trim().toUpperCase() : "";
-  const size = Math.round(TEXT.title.size * ts), smallSize = Math.round(TEXT.title.small * ts);
+  const size = Math.round(TEXT.title.size * ts2), smallSize = Math.round(TEXT.title.small * ts2);
   const lines = [];
   for (const w of big.split(/\s+/u)) {
     const t = lines.length ? `${lines.at(-1)} ${w}` : w;
@@ -66457,9 +66880,9 @@ function chapterBox(title, ts, maxw, measure) {
     else
       lines.push(w);
   }
-  const bw = Math.max(...lines.map((l) => measure(l, "sfx", size)), small ? measure(small, "narration", smallSize) : 0) + 40 * ts;
-  const bh = lines.length * size * 1.05 + (small ? smallSize * 1.3 : 0) + 26 * ts;
-  return { small, big, size, bw, bh };
+  const bw = Math.max(...lines.map((l) => measure(l, "sfx", size)), small ? measure(small, "narration", smallSize) : 0) + 40 * ts2;
+  const bh2 = lines.length * size * 1.05 + (small ? smallSize * 1.3 : 0) + 26 * ts2;
+  return { small, big, size, bw, bh: bh2 };
 }
 function imageSize(panel, images) {
   const img = images[String(panel.id)];
@@ -66473,29 +66896,29 @@ function lowerTop(poly, top) {
   const at = (a, b) => [a[0] + (b[0] - a[0]) * (top - a[1]) / Math.max(1, b[1] - a[1]), top];
   return [at(tl, bl), at(tr, br), br, bl];
 }
-function headBoxes(faces, iw, ih) {
+function headBoxes(faces, iw3, ih2) {
   if (!faces)
     return faces;
   return Object.fromEntries(Object.entries(faces).map(([name, f]) => {
-    const w = (f.right - f.left) * iw, h = (f.bottom - f.top) * ih;
-    return [name, h > 1.6 * w ? { ...f, bottom: f.top + 1.3 * w / ih } : f];
+    const w = (f.right - f.left) * iw3, h = (f.bottom - f.top) * ih2;
+    return [name, h > 1.6 * w ? { ...f, bottom: f.top + 1.3 * w / ih2 } : f];
   }));
 }
 function panelGeometry(slot, index, images, ctx) {
   const { panel: p, cell } = slot;
   const img = images[String(p.id)];
-  const [iw, ih] = imageSize(p, images);
+  const [iw3, ih2] = imageSize(p, images);
   const [x0, y0, x1, y1] = cell.bbox;
-  const fw = x1 - x0, fh = y1 - y0;
-  const geo = new Map(p.nai.characters.map((c) => [c.name, charGeometry(c, iw, ih, headBoxes(img?.faces, iw, ih))]));
+  const fw = x1 - x0, fh2 = y1 - y0;
+  const geo = new Map(p.nai.characters.map((c) => [c.name, charGeometry(c, iw3, ih2, headBoxes(img?.faces, iw3, ih2))]));
   const withFace = [...geo.values()].filter((g) => g.face);
-  const s = Math.max(fw / iw, fh / ih);
-  const dw = iw * s, dh = ih * s;
+  const s2 = Math.max(fw / iw3, fh2 / ih2);
+  const dw2 = iw3 * s2, dh2 = ih2 * s2;
   const hx = withFace.length ? withFace.reduce((a, g) => a + g.head[0], 0) / withFace.length : 0.5;
   const hy = withFace.length ? Math.min(...withFace.map((g) => g.head[1])) : 0.4;
-  const dx = clamp2(x0 + fw / 2 - hx * dw, x1 - dw, x0), dy = clamp2(y0 + fh * 0.4 - hy * dh, y1 - dh, y0);
-  const crop = [(x0 - dx) / dw, (y0 - dy) / dh, (x1 - dx) / dw, (y1 - dy) / dh];
-  const toPx = (nx, ny) => [dx + nx * dw, dy + ny * dh];
+  const dx = clamp2(x0 + fw / 2 - hx * dw2, x1 - dw2, x0), dy = clamp2(y0 + fh2 * 0.4 - hy * dh2, y1 - dh2, y0);
+  const crop = [(x0 - dx) / dw2, (y0 - dy) / dh2, (x1 - dx) / dw2, (y1 - dy) / dh2];
+  const toPx = (nx, ny) => [dx + nx * dw2, dy + ny * dh2];
   const heads = {}, faces = {};
   const bodies = [];
   for (const c of p.nai.characters) {
@@ -66513,8 +66936,8 @@ function panelGeometry(slot, index, images, ctx) {
   let frameBreak = null;
   if (img?.cutout && p.beat === "action" && p.nai.characters.length === 1) {
     const bt = toPx(0, img.cutout.bbox.top)[1];
-    if (bt > y0 + 0.03 * fh && bt <= y0 + BREAK.maxTop * fh) {
-      const top = Math.min(bt + clamp2(BREAK.depth * fh, BREAK.min * ctx.ts, BREAK.max * ctx.ts), y0 + 0.5 * fh);
+    if (bt > y0 + 0.03 * fh2 && bt <= y0 + BREAK.maxTop * fh2) {
+      const top = Math.min(bt + clamp2(BREAK.depth * fh2, BREAK.min * ctx.ts, BREAK.max * ctx.ts), y0 + 0.5 * fh2);
       poly = lowerTop(cell.poly, top);
       frame = [x0, top, x1, y1];
       frameBreak = "top";
@@ -66524,10 +66947,10 @@ function panelGeometry(slot, index, images, ctx) {
   ctx.out.panels.push({ id: p.id, rect: cell.bbox, crop, frame, frameBreak, cutout: frameBreak && img?.cutout ? { src: img.cutout.src } : null, fade: null, heads, faces, clip: poly });
   return { slot, index, frame, faces, heads, bodies };
 }
-function layoutPage(slots, images, ctx) {
-  const { measure, ts, log } = ctx;
-  const allCells = slots.map((s) => s.cell.bbox);
-  const geoms = slots.map((slot, i) => panelGeometry(slot, i, images, ctx));
+function layoutPage(slots2, images, ctx) {
+  const { measure, ts: ts2, log } = ctx;
+  const allCells = slots2.map((s2) => s2.cell.bbox);
+  const geoms = slots2.map((slot, i) => panelGeometry(slot, i, images, ctx));
   const faceBlocks = geoms.flatMap((g) => Object.values(g.faces).flatMap((f) => f ? [pad2(f, 4)] : []));
   const textBlocks = [];
   const onFace = (r) => {
@@ -66538,10 +66961,10 @@ function layoutPage(slots, images, ctx) {
     const inner = shrink(r, 0.97);
     return textBlocks.some((b) => inter2(inner, b) > 0) || taken.some((b) => inter2(inner, b) > 0);
   };
-  const wrap = (text, font, size, maxw) => {
+  const wrap = (text3, font, size, maxw) => {
     const lines = [];
     let cur = "";
-    for (const w of text.split(/\s+/u).filter(Boolean)) {
+    for (const w of text3.split(/\s+/u).filter(Boolean)) {
       const t = `${cur} ${w}`.trim();
       if (measure(t, font, size) <= maxw || !cur)
         cur = t;
@@ -66554,31 +66977,31 @@ function layoutPage(slots, images, ctx) {
       lines.push(cur);
     return lines;
   };
-  const fitLines = (text, font, size, lh, aspect, minw, maxw) => wrap(text, font, size, clamp2(Math.sqrt(measure(text, font, size) * lh * aspect), minw, maxw));
+  const fitLines = (text3, font, size, lh, aspect, minw, maxw) => wrap(text3, font, size, clamp2(Math.sqrt(measure(text3, font, size) * lh * aspect), minw, maxw));
   for (const { slot: { panel: p, cell, page }, index: i, frame, faces, heads, bodies } of geoms) {
     const [x0, , x1, y1] = cell.bbox;
-    const fw = x1 - x0, fh = y1 - cell.bbox[1];
+    const fw = x1 - x0, fh2 = y1 - cell.bbox[1];
     const top = frame[1];
     const inPage = (r) => r[0] >= page[0] + 4 && r[1] >= page[1] + 4 && r[2] <= page[2] - 4 && r[3] <= page[3] - 4;
     const otherShare = (r) => allCells.reduce((sum, b, k) => sum + (k === i ? 0 : inter2(r, b)), 0) / area2(r);
     const bodyShare = (r) => bodies.reduce((sum, b) => sum + inter2(r, b), 0) / area2(r);
     if (p.id === ctx.titlePanel && ctx.title.trim()) {
-      const box = chapterBox(ctx.title, ts, Math.min(380 * ts, fw * 0.6), measure);
-      const { bw, bh } = box;
-      const m = 12 * ts;
-      const spot = ctx.phone ? [x0 + (fw - bw) / 2, cell.bbox[1] - bh - PHONE.gutter / 2, x0 + (fw + bw) / 2, cell.bbox[1] - PHONE.gutter / 2] : [[x1 - bw - m, top + m], [x0 + m, top + m], [x0 + m, y1 - bh - m], [x1 - bw - m, y1 - bh - m]].map(([x, yy]) => [x, yy, x + bw, yy + bh]).find((r) => inPage(r) && !faceBlocks.some((b) => inter2(r, b) > 0)) ?? [x1 - bw - m, top + m, x1 - m, top + m + bh];
+      const box2 = chapterBox(ctx.title, ts2, Math.min(380 * ts2, fw * 0.6), measure);
+      const { bw, bh: bh2 } = box2;
+      const m = 12 * ts2;
+      const spot = ctx.phone ? [x0 + (fw - bw) / 2, cell.bbox[1] - bh2 - PHONE.gutter / 2, x0 + (fw + bw) / 2, cell.bbox[1] - PHONE.gutter / 2] : [[x1 - bw - m, top + m], [x0 + m, top + m], [x0 + m, y1 - bh2 - m], [x1 - bw - m, y1 - bh2 - m]].map(([x, yy3]) => [x, yy3, x + bw, yy3 + bh2]).find((r) => inPage(r) && !faceBlocks.some((b) => inter2(r, b) > 0)) ?? [x1 - bw - m, top + m, x1 - m, top + m + bh2];
       textBlocks.push(pad2(spot, 4));
-      ctx.out.chapter = { panel: p.id, small: box.small, big: box.big, rect: spot, fontSize: box.size };
+      ctx.out.chapter = { panel: p.id, small: box2.small, big: box2.big, rect: spot, fontSize: box2.size };
     }
     const placeNarration = (t, k, taken) => {
-      const size = Math.round(TEXT.narration.size * ts), lh = Math.round(TEXT.narration.lh * ts);
-      const lines = fitLines(t.text, "narration", size, lh, 3.4, 60 * ts, Math.min(300 * ts, fw * 0.7));
+      const size = Math.round(TEXT.narration.size * ts2), lh = Math.round(TEXT.narration.lh * ts2);
+      const lines = fitLines(t.text, "narration", size, lh, 3.4, 60 * ts2, Math.min(300 * ts2, fw * 0.7));
       const tw = Math.max(...lines.map((l) => measure(l, "narration", size)));
-      const bw = tw + 36 * ts, bh = lines.length * lh + 24 * ts;
-      const corners = [[x1 - bw, top], [x0, top], [x0, y1 - bh], [x1 - bw, y1 - bh]];
-      const straddle = [[x1 - bw - 14 * ts, top - bh / 2], [x0 + 14 * ts, top - bh / 2], [x0 + 14 * ts, y1 - bh / 2], [x1 - bw - 14 * ts, y1 - bh / 2]];
+      const bw = tw + 36 * ts2, bh2 = lines.length * lh + 24 * ts2;
+      const corners = [[x1 - bw, top], [x0, top], [x0, y1 - bh2], [x1 - bw, y1 - bh2]];
+      const straddle = [[x1 - bw - 14 * ts2, top - bh2 / 2], [x0 + 14 * ts2, top - bh2 / 2], [x0 + 14 * ts2, y1 - bh2 / 2], [x1 - bw - 14 * ts2, y1 - bh2 / 2]];
       const free = (r) => inPage(r) && !faceBlocks.some((b) => inter2(r, b) > 0) && !onText(r, taken);
-      const rects = [...corners, ...straddle].map(([x, yy]) => [x, yy, x + bw, yy + bh]);
+      const rects = [...corners, ...straddle].map(([x, yy3]) => [x, yy3, x + bw, yy3 + bh2]);
       let rect = rects.slice(0, 4).find(free) ?? rects.slice(4).find((r) => free(r) && otherShare(r) < 0.05) ?? null;
       let fallback = null;
       if (!rect) {
@@ -66599,25 +67022,25 @@ function layoutPage(slots, images, ctx) {
     const balloonShape = (t, aspect) => {
       const whisper = t.type === "speech" && t.tone === "whisper";
       const shout = t.type === "speech" && !whisper && (t.tone === "shout" || isShout(t.text));
-      const size = Math.round(TEXT.speech.size * ts), lh = Math.round(TEXT.speech.lh * ts);
-      const lines = fitLines(t.text.toUpperCase(), "speech", size, lh, aspect, 90 * ts, Math.min(250 * ts, fw * 0.8));
-      const tw = Math.max(...lines.map((l) => measure(l, "speech", size))), th = lines.length * lh;
-      const rx = tw / 2 * 1.34 + 10 * ts, ry = th / 2 * 1.38 + 9 * ts;
+      const size = Math.round(TEXT.speech.size * ts2), lh = Math.round(TEXT.speech.lh * ts2);
+      const lines = fitLines(t.text.toUpperCase(), "speech", size, lh, aspect, 90 * ts2, Math.min(250 * ts2, fw * 0.8));
+      const tw = Math.max(...lines.map((l) => measure(l, "speech", size))), th3 = lines.length * lh;
+      const rx = tw / 2 * 1.34 + 10 * ts2, ry = th3 / 2 * 1.38 + 9 * ts2;
       const out = shout ? BURST_SPIKE : 1;
-      return { whisper, shout, size, lh, lines, tw, th, rx, ry, ex: rx * out, ey: ry * out };
+      return { whisper, shout, size, lh, lines, tw, th: th3, rx, ry, ex: rx * out, ey: ry * out };
     };
     const balloonSpots = (t, shape, later, taken, prevBalloons, bias, maxTier = tiers.length - 1) => {
-      const { ex, ey } = shape;
+      const { ex: ex2, ey } = shape;
       const head = t.speaker && faces[t.speaker] ? heads[t.speaker] : undefined;
       const spots = [];
-      for (const [ti, tier] of tiers.entries()) {
-        if (ti > maxTier)
+      for (const [ti2, tier] of tiers.entries()) {
+        if (ti2 > maxTier)
           break;
-        const ox = ex * 2 * tier.out, oy = ey * 2 * tier.out;
+        const ox = ex2 * 2 * tier.out, oy = ey * 2 * tier.out;
         for (let gx = 0;gx <= 14; gx++)
           for (let gy = 0;gy <= 14; gy++) {
-            const cx = x0 - ox + ex + (fw + 2 * ox - 2 * ex) * gx / 14, cy = top - oy + ey + (y1 - top + 2 * oy - 2 * ey) * gy / 14;
-            const r = [cx - ex, cy - ey, cx + ex, cy + ey];
+            const cx = x0 - ox + ex2 + (fw + 2 * ox - 2 * ex2) * gx / 14, cy4 = top - oy + ey + (y1 - top + 2 * oy - 2 * ey) * gy / 14;
+            const r = [cx - ex2, cy4 - ey, cx + ex2, cy4 + ey];
             if (!inPage(r))
               continue;
             const a = area2(r);
@@ -66630,17 +67053,17 @@ function layoutPage(slots, images, ctx) {
             const before = prevBalloons.some((q) => readBefore(r, q));
             if (before && tier.order)
               continue;
-            let sc = bodyShare(r) * 3 + (cy - top) / (y1 - top) * 1.2;
+            let sc = bodyShare(r) * 3 + (cy4 - top) / (y1 - top) * 1.2;
             if (head) {
-              sc += Math.hypot(cx - head[0], cy - head[1]) / Math.hypot(fw, fh) * 2.5;
-              if (cy > head[1] + ey * 0.6)
+              sc += Math.hypot(cx - head[0], cy4 - head[1]) / Math.hypot(fw, fh2) * 2.5;
+              if (cy4 > head[1] + ey * 0.6)
                 sc += 1.5;
             } else
               sc += (x1 - cx) / fw * 0.8;
             if (later > 0)
-              sc += ((cy - top) / (y1 - top) * 0.8 + (x1 - cx) / fw * 0.6) * (1 + 3 * bias);
+              sc += ((cy4 - top) / (y1 - top) * 0.8 + (x1 - cx) / fw * 0.6) * (1 + 3 * bias);
             sc += (1 - own) * 0.8 + other * 4 + (before ? 6 : 0);
-            spots.push({ r, s: sc, before, tier: ti });
+            spots.push({ r, s: sc, before, tier: ti2 });
           }
         if (spots.length)
           break;
@@ -66650,51 +67073,51 @@ function layoutPage(slots, images, ctx) {
     const placeBalloon = (t, k, next, later, taken, prevBalloons, bias, aspect) => {
       const shape = balloonShape(t, aspect);
       const spots = balloonSpots(t, shape, later, taken, prevBalloons, bias);
-      const { whisper, shout, size, lh, lines, tw, th, rx, ry, ex, ey } = shape;
+      const { whisper, shout, size, lh, lines, tw, th: th3, rx, ry, ex: ex2, ey } = shape;
       const nextShape = next ? balloonShape(next, aspect) : null;
       const fits = (sp) => !nextShape || balloonSpots(next, nextShape, later - 1, [...taken, pad2(sp.r, 4)], [...prevBalloons, sp.r], bias, ORDER_TIERS).length > 0;
       let best = spots.find((sp) => sp.tier === spots[0].tier && !sp.before && fits(sp)) ?? spots[0] ?? null;
       let fallback = null;
       if (!best) {
         fallback = "overlap";
-        let r = [x1 - 2 * ex - 6, top + 6, x1 - 6, top + 6 + 2 * ey];
+        let r3 = [x1 - 2 * ex2 - 6, top + 6, x1 - 6, top + 6 + 2 * ey];
         let least = Infinity;
         for (let gx = 0;gx <= 10; gx++)
           for (let gy = 0;gy <= 10; gy++) {
-            const cx = x0 + ex + (fw - 2 * ex) * gx / 10, cy = top + ey + (y1 - top - 2 * ey) * gy / 10;
-            const c = [cx - ex, cy - ey, cx + ex, cy + ey];
+            const cx2 = x0 + ex2 + (fw - 2 * ex2) * gx / 10, cy5 = top + ey + (y1 - top - 2 * ey) * gy / 10;
+            const c = [cx2 - ex2, cy5 - ey, cx2 + ex2, cy5 + ey];
             if (!inPage(c))
               continue;
             const inner = shrink(c, 0.9);
             const cost = faceBlocks.reduce((sum, b) => sum + inter2(inner, b), 0) * 10 + [...textBlocks, ...taken].reduce((sum, b) => sum + inter2(inner, b), 0);
             if (cost < least) {
               least = cost;
-              r = c;
+              r3 = c;
             }
           }
-        log.push(`p${p.id}: no free place for "${t.text.slice(0, 30)}"${onFace(r) ? ", placed on a face" : ", placed over other text"}`);
-        best = { r, s: 99, before: true, tier: tiers.length };
+        log.push(`p${p.id}: no free place for "${t.text.slice(0, 30)}"${onFace(r3) ? ", placed on a face" : ", placed over other text"}`);
+        best = { r: r3, s: 99, before: true, tier: tiers.length };
       } else if (best.tier > 0) {
         fallback = `tier ${best.tier + 1}`;
         log.push(`p${p.id}: "${t.text.slice(0, 24)}" placed with relaxed tier ${best.tier + 1}`);
       }
       const r = best.r;
-      const [cx, cy] = centre(r);
+      const [cx, cy4] = centre(r);
       const head = t.speaker && faces[t.speaker] ? heads[t.speaker] : undefined;
       let tail = null;
       if (head && t.speaker) {
         const f = faces[t.speaker];
         const aim = [head[0], head[1] + (f[3] - f[1]) * 0.25];
-        const ddx = aim[0] - cx, ddy = aim[1] - cy, dist = Math.hypot(ddx, ddy) || 1;
+        const ddx = aim[0] - cx, ddy = aim[1] - cy4, dist = Math.hypot(ddx, ddy) || 1;
         const edge = Math.hypot(rx * ddx / dist, ry * ddy / dist);
-        let L = Math.min(edge + 52 * ts, Math.max(edge + 14 * ts, dist - 30 * ts));
+        let L = Math.min(edge + 52 * ts2, Math.max(edge + 14 * ts2, dist - 30 * ts2));
         const inFace = (q) => {
-          const px = cx + ddx / dist * q, py = cy + ddy / dist * q;
+          const px = cx + ddx / dist * q, py = cy4 + ddy / dist * q;
           return px > f[0] - 4 && px < f[2] + 4 && py > f[1] - 4 && py < f[3] + 4;
         };
         while (L > edge + 6 && inFace(L))
           L -= 4;
-        tail = [cx + ddx / dist * L, cy + ddy / dist * L];
+        tail = [cx + ddx / dist * L, cy4 + ddy / dist * L];
       }
       const item = {
         kind: t.type,
@@ -66704,11 +67127,11 @@ function layoutPage(slots, images, ctx) {
         text: t.text,
         lines,
         cx,
-        cy,
+        cy: cy4,
         rx,
         ry,
         textW: tw,
-        textH: th,
+        textH: th3,
         tail,
         shout,
         rect: r,
@@ -66731,13 +67154,13 @@ function layoutPage(slots, images, ctx) {
         if (t.type === "sfx")
           continue;
         const next = texts.slice(j + 1).find((x) => x.t.type === "speech" || x.t.type === "thought")?.t;
-        const placed = t.type === "narration" ? { item: placeNarration(t, k, taken), violates: false } : placeBalloon(t, k, next, balloonsTotal - 1 - nth++, taken, balloons, bias, aspect);
-        if (placed.violates || placed.item.fallback === "overlap")
+        const placed2 = t.type === "narration" ? { item: placeNarration(t, k, taken), violates: false } : placeBalloon(t, k, next, balloonsTotal - 1 - nth++, taken, balloons, bias, aspect);
+        if (placed2.violates || placed2.item.fallback === "overlap")
           violations++;
-        if (placed.item.kind !== "narration")
-          balloons.push(placed.item.rect);
-        items.push(placed.item);
-        taken.push(pad2(placed.item.rect, 4));
+        if (placed2.item.kind !== "narration")
+          balloons.push(placed2.item.rect);
+        items.push(placed2.item);
+        taken.push(pad2(placed2.item.rect, 4));
       }
       return { items, violations };
     };
@@ -66759,13 +67182,13 @@ function layoutPage(slots, images, ctx) {
       if (t.type !== "sfx")
         continue;
       const size = Math.round(TEXT.sfx[cell.imp] * (p.beat === "action" ? 1.1 : 1) * ctx.sfxScale);
-      const text = t.text.toUpperCase();
-      const w = measure(text, "sfx", size) + 10, h = size + 10;
+      const text3 = t.text.toUpperCase();
+      const w = measure(text3, "sfx", size) + 10, h = size + 10;
       let best = null;
       for (let gx = 0;gx <= 10; gx++)
         for (let gy = 0;gy <= 10; gy++) {
-          const cx = x0 + w / 2 - w * 0.15 + (fw - w * 0.7) * gx / 10, cy = top + h / 2 - h * 0.3 + (y1 - top - h * 0.4) * gy / 10;
-          const r = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2];
+          const cx2 = x0 + w / 2 - w * 0.15 + (fw - w * 0.7) * gx / 10, cy5 = top + h / 2 - h * 0.3 + (y1 - top - h * 0.4) * gy / 10;
+          const r = [cx2 - w / 2, cy5 - h / 2, cx2 + w / 2, cy5 + h / 2];
           if (!inPage([r[0], r[1] - 0.08 * w, r[2], r[3] + 0.08 * w]))
             continue;
           const a = area2(r);
@@ -66773,7 +67196,7 @@ function layoutPage(slots, images, ctx) {
             continue;
           if (faceBlocks.some((b) => inter2(r, pad2(b, 0.3 * (b[2] - b[0]))) > 0) || textBlocks.some((b) => inter2(r, pad2(b, 2)) > 0))
             continue;
-          const sc = bodyShare(r) + (p.beat === "action" ? Math.abs((r[1] - top) / fh - 0.15) * 0.3 : 0);
+          const sc = bodyShare(r) + (p.beat === "action" ? Math.abs((r[1] - top) / fh2 - 0.15) * 0.3 : 0);
           if (!best || sc < best.s)
             best = { r, s: sc };
         }
@@ -66782,8 +67205,8 @@ function layoutPage(slots, images, ctx) {
         continue;
       }
       textBlocks.push(best.r);
-      const [cx, cy] = centre(best.r);
-      local.push({ kind: "sfx", panel: p.id, textIndex: k, text: t.text, cx, cy, size, rot: n++ % 2 ? 7 : -8, color: "#111", rect: best.r, breaksFrame: false });
+      const [cx, cy4] = centre(best.r);
+      local.push({ kind: "sfx", panel: p.id, textIndex: k, text: t.text, cx, cy: cy4, size, rot: n++ % 2 ? 7 : -8, color: "#111", rect: best.r, breaksFrame: false });
     }
     ctx.out.items.push(...local);
   }
@@ -66817,12 +67240,12 @@ function createStripDocument(input) {
     textOverrides: {}
   };
 }
-async function readStrip(storage, chatId, historyId) {
-  const raw = await storage.readJson(webtoonPath(chatId, historyId), null);
+async function readStrip(storage3, chatId, historyId) {
+  const raw = await storage3.readJson(webtoonPath(chatId, historyId), null);
   return raw && raw.schema === "inlay-illustrator.webtoon" && raw.version === 1 ? raw : null;
 }
-async function writeIndex(storage, doc, chatId, historyId) {
-  await storage.updateJson(indexPath(chatId), {}, (index) => {
+async function writeIndex(storage3, doc, chatId, historyId) {
+  await storage3.updateJson(indexPath(chatId), {}, (index) => {
     const next = { ...index };
     if (doc)
       next[historyId] = { revision: doc.revision, status: doc.status, ...doc.format === "manga" ? { format: "manga" } : {} };
@@ -66831,45 +67254,45 @@ async function writeIndex(storage, doc, chatId, historyId) {
     return next;
   });
 }
-async function updateStrip(storage, chatId, historyId, mutate, now = Date.now) {
-  const written = await storage.updateJson(webtoonPath(chatId, historyId), null, (current) => {
-    const valid = current && current.schema === "inlay-illustrator.webtoon" && current.version === 1 ? current : null;
+async function updateStrip(storage3, chatId, historyId, mutate, now = Date.now) {
+  const written = await storage3.updateJson(webtoonPath(chatId, historyId), null, (current2) => {
+    const valid = current2 && current2.schema === "inlay-illustrator.webtoon" && current2.version === 1 ? current2 : null;
     const next = mutate(valid ? structuredClone(valid) : null);
     return { ...next, revision: (valid?.revision ?? next.revision - 1) + 1, updatedAt: now() };
   });
-  await writeIndex(storage, written, chatId, historyId);
+  await writeIndex(storage3, written, chatId, historyId);
   return written;
 }
-async function deleteStrip(storage, chatId, historyId) {
-  await storage.delete(webtoonPath(chatId, historyId));
-  await writeIndex(storage, null, chatId, historyId);
+async function deleteStrip(storage3, chatId, historyId) {
+  await storage3.delete(webtoonPath(chatId, historyId));
+  await writeIndex(storage3, null, chatId, historyId);
 }
-async function stripSummaries(storage, chatId) {
-  return storage.readJson(indexPath(chatId), {});
+async function stripSummaries(storage3, chatId) {
+  return storage3.readJson(indexPath(chatId), {});
 }
-async function dropMessageStrips(storage, chatId, messageId, swipe) {
-  const affected = Object.keys(await stripSummaries(storage, chatId)).flatMap((historyId) => {
+async function dropMessageStrips(storage3, chatId, messageId, swipe) {
+  const affected = Object.keys(await stripSummaries(storage3, chatId)).flatMap((historyId) => {
     const parsed = parseHistoryMessageId(historyId);
     return parsed && parsed.messageId === messageId && (swipe === undefined || parsed.swipeIndex >= swipe) ? [{ historyId, index: parsed.swipeIndex }] : [];
   }).sort((a, b) => a.index - b.index);
   const revisions = new Map;
   for (const { historyId, index } of affected) {
-    const doc = await readStrip(storage, chatId, historyId);
+    const doc = await readStrip(storage3, chatId, historyId);
     revisions.set(index, doc?.revision ?? 0);
-    await deleteStrip(storage, chatId, historyId);
+    await deleteStrip(storage3, chatId, historyId);
     if (swipe === undefined || index === swipe || !doc)
       continue;
     const to = toHistoryMessageId(messageId, index - 1);
     const moved = { ...doc, historyId: to, messageKey: illustrationMessageKey(to), revision: Math.max(doc.revision, revisions.get(index - 1) ?? 0) + 1 };
-    await storage.writeJson(webtoonPath(chatId, to), moved);
-    await writeIndex(storage, moved, chatId, to);
+    await storage3.writeJson(webtoonPath(chatId, to), moved);
+    await writeIndex(storage3, moved, chatId, to);
   }
 }
-async function failInterruptedStrips(storage, chatId, error, running, now = Date.now) {
-  const stale = Object.entries(await stripSummaries(storage, chatId)).filter(([historyId, s]) => (s.status === "planning" || s.status === "generating") && !running(historyId)).map(([historyId]) => historyId);
+async function failInterruptedStrips(storage3, chatId, error, running, now = Date.now) {
+  const stale = Object.entries(await stripSummaries(storage3, chatId)).filter(([historyId, s2]) => (s2.status === "planning" || s2.status === "generating") && !running(historyId)).map(([historyId]) => historyId);
   for (const historyId of stale) {
-    await updateStrip(storage, chatId, historyId, (current) => {
-      const doc = current ?? createStripDocument({ chatId, messageKey: illustrationMessageKey(historyId), historyId, characterId: "", sourceLength: 0, now: now() });
+    await updateStrip(storage3, chatId, historyId, (current2) => {
+      const doc = current2 ?? createStripDocument({ chatId, messageKey: illustrationMessageKey(historyId), historyId, characterId: "", sourceLength: 0, now: now() });
       if (doc.status !== "planning" && doc.status !== "generating")
         return doc;
       doc.status = "error";
@@ -66906,8 +67329,8 @@ function relayout(doc, width = doc.format === "manga" ? MANGA_PAGE_WIDTH : STRIP
       continue;
     const panel = doc.panels[String(p.id)];
     const take = panel?.takes[panel.selected];
-    const [width, height] = p.size.split("x").map(Number);
-    images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width, height };
+    const [width2, height] = p.size.split("x").map(Number);
+    images[String(p.id)] = take?.width && take.height ? { width: take.width, height: take.height } : { width: width2, height };
     if (take?.cutout)
       images[String(p.id)].cutout = { src: take.cutout.url, bbox: take.cutout.bbox, mask: take.cutout.mask };
     if (take?.check && Object.keys(take.check.faces).length)
@@ -66939,7 +67362,7 @@ function takeOf(imageId, seed, width, height, createdAt) {
 var rec6 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str7 = (v) => typeof v === "string" ? v.trim() : "";
 var PARTS = ["head", "top", "bottom", "legs", "feet"];
-var fold2 = (s) => s.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ");
+var fold2 = (s2) => s2.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/gu, " ");
 var EXPLICIT = /genital|pubic|labia|vagin|vulva|penis|nipple|areola|breast|\bbust\b|\b[a-k][- ]?cup\b|\banus\b|clitor|testic|\bnude\b|naked|\bbra\b|panties|lingerie|underwear|\bnsfw\b|\bsex/iu;
 var APPEARANCE_HEADING = /^\s*(?:#{1,6}\s*|\[|<|\*\*)?\s*(?:appearance|looks?|physical(?: description| appearance| traits)?|visual(?: description)?|외모|외형|外見|外貌)\b/iu;
 var HEADING = /^\s*(?:#{1,6}\s+\S|\[[^\]]+\]\s*$|<\/?[\p{L}_ -]+>\s*$|\*\*[^*]+\*\*:?\s*$|[\p{L}][\p{L} &/-]{1,40}:\s*$)/u;
@@ -66971,7 +67394,7 @@ function appearanceText(description, vars) {
 var TAG = /^[\p{Ll}\p{Lo}0-9][\p{Ll}\p{Lo}0-9 ()'!.-]{0,39}$/u;
 var COUNT = /^(?:\d+\s*(?:girls?|boys?|others?)|solo|multiple (?:girls|boys))$/u;
 var GENDER_WORD = /^(?:female|male|girl|boy|woman|man|other)$/u;
-var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+var escapeRe = (s2) => s2.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 function cleanTags(value, names, max) {
   const banned = names.filter((n) => n.trim().length > 1).map((n) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(fold2(n))}(?![\\p{L}\\p{N}])`, "u"));
   const seen = new Set;
@@ -67032,7 +67455,7 @@ function resolveLooks(raw, roster, known) {
     if (r.designed) {
       let next = r;
       if (look && hasOutfit(look.outfit)) {
-        const id = `look_${Math.max(0, ...r.outfits.map((o) => Number(/^look_(\d+)$/u.exec(o.id)?.[1] ?? 0))) + 1}`;
+        const id = `look_${Math.max(0, ...r.outfits.map((o2) => Number(/^look_(\d+)$/u.exec(o2.id)?.[1] ?? 0))) + 1}`;
         next = { ...r, outfits: [...r.outfits, { id, label: look.outfitLabel || "outfit", outfit: look.outfit }], currentOutfitId: id };
         outfits[r.name] = id;
       }
@@ -67092,10 +67515,10 @@ function profileGroups(tags) {
   }
   return groups;
 }
-async function latestLooks(storage, chatId) {
+async function latestLooks(storage3, chatId) {
   const docs = [];
-  for (const historyId of Object.keys(await stripSummaries(storage, chatId))) {
-    const doc = await readStrip(storage, chatId, historyId);
+  for (const historyId of Object.keys(await stripSummaries(storage3, chatId))) {
+    const doc = await readStrip(storage3, chatId, historyId);
     if (doc?.cast.some((c) => c.look))
       docs.push(doc);
   }
@@ -67266,7 +67689,7 @@ var RELATION = /^(.*?)\s+(?:on|against|at|behind|beside|near|by|into|through|und
 var POSTURE = /^(?:sitting|standing|kneeling|lying|leaning|crouching|squatting|reclining)$/iu;
 function cutoutPose(poseTags, placeTags) {
   const place = placeTags.map((t) => t.toLowerCase()).filter((t) => t.length > 3);
-  const scene = (s) => SCENE_OBJECT.test(s) || place.some((p) => s.toLowerCase().includes(p));
+  const scene = (s2) => SCENE_OBJECT.test(s2) || place.some((p) => s2.toLowerCase().includes(p));
   return tags(poseTags).flatMap((t) => {
     if (CAMERA.test(t))
       return [t];
@@ -67278,10 +67701,10 @@ function cutoutPose(poseTags, placeTags) {
     return scene(t) ? [] : [t];
   }).join(", ");
 }
-var tags = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+var tags = (s2) => (s2 ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 var fmt = (n) => String(Math.round(n * 100) / 100);
-function outfitPrompt(outfit, framing, weights, shoesOff, drop = []) {
-  const w = framing === "hands only" ? HANDS_ONLY : Object.fromEntries(PARTS3.map((p) => [p, weights[p]?.[framing] ?? 1]));
+function outfitPrompt(outfit, framing, weights2, shoesOff, drop = []) {
+  const w = framing === "hands only" ? HANDS_ONLY : Object.fromEntries(PARTS3.map((p) => [p, weights2[p]?.[framing] ?? 1]));
   const dropped = new Set(drop.map((d) => d.toLowerCase()));
   const out = [];
   const keyTags = [];
@@ -67318,14 +67741,14 @@ var speciesName = (identity) => tags(identity).find((t) => SPECIES_NAME.test(t))
 var furryGenderTag = (gender) => gender === "female" ? "furry female" : gender === "male" ? "furry male" : "";
 function identityPrompt(member, boost = 0) {
   const furry = isFurry(member.identity);
-  const ts = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
-  const gender = ts.filter((t) => t === "female" || t === "male");
-  const named = ts.filter((t) => t.includes("\\(") || !gender.includes(t) && ts.indexOf(t) === gender.length && !SPECIES.test(t) && !HAIR.test(t) && t.includes(" ") && !/eyes|skin/u.test(t));
-  let species = ts.filter((t) => furry && SPECIES.test(t) && !named.includes(t));
+  const ts2 = tags(member.identity).filter((t) => !(furry && KEMONOMIMI_EARS.test(t)));
+  const gender = ts2.filter((t) => t === "female" || t === "male");
+  const named = ts2.filter((t) => t.includes("\\(") || !gender.includes(t) && ts2.indexOf(t) === gender.length && !SPECIES.test(t) && !HAIR.test(t) && t.includes(" ") && !/eyes|skin/u.test(t));
+  let species = ts2.filter((t) => furry && SPECIES.test(t) && !named.includes(t));
   if (furry)
     species = [...new Set([...["furry", "anthro", furryGenderTag(member.gender), speciesName(member.identity), "muzzle"].filter(Boolean), ...species])];
-  const hair = ts.filter((t) => HAIR.test(t) && !species.includes(t) && !named.includes(t));
-  const rest = ts.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
+  const hair = ts2.filter((t) => HAIR.test(t) && !species.includes(t) && !named.includes(t));
+  const rest = ts2.filter((t) => !gender.includes(t) && !named.includes(t) && !species.includes(t) && !hair.includes(t));
   const out = [...gender, ...named];
   if (species.length)
     out.push(`${fmt(ID_WEIGHT_FURRY + boost)}::${species.join(", ")}::`);
@@ -67351,9 +67774,9 @@ function splitPrompt(p) {
   const head = (i < 0 ? p : p.slice(0, i)).trim().replace(/^,+|,+$/gu, "").trim();
   return [head, i < 0 ? "" : p.slice(i + 1).trim()];
 }
-function dedupeTags(s) {
+function dedupeTags(s2) {
   const seen = new Set;
-  return tags(s).filter((t) => seen.has(t.toLowerCase()) ? false : (seen.add(t.toLowerCase()), true)).join(", ");
+  return tags(s2).filter((t) => seen.has(t.toLowerCase()) ? false : (seen.add(t.toLowerCase()), true)).join(", ");
 }
 function buildPanelRequest(panel, cast, style) {
   const chars = panel.nai.characters.filter((c) => cast.has(c.name));
@@ -67466,8 +67889,8 @@ The chat reply:
 >>>
 `;
 function mangaPagesHint(panels) {
-  const lo = Math.max(1, Math.ceil(panels / 6)), hi = Math.max(1, Math.ceil(panels / 4));
-  return lo === hi ? String(lo) : `${lo}-${hi}`;
+  const lo = Math.max(1, Math.ceil(panels / 6)), hi2 = Math.max(1, Math.ceil(panels / 4));
+  return lo === hi2 ? String(lo) : `${lo}-${hi2}`;
 }
 function buildMangaPlannerPrompt(args) {
   const range = webtoonPanelRange(args.panels);
@@ -67505,7 +67928,7 @@ function weightedRuns(prompt) {
   return runs;
 }
 function isMonochromeStyle(positive) {
-  return weightedRuns(positive).some(([text, weight]) => weight > 0 && text.split(/[,\n]/u).some((tag) => MONO.has(tag.replace(/[{}[\]()]/gu, "").trim().toLowerCase())));
+  return weightedRuns(positive).some(([text3, weight]) => weight > 0 && text3.split(/[,\n]/u).some((tag) => MONO.has(tag.replace(/[{}[\]()]/gu, "").trim().toLowerCase())));
 }
 var COLOUR = "red|orange|yellow|green|blue|purple|violet|pink|brown|grey|gray|silver|gold|golden|blonde|blond|platinum|teal|cyan|magenta|beige|navy|maroon|crimson|scarlet|amber|aqua|aquamarine|turquoise|lavender|lilac|indigo|khaki|olive|peach|emerald|ruby|sapphire|azure|multicolou?red|colou?rful|rainbow|two-tone";
 var COLOUR_WORD = new RegExp(`\\b(?:(?:light|dark|pale|bright|deep|pastel|neon|hot|baby|sky|dusty|vivid)[\\s-]+)?(?:${COLOUR})(?:[\\s-]*(?:colou?red|tinted|ish))?\\b`, "giu");
@@ -67562,7 +67985,7 @@ function monoCast(cast) {
   return new Map([...cast].map(([name, m]) => [name, {
     ...m,
     identity: stripColours(m.identity),
-    outfit: Object.fromEntries(Object.entries(m.outfit).map(([part, tags]) => [part, stripColours(tags ?? "")]))
+    outfit: Object.fromEntries(Object.entries(m.outfit).map(([part, tags2]) => [part, stripColours(tags2 ?? "")]))
   }]));
 }
 function monoPanel(panel) {
@@ -67648,12 +68071,12 @@ var STORYBOARD_JSON_SCHEMA = {
 
 // src/backend/webtoon/storyboard-validate.ts
 var LIMITS = { maxBalloons: 2, maxNarrImage: 2, maxNarrBeat: 3, maxWords: 12, repairRatio: 0.85, portraitShare: 0.6, maxFrameBreaks: 2 };
-function normWords(s) {
-  s = s.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
-  return (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
+function normWords(s2) {
+  s2 = s2.replace(/[\u2019\u2018]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2014\u2013]/g, " ").replace(/\u2026/g, " ... ").replace(/[*_]/g, "");
+  return (s2.toLowerCase().match(/[a-z0-9']+/g) ?? []).map((w) => w.replace(/^'+|'+$/g, "")).filter(Boolean);
 }
-function fragments(text) {
-  return text.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/).map((f) => f.trim()).filter((f) => normWords(f).length);
+function fragments(text3) {
+  return text3.split(/(?<=[.!?])\s+|\.\.\.|\u2026|\u2014|--/).map((f) => f.trim()).filter((f) => normWords(f).length);
 }
 function speechStream(para) {
   const segs = [];
@@ -67664,9 +68087,9 @@ function speechStream(para) {
 function buildQuoteIndex(source) {
   const paras = source.split(`
 `).filter((p) => p.trim());
-  const streams = paras.map(speechStream).filter((s) => s.trim());
+  const streams = paras.map(speechStream).filter((s2) => s2.trim());
   const texts = [...paras, ...streams];
-  return { texts, hay: [" " + normWords(source).join(" ") + " ", ...streams.map((s) => " " + normWords(s).join(" ") + " ")] };
+  return { texts, hay: [" " + normWords(source).join(" ") + " ", ...streams.map((s2) => " " + normWords(s2).join(" ") + " ")] };
 }
 function lcs(a, b) {
   const dp = new Array(b.length + 1).fill(0);
@@ -67684,30 +68107,30 @@ function repairFragment(frag, idx) {
   const tw = normWords(frag);
   const n = tw.length;
   let best = [0, null];
-  for (const text of idx.texts) {
-    const toks = [...text.matchAll(/[A-Za-z0-9'\u2019]+/g)].map((m) => ({ w: m[0].replace(/^['\u2019]+|['\u2019]+$/g, "").toLowerCase().replace(/\u2019/g, "'"), a: m.index, b: m.index + m[0].length })).filter((t) => t.w);
+  for (const text3 of idx.texts) {
+    const toks = [...text3.matchAll(/[A-Za-z0-9'\u2019]+/g)].map((m) => ({ w: m[0].replace(/^['\u2019]+|['\u2019]+$/g, "").toLowerCase().replace(/\u2019/g, "'"), a: m.index, b: m.index + m[0].length })).filter((t) => t.w);
     for (const L of new Set([Math.max(1, n - 1), n, n + 1])) {
       for (let i = 0;i + L <= toks.length; i++) {
         const win = toks.slice(i, i + L);
         const r = 2 * lcs(tw, win.map((t) => t.w)) / (n + L);
         if (r > best[0])
-          best = [r, text.slice(win[0].a, win[L - 1].b)];
+          best = [r, text3.slice(win[0].a, win[L - 1].b)];
       }
     }
   }
   return best;
 }
-function checkQuote(text, idx) {
+function checkQuote(text3, idx) {
   const keep = [];
   const notes = [];
-  for (const f of fragments(text)) {
+  for (const f of fragments(text3)) {
     const w = " " + normWords(f).join(" ") + " ";
-    const hit = idx.hay.findIndex((h) => h.includes(w));
-    if (hit === 0) {
+    const hit2 = idx.hay.findIndex((h) => h.includes(w));
+    if (hit2 === 0) {
       keep.push(f);
       continue;
     }
-    if (hit > 0) {
+    if (hit2 > 0) {
       keep.push(f);
       notes.push({ kind: "joined", fragment: f, replacement: null, ratio: 1 });
       continue;
@@ -67720,7 +68143,7 @@ function checkQuote(text, idx) {
     } else
       notes.push({ kind: "dropped", fragment: f, replacement: null, ratio: r });
   }
-  return { text: keep.length ? keep.join(text.includes("...") || text.includes("…") ? "... " : " ").replace(/([.!?])\.\.\. /g, "$1 ") : null, notes };
+  return { text: keep.length ? keep.join(text3.includes("...") || text3.includes("…") ? "... " : " ").replace(/([.!?])\.\.\. /g, "$1 ") : null, notes };
 }
 function splitLong(t) {
   const words = t.split(/\s+/);
@@ -67753,8 +68176,8 @@ function hardOk(raw, images) {
 function outfitItems(r) {
   return Object.values(r.outfit).flatMap((v) => (v ?? "").split(",").map((t) => t.trim()).filter(Boolean));
 }
-function checkedQuote(panelId, text, idx, log, stats) {
-  const q = checkQuote(text, idx);
+function checkedQuote(panelId, text3, idx, log, stats) {
+  const q = checkQuote(text3, idx);
   for (const nt of q.notes) {
     if (nt.kind === "repaired") {
       stats.quote_repaired++;
@@ -67782,15 +68205,15 @@ function validateCharacters(p, byName, log, stats) {
     c.y = snap(c.y);
     if (!FRAMINGS.includes(c.framing))
       c.framing = "upper body";
-    const items = outfitItems(r);
+    const items2 = outfitItems(r);
     const drops = [];
     for (const d of c.drop_outfit ?? []) {
       const dl = String(d).toLowerCase().trim();
-      const hit = items.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
-      if (hit.length === 1) {
-        drops.push(hit[0]);
-        stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit[0]}`);
-        log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit[0]}"`);
+      const hit2 = items2.filter((it) => it.toLowerCase() === dl || it.toLowerCase().includes(dl) || dl.includes(it.toLowerCase()) && it.length > 3);
+      if (hit2.length === 1) {
+        drops.push(hit2[0]);
+        stats.outfit_dropped.push(`p${p.id} ${c.name}: ${hit2[0]}`);
+        log.push(`p${p.id}: ${c.name} outfit item dropped for the scene: "${hit2[0]}"`);
       } else
         log.push(`p${p.id}: ${c.name} drop_outfit "${d}" ignored (not one item of the outfit)`);
     }
@@ -67825,7 +68248,7 @@ function validateStoryboard(raw, roster, source) {
   };
   const byName = new Map(roster.map((r) => [r.name, r]));
   const idx = buildQuoteIndex(source);
-  const sb = { title: String(raw.title ?? ""), key_props: raw.key_props ?? [], panels: [] };
+  const sb2 = { title: String(raw.title ?? ""), key_props: raw.key_props ?? [], panels: [] };
   const panels = (raw.panels ?? []).filter((p) => p && typeof p === "object");
   for (const p of panels) {
     const out = [];
@@ -67838,10 +68261,10 @@ function validateStoryboard(raw, roster, source) {
       const a = String(t.anchor);
       t.anchor = a === "gutter-above" ? "over-top-edge" : a === "gutter-below" ? "over-bottom-edge" : ANCHORS.includes(a) ? a : t.type === "narration" ? "top-left" : "top";
       if (t.type === "speech" || t.type === "thought") {
-        const text = checkedQuote(p.id, t.text, idx, log, stats);
-        if (!text)
+        const text3 = checkedQuote(p.id, t.text, idx, log, stats);
+        if (!text3)
           continue;
-        t.text = text;
+        t.text = text3;
         const parts = splitLong(t.text);
         if (parts.length > 1) {
           stats.split++;
@@ -67870,17 +68293,17 @@ function validateStoryboard(raw, roster, source) {
     }
     const next = panels.slice(i + 1).find((q) => q.kind === "image");
     const prev = [...kept].reverse().find((q) => q.kind === "image");
-    const items = p.text;
-    const room = (q) => q && narrCount(q) + items.filter((t) => t.type === "narration").length <= LIMITS.maxNarrImage;
+    const items2 = p.text;
+    const room = (q) => q && narrCount(q) + items2.filter((t) => t.type === "narration").length <= LIMITS.maxNarrImage;
     if (room(next)) {
-      next.text = [...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "top-right" : "top-left" : t.anchor })), ...next.text];
+      next.text = [...items2.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "top-right" : "top-left" : t.anchor })), ...next.text];
       if (p.scene_change)
         next.scene_change = true;
-      stats.narration_merged += items.length;
+      stats.narration_merged += items2.length;
       log.push(`p${p.id}: text beat merged into the top of p${next.id}`);
     } else if (room(prev)) {
-      prev.text = [...prev.text, ...items.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "bottom-left" : "bottom-right" : t.anchor }))];
-      stats.narration_merged += items.length;
+      prev.text = [...prev.text, ...items2.map((t, k) => ({ ...t, anchor: t.type === "narration" ? k % 2 ? "bottom-left" : "bottom-right" : t.anchor }))];
+      stats.narration_merged += items2.length;
       log.push(`p${p.id}: text beat merged into the bottom of p${prev.id}`);
     } else if (!pauseKept) {
       pauseKept = true;
@@ -67888,7 +68311,7 @@ function validateStoryboard(raw, roster, source) {
       kept.push(p);
       log.push(`p${p.id}: text beat kept as the pause (no room to merge)`);
     } else {
-      stats.balloons_dropped += items.length;
+      stats.balloons_dropped += items2.length;
       log.push(`p${p.id}: text beat dropped (no room)`);
     }
   });
@@ -67938,19 +68361,19 @@ function validateStoryboard(raw, roster, source) {
       log.push(`p${p.id}: 1472x704 with characters outside a band -> 1216x832`);
     }
     const out = [];
-    let nb = 0, nn = 0;
+    let nb2 = 0, nn2 = 0;
     for (const t of p.text) {
       if (t.type === "speech" || t.type === "thought") {
-        if (++nb > LIMITS.maxBalloons) {
+        if (++nb2 > LIMITS.maxBalloons) {
           stats.balloons_dropped++;
-          log.push(`p${p.id}: dropped balloon #${nb} "${t.text}"`);
+          log.push(`p${p.id}: dropped balloon #${nb2} "${t.text}"`);
           continue;
         }
       }
       if (t.type === "narration") {
-        if (++nn > LIMITS.maxNarrImage) {
+        if (++nn2 > LIMITS.maxNarrImage) {
           stats.balloons_dropped++;
-          log.push(`p${p.id}: dropped narration #${nn}`);
+          log.push(`p${p.id}: dropped narration #${nn2}`);
           continue;
         }
       }
@@ -68018,7 +68441,7 @@ function validateStoryboard(raw, roster, source) {
       c.y = 0.5;
     }
   }
-  const props = sb.key_props ?? [];
+  const props = sb2.key_props ?? [];
   const inserts = imgs.filter((p) => p.beat === "insert").map((p) => `${p.moment ?? ""} ${p.shot ?? ""} ${p.nai.base}`.toLowerCase()).join(" ");
   Object.assign(stats, {
     props_without_insert: props.filter((pr) => !normWords(pr).some((w) => w.length > 3 && inserts.includes(w))).length,
@@ -68033,8 +68456,8 @@ function validateStoryboard(raw, roster, source) {
     sfx: kept.reduce((n, p) => n + p.text.filter((t) => t.type === "sfx").length, 0),
     max_words: Math.max(0, ...kept.flatMap((p) => p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => t.text.split(/\s+/).length)))
   });
-  sb.panels = kept;
-  return { storyboard: sb, log, stats };
+  sb2.panels = kept;
+  return { storyboard: sb2, log, stats };
 }
 
 // src/backend/webtoon/manga-validate.ts
@@ -68051,15 +68474,15 @@ function mangaHardOk(raw, range) {
     return false;
   }
 }
-var wordCount = (s) => s.split(/\s+/u).filter(Boolean).length;
-function splitBalloon(text) {
-  if (wordCount(text) <= MANGA_LIMITS.words)
-    return [text];
-  let parts = text.split(/(?<=[.!?\u2026])\s+/u);
+var wordCount = (s2) => s2.split(/\s+/u).filter(Boolean).length;
+function splitBalloon(text3) {
+  if (wordCount(text3) <= MANGA_LIMITS.words)
+    return [text3];
+  let parts = text3.split(/(?<=[.!?\u2026])\s+/u);
   if (parts.length < 2)
-    parts = text.split(/(?<=,|\.\.\.)\s+/u);
+    parts = text3.split(/(?<=,|\.\.\.)\s+/u);
   if (parts.length < 2)
-    return [text];
+    return [text3];
   const chunks = [];
   for (const part of parts) {
     const last = chunks.at(-1);
@@ -68072,10 +68495,10 @@ function splitBalloon(text) {
     chunks.splice(-2, 2, `${chunks.at(-2)} ${chunks.at(-1)}`);
   return chunks.length > 3 ? [...chunks.slice(0, 2), chunks.slice(2).join(" ")] : chunks;
 }
-function falseJoin(text, source) {
-  const frags = fragments(text);
+function falseJoin(text3, source) {
+  const frags = fragments(text3);
   if (frags.length < 2)
-    return { text, dropped: [] };
+    return { text: text3, dropped: [] };
   const hay = normWords(source);
   const find = (words, from) => {
     for (let i = from;i + words.length <= hay.length; i++)
@@ -68091,14 +68514,14 @@ function falseJoin(text, source) {
     const at = find(words, Math.max(0, end));
     if (end >= 0 && (at < 0 || at - end > MANGA_LIMITS.joinGapWords)) {
       if (at < 0 && find(words, 0) < 0)
-        return { text, dropped: [] };
+        return { text: text3, dropped: [] };
       const kept = frags.slice(0, k).join(" ");
       return { text: kept, dropped: frags.slice(k) };
     }
     if (at >= 0)
       end = at + words.length;
   }
-  return { text, dropped: [] };
+  return { text: text3, dropped: [] };
 }
 function cleanTags2(line, panelId, who, log) {
   const [tagLine, ...rest] = line.split(`
@@ -68148,21 +68571,21 @@ function validateMangaStoryboard(raw, roster, source) {
         continue;
       const t = { type: t0.type, speaker: typeof t0.speaker === "string" ? t0.speaker : null, text: String(t0.text).trim(), anchor: "top" };
       if (t.type === "speech" || t.type === "thought") {
-        let text = checkedQuote(id, t.text, idx, log, stats);
-        if (!text)
+        let text3 = checkedQuote(id, t.text, idx, log, stats);
+        if (!text3)
           continue;
-        const joined = falseJoin(text, source);
+        const joined = falseJoin(text3, source);
         if (joined.dropped.length) {
           stats.false_joins++;
           log.push(`p${id}: dropped "${joined.dropped.join(" ")}" (a different line joined into one balloon)`);
-          text = joined.text;
+          text3 = joined.text;
         }
         if (t.type === "speech" && (t0.tone === "shout" || t0.tone === "whisper"))
           t.tone = t0.tone;
-        const parts = splitBalloon(text);
+        const parts = splitBalloon(text3);
         if (parts.length > 1) {
           stats.split++;
-          log.push(`p${id}: split ${wordCount(text)}-word balloon into ${parts.length}`);
+          log.push(`p${id}: split ${wordCount(text3)}-word balloon into ${parts.length}`);
         }
         for (const part of parts)
           out.push({ ...t, text: part });
@@ -68238,7 +68661,7 @@ function validateMangaStoryboard(raw, roster, source) {
       c.y = 0.5;
     }
   }
-  const sb = { title: String(raw.title ?? ""), key_props: Array.isArray(raw.key_props) ? raw.key_props : [], panels, pages: plan.pages };
+  const sb2 = { title: String(raw.title ?? ""), key_props: Array.isArray(raw.key_props) ? raw.key_props : [], panels, pages: plan.pages };
   Object.assign(stats, {
     image_panels: panels.length,
     pages: plan.pages.map((p) => p.template),
@@ -68250,16 +68673,16 @@ function validateMangaStoryboard(raw, roster, source) {
     sfx: panels.reduce((n, p) => n + p.text.filter((t) => t.type === "sfx").length, 0),
     max_words: Math.max(0, ...panels.flatMap((p) => p.text.filter((t) => t.type === "speech" || t.type === "thought").map((t) => wordCount(t.text))))
   });
-  return { storyboard: sb, log, stats };
+  return { storyboard: sb2, log, stats };
 }
 
 // src/backend/webtoon/roster.ts
 var rec7 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var str9 = (v) => v == null ? "" : String(v).trim();
 var PARTS4 = ["head", "top", "bottom", "legs", "feet"];
-var escapeRe2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-function mentions(text, names) {
-  return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe2(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text));
+var escapeRe2 = (s2) => s2.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+function mentions(text3, names) {
+  return names.some((n) => n.trim().length > 1 && new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe2(n.trim())}(?![\\p{L}\\p{N}])`, "iu").test(text3));
 }
 function rosterEntry(candidate, currentOutfitId) {
   const forms = candidate.appearanceForms ?? [];
@@ -68269,7 +68692,7 @@ function rosterEntry(candidate, currentOutfitId) {
   const gender = str9(form.gender) || str9(candidate.gender);
   const outfits = (form.outfits ?? []).map((o) => ({ ...rec7(o), id: str9(rec7(o).outfitId ?? rec7(o).id), label: str9(o.label) })).filter((o) => o.id && PARTS4.some((p) => str9(o[p])));
   const ids = outfits.map((o) => o.id);
-  const current = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str9(form.defaultOutfitId)) ? str9(form.defaultOutfitId) : ids[0] ?? "";
+  const current2 = currentOutfitId && ids.includes(currentOutfitId) ? currentOutfitId : ids.includes(str9(form.defaultOutfitId)) ? str9(form.defaultOutfitId) : ids[0] ?? "";
   const main = compileMainPrompt(form.basePromptGroups, gender);
   return {
     key: candidate.key,
@@ -68277,7 +68700,7 @@ function rosterEntry(candidate, currentOutfitId) {
     gender,
     formLabel: str9(form.label),
     outfits: outfits.map((o) => ({ id: o.id, label: o.label, outfit: Object.fromEntries(PARTS4.flatMap((p) => str9(o[p]) ? [[p, str9(o[p])]] : [])) })),
-    currentOutfitId: current,
+    currentOutfitId: current2,
     identity: [gender === "female" || gender === "male" ? gender : "", main].filter(Boolean).join(", ")
   };
 }
@@ -68303,7 +68726,7 @@ function personaRecord2(p) {
   return { key: p.personaId, id: p.personaId, name: p.name, ...p.avatarImageId ? { imageAsset: { key: p.avatarImageId, name: p.name, sourceType: "persona" } } : {} };
 }
 async function loadWebtoonContext(services, input) {
-  const { config } = input;
+  const { config: config2 } = input;
   const view = input.messages[input.target];
   const primaryId = await speakingCharacterId(services, input.chat, view);
   const memberIds = [...new Set([primaryId, ...input.chat.groupCharacterIds].filter(Boolean))];
@@ -68314,19 +68737,19 @@ async function loadWebtoonContext(services, input) {
   for (const id of memberIds)
     sources.push(await services.sources.buildSource(id, docs.get(id), { chatId: input.chatId }));
   const seen = new Set;
-  const source = { ...sources[0], members: sources.flatMap((s) => s.members).filter((m) => seen.has(m.key) ? false : (seen.add(m.key), true)) };
+  const source = { ...sources[0], members: sources.flatMap((s2) => s2.members).filter((m) => seen.has(m.key) ? false : (seen.add(m.key), true)) };
   const custom = [...docs.values()].flatMap((d) => d.customCharacters);
   const target = await services.images.resolveTarget();
-  const runtime = buildRuntimeConfig(config, docs.get(primaryId) ?? null, { resolvedImageModel: target.model });
-  const cp = rec7(runtime.characterPrompt);
+  const runtime2 = buildRuntimeConfig(config2, docs.get(primaryId) ?? null, { resolvedImageModel: target.model });
+  const cp = rec7(runtime2.characterPrompt);
   const forms = { ...rec7(cp.characterForms) };
   for (const id of memberIds.slice(1))
     for (const [k, v] of Object.entries(rec7(rec7(docs.get(id)?.characterPrompt).characterForms)))
       if (!(k in forms))
         forms[k] = v;
-  runtime.characterPrompt = { ...cp, characterForms: forms };
-  const amConfig = runtime;
-  const character = await services.sources.getCharacter(primaryId);
+  runtime2.characterPrompt = { ...cp, characterForms: forms };
+  const amConfig = runtime2;
+  const character2 = await services.sources.getCharacter(primaryId);
   const personas = await services.sources.listPersonas();
   const active = await services.sources.getActivePersona(input.chatId);
   const chatKey = chatKeyForChat(input.chatId);
@@ -68344,7 +68767,7 @@ async function loadWebtoonContext(services, input) {
     messages: requestMessages,
     content: input.source,
     imageTokens: [],
-    character: { name: character.name, description: character.description },
+    character: { name: character2.name, description: character2.description },
     source: withCustomCharacterMembers(source, custom),
     activePersona: active ? personaRecord2(active) : null,
     personaRecords: personas.map(personaRecord2)
@@ -68354,7 +68777,7 @@ async function loadWebtoonContext(services, input) {
     if (ref?.lorebook_prompt_key && ref.outfit_id)
       previous.set(ref.lorebook_prompt_key, ref.outfit_id);
   const candidates = [...ft.analyzerIdentityCandidates, ...ft.analyzerPersonaCandidates];
-  const personaProfiles = rec7(config.characterPrompt.personaSettings.profiles);
+  const personaProfiles = rec7(config2.characterPrompt.personaSettings.profiles);
   const all = candidates.flatMap((c) => {
     if (c.key.startsWith(PERSONA_PROMPT_KEY_PREFIX) && !personaProfiles[c.key.slice(PERSONA_PROMPT_KEY_PREFIX.length)])
       return [];
@@ -68362,13 +68785,13 @@ async function loadWebtoonContext(services, input) {
     return entry && entry.name ? [{ entry, names: [c.characterName, ...c.aliases ?? []] }] : [];
   });
   const looks = await latestLooks(services.storage, input.chatId);
-  const analysedFor = (key, names) => {
-    const folded = new Set(names.map(fold2).filter(Boolean));
+  const analysedFor = (key, names2) => {
+    const folded = new Set(names2.map(fold2).filter(Boolean));
     return all.find((a) => a.entry.key === key || a.entry.key.startsWith(`${key}::lore::asset-maid:charx-description`) || a.names.some((n) => folded.has(fold2(n))));
   };
   const people = [];
   for (const id of memberIds) {
-    const info = id === primaryId ? character : await services.sources.getCharacter(id);
+    const info = id === primaryId ? character2 : await services.sources.getCharacter(id);
     people.push({ key: id, names: [info.name], description: info.description });
   }
   for (const c of custom)
@@ -68405,7 +68828,7 @@ async function loadWebtoonContext(services, input) {
     roster.unshift(primary);
   const names = new Set;
   roster = roster.filter((r) => names.has(fold2(r.name)) ? false : (names.add(fold2(r.name)), true));
-  const profile = str9(rec7(runtime.novelai).analysisProfile);
+  const profile = str9(rec7(runtime2.novelai).analysisProfile);
   const free = profile === "v5-hybrid" && resolveSourceGenerationSettings2(amConfig, primaryId).freeCharacterGenerationEnabled;
   const knownIdentities = free ? buildKnownIdentities(withCustomCharacterMembers(source, custom, "all"), personas.map(personaRecord2)) : null;
   const prompts = ft.promptInputs({ actors: {} });
@@ -68446,8 +68869,8 @@ var FRAME_BREAK = {
   fillRadius: 4
 };
 var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
-async function zlib(data, mode) {
-  const transform = mode === "compress" ? new CompressionStream("deflate") : new DecompressionStream("deflate");
+async function zlib(data, mode2) {
+  const transform = mode2 === "compress" ? new CompressionStream("deflate") : new DecompressionStream("deflate");
   const stream = new Blob([data]).stream().pipeThrough(transform);
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
@@ -68515,8 +68938,8 @@ async function decodePng(bytes) {
       else if (filter === 3)
         v += a + b >> 1;
       else if (filter === 4) {
-        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
-        v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc3 = Math.abs(p - c);
+        v += pa <= pb && pa <= pc3 ? a : pb <= pc3 ? b : c;
       }
       rows[out + x] = v & 255;
     }
@@ -68603,12 +69026,12 @@ function keepMainParts(image) {
       size += 1;
       const x = i % width, y = (i - x) / width;
       for (let dy = -1;dy <= 1; dy += 1) {
-        const yy = y + dy;
-        if (yy < 0 || yy >= height)
+        const yy3 = y + dy;
+        if (yy3 < 0 || yy3 >= height)
           continue;
         for (let dx = -1;dx <= 1; dx += 1) {
-          const xx = x + dx, j = yy * width + xx;
-          if (xx < 0 || xx >= width || label[j] || data[j * 4 + 3] <= 32)
+          const xx4 = x + dx, j = yy3 * width + xx4;
+          if (xx4 < 0 || xx4 >= width || label[j] || data[j * 4 + 3] <= 32)
             continue;
           label[j] = id;
           stack[top++] = j;
@@ -68618,7 +69041,7 @@ function keepMainParts(image) {
     sizes.push(size);
   }
   const largest = Math.max(0, ...sizes);
-  if (sizes.every((s) => s === largest || s >= FRAME_BREAK.minPart * largest))
+  if (sizes.every((s2) => s2 === largest || s2 >= FRAME_BREAK.minPart * largest))
     return image;
   const out = new Uint8Array(data);
   for (let i = 0;i < n; i += 1)
@@ -68674,18 +69097,18 @@ function headShift(info, height) {
 function backgroundMask(image, block = FRAME_BREAK.maskBlock) {
   const { width, height, data } = image;
   const mask = new Uint8Array(width * height);
-  for (let by = 0;by < height; by += block) {
+  for (let by3 = 0;by3 < height; by3 += block) {
     for (let bx = 0;bx < width; bx += block) {
-      const ys = Math.min(height, by + block), xs = Math.min(width, bx + block);
+      const ys = Math.min(height, by3 + block), xs = Math.min(width, bx + block);
       let any = false;
-      for (let y = by;y < ys && !any; y += 1)
+      for (let y = by3;y < ys && !any; y += 1)
         for (let x = bx;x < xs; x += 1)
           if (data[(y * width + x) * 4 + 3] < FRAME_BREAK.maskAlpha) {
             any = true;
             break;
           }
       if (any)
-        for (let y = by;y < ys; y += 1)
+        for (let y = by3;y < ys; y += 1)
           mask.fill(1, y * width + bx, y * width + xs);
     }
   }
@@ -68702,8 +69125,8 @@ function maskImage(mask, width, height) {
 function softFill(image) {
   const { width, height, data } = image;
   const b = FRAME_BREAK.fillBlock;
-  const bw = Math.ceil(width / b), bh = Math.ceil(height / b);
-  let sums = [new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh), new Float64Array(bw * bh)];
+  const bw = Math.ceil(width / b), bh2 = Math.ceil(height / b);
+  let sums = [new Float64Array(bw * bh2), new Float64Array(bw * bh2), new Float64Array(bw * bh2), new Float64Array(bw * bh2)];
   const total = [0, 0, 0, 0];
   for (let y = 0;y < height; y += 1) {
     for (let x = 0;x < width; x += 1) {
@@ -68718,34 +69141,34 @@ function softFill(image) {
   }
   const r = FRAME_BREAK.fillRadius;
   const blur = (src, horizontal) => {
-    const out = new Float64Array(src.length);
-    const [lines, len] = horizontal ? [bh, bw] : [bw, bh];
+    const out2 = new Float64Array(src.length);
+    const [lines, len] = horizontal ? [bh2, bw] : [bw, bh2];
     for (let l = 0;l < lines; l += 1) {
       const at = (i) => horizontal ? l * bw + i : i * bw + l;
       for (let i = 0;i < len; i += 1) {
-        let s = 0;
+        let s2 = 0;
         for (let k = Math.max(0, i - r);k <= Math.min(len - 1, i + r); k += 1)
-          s += src[at(k)];
-        out[at(i)] = s;
+          s2 += src[at(k)];
+        out2[at(i)] = s2;
       }
     }
-    return out;
+    return out2;
   };
   for (let pass = 0;pass < 3; pass += 1)
-    sums = sums.map((s) => blur(blur(s, true), false));
+    sums = sums.map((s2) => blur(blur(s2, true), false));
   const mean = total[3] > 0 ? [0, 1, 2].map((c) => total[c] / total[3]) : [128, 128, 128];
   const peak = Math.max(...sums[3]);
   const colour = (cell, c) => sums[3][cell] > peak * 0.001 ? sums[c][cell] / sums[3][cell] : mean[c];
   const out = new Uint8Array(data.length);
   for (let y = 0;y < height; y += 1) {
-    const fy = Math.min(bh - 1, Math.max(0, (y + 0.5) / b - 0.5)), y0 = Math.floor(fy), y1 = Math.min(bh - 1, y0 + 1), ty = fy - y0;
+    const fy = Math.min(bh2 - 1, Math.max(0, (y + 0.5) / b - 0.5)), y0 = Math.floor(fy), y1 = Math.min(bh2 - 1, y0 + 1), ty2 = fy - y0;
     for (let x = 0;x < width; x += 1) {
       const fx = Math.min(bw - 1, Math.max(0, (x + 0.5) / b - 0.5)), x0 = Math.floor(fx), x1 = Math.min(bw - 1, x0 + 1), tx = fx - x0;
       const i = (y * width + x) * 4, a = data[i + 3] / 255;
       for (let c = 0;c < 3; c += 1) {
         const top = colour(y0 * bw + x0, c) * (1 - tx) + colour(y0 * bw + x1, c) * tx;
         const bottom = colour(y1 * bw + x0, c) * (1 - tx) + colour(y1 * bw + x1, c) * tx;
-        out[i + c] = Math.round(data[i + c] * a + (top * (1 - ty) + bottom * ty) * (1 - a));
+        out[i + c] = Math.round(data[i + c] * a + (top * (1 - ty2) + bottom * ty2) * (1 - a));
       }
       out[i + 3] = 255;
     }
@@ -68770,15 +69193,15 @@ function characterGrid(image) {
   const out = [];
   for (let r = 0;r < rows; r += 1) {
     let line = "";
-    const ya = Math.floor(r * height / rows), yb = Math.floor((r + 1) * height / rows);
+    const ya = Math.floor(r * height / rows), yb2 = Math.floor((r + 1) * height / rows);
     for (let c = 0;c < cols; c += 1) {
       const xa = Math.floor(c * width / cols), xb = Math.floor((c + 1) * width / cols);
       let solid = 0;
-      for (let y = ya;y < yb; y += 1)
+      for (let y = ya;y < yb2; y += 1)
         for (let x = xa;x < xb; x += 1)
           if (data[(y * width + x) * 4 + 3] > FRAME_BREAK.solidAlpha)
             solid += 1;
-      line += solid >= FRAME_BREAK.gridFill * Math.max(1, (yb - ya) * (xb - xa)) ? "1" : "0";
+      line += solid >= FRAME_BREAK.gridFill * Math.max(1, (yb2 - ya) * (xb - xa)) ? "1" : "0";
     }
     out.push(line);
   }
@@ -68789,11 +69212,11 @@ async function frameBreakInputs(generated) {
   const first = alphaInfo(transparent);
   if (first.transparent < FRAME_BREAK.minTransparent || !first.bbox)
     throw new Error(`The cut-out has no transparent background (${Math.round(first.transparent * 100)}% clear).`);
-  const shift = headShift(first, transparent.height);
-  const cutout = shift ? shiftDown(transparent, shift) : transparent;
+  const shift2 = headShift(first, transparent.height);
+  const cutout = shift2 ? shiftDown(transparent, shift2) : transparent;
   const mask = maskImage(backgroundMask(cutout), cutout.width, cutout.height);
   const display = cropToHead(cutout, alphaInfo(cutout).bbox);
-  return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift, info: alphaInfo(display) };
+  return { cutout, display, source: await encodePng(softFill(cutout)), mask: await encodePng(mask), shift: shift2, info: alphaInfo(display) };
 }
 
 // src/backend/webtoon/vision.ts
@@ -68807,15 +69230,15 @@ var ID_BOOST = 0.25;
 var NO_FACE = new Set(["hands only", "lower body"]);
 var ASSET = "panel";
 var JEV_MAX_SIDE = 1568;
-async function visionConnection(services, config) {
+async function visionConnection(services, config2) {
   if (!((services.host.host?.capabilities?.[VISION_CAPABILITY] ?? 0) >= 1))
     return null;
   const list = await services.decisions.listConnections();
-  const chosen = config.jevConnection.connectionId;
+  const chosen = config2.jevConnection.connectionId;
   const candidates = [chosen ? list.find((c) => c.id === chosen) : undefined, list.find((c) => c.isDefault)];
   return candidates.find((c) => c?.provider === "typesafe" && c.hasApiKey)?.id ?? null;
 }
-var tags2 = (s) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+var tags2 = (s2) => (s2 ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 var WHERE = { "0.1": "at the far left", "0.3": "on the left", "0.5": "in the middle", "0.7": "on the right", "0.9": "at the far right" };
 function describe(member) {
   const noun = member.identity && isFurry(member.identity) ? "character" : member.gender === "female" ? "girl" : member.gender === "male" ? "man" : "character";
@@ -68852,8 +69275,8 @@ function panelQuestions(panel, cast, mono = false) {
       out.questions[`face${i}`] = { type: "box", instructions: `the face of the ${named} in \`image\`` };
       out.faces.push({ name: c.name, face: `face${i}`, present: `present${i}` });
     }
-    identityQuestions(member, c, chars.length, noun, mono).forEach(([check, text], j) => {
-      out.questions[`id${i}_${j}`] = { type: "noul", instructions: text };
+    identityQuestions(member, c, chars.length, noun, mono).forEach(([check, text3], j) => {
+      out.questions[`id${i}_${j}`] = { type: "noul", instructions: text3 };
       out.identity.push({ name: c.name, check, key: `id${i}_${j}` });
     });
   });
@@ -68891,16 +69314,16 @@ function jevScale(width, height) {
 }
 function downscale(image, width, height) {
   const data = new Uint8Array(width * height * 4);
-  const sx = image.width / width, sy = image.height / height;
+  const sx = image.width / width, sy4 = image.height / height;
   for (let y = 0;y < height; y += 1) {
-    const y0 = Math.floor(y * sy), y1 = Math.max(y0 + 1, Math.floor((y + 1) * sy));
+    const y0 = Math.floor(y * sy4), y1 = Math.max(y0 + 1, Math.floor((y + 1) * sy4));
     for (let x = 0;x < width; x += 1) {
       const x0 = Math.floor(x * sx), x1 = Math.max(x0 + 1, Math.floor((x + 1) * sx));
       const sum = [0, 0, 0, 0];
-      for (let yy = y0;yy < y1; yy += 1)
-        for (let xx = x0;xx < x1; xx += 1)
+      for (let yy3 = y0;yy3 < y1; yy3 += 1)
+        for (let xx4 = x0;xx4 < x1; xx4 += 1)
           for (let c = 0;c < 4; c += 1)
-            sum[c] += image.data[(yy * image.width + xx) * 4 + c];
+            sum[c] += image.data[(yy3 * image.width + xx4) * 4 + c];
       const n = (y1 - y0) * (x1 - x0);
       for (let c = 0;c < 4; c += 1)
         data[(y * width + x) * 4 + c] = Math.round(sum[c] / n);
@@ -68913,8 +69336,8 @@ async function panelAsset(services, input) {
   if (scale >= 1)
     return { image_id: input.imageId };
   const image = await decodePng(base64ToBytes2((await services.imageBytes.getImage({ imageId: input.imageId }, { signal: input.signal })).data));
-  const s = jevScale(image.width, image.height);
-  return { format: "png", data_base64: bytesToBase642(await encodePng(downscale(image, Math.floor(image.width * s), Math.floor(image.height * s)))) };
+  const s2 = jevScale(image.width, image.height);
+  return { format: "png", data_base64: bytesToBase642(await encodePng(downscale(image, Math.floor(image.width * s2), Math.floor(image.height * s2)))) };
 }
 async function checkPanel(services, input) {
   const q = panelQuestions(input.panel, input.cast, input.mono);
@@ -69090,42 +69513,42 @@ async function openAuto(deps, characterId) {
     return null;
   }
 }
-async function createStrangers(deps, auto, context, resolved, req) {
-  const byKey = new Map(resolved.strangers.map((s, i) => [`webtoon_free_${i + 1}`, s]));
+async function createStrangers(deps, auto, context2, resolved, req) {
+  const byKey = new Map(resolved.strangers.map((s2, i) => [`webtoon_free_${i + 1}`, s2]));
   try {
     const prepared = await auto.autoCharacter.prepare({
-      actors: [...byKey].map(([candidateKey, s]) => ({
+      actors: [...byKey].map(([candidateKey, s2]) => ({
         candidateKey,
-        label: s.name,
-        sex: s.gender || "unknown",
+        label: s2.name,
+        sex: s2.gender || "unknown",
         profile: {
-          recognitionKeys: [s.name],
-          humanlike: !isFurry(s.identity),
-          basePromptGroups: profileGroups(s.identityTags),
-          defaultOutfit: { name: s.outfits[0].label, ...s.outfits[0].outfit }
+          recognitionKeys: [s2.name],
+          humanlike: !isFurry(s2.identity),
+          basePromptGroups: profileGroups(s2.identityTags),
+          defaultOutfit: { name: s2.outfits[0].label, ...s2.outfits[0].outfit }
         }
       })),
       signal: req.signal,
       owner: req,
-      sourceId: context.characterId,
-      knownIdentities: context.knownIdentities
+      sourceId: context2.characterId,
+      knownIdentities: context2.knownIdentities
     });
     for (const p of prepared) {
-      const s = byKey.get(p.candidateKey);
-      if (s)
-        s.key = p.identityKey;
+      const s2 = byKey.get(p.candidateKey);
+      if (s2)
+        s2.key = p.identityKey;
     }
     await auto.autoCharacter.settle();
-    resolved.log.push(`new characters: ${resolved.strangers.map((s) => `${s.name} (${s.key})`).join(", ")}`);
+    resolved.log.push(`new characters: ${resolved.strangers.map((s2) => `${s2.name} (${s2.key})`).join(", ")}`);
   } catch (error) {
     if (req.signal.aborted || isAbortLike(error))
       throw error;
     deps.services.log.append("warn", "webtoon", "New characters could not be stored; they are drawn in this strip only.", { error: toRpcError(error).message });
   }
 }
-async function visionRun(deps, config, run) {
+async function visionRun(deps, config2, run) {
   try {
-    const connectionId = await visionConnection(deps.services, config);
+    const connectionId = await visionConnection(deps.services, config2);
     return connectionId ? { deps, connectionId, ...run } : null;
   } catch (error) {
     deps.services.log.append("warn", "webtoon", "Vision check unavailable, balloons placed by coordinates", { error: toRpcError(error).message });
@@ -69140,17 +69563,17 @@ async function checkTake(v, panel, take, redrawOf) {
   const id = String(panel.id);
   const chosen = !!redrawOf && check.score > redrawOf.score;
   try {
-    await updateStrip(services.storage, v.chatId, v.historyId, (current) => {
-      if (!current)
+    await updateStrip(services.storage, v.chatId, v.historyId, (current2) => {
+      if (!current2)
         throw new Error("The strip no longer exists.");
-      const p = current.panels[id];
+      const p = current2.panels[id];
       const index = p ? p.takes.findIndex((t) => t.imageId === take.imageId) : -1;
       if (!p || index < 0)
-        return current;
+        return current2;
       p.takes[index].check = redrawOf ? { ...check, redraw: true } : check;
       if (chosen && p.takes[p.selected]?.imageId === redrawOf.imageId)
         p.selected = index;
-      return current;
+      return current2;
     }, v.deps.now);
     v.onChanged();
   } catch (error) {
@@ -69171,11 +69594,11 @@ async function redrawIdentity(v, input, panel, assertTarget) {
   }
   await assertTarget?.();
   try {
-    await updateStrip(v.deps.services.storage, v.chatId, v.historyId, (current) => {
-      if (!current?.panels[String(panel.id)])
+    await updateStrip(v.deps.services.storage, v.chatId, v.historyId, (current2) => {
+      if (!current2?.panels[String(panel.id)])
         throw new Error("The strip no longer exists.");
-      current.panels[String(panel.id)].takes.push(take);
-      return current;
+      current2.panels[String(panel.id)].takes.push(take);
+      return current2;
     }, v.deps.now);
   } catch (error) {
     v.deps.services.log.append("warn", "webtoon", `Panel ${panel.id}: the identity redraw could not be saved`, { error: toRpcError(error).message });
@@ -69188,12 +69611,12 @@ async function runWebtoonStrip(deps, req) {
   const { services } = deps;
   const now = deps.now ?? Date.now;
   const write = async (mutate) => {
-    const doc = await updateStrip(services.storage, req.chatId, req.historyId, (current) => {
-      const next = current ?? createStripDocument({ chatId: req.chatId, messageKey: req.planKey, historyId: req.historyId, characterId: "", sourceLength: req.source.length, now: now() });
+    const doc2 = await updateStrip(services.storage, req.chatId, req.historyId, (current2) => {
+      const next = current2 ?? createStripDocument({ chatId: req.chatId, messageKey: req.planKey, historyId: req.historyId, characterId: "", sourceLength: req.source.length, now: now() });
       return mutate(next) ?? next;
     }, now);
     req.onChanged();
-    return doc;
+    return doc2;
   };
   let doc = null;
   let manga = req.format === "manga";
@@ -69217,32 +69640,32 @@ async function runWebtoonStrip(deps, req) {
       });
     } else {
       replanning = !!previous?.storyboard;
-      const context = await loadWebtoonContext(services, { ...req, format: manga ? "manga" : "webtoon" });
-      style = context.style;
-      characterId = context.characterId;
+      const context2 = await loadWebtoonContext(services, { ...req, format: manga ? "manga" : "webtoon" });
+      style = context2.style;
+      characterId = context2.characterId;
       const mono = manga && isMonochromeStyle(style.style);
       doc = await write(() => ({
         ...createStripDocument({ chatId: req.chatId, messageKey: req.planKey, historyId: req.historyId, characterId, sourceLength: req.source.length, now: now(), revision: previous?.revision ?? 0 }),
         ...manga ? { format: "manga", mono } : {}
       }));
-      const auto = context.knownIdentities ? await openAuto(deps, characterId) : null;
+      const auto = context2.knownIdentities ? await openAuto(deps, characterId) : null;
       try {
         const freeCharacters = !!auto;
         let planned;
         try {
           const panels = webtoonPanelTarget(req.source.length);
-          const prompt = manga ? buildMangaPlannerPrompt({ roster: context.roster, source: req.source, panels, mono, freeCharacters }) : buildPlannerPrompt({ roster: context.roster, source: req.source, panels, freeCharacters });
+          const prompt = manga ? buildMangaPlannerPrompt({ roster: context2.roster, source: req.source, panels, mono, freeCharacters }) : buildPlannerPrompt({ roster: context2.roster, source: req.source, panels, freeCharacters });
           planned = await plan(deps, prompt, webtoonPanelRange(panels), req.signal, manga);
-        } catch (error) {
-          const meta = error;
+        } catch (error2) {
+          const meta = error2;
           if (meta.calls)
             await write((d) => void (d.planner = { model: meta.model ?? "", calls: meta.calls }));
-          throw error;
+          throw error2;
         }
         await req.assertTarget();
-        const resolved = resolveLooks(planned.raw, context.roster, auto ? context.knownIdentities.flatMap((k) => [k.name, ...k.keys]) : null);
+        const resolved = resolveLooks(planned.raw, context2.roster, auto ? context2.knownIdentities.flatMap((k) => [k.name, ...k.keys]) : null);
         if (auto && resolved.strangers.length)
-          await createStrangers(deps, auto, context, resolved, req);
+          await createStrangers(deps, auto, context2, resolved, req);
         const roster = resolved.roster;
         const outfitLog = [...resolved.log];
         const outfits = { ...chosenOutfits(planned.raw, roster.filter((r) => !resolved.outfits[r.name]), outfitLog), ...resolved.outfits };
@@ -69251,7 +69674,7 @@ async function runWebtoonStrip(deps, req) {
         validated.log.unshift(...outfitLog);
         const cast = mono ? monoCast(castFor(roster, outfits)) : castFor(roster, outfits);
         const planImages = validated.storyboard.panels.filter((p) => p.kind === "image");
-        const request = (p) => mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context.style)) : buildPanelRequest(p, cast, context.style);
+        const request = (p) => mono ? withMonoTags(buildPanelRequest(monoPanel(p), cast, context2.style)) : buildPanelRequest(p, cast, context2.style);
         doc = await write((d) => {
           d.planner = { model: planned.model, calls: planned.calls };
           d.storyboardRaw = planned.raw;
@@ -69261,7 +69684,7 @@ async function runWebtoonStrip(deps, req) {
             const look = resolved.looks.get(r.key);
             return { name: r.name, key: r.key, outfitId: cast.get(r.name)?.outfitId ?? r.currentOutfitId, gender: r.gender, identity: mono ? stripColours(r.identity) : r.identity, ...look ? { look } : {} };
           });
-          d.style = context.style;
+          d.style = context2.style;
           d.requests = Object.fromEntries(planImages.map((p) => [String(p.id), request(p)]));
           d.panels = Object.fromEntries(planImages.map((p) => [String(p.id), { panelId: String(p.id), status: "pending", takes: [], selected: -1 }]));
           d.status = "generating";
@@ -69313,11 +69736,11 @@ async function runWebtoonStrip(deps, req) {
         });
         if (vision)
           afterTake(vision, panel, input, take);
-      } catch (error) {
-        if (req.signal.aborted || isAbortLike(error) || error?.name === "ChatResponseTargetChangedError")
-          throw error;
+      } catch (error2) {
+        if (req.signal.aborted || isAbortLike(error2) || error2?.name === "ChatResponseTargetChangedError")
+          throw error2;
         failed += 1;
-        const message = toRpcError(error).message;
+        const message = toRpcError(error2).message;
         doc = await write((d) => {
           d.panels[id] = { ...d.panels[id], status: "error", error: message };
         });
@@ -69368,8 +69791,8 @@ async function rerollWebtoonPanel(deps, req) {
   const take = await drawPanel(deps, input);
   if (req.signal.aborted)
     throw aborted();
-  let written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
-    const d = current ?? doc;
+  let written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current2) => {
+    const d = current2 ?? doc;
     const p = d.panels[req.panelId] ?? { panelId: req.panelId, status: "pending", takes: [], selected: -1 };
     p.takes.push(take);
     p.selected = p.takes.length - 1;
@@ -69393,30 +69816,30 @@ async function rerollWebtoonPanel(deps, req) {
   return stripView(written);
 }
 async function selectWebtoonTake(deps, req) {
-  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
-    const panel = current?.panels[req.panelId];
-    if (!current || !panel?.takes[req.take])
+  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current2) => {
+    const panel = current2?.panels[req.panelId];
+    if (!current2 || !panel?.takes[req.take])
       throw new RpcFailure(rpcError("not-found", "This webtoon panel take does not exist.", { retryable: false }));
     panel.selected = req.take;
-    return current;
+    return current2;
   }, deps.now);
   return stripView(written, req.width);
 }
 async function editWebtoonText(deps, req) {
-  const text = req.text.replace(/\s+/gu, " ").trim();
-  if (!text)
+  const text3 = req.text.replace(/\s+/gu, " ").trim();
+  if (!text3)
     throw new RpcFailure(rpcError("bad-request", "The text is empty.", { retryable: false }));
-  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current) => {
-    const panel = current?.storyboard?.panels.find((p) => String(p.id) === req.panelId);
+  const written = await updateStrip(deps.services.storage, req.chatId, req.historyId, (current2) => {
+    const panel = current2?.storyboard?.panels.find((p) => String(p.id) === req.panelId);
     const original = panel?.text[req.textIndex];
-    if (!current || !original)
+    if (!current2 || !original)
       throw new RpcFailure(rpcError("not-found", "This webtoon text item does not exist.", { retryable: false }));
     const key = `${req.panelId}:${req.textIndex}`;
-    if (text === original.text)
-      delete current.textOverrides[key];
+    if (text3 === original.text)
+      delete current2.textOverrides[key];
     else
-      current.textOverrides[key] = text;
-    return current;
+      current2.textOverrides[key] = text3;
+    return current2;
   }, deps.now);
   return stripView(written, req.width);
 }
@@ -69463,7 +69886,7 @@ function createChatPipelineController(services, engine, options = {}) {
   const nextId = (prefix) => `${prefix}:${now().toString(36)}:${(++seq).toString(36)}`;
   const k = (chatId, key) => `${chatId}\x00${key}`;
   const webtoonSlotKey = (chatId, messageKey, panelId) => k(chatId, `webtoon:${messageKey}\x00${panelId}`);
-  const emitProgress = (job) => services.events.emit("generation.progress", jsonClone(job.snapshot));
+  const emitProgress2 = (job) => services.events.emit("generation.progress", jsonClone(job.snapshot));
   const emitChanged = (chatId, messageKeys) => services.events.emit("chatData.changed", { chatId, messageKeys: [...new Set(messageKeys)] });
   const log = (level, message, details) => {
     try {
@@ -69513,7 +69936,7 @@ function createChatPipelineController(services, engine, options = {}) {
     job.snapshot.status = "running";
     job.snapshot.phase = phase;
     job.snapshot.progress = phaseProgress(phase, { ...detail, regenerate: job.kind !== "message" });
-    emitProgress(job);
+    emitProgress2(job);
   };
   const setRetryErrors = (job, patch) => {
     const next = { run: [], engine: [], ...job.retryErrors, ...patch };
@@ -69537,7 +69960,7 @@ function createChatPipelineController(services, engine, options = {}) {
       lastErrors.set(k(job.target.chatId, job.planKey), error);
     else if (result === "completed")
       lastErrors.delete(k(job.target.chatId, job.planKey));
-    emitProgress(job);
+    emitProgress2(job);
     log(result === "failed" || result === "blocked" ? "warn" : "info", `Illustration ${job.kind} ${result}: ${job.planKey}`, {
       jobId: job.snapshot.jobId,
       chatId: job.target.chatId,
@@ -69557,9 +69980,9 @@ function createChatPipelineController(services, engine, options = {}) {
     if (!view || swipeContent(view, target.swipeIndex) === null)
       throw Object.assign(new Error(PIPELINE_TEXT.targetChanged.en), { name: "ChatResponseTargetChangedError", retryable: false });
   };
-  const nativeVisibility = async (config, characterId) => {
+  const nativeVisibility = async (config2, characterId) => {
     const document2 = await services.storage.loadCharacterDocument(characterId);
-    return { visibility: resolveEffectiveConfig(config, { characterId, document: document2 }).nativeAssetVisibility, document: document2 };
+    return { visibility: resolveEffectiveConfig(config2, { characterId, document: document2 }).nativeAssetVisibility, document: document2 };
   };
   const publishOnce = async (chatId, planKey) => {
     const historyId = planKey.replace(/^illustration:/u, "");
@@ -69573,10 +69996,10 @@ function createChatPipelineController(services, engine, options = {}) {
     const content = view ? swipeContent(view, parsed.swipeIndex) : null;
     if (!view || view.role !== "assistant" || content === null)
       return "missing";
-    const [doc, config, chat] = await Promise.all([services.storage.loadChatData(chatId), services.storage.loadConfig(), getChat(chatId)]);
-    const characterId = await speakingCharacterId(services, chat, view);
-    const { visibility, document: document2 } = await nativeVisibility(config, characterId);
-    const selection = bakeSelection(doc, planKey, { chatId, messageId: parsed.messageId, swipeIndex: parsed.swipeIndex, widthPercent: config.runtime.chatImageWidthPercent });
+    const [doc, config2, chat2] = await Promise.all([services.storage.loadChatData(chatId), services.storage.loadConfig(), getChat(chatId)]);
+    const characterId = await speakingCharacterId(services, chat2, view);
+    const { visibility, document: document2 } = await nativeVisibility(config2, characterId);
+    const selection = bakeSelection(doc, planKey, { chatId, messageId: parsed.messageId, swipeIndex: parsed.swipeIndex, widthPercent: config2.runtime.chatImageWidthPercent });
     const result = bakeMessage({
       content,
       messageKey: planKey,
@@ -69640,9 +70063,9 @@ function createChatPipelineController(services, engine, options = {}) {
     const base = toRpcError(e);
     return base.code === "internal" ? { ...base, code: "provider-error", retryable: base.retryable ?? true } : base;
   };
-  const savePlan = async (chatId, plan) => {
+  const savePlan = async (chatId, plan2) => {
     await services.storage.updateChatData(chatId, (doc) => {
-      storePlanAndTree(doc, plan);
+      storePlanAndTree(doc, plan2);
       return doc;
     });
   };
@@ -69655,7 +70078,7 @@ function createChatPipelineController(services, engine, options = {}) {
     setRetryErrors(job, { engine: [] });
     if ((opts.automatic || opts.waitForChat) && tracker.isStreaming(chatId)) {
       job.snapshot.progress = phaseProgress("queued");
-      emitProgress(job);
+      emitProgress2(job);
       const deadline = now() + STREAM_WAIT_MAX_MS;
       while (tracker.isStreaming(chatId) && !signal.aborted && now() < deadline)
         await sleep3(STREAM_WAIT_POLL_MS, signal);
@@ -69667,8 +70090,8 @@ function createChatPipelineController(services, engine, options = {}) {
           return { kind: "cancelled" };
       }
     }
-    const config = await services.storage.loadConfig();
-    const chat = await getChat(chatId);
+    const config2 = await services.storage.loadConfig();
+    const chat2 = await getChat(chatId);
     const messages = await loadMessages(services.host, chatId);
     const { index: target, view } = findMessage(messages, messageId);
     const content = view ? swipeContent(view, swipeIndex) : null;
@@ -69679,9 +70102,9 @@ function createChatPipelineController(services, engine, options = {}) {
     if (tracker.isStreaming(chatId))
       return { kind: "blocked", error: labelError("busy", PIPELINE_TEXT.busy, { retryable: true }) };
     const doc0 = await services.storage.loadChatData(chatId);
-    let plan = ensurePlan(doc0, historyId, view.index);
-    const previous = { status: plan.status, error: plan.error };
-    const attemptKind = opts.automatic ? "automatic" : opts.attemptKind ?? nextIllustrationAttempt(plan);
+    let plan2 = ensurePlan(doc0, historyId, view.index);
+    const previous = { status: plan2.status, error: plan2.error };
+    const attemptKind = opts.automatic ? "automatic" : opts.attemptKind ?? nextIllustrationAttempt(plan2);
     job.snapshot.attemptKind = attemptKind;
     const analyzerDone = attemptKind === "retry" && analyzerCompleted.has(skey);
     if (attemptKind !== "retry" && !opts.revision) {
@@ -69691,19 +70114,19 @@ function createChatPipelineController(services, engine, options = {}) {
     const settings = opts.settings ?? (attemptKind === "retry" && settingsSnapshots.has(skey) ? settingsSnapshots.get(skey) : await services.storage.loadChatImageGenerationSettings());
     const runSettings = opts.countPolicy ? { ...settings, countPolicy: opts.countPolicy } : settings;
     if (runSettings.webtoonMode && !opts.revision)
-      return runWebtoonOnce(job, { config, chat, messages, target, view, content, historyId, attemptKind, chatData: doc0, manga: runSettings.comicFormat === "manga" });
+      return runWebtoonOnce(job, { config: config2, chat: chat2, messages, target, view, content, historyId, attemptKind, chatData: doc0, manga: runSettings.comicFormat === "manga" });
     const split = runSettings.analysisMode === "split" && !opts.revision;
     const countPolicy = split ? fixedCountPolicy(runSettings.splitAnalysis.totalCount ?? 1) : runSettings.countPolicy;
     if (attemptKind !== "retry")
       analyzerCompleted.delete(skey);
-    const retryId = attemptKind === "retry" && !opts.revision ? splitRevisions.get(skey) || plan.activeRevisionId : "";
-    const errorRevision = retryId ? plan.revisions.find((r) => r.revisionId === retryId && r.status === "error" && (distinctSlotCount(r.entries) < expectedSlotCount(plan) || !!r.deletedSlotIndices?.length)) : undefined;
-    const revisionTarget = opts.revision ? plan.revisions.find((r) => r.revisionId === opts.revision.revisionId && r.entries.some((e) => e.slotId === opts.revision.slotId)) : undefined;
+    const retryId = attemptKind === "retry" && !opts.revision ? splitRevisions.get(skey) || plan2.activeRevisionId : "";
+    const errorRevision = retryId ? plan2.revisions.find((r) => r.revisionId === retryId && r.status === "error" && (distinctSlotCount(r.entries) < expectedSlotCount(plan2) || !!r.deletedSlotIndices?.length)) : undefined;
+    const revisionTarget = opts.revision ? plan2.revisions.find((r) => r.revisionId === opts.revision.revisionId && r.entries.some((e) => e.slotId === opts.revision.slotId)) : undefined;
     if (opts.revision && !revisionTarget)
       return { kind: "blocked", error: labelError("not-found", PIPELINE_TEXT.messageMissing) };
     const existingEntries = errorRevision?.entries ?? [];
     const revisionId = (attemptKind === "retry" && !opts.revision ? splitRevisions.get(skey) : "") || errorRevision?.revisionId || revisionTarget?.revisionId || ["revision", now().toString(36), (++seq).toString(36)].join(":");
-    const parentRevisionId = parentRevisionFor(plan, plan.activeRevisionId);
+    const parentRevisionId = parentRevisionFor(plan2, plan2.activeRevisionId);
     if (!opts.revision && !(attemptKind === "retry" && settingsSnapshots.has(skey))) {
       settingsSnapshots.set(skey, jsonClone(runSettings));
       while (settingsSnapshots.size > MAX_SETTINGS_SNAPSHOTS) {
@@ -69717,47 +70140,47 @@ function createChatPipelineController(services, engine, options = {}) {
     if (split)
       splitRevisions.set(skey, revisionId);
     try {
-      if (split && config.novelai.analysisProfile !== "v5-hybrid")
+      if (split && config2.novelai.analysisProfile !== "v5-hybrid")
         throw new RpcFailure(labelError("bad-request", PIPELINE_TEXT.splitNeedsV5, { retryable: false }));
-      const characterId = await speakingCharacterId(services, chat, view);
+      const characterId = await speakingCharacterId(services, chat2, view);
       const document2 = await services.storage.loadCharacterDocument(characterId);
-      const visibility = resolveEffectiveConfig(config, { characterId, document: document2 }).nativeAssetVisibility;
+      const visibility = resolveEffectiveConfig(config2, { characterId, document: document2 }).nativeAssetVisibility;
       const built = messageSlots(planKey, content, nativeDetectorsFor(characterId, "", document2));
-      const slots = built.slots.map((s) => ({ ...s }));
-      const revisionSlot = opts.revision ? slots.find((s) => s.slotId === opts.revision.slotId) : undefined;
+      const slots2 = built.slots.map((s2) => ({ ...s2 }));
+      const revisionSlot = opts.revision ? slots2.find((s2) => s2.slotId === opts.revision.slotId) : undefined;
       if (opts.revision && !revisionSlot)
         throw new RpcFailure(labelError("conflict", PIPELINE_TEXT.noSlots));
       const updateCount = opts.automatic || attemptKind === "initial" || attemptKind === "reroll" || attemptKind === "retry" && !analyzerDone;
-      plan = { ...plan, slots, ...updateCount ? { countPolicy, requestedCount: Math.max(1, countPolicy.max) } : {}, status: "generating", error: "" };
-      await savePlan(chatId, plan);
-      if (!slots.length)
+      plan2 = { ...plan2, slots: slots2, ...updateCount ? { countPolicy, requestedCount: Math.max(1, countPolicy.max) } : {}, status: "generating", error: "" };
+      await savePlan(chatId, plan2);
+      if (!slots2.length)
         throw new RpcFailure(labelError("bad-request", PIPELINE_TEXT.noSlots, { retryable: false }));
-      const requestedCount = opts.revision ? 1 : plan.requestedCount;
+      const requestedCount = opts.revision ? 1 : plan2.requestedCount;
       job.snapshot.requestedCount = requestedCount;
       setPhase(job, "analyzing-preset", { imageCount: requestedCount });
-      const hasEntries = plan.entries.length > 0 || plan.revisions.some((r) => r.entries.length > 0);
+      const hasEntries = plan2.entries.length > 0 || plan2.revisions.some((r) => r.entries.length > 0);
       const activityLabel = opts.automatic ? hasEntries ? "Regenerate" : "Chat" : attemptKind === "initial" ? "Previous" : "Regenerate";
       const result = await generateMessageIllustrations({ services, engine, ...options.getModules ? { getModules: options.getModules } : {}, replayOutfits }, {
         chatId,
-        chat,
+        chat: chat2,
         messages,
         target,
         swipeIndex,
         historyId,
         planKey,
         clean: built.clean,
-        slots: revisionSlot ? [revisionSlot] : slots,
-        countPolicy: opts.revision ? fixedCountPolicy(1) : plan.countPolicy,
+        slots: revisionSlot ? [revisionSlot] : slots2,
+        countPolicy: opts.revision ? fixedCountPolicy(1) : plan2.countPolicy,
         attemptKind,
         automatic: opts.automatic,
         revisionId,
         existingEntries,
-        deletedSlotIndices: attemptKind === "retry" ? plan.revisions.find((r) => r.revisionId === revisionId)?.deletedSlotIndices ?? [] : [],
-        ...split ? { splitAnalysis: { totalCount: countPolicy.max, batchSize: runSettings.splitAnalysis.batchSize, retries: config.runtime.generationAutoRetryCount, revision: revisionId } } : {},
+        deletedSlotIndices: attemptKind === "retry" ? plan2.revisions.find((r) => r.revisionId === revisionId)?.deletedSlotIndices ?? [] : [],
+        ...split ? { splitAnalysis: { totalCount: countPolicy.max, batchSize: runSettings.splitAnalysis.batchSize, retries: config2.runtime.generationAutoRetryCount, revision: revisionId } } : {},
         ...opts.revision ? { revision: opts.revision } : {},
         jobId: job.snapshot.jobId,
         activityLabel,
-        config,
+        config: config2,
         settings: runSettings,
         chatData: doc0,
         signal,
@@ -69768,13 +70191,13 @@ function createChatPipelineController(services, engine, options = {}) {
         },
         onJevSelection: (selection) => {
           job.snapshot.jevSelection = selection;
-          emitProgress(job);
+          emitProgress2(job);
         },
         onRetryErrors: (errors, imageRetry) => {
           setRetryErrors(job, { engine: errors });
           if (imageRetry)
             job.snapshot.progress = { ...job.snapshot.progress, retry: imageRetry, retryCount: `${imageRetry.attempt}/${imageRetry.total}` };
-          emitProgress(job);
+          emitProgress2(job);
         }
       });
       if (result.error && result.analyzerCompleted)
@@ -69782,7 +70205,7 @@ function createChatPipelineController(services, engine, options = {}) {
       else
         analyzerCompleted.delete(skey);
       if (result.cancelled || signal.aborted) {
-        await savePlan(chatId, { ...plan, status: previous.status, error: previous.error });
+        await savePlan(chatId, { ...plan2, status: previous.status, error: previous.error });
         return { kind: "cancelled" };
       }
       if (result.error && !result.entries.length)
@@ -69791,16 +70214,16 @@ function createChatPipelineController(services, engine, options = {}) {
         throw new RpcFailure(labelError("provider-error", PIPELINE_TEXT.revisionMissing));
       job.snapshot.completedSlots = result.entries.length;
       setPhase(job, "committing", { imageCount: requestedCount, imageIndex: requestedCount });
-      const assetHints = result.assetHints.length ? result.assetHints : plan.assetHints;
-      let finalPlan = plan;
+      const assetHints = result.assetHints.length ? result.assetHints : plan2.assetHints;
+      let finalPlan = plan2;
       let errorText = "";
       let errorKo;
       const written = await services.storage.updateChatData(chatId, async (doc) => {
-        const base = reconcilePlanWithTree(plan, doc.history);
-        const current = base.revisions.find((r) => r.revisionId === revisionId);
-        const merged = revisionTarget || attemptKind === "retry" ? mergeEntries(current?.entries ?? revisionTarget?.entries ?? existingEntries, result.entries) : result.entries;
+        const base = reconcilePlanWithTree(plan2, doc.history);
+        const current2 = base.revisions.find((r) => r.revisionId === revisionId);
+        const merged = revisionTarget || attemptKind === "retry" ? mergeEntries(current2?.entries ?? revisionTarget?.entries ?? existingEntries, result.entries) : result.entries;
         const resolved = revisionTarget ? Math.min(base.slots.length, distinctSlotCount(merged)) : Math.min(base.slots.length, Math.max(1, result.resolvedCount));
-        const deleted = (current?.deletedSlotIndices ?? []).filter((i) => !merged.some((e) => e.slotIndex === i)).length;
+        const deleted = (current2?.deletedSlotIndices ?? []).filter((i) => !merged.some((e) => e.slotIndex === i)).length;
         const missing = Math.max(0, resolved - distinctSlotCount(merged) - deleted);
         const status = missing > 0 || result.error ? "error" : "complete";
         if (missing > 0 || result.error) {
@@ -69816,9 +70239,9 @@ function createChatPipelineController(services, engine, options = {}) {
         const createdAt = now();
         let next;
         const patchRevision = (id, patch) => base.revisions.map((r) => r.revisionId === id ? { ...r, ...patch } : r);
-        if (current && attemptKind === "retry") {
+        if (current2 && attemptKind === "retry") {
           next = { ...base, status, requestedCount: resolved, entries: merged, assetHints, revisions: patchRevision(revisionId, { requestedCount: resolved, status, entries: merged, error: errorText }), activeRevisionId: revisionId, error: errorText };
-        } else if (current && revisionTarget) {
+        } else if (current2 && revisionTarget) {
           next = { ...base, status, entries: merged, assetHints, revisions: patchRevision(revisionId, { status, entries: merged, error: errorText }), activeRevisionId: revisionId, error: errorText };
         } else if (!merged.length) {
           next = { ...base, status, requestedCount: resolved, assetHints, error: errorText };
@@ -69849,9 +70272,9 @@ function createChatPipelineController(services, engine, options = {}) {
         return doc;
       });
       if (result.records.length)
-        await updateSidecar(services.storage, chatId, (s) => {
+        await updateSidecar(services.storage, chatId, (s2) => {
           for (const r of result.records)
-            s.records[r.entryId] = r;
+            s2.records[r.entryId] = r;
         }, written.history).catch((e) => log("warn", "Generation records could not be saved", toRpcError(e)));
       const published = await publishCommitted(chatId, planKey);
       if (published === "missing")
@@ -69869,15 +70292,15 @@ function createChatPipelineController(services, engine, options = {}) {
       };
     } catch (e) {
       if (signal.aborted || isCancellation(e)) {
-        await savePlan(chatId, { ...plan, status: previous.status, error: previous.error }).catch(() => {
+        await savePlan(chatId, { ...plan2, status: previous.status, error: previous.error }).catch(() => {
           return;
         });
         return { kind: "cancelled" };
       }
       const error = errorOf(e);
       await services.storage.updateChatData(chatId, (doc) => {
-        const current = reconcilePlanWithTree(plan, doc.history);
-        storePlanAndTree(doc, { ...current, status: "error", error: error.message });
+        const current2 = reconcilePlanWithTree(plan2, doc.history);
+        storePlanAndTree(doc, { ...current2, status: "error", error: error.message });
         return doc;
       }).catch((err) => log("error", "Illustration plan persistence failed", toRpcError(err)));
       emitChanged(chatId, [planKey]);
@@ -69892,11 +70315,11 @@ function createChatPipelineController(services, engine, options = {}) {
       setPhase(job, p.stage, { imageIndex: p.done ?? 0, imageCount: total });
     if (p.stage !== "planning")
       job.snapshot.completedSlots = p.done ?? 0;
-    const text = p.manga ? MANGA_TEXT : WEBTOON_TEXT;
-    const label = p.stage === "planning" ? text.planning : p.stage === "generating" ? formatLabel(text.panel, { n: (p.done ?? 0) + 1, total }) : text.finishing;
+    const text3 = p.manga ? MANGA_TEXT : WEBTOON_TEXT;
+    const label = p.stage === "planning" ? text3.planning : p.stage === "generating" ? formatLabel(text3.panel, { n: (p.done ?? 0) + 1, total }) : text3.finishing;
     job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
     job.snapshot.requestedCount = total;
-    emitProgress(job);
+    emitProgress2(job);
   };
   const runWebtoonOnce = async (job, input) => {
     const { chatId } = job.target;
@@ -69927,15 +70350,15 @@ function createChatPipelineController(services, engine, options = {}) {
     job.snapshot.failedSlots = result.failedPanels;
     return { kind: "failed", error: result.error ?? rpcError("provider-error", PIPELINE_TEXT.generationIncomplete.en), autoRetryable: false, partial: result.failedPanels > 0 };
   };
-  const runWebtoonReroll = async (job, config) => {
+  const runWebtoonReroll = async (job, config2) => {
     const { chatId } = job.target;
     try {
       setPhase(job, "generating", { imageIndex: 0, imageCount: 1 });
       const label = formatLabel(job.webtoonManga ? MANGA_TEXT.reroll : WEBTOON_TEXT.reroll, { n: job.webtoonPanel });
       job.snapshot.progress = { ...job.snapshot.progress, label: label.en, labelKo: label.ko };
-      emitProgress(job);
+      emitProgress2(job);
       const historyId = job.planKey.replace(/^illustration:/u, "");
-      await rerollWebtoonPanel({ services, engine, now }, { chatId, historyId, panelId: job.webtoonPanel, config, signal: job.controller.signal, onChanged: () => emitChanged(chatId, [job.planKey]) });
+      await rerollWebtoonPanel({ services, engine, now }, { chatId, historyId, panelId: job.webtoonPanel, config: config2, signal: job.controller.signal, onChanged: () => emitChanged(chatId, [job.planKey]) });
       job.snapshot.completedSlots = 1;
       finishJob(job, "completed", "success");
     } catch (e) {
@@ -69955,13 +70378,13 @@ function createChatPipelineController(services, engine, options = {}) {
   };
   const runMessageJob = async (job, opts) => {
     const key = k(job.target.chatId, job.planKey);
-    let current = opts;
+    let current2 = opts;
     try {
       const retries = Math.max(0, Math.min(10, (await services.storage.loadConfig()).runtime.generationAutoRetryCount));
       for (let attempt = 0;; attempt += 1) {
         if (job.controller.signal.aborted)
           return finishJob(job, "cancelled", "cancelled");
-        const outcome = await runMessageOnce(job, current);
+        const outcome = await runMessageOnce(job, current2);
         if (outcome.kind === "completed")
           return finishJob(job, "completed", "success");
         if (outcome.kind === "cancelled")
@@ -69973,9 +70396,9 @@ function createChatPipelineController(services, engine, options = {}) {
         if (!outcome.autoRetryable || attempt >= retries)
           return finishJob(job, "failed", outcome.partial ? "partial" : "error", outcome.error);
         job.snapshot.progress = phaseProgress("planned", { retry: { attempt: attempt + 1, total: retries } });
-        emitProgress(job);
+        emitProgress2(job);
         await sleep3(AUTO_RETRY_DELAY_MS, job.controller.signal);
-        current = { ...current, automatic: false, attemptKind: current.revision ? current.attemptKind : "retry", settings: undefined, waitForChat: true };
+        current2 = { ...current2, automatic: false, attemptKind: current2.revision ? current2.attemptKind : "retry", settings: undefined, waitForChat: true };
       }
     } catch (e) {
       finishJob(job, isAbortLike(e) ? "cancelled" : "failed", isAbortLike(e) ? "cancelled" : "error", isAbortLike(e) ? undefined : errorOf(e));
@@ -69999,7 +70422,7 @@ function createChatPipelineController(services, engine, options = {}) {
     if (opts.revision)
       job.revision = opts.revision;
     messageJobs.set(k(target.chatId, planKey), job);
-    emitProgress(job);
+    emitProgress2(job);
     job.done = runMessageJob(job, opts);
     return job;
   };
@@ -70055,24 +70478,24 @@ function createChatPipelineController(services, engine, options = {}) {
     en: "Editing made the artist prompt segment undetectable. Edit the artist part and the rest separately in the original.",
     ko: "편집으로 작가 프롬프트 구간을 확인할 수 없습니다. 원본에서 작가 구간과 나머지 내용을 나누어 편집해 주세요."
   };
-  const replaceSegment = (text, oldSegment, nextSegment) => {
+  const replaceSegment = (text3, oldSegment, nextSegment) => {
     const from = oldSegment.trim();
     if (!from)
-      return nextSegment.trim() ? text.trim() ? `${text.trim()}, ${nextSegment.trim()}` : nextSegment.trim() : text;
-    const index = text.indexOf(from);
+      return nextSegment.trim() ? text3.trim() ? `${text3.trim()}, ${nextSegment.trim()}` : nextSegment.trim() : text3;
+    const index = text3.indexOf(from);
     if (index < 0)
       throw new RpcFailure(labelError("conflict", ARTIST_SEGMENT_LOST));
-    const next = `${text.slice(0, index)}${nextSegment.trim()}${text.slice(index + from.length)}`;
+    const next = `${text3.slice(0, index)}${nextSegment.trim()}${text3.slice(index + from.length)}`;
     return next.replace(/,\s*,/gu, ",").replace(/^\s*,\s*|\s*,\s*$/gu, "").trim();
   };
   const applyArtistAndOutfits = async (chatId, record, overrides) => {
     const out = { positive: record.positivePrompt, negative: record.negativePrompt, characters: charactersOf(record), configPatch: {}, artistId: record.artistId, actors: record.actors.map((a) => ({ ...a })), trackedArtist: undefined };
     if (!overrides)
       return out;
-    const config = await services.storage.loadConfig();
+    const config2 = await services.storage.loadConfig();
     if (overrides.artistId && overrides.artistId !== record.artistId) {
       if (record.engineProvider === "novelai") {
-        const list = listNovelAIArtists(config.characterPrompt.artistPrompts);
+        const list = listNovelAIArtists(config2.characterPrompt.artistPrompts);
         const next = list.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
         const old = list.find((a) => a.id === record.artistId);
         const tracked = rec8(rec8(record.novelAIConfig).nonArtistPromptWeightArtist);
@@ -70085,13 +70508,13 @@ function createChatPipelineController(services, engine, options = {}) {
           if (Number.isFinite(Number(o[key])))
             out.configPatch[key] = Number(o[key]);
       } else {
-        const entries = config.animaArtists.entries;
+        const entries = config2.animaArtists.entries;
         const next = entries.find((a) => a.id === overrides.artistId) ?? fail2("not-found", `Artist not found: ${overrides.artistId}`);
         out.positive = replaceSegment(out.positive, str10(entries.find((a) => a.id === record.artistId)?.text), str10(next.text));
       }
       out.artistId = overrides.artistId;
     }
-    const choices = overrides.outfitByActor && Object.keys(overrides.outfitByActor).length ? await formsByActor(record, chatId, config) : new Map;
+    const choices = overrides.outfitByActor && Object.keys(overrides.outfitByActor).length ? await formsByActor(record, chatId, config2) : new Map;
     for (const [key, outfitId] of Object.entries(overrides.outfitByActor ?? {})) {
       const actor = out.actors.find((a) => a.identityKey === key);
       if (!actor || !outfitId || actor.selectedOutfitId === outfitId)
@@ -70111,13 +70534,13 @@ function createChatPipelineController(services, engine, options = {}) {
     }
     return out;
   };
-  const regenerationRequest = (record, overrides, keepSeed, config, slotId, rebuilt, fromZoom = false) => {
+  const regenerationRequest = (record, overrides, keepSeed, config2, slotId, rebuilt, fromZoom = false) => {
     const o = overrides ?? {};
-    const sections = new Map((o.sections ?? []).map((s) => [s.id, s]));
+    const sections = new Map((o.sections ?? []).map((s2) => [s2.id, s2]));
     const main = sections.get("main") ?? sections.get("provider");
-    const size = o.sizeId ? resolveImageSize2(o.sizeId, config.runtime.customImageSizes ?? []) : undefined;
-    const width = size?.width ?? (record.width || config.novelai.width);
-    const height = size?.height ?? (record.height || config.novelai.height);
+    const size = o.sizeId ? resolveImageSize2(o.sizeId, config2.runtime.customImageSizes ?? []) : undefined;
+    const width = size?.width ?? (record.width || config2.novelai.width);
+    const height = size?.height ?? (record.height || config2.novelai.height);
     const positive = o.positivePrompt ?? main?.value ?? rebuilt?.positive ?? record.positivePrompt;
     const negative = o.negativePrompt ?? main?.negativeValue ?? rebuilt?.negative ?? record.negativePrompt;
     const excluded = new Set(o.excludedCharacterIndexes ?? []);
@@ -70129,19 +70552,19 @@ function createChatPipelineController(services, engine, options = {}) {
       return typeof x === "number" && Number.isFinite(x) && typeof y === "number" && Number.isFinite(y) && !(x === 0 && y === 0) ? { x, y } : null;
     };
     const characters = (rebuilt?.characters ?? charactersOf(record)).map((c, i) => {
-      const s = sections.get(`actor:${i}`);
+      const s2 = sections.get(`actor:${i}`);
       const center = o.centers?.[i];
       if (center)
         anyCenter = true;
       const kept = keepCoords ? sentCenter(i) : null;
       return {
         ...c,
-        prompt: s?.value ?? c.prompt,
-        uc: s?.negativeValue ?? c.uc,
+        prompt: s2?.value ?? c.prompt,
+        uc: s2?.negativeValue ?? c.uc,
         ...center ? { centerX: center.x, centerY: center.y, coordinateMode: "fixed" } : o.centers && o.centers[i] === null ? { coordinateMode: "automatic" } : {},
         ...keepCoords ? kept ? { centerX: kept.x, centerY: kept.y, coordinateMode: "fixed" } : { coordinateMode: "automatic" } : {}
       };
-    }).filter((_c, i) => !excluded.has(i));
+    }).filter((_c2, i) => !excluded.has(i));
     const seed = keepSeed ? str10(o.seed) || record.seed : "";
     const provider = record.engineProvider === "comfy-ui" ? "comfy-ui" : record.engineProvider === "chan-server" ? "chan-server" : "novelai";
     if (provider !== "novelai")
@@ -70179,10 +70602,10 @@ function createChatPipelineController(services, engine, options = {}) {
       next.centers = centers;
     else
       delete next.centers;
-    const sections = draft.sections?.flatMap((s) => {
-      const actor = /^actor:(\d+)$/u.exec(s.id);
+    const sections = draft.sections?.flatMap((s2) => {
+      const actor = /^actor:(\d+)$/u.exec(s2.id);
       const at = actor ? kept.indexOf(Number(actor[1])) : -1;
-      return !actor ? [s] : at < 0 ? [] : [{ ...s, id: `actor:${at}` }];
+      return !actor ? [s2] : at < 0 ? [] : [{ ...s2, id: `actor:${at}` }];
     });
     if (sections?.length)
       next.sections = sections;
@@ -70196,7 +70619,7 @@ function createChatPipelineController(services, engine, options = {}) {
     const signal = job.controller.signal;
     try {
       setPhase(job, "generating", { imageIndex: 0, imageCount: 1 });
-      const [doc, config, sidecar] = await Promise.all([services.storage.loadChatData(chatId), services.storage.loadConfig(), readSidecar(services.storage, chatId)]);
+      const [doc, config2, sidecar] = await Promise.all([services.storage.loadChatData(chatId), services.storage.loadConfig(), readSidecar(services.storage, chatId)]);
       const resolved = resolveHistorySlot(doc.history, { slotId, messageKey: job.planKey });
       if (!resolved)
         throw new RpcFailure(labelError("not-found", PIPELINE_TEXT.messageMissing));
@@ -70212,12 +70635,12 @@ function createChatPipelineController(services, engine, options = {}) {
       const overrides = draft || explicit ? { ...draft ?? {}, ...explicit ?? {} } : undefined;
       const keepSeed = !!overrides?.seedFixed;
       const rebuilt = await applyArtistAndOutfits(chatId, record, overrides);
-      const request = regenerationRequest(record, overrides, keepSeed, config, slotId, rebuilt, !!explicit);
-      const chat = await getChat(chatId);
+      const request = regenerationRequest(record, overrides, keepSeed, config2, slotId, rebuilt, !!explicit);
+      const chat2 = await getChat(chatId);
       const messages = await loadMessages(services.host, chatId);
-      const characterId = await speakingCharacterId(services, chat, findMessage(messages, job.target.messageId).view);
+      const characterId = await speakingCharacterId(services, chat2, findMessage(messages, job.target.messageId).view);
       const document2 = await services.storage.loadCharacterDocument(characterId);
-      const nsfw = resolveEffectiveConfig(config, { characterId, document: document2 }).nsfwAlwaysEnabled;
+      const nsfw2 = resolveEffectiveConfig(config2, { characterId, document: document2 }).nsfwAlwaysEnabled;
       const result = await engine.dispatch(request, {
         engineProvider: record.engineProvider,
         purpose: "regenerate",
@@ -70226,18 +70649,18 @@ function createChatPipelineController(services, engine, options = {}) {
         ownerChatId: chatId,
         ownerCharacterId: characterId,
         comfyuiWorkflowId: target.comfyuiWorkflowId,
-        forceNsfwPrefix: () => nsfw,
+        forceNsfwPrefix: () => nsfw2,
         onProgress: (p) => {
           job.snapshot.progress = { ...phaseProgress("generating", { regenerate: true, imageIndex: 0, imageCount: 1 }), ...p.queue ? { queue: p.queue } : {} };
-          emitProgress(job);
+          emitProgress2(job);
         }
-      }, config, {
+      }, config2, {
         signal,
         onRetry: (retry, errors) => {
           setRetryErrors(job, { engine: errors });
           if (retry)
             job.snapshot.progress = { ...job.snapshot.progress, retry: { attempt: retry.attempt, total: retry.total }, retryCount: `${retry.attempt}/${retry.total}` };
-          emitProgress(job);
+          emitProgress2(job);
         }
       });
       if (signal.aborted)
@@ -70268,8 +70691,8 @@ function createChatPipelineController(services, engine, options = {}) {
       setPhase(job, "committing");
       const written = await services.storage.updateChatData(chatId, (d) => {
         const tree = appendGeneratedEntry(d.history, { slotId, messageKey: job.planKey, revisionId: resolved.revision.revisionId, entry, selectAsDefault: true });
-        const plan = findPlan(d, job.planKey);
-        storePlanAndTree(d, plan, tree);
+        const plan2 = findPlan(d, job.planKey);
+        storePlanAndTree(d, plan2, tree);
         return d;
       });
       const finalized = rec8(result.finalizedPrompt);
@@ -70279,18 +70702,18 @@ function createChatPipelineController(services, engine, options = {}) {
         ...cfg,
         ...rebuilt.configPatch,
         ...rebuilt.trackedArtist ? { nonArtistPromptWeightArtist: rebuilt.trackedArtist } : {},
-        ...Array.isArray(cfg.characterPrompts) ? { characterPrompts: cfg.characterPrompts.filter((_c, i) => !excluded.has(i)) } : {}
+        ...Array.isArray(cfg.characterPrompts) ? { characterPrompts: cfg.characterPrompts.filter((_c2, i) => !excluded.has(i)) } : {}
       };
-      await updateSidecar(services.storage, chatId, (s) => {
-        const draft = s.drafts[slotId]?.overrides;
-        if (draft && excluded.size) {
-          const next = compactDraft(draft, record.characters.length, excluded);
+      await updateSidecar(services.storage, chatId, (s2) => {
+        const draft2 = s2.drafts[slotId]?.overrides;
+        if (draft2 && excluded.size) {
+          const next = compactDraft(draft2, record.characters.length, excluded);
           if (Object.keys(next).length)
-            s.drafts[slotId] = { overrides: next, updatedAt: now() };
+            s2.drafts[slotId] = { overrides: next, updatedAt: now() };
           else
-            delete s.drafts[slotId];
+            delete s2.drafts[slotId];
         }
-        s.records[entry.entryId] = {
+        s2.records[entry.entryId] = {
           ...record,
           entryId: entry.entryId,
           imageId,
@@ -70361,7 +70784,7 @@ function createChatPipelineController(services, engine, options = {}) {
         statuses = toDelete.map((r) => ({ imageId: r.imageId, status: "failed" }));
       }
       for (const r of toDelete) {
-        const status = statuses.find((s) => s.imageId === r.imageId)?.status ?? "failed";
+        const status = statuses.find((s2) => s2.imageId === r.imageId)?.status ?? "failed";
         cleanup.push({ assetName: r.assetName, status });
         if (status === "failed")
           failed.push(r);
@@ -70374,18 +70797,18 @@ function createChatPipelineController(services, engine, options = {}) {
     return e && e.kind === "generated" && !after.entriesById[id] ? [{ assetName: e.assetName, imageId: imageIdFromResultUrl(e.savedPath) ?? "" }] : [];
   });
   const providerOf = (record) => !record ? "novelai" : record.engineProvider === "comfy-ui" ? "comfy-ui" : record.engineProvider === "chan-server" ? "generic" : "novelai";
-  const formsByActor = async (record, chatId, config) => {
+  const formsByActor = async (record, chatId, config2) => {
     const out = new Map;
-    const chat = await getChat(chatId).catch(() => null);
+    const chat2 = await getChat(chatId).catch(() => null);
     for (const actor of record.actors) {
       if (!actor.identityKey)
         continue;
       try {
         let forms;
         if (actor.identityKey.startsWith("persona::"))
-          forms = resolvePersonaForms(config.characterPrompt.personaSettings, config.characterPrompt.personaGender, actor.identityKey.slice(9));
+          forms = resolvePersonaForms(config2.characterPrompt.personaSettings, config2.characterPrompt.personaGender, actor.identityKey.slice(9));
         else {
-          const owner = actor.identityKey.includes("::") ? actor.identityKey.split("::")[0] : chat?.characterId ?? "";
+          const owner = actor.identityKey.includes("::") ? actor.identityKey.split("::")[0] : chat2?.characterId ?? "";
           const document2 = owner ? await services.storage.loadCharacterDocument(owner) : null;
           forms = resolveFormCollection(document2?.characterPrompt.characterForms ?? {}, actor.identityKey, {});
         }
@@ -70399,10 +70822,10 @@ function createChatPipelineController(services, engine, options = {}) {
   const choicesFor = async (record, chatId) => {
     if (!record)
       return {};
-    const config = await services.storage.loadConfig();
-    const artists = record.engineProvider === "novelai" ? listNovelAIArtists(config.characterPrompt.artistPrompts).map((a) => ({ id: a.id, label: a.displayTitle || a.id })) : config.animaArtists.entries.map((a) => ({ id: a.id, label: a.title || a.id }));
+    const config2 = await services.storage.loadConfig();
+    const artists = record.engineProvider === "novelai" ? listNovelAIArtists(config2.characterPrompt.artistPrompts).map((a) => ({ id: a.id, label: a.displayTitle || a.id })) : config2.animaArtists.entries.map((a) => ({ id: a.id, label: a.title || a.id }));
     const outfitsByActor = new Map;
-    const forms = await formsByActor(record, chatId, config);
+    const forms = await formsByActor(record, chatId, config2);
     for (const actor of record.actors) {
       const form = forms.get(actor.actorIndex);
       if (form)
@@ -70421,7 +70844,7 @@ function createChatPipelineController(services, engine, options = {}) {
       const actor = record.actors.find((a) => a.actorIndex === i);
       return { outfitChoices: o.choices, selectedOutfitId: draft?.outfitByActor?.[o.key] ?? actor?.selectedOutfitId ?? "", actorKey: o.key };
     };
-    const overrides = new Map((draft?.sections ?? []).map((s) => [s.id, s]));
+    const overrides = new Map((draft?.sections ?? []).map((s2) => [s2.id, s2]));
     const pick = (id, value, negativeValue) => {
       const o = overrides.get(id);
       return { value: o?.value ?? value, negativeValue: o?.negativeValue ?? negativeValue };
@@ -70500,12 +70923,12 @@ function createChatPipelineController(services, engine, options = {}) {
     const doc = await services.storage.loadChatData(chatId);
     if (!doc.history.slotsById[slotId])
       fail2("not-found", `Image History slot not found: ${slotId}`);
-    await updateSidecar(services.storage, chatId, (s) => {
-      const next = change(s.drafts[slotId]?.overrides);
+    await updateSidecar(services.storage, chatId, (s2) => {
+      const next = change(s2.drafts[slotId]?.overrides);
       if (next && Object.keys(next).length)
-        s.drafts[slotId] = { overrides: next, updatedAt: now() };
+        s2.drafts[slotId] = { overrides: next, updatedAt: now() };
       else
-        delete s.drafts[slotId];
+        delete s2.drafts[slotId];
     });
   };
   const channelsOf = (record) => [
@@ -70570,14 +70993,14 @@ function createChatPipelineController(services, engine, options = {}) {
       return !!p && p.messageId === messageId && (swipe === undefined || p.swipeIndex === swipe);
     };
     const escaped = messageId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-    const shift = (text) => swipe === undefined ? text : text.replace(new RegExp(`${escaped}@(\\d+)(?![0-9])`, "gu"), (m, n) => Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m);
+    const shift2 = (text3) => swipe === undefined ? text3 : text3.replace(new RegExp(`${escaped}@(\\d+)(?![0-9])`, "gu"), (m, n) => Number(n) > swipe ? `${messageId}@${Number(n) - 1}` : m);
     const fate = (key) => {
       const m = new RegExp(`${escaped}@(\\d+)(?![0-9])`, "u").exec(key);
       if (!m)
         return;
       if (swipe === undefined || Number(m[1]) === swipe)
         return null;
-      const next = shift(key);
+      const next = shift2(key);
       return next === key ? undefined : next;
     };
     const stopped = [...messageJobs.values(), ...slotJobs.values()].filter((job) => job.target.chatId === chatId && job.target.messageId === messageId && (swipe === undefined || job.target.swipeIndex >= swipe));
@@ -70597,9 +71020,9 @@ function createChatPipelineController(services, engine, options = {}) {
         if (matches(key))
           delete doc.store.messages[key];
       storePlanAndTree(doc, null, tree);
-      return swipe === undefined ? doc : JSON.parse(shift(JSON.stringify(doc)));
+      return swipe === undefined ? doc : JSON.parse(shift2(JSON.stringify(doc)));
     });
-    await services.storage.updateJson(sidecarPath(chatId), emptySidecar(), async (current) => pruneSidecar(JSON.parse(shift(JSON.stringify(current))), (await services.storage.loadChatData(chatId)).history)).catch(() => {
+    await services.storage.updateJson(sidecarPath(chatId), emptySidecar(), async (current2) => pruneSidecar(JSON.parse(shift2(JSON.stringify(current2))), (await services.storage.loadChatData(chatId)).history)).catch(() => {
       return;
     });
     await dropMessageStrips(services.storage, chatId, messageId, swipe).catch((e) => log("warn", "Webtoon strip cleanup failed", toRpcError(e)));
@@ -70623,8 +71046,8 @@ function createChatPipelineController(services, engine, options = {}) {
     if (!AUTO_GENERATION_TYPES.has(str10(payload.generationType).toLowerCase()))
       return;
     try {
-      const [settings, config] = await Promise.all([services.storage.loadChatImageGenerationSettings(), services.storage.loadConfig()]);
-      if (!settings.autoGenerationEnabled || config.enabled === false)
+      const [settings, config2] = await Promise.all([services.storage.loadChatImageGenerationSettings(), services.storage.loadConfig()]);
+      if (!settings.autoGenerationEnabled || config2.enabled === false)
         return;
       const active = await services.sources.getActiveChat();
       if (active && active.chatId !== chatId)
@@ -70819,7 +71242,7 @@ function createChatPipelineController(services, engine, options = {}) {
       const job = createJob({ target, planKey: resolved.message.messageKey, kind: "regenerate", attemptKind: "regenerate", slotId: params.slotId, requestedCount: 1 });
       job.regenerate = { ...params.entryId ? { entryId: params.entryId } : {}, ...params.overrides ? { overrides: params.overrides } : {} };
       slotJobs.set(slotKey, job);
-      emitProgress(job);
+      emitProgress2(job);
       job.done = runRegenerate(job);
       return { jobId: job.snapshot.jobId };
     },
@@ -70830,14 +71253,14 @@ function createChatPipelineController(services, engine, options = {}) {
       for (const key of keys) {
         if (messageKeys?.length && !messageKeys.includes(key))
           continue;
-        const plan = findPlan(doc, key);
-        if (plan)
-          plans[key] = plan;
+        const plan2 = findPlan(doc, key);
+        if (plan2)
+          plans[key] = plan2;
       }
       if (!messageKeys?.length)
         return { tree: doc.history, plans };
       const wanted = new Set(messageKeys);
-      const slotsById = Object.fromEntries(Object.entries(doc.history.slotsById).filter(([, s]) => wanted.has(s.messageKey)));
+      const slotsById = Object.fromEntries(Object.entries(doc.history.slotsById).filter(([, s2]) => wanted.has(s2.messageKey)));
       return {
         tree: {
           chatKey: doc.history.chatKey,
@@ -70998,14 +71421,14 @@ function createChatPipelineController(services, engine, options = {}) {
     },
     getZoomDetails: (chatId, slotId, entryId) => zoomDetails(chatId, slotId, entryId),
     async saveDraft(chatId, slotId, overrides) {
-      await updateDraft(chatId, slotId, (current) => ({ ...current ?? {}, ...jsonClone(overrides) }));
+      await updateDraft(chatId, slotId, (current2) => ({ ...current2 ?? {}, ...jsonClone(overrides) }));
       return zoomDetails(chatId, slotId);
     },
     async clearDraft(chatId, slotId, part) {
-      await updateDraft(chatId, slotId, (current) => {
-        if (!current || part === "all")
+      await updateDraft(chatId, slotId, (current2) => {
+        if (!current2 || part === "all")
           return;
-        const next = { ...current };
+        const next = { ...current2 };
         if (part === "prompts") {
           delete next.positivePrompt;
           delete next.negativePrompt;
@@ -71020,15 +71443,15 @@ function createChatPipelineController(services, engine, options = {}) {
     },
     async importViewed(chatId, slotId, entryId, what) {
       const record = await recordFor(chatId, entryId) ?? fail2("not-found", "The viewed image has no stored generation record.");
-      await updateDraft(chatId, slotId, (current) => {
-        const next = { ...current ?? {} };
+      await updateDraft(chatId, slotId, (current2) => {
+        const next = { ...current2 ?? {} };
         if (what === "seed")
           Object.assign(next, { seed: record.seed, seedFixed: true });
         else
           Object.assign(next, {
             positivePrompt: record.positivePrompt,
             negativePrompt: record.negativePrompt,
-            sections: sectionsOf(record, undefined).map((s) => ({ id: s.id, value: s.value, negativeValue: s.negativeValue }))
+            sections: sectionsOf(record, undefined).map((s2) => ({ id: s2.id, value: s2.value, negativeValue: s2.negativeValue }))
           });
         return next;
       });
@@ -71186,15 +71609,15 @@ function createChatPipelineController(services, engine, options = {}) {
       const doc = await readStrip(services.storage, chatId, targetHistoryId(chatId, messageKey));
       if (!doc?.requests[panelId])
         fail2("not-found", `Webtoon panel not found: ${panelId}`);
-      const config = await services.storage.loadConfig();
+      const config2 = await services.storage.loadConfig();
       busy();
       const job = createJob({ target, planKey: messageKey, kind: "regenerate", attemptKind: "regenerate", slotId, requestedCount: 1 });
       job.webtoonPanel = panelId;
       if (doc.format === "manga")
         job.webtoonManga = true;
       slotJobs.set(slotKey, job);
-      emitProgress(job);
-      job.done = runWebtoonReroll(job, config);
+      emitProgress2(job);
+      job.done = runWebtoonReroll(job, config2);
       return { jobId: job.snapshot.jobId };
     },
     async editWebtoonText(params) {
@@ -71218,33 +71641,33 @@ var rec9 = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var arr3 = (v) => Array.isArray(v) ? v : [];
 var str11 = (v) => typeof v === "string" ? v : "";
 var WEIGHT_PREFIX = /^(-?\d+(?:\.\d+)?)::/;
-function chunkAt(segment, pos, chunk) {
+function chunkAt(segment, pos, chunk2) {
   const done = (end) => end === segment.length || segment.startsWith(", ", end);
-  if (segment.startsWith(chunk, pos) && done(pos + chunk.length))
-    return [1, pos + chunk.length];
+  if (segment.startsWith(chunk2, pos) && done(pos + chunk2.length))
+    return [1, pos + chunk2.length];
   const w = WEIGHT_PREFIX.exec(segment.slice(pos));
-  if (w && segment.startsWith(`${chunk}::`, pos + w[0].length)) {
-    const end = pos + w[0].length + chunk.length + 2;
+  if (w && segment.startsWith(`${chunk2}::`, pos + w[0].length)) {
+    const end = pos + w[0].length + chunk2.length + 2;
     if (done(end))
       return [Number(w[1]), end];
   }
   return null;
 }
-function partAt(segment, pos, text) {
-  const whole = chunkAt(segment, pos, text);
+function partAt(segment, pos, text3) {
+  const whole = chunkAt(segment, pos, text3);
   if (whole)
     return whole;
-  const chunks = text.split(",").map((c) => c.trim()).filter(Boolean);
+  const chunks = text3.split(",").map((c) => c.trim()).filter(Boolean);
   if (chunks.length < 2)
     return null;
   let at = pos;
   let weight = 0;
   for (const [i, c] of chunks.entries()) {
-    const hit = chunkAt(segment, at, c);
-    if (!hit || i > 0 && hit[0] !== weight)
+    const hit2 = chunkAt(segment, at, c);
+    if (!hit2 || i > 0 && hit2[0] !== weight)
       return null;
-    weight = hit[0];
-    at = hit[1] + (i < chunks.length - 1 ? 2 : 0);
+    weight = hit2[0];
+    at = hit2[1] + (i < chunks.length - 1 ? 2 : 0);
   }
   return [weight, at];
 }
@@ -71256,12 +71679,12 @@ function parseOutfitSegment(segment, parts) {
   while (pos < segment.length) {
     let matched = false;
     for (let i = next;i < expected.length && !matched; i += 1) {
-      const { part, text } = expected[i];
-      const hit = partAt(segment, pos, text);
-      if (!hit)
+      const { part, text: text3 } = expected[i];
+      const hit2 = partAt(segment, pos, text3);
+      if (!hit2)
         continue;
-      out.push({ part, text, weight: hit[0] });
-      pos = hit[1];
+      out.push({ part, text: text3, weight: hit2[0] });
+      pos = hit2[1];
       matched = true;
       next = i + 1;
     }
@@ -71279,12 +71702,12 @@ var FOREIGN_PRONOUNS = {
   female: /\b(?:his|him|he)\b/i,
   male: /\b(?:her|hers|she)\b/i
 };
-function genderOf(tags) {
-  const first = tags.split(",")[0]?.trim().toLowerCase() ?? "";
+function genderOf(tags3) {
+  const first = tags3.split(",")[0]?.trim().toLowerCase() ?? "";
   return first === "female" || first === "girl" || first === "1girl" ? "female" : first === "male" || first === "boy" || first === "1boy" ? "male" : "";
 }
-function foreignOrNegated(text, index, gender) {
-  const before = text.slice(Math.max(0, index - 40), index).split(/[.;!?\n]/).at(-1) ?? "";
+function foreignOrNegated(text3, index, gender) {
+  const before = text3.slice(Math.max(0, index - 40), index).split(/[.;!?\n]/).at(-1) ?? "";
   const words = before.trim().split(/\s+/).slice(-3).join(" ");
   if (/\b(?:not|no longer|never)\b/i.test(words))
     return true;
@@ -71293,21 +71716,21 @@ function foreignOrNegated(text, index, gender) {
   const foreign = FOREIGN_PRONOUNS[gender];
   return !!foreign && foreign.test(words);
 }
-function matchesOwn(text, re, gender) {
+function matchesOwn(text3, re, gender) {
   const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
-  for (const m of text.matchAll(g))
-    if (!foreignOrNegated(text, m.index ?? 0, gender))
+  for (const m of text3.matchAll(g))
+    if (!foreignOrNegated(text3, m.index ?? 0, gender))
       return true;
   return false;
 }
 var OWN_PRONOUNS = { female: /\bher\b/i, male: /\bhis\b/i, "": /\b(?:her|his|their)\b/i };
-function matchesOwnNoun(text, re, gender) {
+function matchesOwnNoun(text3, re, gender) {
   const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
-  for (const m of text.matchAll(g)) {
+  for (const m of text3.matchAll(g)) {
     const index = m.index ?? 0;
-    if (foreignOrNegated(text, index, gender))
+    if (foreignOrNegated(text3, index, gender))
       continue;
-    const words = (text.slice(Math.max(0, index - 40), index).split(/[.;!?\n]/).at(-1) ?? "").trim().split(/\s+/).slice(-3).join(" ");
+    const words = (text3.slice(Math.max(0, index - 40), index).split(/[.;!?\n]/).at(-1) ?? "").trim().split(/\s+/).slice(-3).join(" ");
     if (OWN_PRONOUNS[gender].test(words) || /\b(?:with|in|on)\b/i.test(words))
       return true;
   }
@@ -71331,13 +71754,13 @@ var OWN_FOOT_RECEIVED = /\b(?:(?:sucking|licking|kissing|biting|nibbling|ticklin
 var interactionCue = (tag) => SOURCE_TAG.test(tag) ? OWN_FOOT_ACTION.test(tag) : TARGET_TAG.test(tag) ? OWN_FOOT_RECEIVED.test(tag) : true;
 var HANDLED_BY = /\b(?:hold(?:s|ing)?|held|grip(?:s|ping|ped)?|grab(?:s|bing|bed)?|gather(?:s|ing|ed)?|cradl(?:e|es|ing|ed)|clutch(?:es|ing|ed)?|cup(?:s|ping|ped)?|kiss(?:es|ing|ed)?|lick(?:s|ing|ed)?|suck(?:s|ing|ed)?|nibbl\w*|bit(?:es?|ing)|massag\w*|knead\w*|rub(?:s|bing|bed)?|strok\w*|caress\w*|tickl\w*|touch(?:es|ing|ed)?|squeez\w*|lift(?:s|ing|ed)?|pin(?:s|ning|ned)?|wip(?:e|es|ing|ed)|wash(?:es|ing|ed)?|worship\w*|sniff\w*|smell\w*|wrap\w*|around|against|between)\b/i;
 var FOOTWEAR_OFF_CUE = /\b(?:footjob|(?<!(?:shoe|boot|sneaker|loafer|slipper|sandal|heel) )soles?|(?<!tip)toes|toe (?:sucking|licking|curl\w*)|(?:sucking|licking|kissing|curl(?:s|ing|ed)?|spread(?:s|ing)?|wiggl\w*) (?:her |his |their )?(?:big )?toes?|(?:foot|feet) (?:worship|licking|massage|sniffing|smelling|on face)|feet on (?:his|her|their) face)\b/i;
-function matchesOwnCue(text, re, gender) {
+function matchesOwnCue(text3, re, gender) {
   const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
-  for (const m of text.matchAll(g)) {
+  for (const m of text3.matchAll(g)) {
     const index = m.index ?? 0;
-    if (foreignOrNegated(text, index, gender))
+    if (foreignOrNegated(text3, index, gender))
       continue;
-    const clause = (text.slice(Math.max(0, index - 80), index).split(/[.;!?\n,]/).at(-1) ?? "").trim().split(/\s+/);
+    const clause = (text3.slice(Math.max(0, index - 80), index).split(/[.;!?\n,]/).at(-1) ?? "").trim().split(/\s+/);
     const near = clause.slice(-3).join(" ");
     if (OWN_PRONOUNS[gender].test(near))
       return true;
@@ -71349,8 +71772,8 @@ function matchesOwnCue(text, re, gender) {
 }
 var NOT_A_FOOT = /\b(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|a few|few|several|a couple of|many)[- ](?:foot|feet)\b|\b(?:feet|foot) (?:away|tall|high|long|wide|deep|apart from)\b|\bfoot of (?:the|a|an|her|his|their|its) |\bon foot\b|\bfoot traffic\b/gi;
 var BLOCKING_TAGS = ["portrait", "hand focus", "eye focus", "breast focus", "pectoral focus", "crotch focus", "ass focus", "hip focus", "face focus"];
-function hasTag(tags, tag) {
-  return new RegExp(String.raw`(^|,\s*)(?:-?\d+(?:\.\d+)?::)?${tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:::)?\s*(?=,|$)`, "i").test(tags);
+function hasTag(tags3, tag) {
+  return new RegExp(String.raw`(^|,\s*)(?:-?\d+(?:\.\d+)?::)?${tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:::)?\s*(?=,|$)`, "i").test(tags3);
 }
 function repairActorPrompt(input) {
   const { prompt, segment, parts } = input;
@@ -71359,14 +71782,14 @@ function repairActorPrompt(input) {
   const nlStart = prompt.indexOf(`
 `);
   const tagsEnd = nlStart < 0 ? prompt.length : nlStart;
-  const tags = prompt.slice(0, tagsEnd);
+  const tags3 = prompt.slice(0, tagsEnd);
   let nl = nlStart < 0 ? "" : prompt.slice(nlStart + 1);
   const seg = segment && segment.start >= 0 && segment.end <= tagsEnd && segment.start < segment.end ? segment : undefined;
   const entries = seg ? parseOutfitSegment(prompt.slice(seg.start, seg.end), parts) : null;
-  const before = seg ? tags.slice(0, seg.start) : tags;
-  const after = seg ? tags.slice(seg.end) : "";
+  const before = seg ? tags3.slice(0, seg.start) : tags3;
+  const after = seg ? tags3.slice(seg.end) : "";
   const otherTags = `${before}${after}`.replace(BODY_TYPE_TAG, "$1");
-  const gender = genderOf(tags);
+  const gender = genderOf(tags3);
   const cueText = `${otherTags}
 ${nl}`;
   const changes = [];
@@ -71395,11 +71818,11 @@ ${nl}`;
   const feetOut = input.framing === "feet_out_of_frame" || /(^|,\s*)feet out of frame\s*(?=,|$)/i.test(input.globalPositive ?? "") || hasTag(otherTags, "feet out of frame");
   const cueTags = otherTags.split(",").filter(interactionCue).join(",").replace(NOT_A_FOOT, " ");
   const cueNl = nl.replace(NOT_A_FOOT, " ");
-  const cue = (re) => re.test(cueTags) || matchesOwnCue(cueNl, re, gender);
-  const feetVisible = !blocked && !feetOut && cue(FEET_CUE);
-  const footwearOff = feetVisible && cue(FOOTWEAR_OFF_CUE) && !named("feet");
+  const cue2 = (re) => re.test(cueTags) || matchesOwnCue(cueNl, re, gender);
+  const feetVisible = !blocked && !feetOut && cue2(FEET_CUE);
+  const footwearOff = feetVisible && cue2(FOOTWEAR_OFF_CUE) && !named("feet");
   const longLegwear = registeredGarments(parts.legs, "legs").some((g) => LONG_LEGWEAR.has(g.family));
-  const legsVisible = !blocked && (feetVisible || cue(LEGS_CUE) || longLegwear && cue(THIGH_CUE));
+  const legsVisible = !blocked && (feetVisible || cue2(LEGS_CUE) || longLegwear && cue2(THIGH_CUE));
   let nextEntries = entries;
   if (entries) {
     const byPart = new Map(entries.map((e) => [e.part, e]));
@@ -71412,11 +71835,11 @@ ${nl}`;
     const raise = (p, visible) => {
       if (!visible || removed.has(p) || !parts[p]?.trim() || isAbsencePart(parts[p]))
         return;
-      const current = want.get(p) ?? 0;
-      if (current >= 1)
+      const current2 = want.get(p) ?? 0;
+      if (current2 >= 1)
         return;
       want.set(p, 1);
-      changes.push(`${p}: ${current ? `weight ${current}` : "dropped"} -> 1 (${p === "feet" ? "feet" : "legs"} visible)`);
+      changes.push(`${p}: ${current2 ? `weight ${current2}` : "dropped"} -> 1 (${p === "feet" ? "feet" : "legs"} visible)`);
     };
     raise("legs", legsVisible);
     raise("feet", feetVisible && !footwearOff);
@@ -71442,11 +71865,11 @@ ${nl}`;
     const registered = registeredGarments(parts[slot], slot);
     if (!registered.length)
       continue;
-    const mentions = garmentsIn(nl, slot).filter((m) => !foreignOrNegated(nl, m.start, gender));
+    const mentions2 = garmentsIn(nl, slot).filter((m) => !foreignOrNegated(nl, m.start, gender));
     let rewritten = "";
     let cursor = 0;
     let replaced = false;
-    for (const m of mentions) {
+    for (const m of mentions2) {
       if (!registered.every((r) => garmentsConflict(r, m)))
         continue;
       rewritten += nl.slice(cursor, m.start) + registered[0].chunk;
@@ -71459,7 +71882,7 @@ ${nl}`;
   }
   if (!changes.length)
     return null;
-  let newTags = tags;
+  let newTags = tags3;
   let newSegment = seg;
   if (seg && nextEntries) {
     const outfit = nextEntries.map(renderEntry).join(", ");
@@ -71472,7 +71895,7 @@ ${nl}`;
       newSegment = undefined;
     }
   } else if (stateTags.length) {
-    newTags = tags ? `${tags}, ${stateTags.join(", ")}` : stateTags.join(", ");
+    newTags = tags3 ? `${tags3}, ${stateTags.join(", ")}` : stateTags.join(", ");
   }
   const newPrompt = nlStart < 0 ? newTags : `${newTags}
 ${nl}`;
@@ -71485,7 +71908,7 @@ function replaceInStrings(value, replacements) {
     return value;
   const walk = (v) => {
     if (typeof v === "string")
-      return replacements.reduce((s, [from, to]) => s.includes(from) ? s.split(from).join(to) : s, v);
+      return replacements.reduce((s2, [from, to]) => s2.includes(from) ? s2.split(from).join(to) : s2, v);
     if (Array.isArray(v))
       return v.map(walk);
     if (v && typeof v === "object" && Object.getPrototypeOf(v) === Object.prototype)
@@ -71494,13 +71917,13 @@ function replaceInStrings(value, replacements) {
   };
   return walk(value);
 }
-function repairBatchItems(items, index, onRepair) {
+function repairBatchItems(items2, index, onRepair) {
   if (!index)
-    return [...items];
-  return items.map((item) => {
+    return [...items2];
+  return items2.map((item) => {
     const it = rec9(item);
-    const plan = rec9(it.promptPlan);
-    const characters = arr3(plan.characters).map(rec9);
+    const plan2 = rec9(it.promptPlan);
+    const characters = arr3(plan2.characters).map(rec9);
     if (!characters.length)
       return item;
     const segments = rec9(it.promptSegments);
@@ -71514,7 +71937,7 @@ function repairBatchItems(items, index, onRepair) {
       const span = rec9(outfits[key]);
       const segment = Number.isInteger(span.start) && Number.isInteger(span.end) ? { start: Number(span.start), end: Number(span.end) } : undefined;
       const prompt = str11(c.prompt);
-      const repair = prompt ? repairActorPrompt({ prompt, segment, parts, framing: str11(plan.selectedFraming), globalPositive: str11(plan.globalPositive) }) : null;
+      const repair = prompt ? repairActorPrompt({ prompt, segment, parts, framing: str11(plan2.selectedFraming), globalPositive: str11(plan2.globalPositive) }) : null;
       if (!repair)
         return c;
       replacements.push([prompt, repair.prompt]);
@@ -71531,7 +71954,7 @@ function repairBatchItems(items, index, onRepair) {
     const prepareProviderPrompt = it.prepareProviderPrompt;
     return {
       ...it,
-      promptPlan: Object.freeze({ ...plan, characters: Object.freeze(nextCharacters) }),
+      promptPlan: Object.freeze({ ...plan2, characters: Object.freeze(nextCharacters) }),
       promptSegments: Object.freeze({ ...segments, outfits: Object.freeze(outfits) }),
       ...createNovelAIConfig ? { createNovelAIConfig: (seed) => replaceInStrings(createNovelAIConfig(seed), replacements) } : {},
       ...prepareProviderPrompt ? { prepareProviderPrompt: (ctx) => replaceInStrings(prepareProviderPrompt(ctx), replacements) } : {}
@@ -71544,22 +71967,22 @@ function createEnginePort(services, options = {}) {
   const registry = new ProviderRunRegistry;
   const adapters = createImageProviderAdapters(services, registry);
   const references = createComfyReferencePreparer(services);
-  let current = null;
+  let current2 = null;
   let snapshot = null;
   const outfitRuns = new OutfitIndexRegistry;
-  const repairItems = (input, items) => {
+  const repairItems = (input, items2) => {
     try {
-      return repairBatchItems(items, input.outfitIndex, (log) => services.log.append("info", "pipeline", `Outfit repair ${log.actorId} (${log.sourceImageToken}): ${log.changes.join("; ")}`));
+      return repairBatchItems(items2, input.outfitIndex, (log) => services.log.append("info", "pipeline", `Outfit repair ${log.actorId} (${log.sourceImageToken}): ${log.changes.join("; ")}`));
     } catch (e) {
       services.log.append("warn", "pipeline", `Outfit repair skipped: ${e instanceof Error ? e.message : String(e)}`);
-      return [...items];
+      return [...items2];
     }
   };
-  const engineFor = (config) => {
-    const raw = String(config.presetCatalog?.rawJson ?? "");
-    if (current && current.raw === raw)
-      return current.engine;
-    current?.engine.dispose();
+  const engineFor = (config2) => {
+    const raw = String(config2.presetCatalog?.rawJson ?? "");
+    if (current2 && current2.raw === raw)
+      return current2.engine;
+    current2?.engine.dispose();
     const engine = createAssetMaidEngine({
       analyzerClient: withOutfitAwareness(services.llm.analyzerClient({ purpose: "analyzer" }), outfitRuns, (n) => services.log.append("info", "pipeline", `Analyzer request: outfit parts of ${n} registered outfit(s) added.`)),
       imageProviders: adapters,
@@ -71571,18 +71994,18 @@ function createEnginePort(services, options = {}) {
       onAnalyzerDiagnostic: (event) => options.onAnalyzerDiagnostic?.(event),
       prepareBatchItems: repairItems
     });
-    current = { raw, engine };
+    current2 = { raw, engine };
     return engine;
   };
   return {
-    executionMode(config) {
-      return engineFor(config).parts.catalogState.source === "default" ? "single-stage" : "two-stage";
+    executionMode(config2) {
+      return engineFor(config2).parts.catalogState.source === "default" ? "single-stage" : "two-stage";
     },
-    async run(input, context, config) {
-      snapshot = config;
-      const engine = engineFor(config);
-      const runId = registry.register(context);
-      const ref = { providerId: context.engineProvider, queueScopeKey: registry.queueScopeKey(runId) };
+    async run(input, context2, config2) {
+      snapshot = config2;
+      const engine = engineFor(config2);
+      const runId = registry.register(context2);
+      const ref = { providerId: context2.engineProvider, queueScopeKey: registry.queueScopeKey(runId) };
       const outfitIndex = input.outfitIndex;
       const releaseOutfits = outfitIndex ? outfitRuns.register(outfitIndex) : undefined;
       const sessions = engine.parts.sessions;
@@ -71622,21 +72045,21 @@ function createEnginePort(services, options = {}) {
         registry.release(runId);
       }
     },
-    async dispatch(request, context, config, opts = {}) {
-      snapshot = config;
-      const engine = engineFor(config);
-      const runId = registry.register(context);
+    async dispatch(request, context2, config2, opts = {}) {
+      snapshot = config2;
+      const engine = engineFor(config2);
+      const runId = registry.register(context2);
       const providerRef = { providerId: request.provider, queueScopeKey: registry.queueScopeKey(runId) };
       const dispatcher = engine.parts.dispatcher;
       try {
-        return await dispatcher.generate({ ...request, providerRef, ...opts.signal ? { signal: opts.signal } : {} }, { retryCount: config.runtime.generationAutoRetryCount, ...opts.onRetry ? { onRetry: opts.onRetry } : {} });
+        return await dispatcher.generate({ ...request, providerRef, ...opts.signal ? { signal: opts.signal } : {} }, { retryCount: config2.runtime.generationAutoRetryCount, ...opts.onRetry ? { onRetry: opts.onRetry } : {} });
       } finally {
         registry.release(runId);
       }
     },
     dispose() {
-      current?.engine.dispose();
-      current = null;
+      current2?.engine.dispose();
+      current2 = null;
     }
   };
 }
@@ -71657,8 +72080,8 @@ function createPipelineModule(services, getModules, options = {}) {
   const engine = options.engine ?? createEnginePort(services, {
     onAnalyzerDiagnostic: (event) => {
       try {
-        const text = event.detail === undefined ? "" : JSON.stringify(event.detail);
-        services.log.append("debug", "analyzer", event.event, text.length > 2000 ? { size: text.length } : event.detail);
+        const text3 = event.detail === undefined ? "" : JSON.stringify(event.detail);
+        services.log.append("debug", "analyzer", event.event, text3.length > 2000 ? { size: text3.length } : event.detail);
       } catch {}
     }
   });
@@ -71721,15 +72144,15 @@ function createRouter(options) {
         const result = await handler(params, ctx);
         send(userId, frontendSessionId, okResponse({ requestId, method }, result ?? { ok: true }));
       } catch (error) {
-        const rpc = toRpcError(error);
+        const rpc2 = toRpcError(error);
         let logged = false;
         try {
-          if (rpc.code !== "cancelled" && ctx) {
-            ctx.log.append(rpc.code === "internal" ? "error" : "warn", "rpc", `${method} failed: ${rpc.message}`, { code: rpc.code, detailCode: rpc.detailCode });
+          if (rpc2.code !== "cancelled" && ctx) {
+            ctx.log.append(rpc2.code === "internal" ? "error" : "warn", "rpc", `${method} failed: ${rpc2.message}`, { code: rpc2.code, detailCode: rpc2.detailCode });
             logged = true;
           }
         } catch {}
-        reply(rpc, logged);
+        reply(rpc2, logged);
       }
       return true;
     }
@@ -71763,13 +72186,13 @@ function nullsToDefaults(value, defaults) {
   }
   return out;
 }
-function applyScopeToConfig(config, scope) {
+function applyScopeToConfig(config2, scope) {
   return {
-    ...config,
-    runtime: { ...config.runtime, ...typeof scope.runtime.nsfwAlwaysEnabled === "boolean" ? { nsfwAlwaysEnabled: scope.runtime.nsfwAlwaysEnabled } : {} },
-    novelai: { ...config.novelai, ...typeof scope.novelai.negativePrompt === "string" ? { negativePrompt: scope.novelai.negativePrompt } : {} },
+    ...config2,
+    runtime: { ...config2.runtime, ...typeof scope.runtime.nsfwAlwaysEnabled === "boolean" ? { nsfwAlwaysEnabled: scope.runtime.nsfwAlwaysEnabled } : {} },
+    novelai: { ...config2.novelai, ...typeof scope.novelai.negativePrompt === "string" ? { negativePrompt: scope.novelai.negativePrompt } : {} },
     characterPrompt: {
-      ...config.characterPrompt,
+      ...config2.characterPrompt,
       ...typeof scope.characterPrompt.fixedPositivePrompt === "string" ? { fixedPositivePrompt: scope.characterPrompt.fixedPositivePrompt } : {},
       charxGenerationDefaults: scope.characterPrompt.charxGenerationDefaults
     }
@@ -71783,13 +72206,13 @@ function dirtyFieldsOf(scope, characterId) {
   return (Array.isArray(dirty) ? dirty : []).filter((f) => CHARX_SETTING_FIELDS.includes(f));
 }
 async function updateCharx(ctx, characterId, op, reason) {
-  const config = await ctx.storage.loadConfig();
-  const doc = await ctx.storage.updateCharacterDocument(characterId, (d) => applyScopeToDocument(d, op(charxScopeFor(config, d))), { reason });
+  const config2 = await ctx.storage.loadConfig();
+  const doc = await ctx.storage.updateCharacterDocument(characterId, (d) => applyScopeToDocument(d, op(charxScopeFor(config2, d))), { reason });
   const next = await ctx.storage.updateConfig((c) => applyScopeToConfig(c, recomputeCharxDirtyFields(charxScopeFor(c, doc), characterId)));
   return charxScopeFor(next, doc);
 }
 async function backendStatus(ctx) {
-  const [config, chat] = await Promise.all([ctx.storage.loadConfig(), ctx.sources.getActiveChat()]);
+  const [config2, chat2] = await Promise.all([ctx.storage.loadConfig(), ctx.sources.getActiveChat()]);
   let missingPermissions = [];
   try {
     const perms = ctx.host.permissions;
@@ -71805,11 +72228,11 @@ async function backendStatus(ctx) {
   return {
     ready: true,
     extensionVersion: EXTENSION_VERSION,
-    activeChatId: chat?.chatId ?? null,
-    activeCharacterId: chat?.characterId || null,
-    activeGroupCharacterIds: chat?.groupCharacterIds ?? [],
+    activeChatId: chat2?.chatId ?? null,
+    activeCharacterId: chat2?.characterId || null,
+    activeGroupCharacterIds: chat2?.groupCharacterIds ?? [],
     missingPermissions,
-    generationProvider: config.runtime.generationProvider
+    generationProvider: config2.runtime.generationProvider
   };
 }
 function personaAvatarUrl(imageId) {
@@ -71833,8 +72256,8 @@ var coreHandlers = {
     return { ok: true };
   },
   async "config.get"(_params, ctx) {
-    const [config, chatImageGeneration, uiState] = await Promise.all([ctx.storage.loadConfig(), ctx.storage.loadChatImageGenerationSettings(), ctx.storage.loadUiState()]);
-    return { config, chatImageGeneration, uiState };
+    const [config2, chatImageGeneration, uiState] = await Promise.all([ctx.storage.loadConfig(), ctx.storage.loadChatImageGenerationSettings(), ctx.storage.loadUiState()]);
+    return { config: config2, chatImageGeneration, uiState };
   },
   async "config.update"(params, ctx) {
     const patch = asRecord3(params.patch);
@@ -71848,13 +72271,13 @@ var coreHandlers = {
         providerHint = found.provider;
     }
     const before = (await ctx.storage.loadConfig()).runtime.generationProvider;
-    const config = await ctx.storage.updateConfig((current) => {
-      const merged = nullsToDefaults(deepMergePatch(current, patch), createDefaultConfig());
+    const config2 = await ctx.storage.updateConfig((current2) => {
+      const merged = nullsToDefaults(deepMergePatch(current2, patch), createDefaultConfig());
       return providerHint !== null ? { ...merged, image: { ...merged.image, provider: providerHint } } : merged;
     });
-    if (config.runtime.generationProvider !== before)
+    if (config2.runtime.generationProvider !== before)
       ctx.events.emit("status.changed", await backendStatus(ctx));
-    return { config };
+    return { config: config2 };
   },
   async "config.factoryReset"(params, ctx) {
     requireConfirm(params);
@@ -71880,12 +72303,12 @@ var coreHandlers = {
   "workspace.listCharacters": async (_p, ctx) => ({ characters: await ctx.sources.listCharacters() }),
   async "charxSettings.get"(params, ctx) {
     if (typeof params.characterId === "string" && !params.characterId.trim()) {
-      const scope = charxScopeFor(await ctx.storage.loadConfig(), null);
-      return { effective: resolveEffectiveCharxSettings(scope, ""), all: resolveAllCharxSettings(scope), dirtyFields: [] };
+      const scope2 = charxScopeFor(await ctx.storage.loadConfig(), null);
+      return { effective: resolveEffectiveCharxSettings(scope2, ""), all: resolveAllCharxSettings(scope2), dirtyFields: [] };
     }
     const characterId = requireId(params.characterId, "characterId");
-    const [config, doc] = await Promise.all([ctx.storage.loadConfig(), ctx.storage.loadCharacterDocument(characterId)]);
-    let scope = charxScopeFor(config, doc);
+    const [config2, doc] = await Promise.all([ctx.storage.loadConfig(), ctx.storage.loadCharacterDocument(characterId)]);
+    let scope = charxScopeFor(config2, doc);
     const refreshed = refreshCharxDirtyFields(scope, characterId);
     if (refreshed !== scope) {
       const next = await ctx.storage.updateConfig((c) => applyScopeToConfig(c, refreshCharxDirtyFields(charxScopeFor(c, doc), characterId)));
@@ -71895,20 +72318,20 @@ var coreHandlers = {
   },
   async "charxSettings.setOverride"(params, ctx) {
     const characterId = requireId(params.characterId, "characterId");
-    const scope = await updateCharx(ctx, characterId, (s) => setCharxOverride(s, characterId, asRecord3(params.patch)), "charx-settings");
+    const scope = await updateCharx(ctx, characterId, (s2) => setCharxOverride(s2, characterId, asRecord3(params.patch)), "charx-settings");
     return { effective: resolveEffectiveCharxSettings(scope, characterId), dirtyFields: dirtyFieldsOf(scope, characterId) };
   },
   async "charxSettings.setDefaults"(params, ctx) {
-    const config = await ctx.storage.updateConfig((c) => applyScopeToConfig(c, setCharxDefaults(charxScopeFor(c, null), asRecord3(params.patch))));
-    return { all: resolveAllCharxSettings(charxScopeFor(config, null)) };
+    const config2 = await ctx.storage.updateConfig((c) => applyScopeToConfig(c, setCharxDefaults(charxScopeFor(c, null), asRecord3(params.patch))));
+    return { all: resolveAllCharxSettings(charxScopeFor(config2, null)) };
   },
   async "charxSettings.resetAll"(_params, ctx) {
-    const config = await ctx.storage.updateConfig((c) => applyScopeToConfig(c, resetAllCharxOverrides(charxScopeFor(c, null))));
-    return { all: resolveAllCharxSettings(charxScopeFor(config, null)) };
+    const config2 = await ctx.storage.updateConfig((c) => applyScopeToConfig(c, resetAllCharxOverrides(charxScopeFor(c, null))));
+    return { all: resolveAllCharxSettings(charxScopeFor(config2, null)) };
   },
   async "charxSettings.clearOverrides"(params, ctx) {
     const characterId = requireId(params.characterId, "characterId");
-    const scope = await updateCharx(ctx, characterId, (s) => clearCharxOverrides(s, characterId), "charx-settings-reset");
+    const scope = await updateCharx(ctx, characterId, (s2) => clearCharxOverrides(s2, characterId), "charx-settings-reset");
     return { effective: resolveEffectiveCharxSettings(scope, characterId) };
   },
   async "character.reset"(params, ctx) {
@@ -71925,15 +72348,15 @@ var coreHandlers = {
     return { ok: true };
   },
   async "artists.list"(params, ctx) {
-    const config = await ctx.storage.loadConfig();
+    const config2 = await ctx.storage.loadConfig();
     const characterId = str5(params.characterId);
     const doc = characterId ? await ctx.storage.loadCharacterDocument(characterId) : null;
-    const anima = normalizeAnimaArtists(config.animaArtists);
+    const anima = normalizeAnimaArtists(config2.animaArtists);
     if (characterId && doc?.animaArtistId)
       anima.selection.bySourceId[characterId] = doc.animaArtistId;
-    const novelai = resolveNovelAIArtistSelection(config.characterPrompt, doc?.characterPrompt.selectedArtistId);
+    const novelai = resolveNovelAIArtistSelection(config2.characterPrompt, doc?.characterPrompt.selectedArtistId);
     return {
-      novelai: listNovelAIArtists(config.characterPrompt.artistPrompts),
+      novelai: listNovelAIArtists(config2.characterPrompt.artistPrompts),
       anima,
       selectedNovelAIId: novelai.id,
       globalNovelAIId: novelai.globalId,
@@ -71944,8 +72367,8 @@ var coreHandlers = {
   async "artists.upsertNovelAI"(params, ctx) {
     const input = asRecord3(params.entry);
     let saved;
-    await ctx.storage.updateConfig((config) => {
-      const list = [...config.characterPrompt.artistPrompts];
+    await ctx.storage.updateConfig((config2) => {
+      const list = [...config2.characterPrompt.artistPrompts];
       const preset = DEFAULT_ARTIST_PRESETS.find((p) => p.id === str5(input.id));
       if (preset?.id === NO_ARTIST_ID)
         fail2("bad-request", "The 'no artist' entry cannot be edited.");
@@ -71964,49 +72387,49 @@ var coreHandlers = {
         list[index] = saved;
       else
         list.push(saved);
-      return { ...config, characterPrompt: { ...config.characterPrompt, artistPrompts: list } };
+      return { ...config2, characterPrompt: { ...config2.characterPrompt, artistPrompts: list } };
     });
     return { entry: saved };
   },
   async "artists.deleteNovelAI"(params, ctx) {
     const id = requireId(params.id, "id");
-    await ctx.storage.updateConfig((config) => ({
-      ...config,
-      characterPrompt: { ...config.characterPrompt, artistPrompts: config.characterPrompt.artistPrompts.filter((e) => str5(e.id) !== id), defaultArtistId: config.characterPrompt.defaultArtistId === id ? NO_ARTIST_ID : config.characterPrompt.defaultArtistId }
+    await ctx.storage.updateConfig((config2) => ({
+      ...config2,
+      characterPrompt: { ...config2.characterPrompt, artistPrompts: config2.characterPrompt.artistPrompts.filter((e) => str5(e.id) !== id), defaultArtistId: config2.characterPrompt.defaultArtistId === id ? NO_ARTIST_ID : config2.characterPrompt.defaultArtistId }
     }));
     return { ok: true };
   },
   async "artists.upsertAnima"(params, ctx) {
     const input = asRecord3(params.entry);
-    const text = str5(input.text);
-    if (!text)
+    const text3 = str5(input.text);
+    if (!text3)
       fail2("bad-request", "The artist prompt text is required.");
     let saved;
-    await ctx.storage.updateConfig((config) => {
-      const entries = [...config.animaArtists.entries];
+    await ctx.storage.updateConfig((config2) => {
+      const entries = [...config2.animaArtists.entries];
       const id = str5(input.id) && str5(input.id) !== NO_ARTIST_ID ? str5(input.id) : prefixedId("anima", new Set(entries.map((e) => e.id)));
-      saved = { id, title: str5(input.title) || id, text, ...str5(input.portableOrigin) ? { portableOrigin: str5(input.portableOrigin) } : {} };
+      saved = { id, title: str5(input.title) || id, text: text3, ...str5(input.portableOrigin) ? { portableOrigin: str5(input.portableOrigin) } : {} };
       const index = entries.findIndex((e) => e.id === id);
       if (index >= 0)
         entries[index] = saved;
       else
         entries.push(saved);
-      return { ...config, animaArtists: { ...config.animaArtists, entries } };
+      return { ...config2, animaArtists: { ...config2.animaArtists, entries } };
     });
     return { entry: saved };
   },
   async "artists.deleteAnima"(params, ctx) {
     const id = requireId(params.id, "id");
-    await ctx.storage.updateConfig((config) => ({ ...config, animaArtists: { ...config.animaArtists, entries: config.animaArtists.entries.filter((e) => e.id !== id) } }));
+    await ctx.storage.updateConfig((config2) => ({ ...config2, animaArtists: { ...config2.animaArtists, entries: config2.animaArtists.entries.filter((e) => e.id !== id) } }));
     return { ok: true };
   },
   async "artists.select"(params, ctx) {
     const artistId = str5(params.artistId);
     const characterId = str5(params.characterId);
-    const config = await ctx.storage.loadConfig();
+    const config2 = await ctx.storage.loadConfig();
     if (params.list === "novelai") {
       const followGlobal = !artistId && !!characterId;
-      if (!followGlobal && !listNovelAIArtists(config.characterPrompt.artistPrompts).some((a) => a.id === artistId))
+      if (!followGlobal && !listNovelAIArtists(config2.characterPrompt.artistPrompts).some((a) => a.id === artistId))
         fail2("not-found", `Unknown artist: ${artistId}`);
       if (characterId)
         await ctx.storage.updateCharacterDocument(characterId, (d) => ({ ...d, characterPrompt: { ...d.characterPrompt, selectedArtistId: artistId } }), { reason: "artists" });
@@ -72017,7 +72440,7 @@ var coreHandlers = {
     if (params.list !== "anima")
       fail2("bad-request", `Unknown artist list: ${String(params.list)}`);
     const id = artistId || NO_ARTIST_ID;
-    if (id !== NO_ARTIST_ID && !config.animaArtists.entries.some((e) => e.id === id))
+    if (id !== NO_ARTIST_ID && !config2.animaArtists.entries.some((e) => e.id === id))
       fail2("not-found", `Unknown artist: ${id}`);
     if (characterId)
       await ctx.storage.updateCharacterDocument(characterId, (d) => ({ ...d, animaArtistId: id }), { reason: "artists" });
@@ -72026,10 +72449,10 @@ var coreHandlers = {
     return { ok: true };
   },
   async "personas.list"(params, ctx) {
-    const [config, personas, active, chat] = await Promise.all([ctx.storage.loadConfig(), ctx.sources.listPersonas(), ctx.sources.getActivePersona(), ctx.sources.getActiveChat()]);
-    const settings = normalizePersonaSettings(config.characterPrompt.personaSettings);
+    const [config2, personas, active, chat2] = await Promise.all([ctx.storage.loadConfig(), ctx.sources.listPersonas(), ctx.sources.getActivePersona(), ctx.sources.getActiveChat()]);
+    const settings = normalizePersonaSettings(config2.characterPrompt.personaSettings);
     const characterId = str5(params.characterId);
-    const boundId = chat && (!characterId || chat.characterId === characterId || chat.groupCharacterIds.includes(characterId)) ? chat.personaId : null;
+    const boundId = chat2 && (!characterId || chat2.characterId === characterId || chat2.groupCharacterIds.includes(characterId)) ? chat2.personaId : null;
     return {
       personas: personas.map((p) => ({
         personaId: p.personaId,
@@ -72039,28 +72462,28 @@ var coreHandlers = {
         isActive: active?.personaId === p.personaId,
         isBound: boundId === p.personaId,
         profile: settings.profiles[p.personaId] ?? null,
-        forms: resolvePersonaForms(settings, config.characterPrompt.personaGender, p.personaId)
+        forms: resolvePersonaForms(settings, config2.characterPrompt.personaGender, p.personaId)
       }))
     };
   },
   async "personas.saveForms"(params, ctx) {
     const personaId = requireId(params.personaId, "personaId");
     let collection;
-    await ctx.storage.updateConfig((config) => {
-      const settings = normalizePersonaSettings(config.characterPrompt.personaSettings);
-      const current = resolvePersonaForms(settings, config.characterPrompt.personaGender, personaId);
-      if (formCollectionRevision(current) !== str5(params.baseRevision)) {
-        fail2("conflict", "The persona appearance was changed elsewhere. Reload it, then apply your edit again.", { detailCode: "FORM_COLLECTION_BASE_CHANGED", details: { expected: params.baseRevision, actual: formCollectionRevision(current) } });
+    await ctx.storage.updateConfig((config2) => {
+      const settings = normalizePersonaSettings(config2.characterPrompt.personaSettings);
+      const current2 = resolvePersonaForms(settings, config2.characterPrompt.personaGender, personaId);
+      if (formCollectionRevision(current2) !== str5(params.baseRevision)) {
+        fail2("conflict", "The persona appearance was changed elsewhere. Reload it, then apply your edit again.", { detailCode: "FORM_COLLECTION_BASE_CHANGED", details: { expected: params.baseRevision, actual: formCollectionRevision(current2) } });
       }
-      collection = normalizeFormCollection(params.collection, { fallbackGender: config.characterPrompt.personaGender === "female" ? "female" : "male" });
+      collection = normalizeFormCollection(params.collection, { fallbackGender: config2.characterPrompt.personaGender === "female" ? "female" : "male" });
       const profile = { ...settings.profiles[personaId] ?? {}, forms: collection };
-      return { ...config, characterPrompt: { ...config.characterPrompt, personaSettings: { ...settings, profiles: { ...settings.profiles, [personaId]: profile } } } };
+      return { ...config2, characterPrompt: { ...config2.characterPrompt, personaSettings: { ...settings, profiles: { ...settings.profiles, [personaId]: profile } } } };
     });
     return { collection, revision: formCollectionRevision(collection) };
   },
   async "personas.setSettings"(params, ctx) {
-    await ctx.storage.updateConfig((config) => {
-      const cp = { ...config.characterPrompt };
+    await ctx.storage.updateConfig((config2) => {
+      const cp = { ...config2.characterPrompt };
       if (params.personaGender === "male" || params.personaGender === "female")
         cp.personaGender = params.personaGender;
       if (typeof params.malePersonaPrompt === "string")
@@ -72069,7 +72492,7 @@ var coreHandlers = {
         cp.malePersonaNegativePrompt = params.malePersonaNegativePrompt;
       if (typeof params.selectedPersonaKey === "string")
         cp.personaSettings = { ...normalizePersonaSettings(cp.personaSettings), selectedPersonaKey: params.selectedPersonaKey.trim() };
-      return { ...config, characterPrompt: cp };
+      return { ...config2, characterPrompt: cp };
     });
     return { ok: true };
   }
@@ -72132,8 +72555,8 @@ function createPuppetService(services, options = {}) {
     waiting.shift()?.();
   };
   const read = async (imageId) => normalize2(imageId, await services.storage.readJson(STORAGE_PATHS.puppet(imageId), null));
-  const update = (imageId, mutate) => services.storage.updateJson(STORAGE_PATHS.puppet(imageId), null, (raw) => mutate(normalize2(imageId, raw))).then((saved) => normalize2(imageId, saved));
-  const failed = (imageId, code) => update(imageId, () => ({ imageId, status: "failed", enabled: false, failure: { code, message: PUPPET_FAILURE_MESSAGES[code] }, updatedAt: now() }));
+  const update2 = (imageId, mutate) => services.storage.updateJson(STORAGE_PATHS.puppet(imageId), null, (raw) => mutate(normalize2(imageId, raw))).then((saved) => normalize2(imageId, saved));
+  const failed = (imageId, code) => update2(imageId, () => ({ imageId, status: "failed", enabled: false, failure: { code, message: PUPPET_FAILURE_MESSAGES[code] }, updatedAt: now() }));
   async function runRig(imageId, signal) {
     if (!await services.llm.supportsVision())
       fail2("unsupported", "The analysis model can't read images. Choose a model with vision in the analysis settings to animate images.");
@@ -72153,8 +72576,8 @@ function createPuppetService(services, options = {}) {
     } catch (error) {
       if (isAbortLike(error))
         throw error;
-      const rpc = toRpcError(error);
-      if (rpc.detailCode === "ANALYZER_CONTENT_FILTERED" || rpc.code !== "unsupported" && FILTERED.test(rpc.message))
+      const rpc2 = toRpcError(error);
+      if (rpc2.detailCode === "ANALYZER_CONTENT_FILTERED" || rpc2.code !== "unsupported" && FILTERED.test(rpc2.message))
         return failed(imageId, "declined");
       throw error;
     }
@@ -72167,7 +72590,7 @@ function createPuppetService(services, options = {}) {
     }
     services.log.append("info", "puppet", `Rigged ${imageId}: ${cleaned.parts.map((p) => p.kind ?? p.label).join(", ")} (${result.model}, ${Math.round(result.latencyMs / 1000)} s)`);
     const at = now();
-    return update(imageId, () => ({ imageId, status: "ready", enabled: true, rig: { version: 1, parts: cleaned.parts, model: result.model, createdAt: at }, updatedAt: at }));
+    return update2(imageId, () => ({ imageId, status: "ready", enabled: true, rig: { version: 1, parts: cleaned.parts, model: result.model, createdAt: at }, updatedAt: at }));
   }
   return {
     async get(imageIds) {
@@ -72185,18 +72608,18 @@ function createPuppetService(services, options = {}) {
       }));
       return states;
     },
-    async rig(rawId, options = {}) {
+    async rig(rawId, options2 = {}) {
       const imageId = needId(rawId);
-      const running = inflight.get(imageId);
-      if (running)
-        return running;
+      const running2 = inflight.get(imageId);
+      if (running2)
+        return running2;
       const task = (async () => {
-        const current = await read(imageId);
-        if (current.status === "ready" && !options.force)
-          return update(imageId, (s) => ({ ...s, enabled: true, updatedAt: now() }));
+        const current2 = await read(imageId);
+        if (current2.status === "ready" && !options2.force)
+          return update2(imageId, (s2) => ({ ...s2, enabled: true, updatedAt: now() }));
         await acquire();
         try {
-          return await runRig(imageId, options.signal);
+          return await runRig(imageId, options2.signal);
         } finally {
           release();
         }
@@ -72206,13 +72629,13 @@ function createPuppetService(services, options = {}) {
     },
     async setEnabled(rawId, enabled) {
       const imageId = needId(rawId);
-      const current = await read(imageId);
-      if (current.status !== "ready") {
+      const current2 = await read(imageId);
+      if (current2.status !== "ready") {
         if (enabled)
           fail2("not-found", "This image has no animation rig yet.");
-        return current;
+        return current2;
       }
-      return update(imageId, (s) => ({ ...s, enabled, updatedAt: now() }));
+      return update2(imageId, (s2) => ({ ...s2, enabled, updatedAt: now() }));
     }
   };
 }
@@ -72353,7 +72776,7 @@ async function listAssets(services, params) {
   }
   const offset = Math.max(0, Number.parseInt(params.cursor ?? "0", 10) || 0);
   const limit = Math.max(1, Math.min(500, Math.floor(params.limit ?? 60)));
-  const items = entries.slice(offset, offset + limit).map((entry) => {
+  const items2 = entries.slice(offset, offset + limit).map((entry) => {
     const image = byKey.get(entry.asset.key);
     return {
       asset: normalizeAssetRef(entry.asset),
@@ -72367,7 +72790,7 @@ async function listAssets(services, params) {
       candidate: candidates.has(entry.assetKey)
     };
   });
-  return { items, nextCursor: offset + limit < entries.length ? String(offset + limit) : null, total: entries.length };
+  return { items: items2, nextCursor: offset + limit < entries.length ? String(offset + limit) : null, total: entries.length };
 }
 function pageAll(index, descriptor) {
   const count = index.getViewSnapshot(descriptor).count;
@@ -72394,19 +72817,19 @@ async function clearSelections(services, characterId, promptKeys) {
   await mutateAmConfig(services, characterId, (c) => {
     const keys = promptKeys?.length ? promptKeys : Object.keys(c.characterPrompt.assetSelections ?? {});
     return keys.reduce((acc, pk) => {
-      const current = AM.jf(acc, selectionTarget(characterId, pk));
-      return current.assets.length || current.assetNames.length ? AM.ib(acc, selectionTarget(characterId, pk), []) : acc;
+      const current2 = AM.jf(acc, selectionTarget(characterId, pk));
+      return current2.assets.length || current2.assetNames.length ? AM.ib(acc, selectionTarget(characterId, pk), []) : acc;
     }, c);
   }, { reason: "asset-selection" });
 }
 async function setReference(services, target, asset) {
   const list = asset ? [AM.sn(asset)] : [];
   if (target.kind === "persona") {
-    const characterId = target.characterId || (await services.sources.getActiveChat())?.characterId;
-    if (!characterId)
+    const characterId2 = target.characterId || (await services.sources.getActiveChat())?.characterId;
+    if (!characterId2)
       fail2("bad-request", "Open a chat (or pass characterId) to set a persona reference: persona references are stored per character.");
-    const amTarget = target.outfitId ? { kind: "persona-outfit-reference", sourceId: characterId, personaKey: target.personaId, formId: target.formId ?? "form_default", outfitId: target.outfitId } : { kind: "persona-reference", sourceId: characterId, personaKey: target.personaId, formId: target.formId ?? "" };
-    await mutateAmConfig(services, characterId, (c) => AM.ib(c, amTarget, list), { reason: "persona-reference" });
+    const amTarget2 = target.outfitId ? { kind: "persona-outfit-reference", sourceId: characterId2, personaKey: target.personaId, formId: target.formId ?? "form_default", outfitId: target.outfitId } : { kind: "persona-reference", sourceId: characterId2, personaKey: target.personaId, formId: target.formId ?? "" };
+    await mutateAmConfig(services, characterId2, (c) => AM.ib(c, amTarget2, list), { reason: "persona-reference" });
     return;
   }
   const characterId = target.characterId;
@@ -72423,10 +72846,10 @@ async function inspectMetadata(services, characterId, asset) {
   }
 }
 async function clearMetadataRecords(services, characterId, recordKeys) {
-  await services.storage.updateJson(metadataCachePath(characterId), {}, (current) => {
+  await services.storage.updateJson(metadataCachePath(characterId), {}, (current2) => {
     if (!recordKeys?.length)
       return {};
-    const next = { ...current ?? {} };
+    const next = { ...current2 ?? {} };
     for (const key of recordKeys)
       delete next[key];
     return next;
@@ -72480,9 +72903,9 @@ async function assetUrl(services, asset) {
   const chaId = asset.characterTarget?.chaId;
   if (chaId) {
     const images = await services.sources.listCharacterImages(chaId, { includeGenerated: true }).catch(() => []);
-    const hit = images.find((i) => i.imageId === asset.key || i.asset?.key === asset.key);
-    if (hit)
-      return { url: hit.url };
+    const hit2 = images.find((i) => i.imageId === asset.key || i.asset?.key === asset.key);
+    if (hit2)
+      return { url: hit2.url };
   }
   fail2("not-found", `Image not found: ${asset.name || asset.key}`, { messageKo: `이미지를 읽지 못했습니다: ${asset.name || asset.key}` });
 }
@@ -72522,12 +72945,12 @@ var workspaceHandlers = {
     return loadWorkspaceSnapshot(ctx, p.characterId);
   },
   "customCharacters.create": async (p, ctx) => {
-    const character = await createCustomCharacterEntry(ctx, requireId2(p.characterId, "characterId"), p.input ?? { title: "", recognitionKeys: "" }, base(p));
-    return { character, snapshot: await loadWorkspaceSnapshot(ctx, p.characterId) };
+    const character2 = await createCustomCharacterEntry(ctx, requireId2(p.characterId, "characterId"), p.input ?? { title: "", recognitionKeys: "" }, base(p));
+    return { character: character2, snapshot: await loadWorkspaceSnapshot(ctx, p.characterId) };
   },
   "customCharacters.update": async (p, ctx) => {
-    const character = await updateCustomCharacterEntry(ctx, requireId2(p.characterId, "characterId"), requireId2(p.customId, "customId"), p.input ?? { title: "", recognitionKeys: "" }, base(p));
-    return { character, snapshot: await loadWorkspaceSnapshot(ctx, p.characterId) };
+    const character2 = await updateCustomCharacterEntry(ctx, requireId2(p.characterId, "characterId"), requireId2(p.customId, "customId"), p.input ?? { title: "", recognitionKeys: "" }, base(p));
+    return { character: character2, snapshot: await loadWorkspaceSnapshot(ctx, p.characterId) };
   },
   "customCharacters.remove": async (p, ctx) => {
     await removeCustomCharacterEntry(ctx, requireId2(p.characterId, "characterId"), requireId2(p.customId, "customId"), base(p));
@@ -72635,9 +73058,9 @@ var STORAGE_KEY_PREFIX = "storage:";
 var PERMISSION_DENIED_PREFIX = "PERMISSION_DENIED:";
 function bytesToBase643(bytes) {
   let binary = "";
-  const chunk = 32768;
-  for (let i = 0;i < bytes.length; i += chunk)
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  const chunk2 = 32768;
+  for (let i = 0;i < bytes.length; i += chunk2)
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk2));
   return btoa(binary);
 }
 function mimeTypeForExtension(extension) {
@@ -72816,6 +73239,149 @@ function createImageBytesService(deps) {
   return service;
 }
 
+// src/backend/services/character-reference.ts
+function sniffImageMime2(bytes) {
+  if (bytes.length >= 8 && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71)
+    return "image/png";
+  if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255)
+    return "image/jpeg";
+  if (bytes.length >= 12 && bytes[8] === 87 && bytes[9] === 69 && bytes[10] === 66 && bytes[11] === 80)
+    return "image/webp";
+  if (bytes.length >= 4 && bytes[0] === 71 && bytes[1] === 73 && bytes[2] === 70)
+    return "image/gif";
+  return "image/png";
+}
+function base64FromBytes(bytes) {
+  let binary = "";
+  for (let i = 0;i < bytes.length; i += 32768)
+    binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
+  return btoa(binary);
+}
+async function characterReferenceImageId(host, characterId, options, userId) {
+  if (!characterId)
+    return null;
+  if (options.source === "gallery") {
+    const gallery = await host.characters.getGallery?.(characterId, userId) ?? [];
+    if (!gallery.length)
+      return null;
+    const index = Math.max(0, Math.min(gallery.length - 1, Math.trunc(options.galleryIndex ?? 0)));
+    return gallery[index]?.image_id ?? gallery[0]?.image_id ?? null;
+  }
+  const character2 = await host.characters.get(characterId, userId);
+  return character2?.image_id ?? null;
+}
+async function readCharacterReference(host, characterId, options, userId) {
+  if (typeof host.images?.readBinary !== "function")
+    return null;
+  const imageId = await characterReferenceImageId(host, characterId, options, userId);
+  if (!imageId)
+    return null;
+  let bytes;
+  try {
+    bytes = await host.images.readBinary(imageId, userId);
+  } catch {
+    return null;
+  }
+  if (!bytes || !bytes.length)
+    return null;
+  return { data: base64FromBytes(bytes), mimeType: sniffImageMime2(bytes) };
+}
+
+// src/backend/services/image-providers.ts
+var DIFFUSION_ONLY_KEYS = Object.freeze([
+  "seed",
+  "steps",
+  "cfg",
+  "cfg_scale",
+  "scale",
+  "guidance",
+  "sampler",
+  "sampler_name",
+  "scheduler",
+  "noise_schedule",
+  "cfg_rescale",
+  "qualityToggle",
+  "resolution",
+  "negativePrompt",
+  "negative_prompt",
+  "characterTags",
+  "resolvedReferenceImages",
+  "resolvedSourceImages",
+  "referenceFidelity",
+  "denoise",
+  "workflow",
+  "workflow_id",
+  "workflowFormat",
+  "preserveImportedWorkflow",
+  "comfyui_field_values",
+  "rawRequestOverride"
+]);
+function imageProviderFamily(lumiverseProvider, model) {
+  const provider = String(lumiverseProvider ?? "").trim().toLowerCase();
+  const modelText = String(model ?? "").trim().toLowerCase();
+  const haystack = `${provider} ${modelText}`;
+  if (provider === "novelai" || modelText.startsWith("nai-diffusion"))
+    return "novelai";
+  if (provider === "comfyui" || provider === "comfy-ui")
+    return "comfy-ui";
+  if (provider === "swarmui" || provider === "sdapi" || provider === "automatic1111" || provider === "a1111")
+    return "swarmui";
+  if (provider === "openai" || provider === "azure-openai" || /\bgpt-image\b|\bdall-e\b|\bdalle\b|\bgpt-image-\d/u.test(haystack))
+    return "openai";
+  if (provider === "google" || provider === "google-gemini" || provider === "gemini" || provider === "imagen" || /imagen|\bgemini\b/u.test(haystack))
+    return "gemini";
+  return "generic";
+}
+function isTextDrivenFamily(family) {
+  return family === "openai" || family === "gemini";
+}
+function familySupportsNegativePrompt(family) {
+  return !isTextDrivenFamily(family);
+}
+function familySupportsSeed(family) {
+  return !isTextDrivenFamily(family);
+}
+var OPENAI_SIZES = Object.freeze(["1024x1024", "1536x1024", "1024x1536"]);
+var DALLE3_SIZES = Object.freeze(["1024x1024", "1792x1024", "1024x1792"]);
+function openAiImageSize(width, height, model) {
+  const w = Number(width);
+  const h = Number(height);
+  const sizes = /dall-e-3|\bdalle3\b/u.test(String(model ?? "").toLowerCase()) ? DALLE3_SIZES : OPENAI_SIZES;
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0)
+    return sizes[0];
+  const ratio = w / h;
+  if (ratio > 1.15)
+    return sizes.find((s2) => s2 !== "1024x1024" && Number(s2.split("x")[0]) > Number(s2.split("x")[1]));
+  if (ratio < 0.87)
+    return sizes.find((s2) => Number(s2.split("x")[0]) < Number(s2.split("x")[1]));
+  return "1024x1024";
+}
+function stripPromptWeights(value) {
+  const weighted = /\(([^()]*?):\s*-?\d+(?:\.\d+)?\s*\)|\[([^\[\]]*?):\s*-?\d+(?:\.\d+)?\s*\]/u;
+  let next = value;
+  while (weighted.test(next))
+    next = next.replace(new RegExp(weighted.source, "gu"), "$1$2");
+  return next.replace(/\s*::\s*-?\d+(?:\.\d+)?/gu, "").replace(/\s*::\s*/gu, ", ").replace(/[{}]/gu, "").replace(/\s*,\s*(?=,)/gu, "").replace(/\s{2,}/gu, " ").trim();
+}
+function buildGenericProviderParameters(family, input) {
+  const parameters = { ...input.base };
+  if (isTextDrivenFamily(family))
+    for (const key of DIFFUSION_ONLY_KEYS)
+      delete parameters[key];
+  if (family === "openai") {
+    if (parameters.size === undefined)
+      parameters.size = openAiImageSize(input.width, input.height, input.model);
+  } else if (!isTextDrivenFamily(family)) {
+    parameters.width = input.width;
+    parameters.height = input.height;
+  }
+  const referenceParameter = String(input.referenceParameter ?? "").trim();
+  if (referenceParameter && input.references?.length) {
+    parameters[referenceParameter] = input.references.map((r) => r.data);
+  }
+  return parameters;
+}
+
 // src/backend/services/images.ts
 var IMAGE_RETRY_DELAY_MS = 100;
 var LOCKED_RETRY_STEP_MS = 2000;
@@ -72823,9 +73389,9 @@ var LOCKED_RETRY_MAX_MS = 1e4;
 var ABANDONED_REQUEST_HOLD_MS = 60000;
 var NOVELAI_REQUEST_TIMEOUT_MS = 120000;
 var PROMPT_ONLY_PLACEHOLDER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN4+P//fwAJeAPm7ip/RgAAAABJRU5ErkJggg==";
-function imageRequestTimeoutMs(provider, config) {
+function imageRequestTimeoutMs(provider, config2) {
   if (provider === "comfy-ui")
-    return clampInt2(config.runtime.comfyuiCompletionTimeoutMs, 1000, 3600000, 600000);
+    return clampInt2(config2.runtime.comfyuiCompletionTimeoutMs, 1000, 3600000, 600000);
   return provider === "novelai" ? NOVELAI_REQUEST_TIMEOUT_MS : 0;
 }
 var NOVELAI_SKIP_CFG_ABOVE_SIGMA = 59.04722600415217;
@@ -72833,9 +73399,9 @@ var NOVELAI_SAMPLER_IDS = Object.freeze(["k_euler_ancestral", "k_euler", "k_dpmp
 function samplerCandidateFrom(value) {
   if (typeof value === "string")
     return value.trim() || undefined;
-  const record = asRecord3(value);
+  const record2 = asRecord3(value);
   for (const key of ["id", "value", "sampler", "sampler_name", "name", "slug"]) {
-    const found = record[key];
+    const found = record2[key];
     if (typeof found === "string" && found.trim())
       return found.trim();
   }
@@ -72872,22 +73438,22 @@ function randomSeed3() {
   return buf[0];
 }
 function parseSeed(value) {
-  const s = typeof value === "number" ? Number.isSafeInteger(value) ? String(value) : "" : str5(value);
-  if (!/^\d+$/.test(s))
+  const s2 = typeof value === "number" ? Number.isSafeInteger(value) ? String(value) : "" : str5(value);
+  if (!/^\d+$/.test(s2))
     return null;
-  const n = Number(s);
+  const n = Number(s2);
   return Number.isSafeInteger(n) && n >= 0 && n <= 4294967295 ? n : null;
 }
 function readComfyConfig(metadata, workflowId) {
-  const record = asRecord3(metadata);
-  const library = asArray2(record.comfyui_workflows);
-  const selected = str5(workflowId) || str5(record.comfyui_active_workflow_id);
-  const comfy = (selected ? library.find((entry) => str5(entry?.id) === selected)?.config : undefined) ?? record.comfyui;
-  const config = asRecord3(comfy);
-  const workflow = config.workflow_api_json || config.workflow_json;
-  if (!workflow || typeof workflow !== "object" || !Array.isArray(config.field_mappings))
+  const record2 = asRecord3(metadata);
+  const library = asArray2(record2.comfyui_workflows);
+  const selected = str5(workflowId) || str5(record2.comfyui_active_workflow_id);
+  const comfy = (selected ? library.find((entry) => str5(entry?.id) === selected)?.config : undefined) ?? record2.comfyui;
+  const config2 = asRecord3(comfy);
+  const workflow = config2.workflow_api_json || config2.workflow_json;
+  if (!workflow || typeof workflow !== "object" || !Array.isArray(config2.field_mappings))
     return null;
-  return config;
+  return config2;
 }
 function comfyWorkflowMaps(metadata, workflowId, field) {
   return readComfyConfig(metadata, workflowId)?.field_mappings?.some((m) => m.mappedAs === field) === true;
@@ -72926,8 +73492,8 @@ function parseOverride(value) {
     return {};
   }
 }
-function buildNovelAIParameters(request, config, target, connectionDefaults = {}, seedSource = randomSeed3) {
-  const nai = config.novelai;
+function buildNovelAIParameters(request, config2, target, connectionDefaults = {}, seedSource = randomSeed3) {
+  const nai = config2.novelai;
   const o = request.novelai ?? {};
   const notes = [];
   const width = clampInt2(request.width, 64, 2048, 832);
@@ -72947,7 +73513,7 @@ function buildNovelAIParameters(request, config, target, connectionDefaults = {}
   const is45 = /^nai-diffusion-4-5/.test(target.model);
   const characters = (o.characters ?? []).map((c) => ({ prompt: String(c.prompt ?? "").trim(), uc: String(c.negativePrompt ?? "").trim(), center: c.center && Number.isFinite(c.center.x) && Number.isFinite(c.center.y) ? { x: c.center.x, y: c.center.y } : { x: 0, y: 0 } })).filter((c) => c.prompt || c.uc);
   const parameters = {
-    ...config.image.parameters,
+    ...config2.image.parameters,
     resolution: `${width}x${height}`,
     sampler,
     steps,
@@ -72996,16 +73562,16 @@ function buildNovelAIParameters(request, config, target, connectionDefaults = {}
   }
   if (o.rawOverride)
     override = deepMerge(override, o.rawOverride);
-  const base = deepMerge(parseOverride(connectionDefaults.rawRequestOverride), parseOverride(config.image.parameters.rawRequestOverride));
-  parameters.rawRequestOverride = JSON.stringify(deepMerge(base, override));
+  const base2 = deepMerge(parseOverride(connectionDefaults.rawRequestOverride), parseOverride(config2.image.parameters.rawRequestOverride));
+  parameters.rawRequestOverride = JSON.stringify(deepMerge(base2, override));
   return { parameters, seed, width, height, notes };
 }
-function buildComfyParameters(request, config, target, connectionMetadata, seedSource = randomSeed3) {
+function buildComfyParameters(request, config2, target, connectionMetadata, seedSource = randomSeed3) {
   const width = clampInt2(request.width, 64, 4096, 832);
   const height = clampInt2(request.height, 64, 4096, 1216);
   const seed = parseSeed(request.seed) ?? seedSource();
   const workflowId = str5(request.comfy?.workflowId) || target.comfyuiWorkflowId;
-  const parameters = { ...config.image.parameters, width, height, seed, negativePrompt: String(request.negativePrompt ?? "") };
+  const parameters = { ...config2.image.parameters, width, height, seed, negativePrompt: String(request.negativePrompt ?? "") };
   delete parameters.rawRequestOverride;
   if (workflowId)
     parameters.workflow_id = workflowId;
@@ -73022,14 +73588,24 @@ function buildComfyParameters(request, config, target, connectionMetadata, seedS
   }
   return { parameters, seed, width, height, notes: [] };
 }
-function buildGenericParameters(request, config) {
+function buildGenericParameters(request, config2, family = "generic", referenceParameter = "") {
   const width = clampInt2(request.width, 64, 4096, 1024);
   const height = clampInt2(request.height, 64, 4096, 1024);
-  const seed = parseSeed(request.seed);
-  const parameters = { ...config.image.parameters, width, height, negativePrompt: String(request.negativePrompt ?? "") };
+  const seed = familySupportsSeed(family) ? parseSeed(request.seed) : null;
+  const parameters = buildGenericProviderParameters(family, {
+    base: config2.image.parameters,
+    width,
+    height,
+    model: String(request.model ?? ""),
+    references: request.references,
+    referenceParameter
+  });
+  if (familySupportsNegativePrompt(family))
+    parameters.negativePrompt = String(request.negativePrompt ?? "");
   if (seed !== null)
     parameters.seed = seed;
-  return { parameters, seed, width, height, notes: [] };
+  const notes = isTextDrivenFamily(family) && String(request.negativePrompt ?? "").trim() ? [`Negative prompt omitted: ${family} does not accept one.`] : [];
+  return { parameters, seed, width, height, notes };
 }
 function isRetryableImageError(error) {
   if (isAbortLike(error))
@@ -73152,9 +73728,9 @@ function createImageService(deps) {
   }
   async function connection(connectionId) {
     const key = connectionId || "\x00default";
-    const hit = cache.get(key);
-    if (hit)
-      return hit;
+    const hit2 = cache.get(key);
+    if (hit2)
+      return hit2;
     let info = null;
     try {
       if (connectionId) {
@@ -73172,9 +73748,9 @@ function createImageService(deps) {
     }
     return cache.set(key, info);
   }
-  function targetOf(config, info, modelOverride) {
+  function targetOf(config2, info, modelOverride) {
     const generationProvider = generationProviderFromLumiverse(info.provider);
-    const model = str5(modelOverride) || config.image.model || info.model;
+    const model = str5(modelOverride) || config2.image.model || info.model;
     return {
       connectionId: info.id,
       connectionName: info.name,
@@ -73183,7 +73759,7 @@ function createImageService(deps) {
       promptCodec: promptCodecForProvider(generationProvider),
       model,
       isNovelAIV5: generationProvider === "novelai" && isNovelAIV5Model(model),
-      comfyuiWorkflowId: config.image.comfyuiWorkflowId,
+      comfyuiWorkflowId: config2.image.comfyuiWorkflowId,
       connectionDefaultsReadable: info.defaultParametersReadable
     };
   }
@@ -73193,29 +73769,62 @@ function createImageService(deps) {
       queues.set(kind, q = new GapQueue(now, wait));
     return q;
   }
+  const refParamCache = new Map;
+  async function referenceParameterFor(providerId) {
+    const key = providerId.toLowerCase();
+    const cached = refParamCache.get(key);
+    if (cached !== undefined)
+      return cached ?? "";
+    let found = "";
+    try {
+      const providers = asArray2(await host.imageGen.getProviders(userId));
+      const provider = providers.find((p) => str5(p.id).toLowerCase() === key);
+      const parameters = asRecord3(asRecord3(provider?.capabilities).parameters);
+      found = Object.keys(parameters).find((name) => str5(asRecord3(parameters[name]).type) === "image_array") ?? "";
+    } catch {
+      found = "";
+    }
+    refParamCache.set(key, found || null);
+    return found;
+  }
+  async function referenceImages(characterId) {
+    const config2 = normalizeConfig(await deps.loadConfig());
+    const image = await readCharacterReference(host, characterId, {
+      source: config2.image.characterReferenceSource === "gallery" ? "gallery" : "avatar",
+      galleryIndex: config2.image.characterReferenceGalleryIndex
+    }, userId);
+    return image ? [image] : null;
+  }
   const service = {
     async resolveTarget(overrides = {}) {
-      const config = await deps.loadConfig();
-      const info = await connection(str5(overrides.connectionId) || config.image.connectionId);
-      return targetOf(config, info, overrides.model);
+      const config2 = await deps.loadConfig();
+      const info = await connection(str5(overrides.connectionId) || config2.image.connectionId);
+      return targetOf(config2, info, overrides.model);
     },
     async generate(request, options = {}) {
       const { signal, onProgress } = options;
       if (signal?.aborted)
         throw abortError(signal.reason);
-      const config = normalizeConfig(await deps.loadConfig());
-      const info = await connection(str5(request.connectionId) || config.image.connectionId);
-      const target = targetOf(config, info, request.model);
+      const config2 = normalizeConfig(await deps.loadConfig());
+      const info = await connection(str5(request.connectionId) || config2.image.connectionId);
+      const target = targetOf(config2, info, request.model);
       const prompt = String(request.prompt ?? "").trim();
       if (!prompt)
         fail2("bad-request", "The image prompt is empty.", { detailCode: "IMAGE_PROMPT_EMPTY" });
-      const built = target.generationProvider === "novelai" ? buildNovelAIParameters(request, config, target, info.defaultParameters, seedSource) : target.generationProvider === "comfy-ui" ? buildComfyParameters(request, config, target, info.metadata, seedSource) : buildGenericParameters(request, config);
+      const family = imageProviderFamily(info.provider, target.model);
+      let references = request.references;
+      if (!references && request.ownerCharacterId && isTextDrivenFamily(family)) {
+        references = await referenceImages(request.ownerCharacterId).catch(() => []) || undefined;
+      }
+      const referenceParameter = references?.length ? await referenceParameterFor(info.provider) : "";
+      const sentPrompt = isTextDrivenFamily(family) ? stripPromptWeights(prompt) : prompt;
+      const built = target.generationProvider === "novelai" ? buildNovelAIParameters(request, config2, target, info.defaultParameters, seedSource) : target.generationProvider === "comfy-ui" ? buildComfyParameters(request, config2, target, info.metadata, seedSource) : buildGenericParameters({ ...request, prompt: sentPrompt, references }, config2, family, referenceParameter);
       for (const note of built.notes)
         log("info", note);
       const input = {
         connection_id: target.connectionId,
-        prompt,
-        negativePrompt: String(request.negativePrompt ?? ""),
+        prompt: sentPrompt,
+        negativePrompt: familySupportsNegativePrompt(family) ? String(request.negativePrompt ?? "") : "",
         model: target.model,
         parameters: built.parameters,
         includeDataUrl: request.includeData === true,
@@ -73223,12 +73832,12 @@ function createImageService(deps) {
         ...request.ownerChatId ? { owner_chat_id: request.ownerChatId } : {},
         ...userId ? { userId } : {}
       };
-      const retries = request.retries !== undefined ? clampInt2(request.retries, 0, 10, 0) : clampInt2(config.runtime.generationAutoRetryCount, 0, 10, 5);
-      const gapMs = () => clampInt2(config.runtime.novelaiParallelIntervalSec, 0, 30, 0) * 1000;
-      const timeoutMs = imageRequestTimeoutMs(target.generationProvider, config);
+      const retries = request.retries !== undefined ? clampInt2(request.retries, 0, 10, 0) : clampInt2(config2.runtime.generationAutoRetryCount, 0, 10, 5);
+      const gapMs = () => clampInt2(config2.runtime.novelaiParallelIntervalSec, 0, 30, 0) * 1000;
+      const timeoutMs = imageRequestTimeoutMs(target.generationProvider, config2);
       const queue = request.queue === false ? null : queueFor(target.generationProvider);
       const callOnce = async () => {
-        if (config.runtime.devPromptOnly) {
+        if (config2.runtime.devPromptOnly) {
           const stored = asRecord3(await host.images.uploadFromDataUrl(PROMPT_ONLY_PLACEHOLDER, "inlay-prompt-only.png", userId));
           return { imageId: str5(stored.id), provider: "prompt-only", model: target.model };
         }
@@ -73271,18 +73880,18 @@ function createImageService(deps) {
             throw abortError(signal.reason);
           onProgress?.({ label: attempt === 1 ? "Generating image" : `Generating image (retry ${attempt - 1}/${retries})`, labelKo: "이미지 생성 중", ...attempt > 1 ? { retry: { attempt: attempt - 1, total: retries }, retryCount: `${attempt - 1}/${retries}` } : {} });
           try {
-            const result = await callOnce();
-            if (!str5(result.imageId) && !str5(result.imageDataUrl))
+            const result2 = await callOnce();
+            if (!str5(result2.imageId) && !str5(result2.imageDataUrl))
               throw new RpcFailure({ code: "provider-error", message: "The image provider returned no image.", retryable: true, detailCode: "IMAGE_EMPTY_RESULT" });
-            return { result, attempts: attempt };
+            return { result: result2, attempts: attempt };
           } catch (error) {
             if (isAbortLike(error) || signal?.aborted)
               throw abortError(signal?.reason);
             if (attempt > retries || !isRetryableImageError(error)) {
-              const base = toRpcError(error);
-              const rpc = retries > 0 && attempt > retries ? { code: base.code === "internal" ? "provider-error" : base.code, message: `Image generation failed after ${attempt} attempts: ${base.message}`, detailCode: "IMAGE_REQUEST_RETRY_EXHAUSTED", retryable: false, details: { cause: base } } : { ...base, code: base.code === "internal" ? "provider-error" : base.code, retryable: base.retryable ?? isRetryableImageError(error) };
-              log("error", `Image generation failed (${target.lumiverseProvider}/${target.model}).`, rpc);
-              throw new RpcFailure(rpc, { cause: error });
+              const base2 = toRpcError(error);
+              const rpc2 = retries > 0 && attempt > retries ? { code: base2.code === "internal" ? "provider-error" : base2.code, message: `Image generation failed after ${attempt} attempts: ${base2.message}`, detailCode: "IMAGE_REQUEST_RETRY_EXHAUSTED", retryable: false, details: { cause: base2 } } : { ...base2, code: base2.code === "internal" ? "provider-error" : base2.code, retryable: base2.retryable ?? isRetryableImageError(error) };
+              log("error", `Image generation failed (${target.lumiverseProvider}/${target.model}).`, rpc2);
+              throw new RpcFailure(rpc2, { cause: error });
             }
             const locked = isConcurrentLockError(error);
             const delay = locked ? Math.min(LOCKED_RETRY_MAX_MS, LOCKED_RETRY_STEP_MS * attempt) : IMAGE_RETRY_DELAY_MS;
@@ -73352,9 +73961,9 @@ function createImageService(deps) {
     async testConnection(connectionId) {
       const started = now();
       try {
-        const config = await deps.loadConfig();
+        const config2 = await deps.loadConfig();
         cache.clear();
-        const info = await connection(str5(connectionId) || config.image.connectionId);
+        const info = await connection(str5(connectionId) || config2.image.connectionId);
         await host.imageGen.getModels(info.id, userId);
         return { ok: true, latencyMs: now() - started };
       } catch (error) {
@@ -73403,9 +74012,9 @@ function extractText(result) {
     const value = root[key];
     if (typeof value === "string")
       return value;
-    const text = textParts(value) || (value && typeof value === "object" && !Array.isArray(value) ? textParts(asRecord3(value).content) : "");
-    if (text)
-      return text;
+    const text3 = textParts(value) || (value && typeof value === "object" && !Array.isArray(value) ? textParts(asRecord3(value).content) : "");
+    if (text3)
+      return text3;
   }
   const choice = asRecord3(asArray2(root.choices)[0]);
   return textParts(asRecord3(choice.message).content) || (typeof choice.text === "string" ? choice.text : "");
@@ -73438,21 +74047,21 @@ function extractFinishReason(result) {
   return typeof first.finish_reason === "string" ? first.finish_reason : "";
 }
 function declaredVisionSupport(metadata) {
-  const record = asRecord3(metadata);
+  const record2 = asRecord3(metadata);
   const pick = (root, keys) => {
     for (const key of keys)
       if (typeof root[key] === "boolean")
         return root[key];
     return null;
   };
-  const direct = pick(record, ["vision", "supportsVision", "supports_vision", "multimodal", "supportsImages", "supports_images"]);
+  const direct = pick(record2, ["vision", "supportsVision", "supports_vision", "multimodal", "supportsImages", "supports_images"]);
   if (direct !== null)
     return direct;
-  const capabilities = asRecord3(record.capabilities);
+  const capabilities = asRecord3(record2.capabilities);
   const nested = pick(capabilities, ["vision", "image", "images", "multimodal"]);
   if (nested !== null)
     return nested;
-  const modalities = [record.input_modalities, record.inputModalities, capabilities.input_modalities, capabilities.inputModalities].flatMap((v) => asArray2(v).map((x) => str5(x).toLowerCase()));
+  const modalities = [record2.input_modalities, record2.inputModalities, capabilities.input_modalities, capabilities.inputModalities].flatMap((v) => asArray2(v).map((x) => str5(x).toLowerCase()));
   if (modalities.includes("image") || modalities.includes("vision"))
     return true;
   if (modalities.length > 0 && modalities.every((v) => v === "text"))
@@ -73616,9 +74225,9 @@ function createLlmService(deps) {
     return connectionCache.set(key, { id: str5(dto.id), name: str5(dto.name), provider: str5(dto.provider), model: str5(dto.model), metadata: asRecord3(dto.metadata) });
   }
   async function effectiveSettings(overrides) {
-    const config = await deps.loadConfig();
-    const settings = normalizeAnalyzerSettings({ ...config.analysis, ...overrides ?? {}, reasoning: { ...config.analysis.reasoning, ...overrides?.reasoning ?? {} } });
-    return { settings, retryDefault: clampRetries(config.runtime.generationAutoRetryCount, DEFAULT_RETRY_COUNT) };
+    const config2 = await deps.loadConfig();
+    const settings = normalizeAnalyzerSettings({ ...config2.analysis, ...overrides ?? {}, reasoning: { ...config2.analysis.reasoning, ...overrides?.reasoning ?? {} } });
+    return { settings, retryDefault: clampRetries(config2.runtime.generationAutoRetryCount, DEFAULT_RETRY_COUNT) };
   }
   function visionKey(connection, model) {
     return JSON.stringify([connection.id, model]);
@@ -73851,14 +74460,14 @@ function createLlmService(deps) {
       }
       return out;
     },
-    async testMessage(text, settings) {
+    async testMessage(text3, settings) {
       const started = Date.now();
       try {
-        const result = await run({ purpose: "message-test", messages: [{ role: "user", content: str5(text) || DEFAULT_TEST_MESSAGE }], responseMode: "text", retries: 0, ...settings ? { settings } : {} }, {}, 0);
+        const result = await run({ purpose: "message-test", messages: [{ role: "user", content: str5(text3) || DEFAULT_TEST_MESSAGE }], responseMode: "text", retries: 0, ...settings ? { settings } : {} }, {}, 0);
         return { ok: true, latencyMs: Date.now() - started, reply: result.raw };
       } catch (error) {
-        const rpc = isAbortLike(error) ? { code: "cancelled", message: "The test was cancelled." } : error instanceof RpcFailure ? error.error : llmErrorToRpc(classifyLlmError(error));
-        return { ok: false, latencyMs: Date.now() - started, error: rpc };
+        const rpc2 = isAbortLike(error) ? { code: "cancelled", message: "The test was cancelled." } : error instanceof RpcFailure ? error.error : llmErrorToRpc(classifyLlmError(error));
+        return { ok: false, latencyMs: Date.now() - started, error: rpc2 };
       }
     }
   };
@@ -73871,19 +74480,19 @@ var MAX_LOG_STRING_LENGTH = 4000;
 function brandLogMessage(message) {
   return message.replace(/^\[Asset Maid(?: React)?\]\s*/u, "[Inlay] ");
 }
-function redactSensitive(text) {
-  let s = text.replace(/((?:authorization)\s*[:=]\s*(?:bearer|basic)\s+)[^\s,}]+/gi, "$1[redacted]");
-  s = s.replace(/([?&](?:key|api[_-]?key|access[_-]?token|token|secret)=)[^&#\s]+/gi, "$1[redacted]");
-  s = s.replace(/("?(?:api[_-]?key|authorization|private[_-]?key|access[_-]?token|token|secret)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^&#\s,}]+)/gi, (m, p1, p2) => {
+function redactSensitive(text3) {
+  let s2 = text3.replace(/((?:authorization)\s*[:=]\s*(?:bearer|basic)\s+)[^\s,}]+/gi, "$1[redacted]");
+  s2 = s2.replace(/([?&](?:key|api[_-]?key|access[_-]?token|token|secret)=)[^&#\s]+/gi, "$1[redacted]");
+  s2 = s2.replace(/("?(?:api[_-]?key|authorization|private[_-]?key|access[_-]?token|token|secret)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^&#\s,}]+)/gi, (m, p1, p2) => {
     const clean = p2.toLowerCase().replace(/^["']|["']$/g, "").trim();
     if (clean === "bearer" || clean === "basic" || clean.startsWith("bearer ") || clean.startsWith("basic "))
       return m;
     return `${p1}[redacted]`;
   });
-  return s;
+  return s2;
 }
-function truncateLog(text, max = MAX_LOG_STRING_LENGTH) {
-  return text.length > max ? `${text.slice(0, max)}...(세부 로그 생략)` : text;
+function truncateLog(text3, max = MAX_LOG_STRING_LENGTH) {
+  return text3.length > max ? `${text3.slice(0, max)}...(세부 로그 생략)` : text3;
 }
 function safeDetails(details) {
   if (details === undefined)
@@ -74067,26 +74676,26 @@ function dedupe(...lists) {
     return true;
   });
 }
-function assetGenerationSignature(sourceId, activeModuleIds, shared, members, chatAssets) {
+function assetGenerationSignature(sourceId, activeModuleIds, shared2, members, chatAssets) {
   let h = 2166136261;
   const feed = (value) => {
-    const s = str5(value);
-    for (let i = 0;i < s.length; i += 1) {
-      h ^= s.charCodeAt(i);
+    const s2 = str5(value);
+    for (let i = 0;i < s2.length; i += 1) {
+      h ^= s2.charCodeAt(i);
       h = Math.imul(h, 16777619);
     }
   };
-  let sh = 2166136261;
-  for (const a of shared) {
-    for (const s of [assetIdentity(a), a.name])
-      for (let i = 0;i < s.length; i += 1) {
-        sh ^= s.charCodeAt(i);
-        sh = Math.imul(sh, 16777619);
+  let sh2 = 2166136261;
+  for (const a of shared2) {
+    for (const s2 of [assetIdentity(a), a.name])
+      for (let i = 0;i < s2.length; i += 1) {
+        sh2 ^= s2.charCodeAt(i);
+        sh2 = Math.imul(sh2, 16777619);
       }
   }
   feed(sourceId);
   activeModuleIds.forEach(feed);
-  feed((sh >>> 0).toString(36));
+  feed((sh2 >>> 0).toString(36));
   for (const m of members) {
     feed(m.key);
     for (const a of dedupe(m.originalAssets, m.outfitGeneratedAssets, m.chatGeneratedAssets)) {
@@ -74123,13 +74732,13 @@ function extensionOf2(name, mime) {
 function imageUrl(imageId, size) {
   return `/api/v1/images/${encodeURIComponent(imageId)}${size ? `?size=${size}` : ""}`;
 }
-async function mapLimit(items, limit, fn) {
-  const out = new Array(items.length);
+async function mapLimit(items2, limit, fn) {
+  const out = new Array(items2.length);
   let next = 0;
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (next < items.length) {
+  await Promise.all(Array.from({ length: Math.min(limit, items2.length) }, async () => {
+    while (next < items2.length) {
       const i = next++;
-      out[i] = await fn(items[i]);
+      out[i] = await fn(items2[i]);
     }
   }));
   return out;
@@ -74140,9 +74749,9 @@ function createSourcesService(deps) {
   const log = (level, message, details) => deps.log?.append(level, "sources", message, details);
   let generation = 0;
   async function cached(key, load) {
-    const hit = cache.get(key);
-    if (hit !== undefined)
-      return hit;
+    const hit2 = cache.get(key);
+    if (hit2 !== undefined)
+      return hit2;
     const started = generation;
     const value = await load();
     return started === generation ? cache.set(key, value) : value;
@@ -74296,25 +74905,25 @@ function createSourcesService(deps) {
     },
     getChat: (chatId) => chatInfo(str5(chatId)),
     async loadWorldBooks(characterId, document2, options = {}) {
-      const character = await service.getCharacter(characterId);
+      const character2 = await service.getCharacter(characterId);
       const order = [];
       const push = (id, scope) => {
         if (id && !order.some((o) => o.id === id))
           order.push({ id, scope });
       };
-      character.worldBookIds.forEach((id) => push(id, "character"));
+      character2.worldBookIds.forEach((id) => push(id, "character"));
       const persona = await activePersona();
       if (persona?.attachedWorldBookId)
         push(persona.attachedWorldBookId, "persona");
-      let chat = null;
+      let chat2 = null;
       if (options.chatId)
-        chat = await chatInfo(options.chatId).catch(() => null);
+        chat2 = await chatInfo(options.chatId).catch(() => null);
       else {
         const active = await service.getActiveChat();
         if (active && (active.characterId === characterId || active.groupCharacterIds.includes(characterId)))
-          chat = active;
+          chat2 = active;
       }
-      for (const id of asArray2(chat?.metadata.chat_world_book_ids))
+      for (const id of asArray2(chat2?.metadata.chat_world_book_ids))
         push(str5(id), "chat");
       try {
         for (const id of asArray2(await host.world_books.getGlobal(userId)))
@@ -74337,7 +74946,7 @@ function createSourcesService(deps) {
         for (const raw of all) {
           const dto = asRecord3(raw);
           const id = str5(dto.id);
-          if (!id || out.some((s) => s.worldBookId === id))
+          if (!id || out.some((s2) => s2.worldBookId === id))
             continue;
           const total = await cached(`wbcount:${id}`, async () => {
             try {
@@ -74354,17 +74963,17 @@ function createSourcesService(deps) {
       return out;
     },
     async buildSource(characterId, document2, options = {}) {
-      const character = await service.getCharacter(characterId);
-      const name = displayName(character.name, "Character Chat 1");
-      const memberName = displayName(character.name, "Member 1");
-      const aliases = memberAliases({ name: character.name, id: characterId, tags: character.tags });
+      const character2 = await service.getCharacter(characterId);
+      const name = displayName(character2.name, "Character Chat 1");
+      const memberName = displayName(character2.name, "Member 1");
+      const aliases = memberAliases({ name: character2.name, id: characterId, tags: character2.tags });
       const books = await service.loadWorldBooks(characterId, document2, options);
       const activeModuleIds = uniqueTrimmed(document2.characterPrompt.activeModules[characterId] ?? []);
       const attached = books.filter((b) => b.scope === "character");
       const modules = books.filter((b) => b.scope !== "character" && activeModuleIds.includes(b.worldBookId));
       const characterLore = loreRecordsOf(attached.flatMap((b) => b.entries), aliases, { sourceType: "character" });
       const moduleLore = modules.flatMap((b) => loreRecordsOf(b.entries, aliases, { sourceType: "module", sourceName: b.name }));
-      const desc = descriptionLore(memberName, character.description);
+      const desc = descriptionLore(memberName, character2.description);
       const seen = new Set;
       const lorebooks = [...characterLore, ...desc ? [desc] : [], ...moduleLore].filter((l) => !(!l.id || seen.has(l.id)) && (seen.add(l.id), true));
       const images = await service.listCharacterImages(characterId, { includeGenerated: true });
@@ -74375,14 +74984,14 @@ function createSourcesService(deps) {
       for (const [promptKey, outfits] of Object.entries(document2.characterPrompt.outfitPrompts ?? {})) {
         if (promptKey !== characterId && !promptKey.startsWith(`${characterId}::lore::`))
           continue;
-        for (const outfit of asArray2(outfits)) {
-          const ref = normalizeAssetRef(asRecord3(outfit).referenceAsset ?? asRecord3(outfit).reference_asset);
+        for (const outfit2 of asArray2(outfits)) {
+          const ref = normalizeAssetRef(asRecord3(outfit2).referenceAsset ?? asRecord3(outfit2).reference_asset);
           if (ref.name && ref.key && assetKindOfName(ref.name) === "outfit" && IMAGE_EXTENSIONS.has(ref.extension.toLowerCase()))
             outfitRefs.push({ ...ref, sourceType: "character", moduleId: "", moduleName: "" });
         }
       }
       const outfit = dedupe(byKind("outfit"), outfitRefs);
-      const chat = byKind("chat");
+      const chat2 = byKind("chat");
       const avatar = images.find((i) => i.origin === "avatar");
       const preview = avatar ? { ...avatar.asset, characterIndex: 0, characterTarget: target } : original[0] ?? null;
       const member = {
@@ -74391,11 +75000,11 @@ function createSourcesService(deps) {
         key: characterId,
         name: memberName,
         aliases,
-        sourceSummary: sourceSummary(character),
+        sourceSummary: sourceSummary(character2),
         lorebooks,
         originalAssets: preview ? dedupe([preview], original) : original,
         outfitGeneratedAssets: outfit,
-        chatGeneratedAssets: chat,
+        chatGeneratedAssets: chat2,
         assetCount: 0,
         previewAsset: preview,
         characterIndex: 0,
@@ -74412,12 +75021,12 @@ function createSourcesService(deps) {
         attachedModuleIds: [],
         activeModuleIds,
         sharedModuleAssets: [],
-        chatGeneratedAssets: chat,
+        chatGeneratedAssets: chat2,
         previewAsset: preview,
         assetGeneration: "",
         members: [member]
       };
-      source.assetGeneration = assetGenerationSignature(characterId, activeModuleIds, [], [member], chat);
+      source.assetGeneration = assetGenerationSignature(characterId, activeModuleIds, [], [member], chat2);
       return source;
     },
     async listPersonas() {
@@ -74430,9 +75039,9 @@ function createSourcesService(deps) {
     },
     async getActivePersona(chatId) {
       if (chatId) {
-        const chat = await chatInfo(chatId).catch(() => null);
-        if (chat?.personaId) {
-          const dto = await host.personas.get(chat.personaId, userId).catch(() => null);
+        const chat2 = await chatInfo(chatId).catch(() => null);
+        if (chat2?.personaId) {
+          const dto = await host.personas.get(chat2.personaId, userId).catch(() => null);
           if (dto)
             return toPersonaInfo(asRecord3(dto));
         }
@@ -74442,7 +75051,7 @@ function createSourcesService(deps) {
     async listCharacterImages(characterId, options = {}) {
       const key = `images:${characterId}:${options.includeGenerated === false ? 0 : 1}`;
       return cached(key, async () => {
-        const character = await service.getCharacter(characterId);
+        const character2 = await service.getCharacter(characterId);
         const out = [];
         const seen = new Set;
         const add = (origin, imageId, name, extra = {}) => {
@@ -74466,8 +75075,8 @@ function createSourcesService(deps) {
             kind = "outfit";
           out.push({ asset, kind, origin, imageId, name: cleanName, url: imageUrl(imageId), thumbnailUrl: imageUrl(imageId, "sm"), ...extra.width ? { width: extra.width } : {}, ...extra.height ? { height: extra.height } : {} });
         };
-        if (character.avatarImageId)
-          add("avatar", character.avatarImageId, `${character.name || "avatar"}.png`);
+        if (character2.avatarImageId)
+          add("avatar", character2.avatarImageId, `${character2.name || "avatar"}.png`);
         const viaBridge = !host.characters.getGallery;
         if (!viaBridge || deps.imageBytes) {
           try {
@@ -74480,10 +75089,10 @@ function createSourcesService(deps) {
             log("warn", `Gallery of ${characterId} unavailable${viaBridge ? " (the overlay must be open to read it)" : ""}.`, errorMessage(error));
           }
         }
-        const expressions = asRecord3(asRecord3(character.extensions.expressions).mappings);
+        const expressions = asRecord3(asRecord3(character2.extensions.expressions).mappings);
         for (const [label, imageId] of Object.entries(expressions))
           add("expression", str5(imageId), label);
-        const risu = asRecord3(character.extensions.risu_asset_map);
+        const risu = asRecord3(character2.extensions.risu_asset_map);
         for (const [assetName, imageId] of Object.entries(risu))
           add("risu-asset", str5(imageId), assetName);
         if (options.includeGenerated !== false) {
@@ -74535,34 +75144,34 @@ function normalizePath(path) {
   return path.replace(/\\/g, "/").replace(/^\/+/, "");
 }
 function createStorageService(host, userId, options = {}) {
-  const us = host.userStorage;
+  const us2 = host.userStorage;
   const queue = new KeyedQueue;
   const now = options.now ?? (() => new Date);
   let schemaChecked = null;
   let configCache = null;
   let configGeneration = 0;
-  const setConfigCache = (state) => {
-    configCache = state;
+  const setConfigCache = (state2) => {
+    configCache = state2;
     configGeneration += 1;
   };
   const log = (level, message, details) => options.log?.append(level, "storage", message, details);
   async function readRaw(path) {
-    let text;
+    let text3;
     try {
-      text = await us.read(path, userId);
+      text3 = await us2.read(path, userId);
     } catch (error) {
       let exists = true;
       try {
-        exists = await us.exists(path, userId);
+        exists = await us2.exists(path, userId);
       } catch {}
       if (!exists)
         return;
       throw storageFailure(`Could not read ${path}.`, error);
     }
-    if (!text.trim())
+    if (!text3.trim())
       return;
     try {
-      return JSON.parse(text);
+      return JSON.parse(text3);
     } catch (error) {
       throw storageFailure(`Stored file ${path} is not valid JSON.`, error, "STORAGE_CORRUPT_JSON");
     }
@@ -74578,7 +75187,7 @@ function createStorageService(host, userId, options = {}) {
             log("warn", `Storage layout v${marker.version} is newer than this build (v${STORAGE_LAYOUT_VERSION}).`);
           return;
         }
-        await us.write(STORAGE_PATHS.schema, JSON.stringify({ schema: STORAGE_SCHEMA, version: STORAGE_LAYOUT_VERSION, createdAt: now().toISOString() }), userId);
+        await us2.write(STORAGE_PATHS.schema, JSON.stringify({ schema: STORAGE_SCHEMA, version: STORAGE_LAYOUT_VERSION, createdAt: now().toISOString() }), userId);
       })().catch((error) => {
         schemaChecked = null;
         log("warn", "Could not write the storage schema marker.", errorMessage(error));
@@ -74589,7 +75198,7 @@ function createStorageService(host, userId, options = {}) {
   async function writeRaw(path, value) {
     await ensureSchemaMarker();
     try {
-      await us.write(path, JSON.stringify(value), userId);
+      await us2.write(path, JSON.stringify(value), userId);
     } catch (error) {
       throw storageFailure(`Could not write ${path}.`, error);
     }
@@ -74625,11 +75234,11 @@ function createStorageService(host, userId, options = {}) {
       if (read.tooNew)
         tooNew.add(path);
     }
-    const state = { config: mergeStoredConfig(parts), stored, tooNew };
+    const state2 = { config: mergeStoredConfig(parts), stored, tooNew };
     if (generation !== configGeneration)
-      return configCache ?? state;
-    configCache = state;
-    return state;
+      return configCache ?? state2;
+    configCache = state2;
+    return state2;
   }
   function withVersion(kind, value) {
     return { ...value, version: STORAGE_FILE_VERSIONS[kind] };
@@ -74650,8 +75259,8 @@ function createStorageService(host, userId, options = {}) {
       const p = normalizePath(path);
       return queue.run(p, async () => {
         const raw = await readRaw(p);
-        const current = raw === undefined ? jsonClone2(fallback) : raw;
-        const next = await mutate(current);
+        const current2 = raw === undefined ? jsonClone2(fallback) : raw;
+        const next = await mutate(current2);
         await writeRaw(p, next);
         return next;
       });
@@ -74659,11 +75268,11 @@ function createStorageService(host, userId, options = {}) {
     async readBinary(path) {
       const p = normalizePath(path);
       try {
-        return await us.readBinary(p, userId);
+        return await us2.readBinary(p, userId);
       } catch (error) {
         let exists = true;
         try {
-          exists = await us.exists(p, userId);
+          exists = await us2.exists(p, userId);
         } catch {}
         if (!exists)
           return null;
@@ -74675,7 +75284,7 @@ function createStorageService(host, userId, options = {}) {
       await queue.run(p, async () => {
         await ensureSchemaMarker();
         try {
-          await us.writeBinary(p, data, userId);
+          await us2.writeBinary(p, data, userId);
         } catch (error) {
           throw storageFailure(`Could not write ${p}.`, error);
         }
@@ -74685,11 +75294,11 @@ function createStorageService(host, userId, options = {}) {
       const p = normalizePath(path);
       await queue.run(p, async () => {
         try {
-          await us.delete(p, userId);
+          await us2.delete(p, userId);
         } catch (error) {
           let exists = true;
           try {
-            exists = await us.exists(p, userId);
+            exists = await us2.exists(p, userId);
           } catch {}
           if (exists)
             throw storageFailure(`Could not delete ${p}.`, error);
@@ -74700,7 +75309,7 @@ function createStorageService(host, userId, options = {}) {
       const p = normalizePath(prefix);
       let entries;
       try {
-        entries = await us.list(p, userId);
+        entries = await us2.list(p, userId);
       } catch {
         return [];
       }
@@ -74711,25 +75320,25 @@ function createStorageService(host, userId, options = {}) {
       return jsonClone2((await loadConfigState()).config);
     },
     async updateConfig(mutate) {
-      const config = await queue.run(CONFIG_QUEUE_KEY, async () => {
-        const state = await loadConfigState();
-        const next = normalizeConfig(await mutate(jsonClone2(state.config)));
+      const config2 = await queue.run(CONFIG_QUEUE_KEY, async () => {
+        const state2 = await loadConfigState();
+        const next = normalizeConfig(await mutate(jsonClone2(state2.config)));
         const split = splitConfigForStorage(next);
-        const stored = { ...state.stored };
+        const stored = { ...state2.stored };
         for (const { part, kind, path } of CONFIG_PARTS) {
           const value = withVersion(kind, asRecord3(split[part]));
-          const text = JSON.stringify(value);
-          if (stored[part] === text)
+          const text3 = JSON.stringify(value);
+          if (stored[part] === text3)
             continue;
-          assertWritable(state.tooNew.has(path), path);
+          assertWritable(state2.tooNew.has(path), path);
           await writeRaw(path, value);
-          stored[part] = text;
+          stored[part] = text3;
         }
-        setConfigCache({ config: next, stored, tooNew: state.tooNew });
+        setConfigCache({ config: next, stored, tooNew: state2.tooNew });
         return next;
       });
-      options.events?.emit("config.changed", { config: jsonClone2(config) });
-      return jsonClone2(config);
+      options.events?.emit("config.changed", { config: jsonClone2(config2) });
+      return jsonClone2(config2);
     },
     async loadChatImageGenerationSettings() {
       const stored = await readVersioned("chat-image-generation-settings", STORAGE_PATHS.chatImageGenerationSettings);
@@ -74748,8 +75357,8 @@ function createStorageService(host, userId, options = {}) {
       const loaded = loadChatImageGenerationSettings(settings ?? {});
       const result = { settings: loaded.settings, notice: loaded.notice };
       await queue.run(STORAGE_PATHS.chatImageGenerationSettings, async () => {
-        const current = await readVersioned("chat-image-generation-settings", STORAGE_PATHS.chatImageGenerationSettings);
-        assertWritable(current.tooNew, STORAGE_PATHS.chatImageGenerationSettings);
+        const current2 = await readVersioned("chat-image-generation-settings", STORAGE_PATHS.chatImageGenerationSettings);
+        assertWritable(current2.tooNew, STORAGE_PATHS.chatImageGenerationSettings);
         await writeRaw(STORAGE_PATHS.chatImageGenerationSettings, withVersion("chat-image-generation-settings", { ...loaded.settings }));
       });
       options.events?.emit("chatImageGeneration.changed", { settings: jsonClone2(result.settings) });
@@ -74759,11 +75368,11 @@ function createStorageService(host, userId, options = {}) {
       const read = await readVersioned("ui-state", STORAGE_PATHS.uiState);
       return normalizeUiState(read.value ?? {});
     },
-    async saveUiState(state) {
-      const normalized = normalizeUiState(state);
+    async saveUiState(state2) {
+      const normalized = normalizeUiState(state2);
       await queue.run(STORAGE_PATHS.uiState, async () => {
-        const current = await readVersioned("ui-state", STORAGE_PATHS.uiState);
-        assertWritable(current.tooNew, STORAGE_PATHS.uiState);
+        const current2 = await readVersioned("ui-state", STORAGE_PATHS.uiState);
+        assertWritable(current2.tooNew, STORAGE_PATHS.uiState);
         await writeRaw(STORAGE_PATHS.uiState, normalized);
       });
     },
@@ -74779,7 +75388,7 @@ function createStorageService(host, userId, options = {}) {
     },
     async hasCharacterDocument(characterId) {
       try {
-        return await us.exists(STORAGE_PATHS.characterDocument(characterId), userId);
+        return await us2.exists(STORAGE_PATHS.characterDocument(characterId), userId);
       } catch {
         return false;
       }
@@ -74789,20 +75398,20 @@ function createStorageService(host, userId, options = {}) {
       const next = await queue.run(path, async () => {
         const read = await readVersioned("character-document", path);
         assertWritable(read.tooNew, path);
-        const current = read.value === undefined ? createEmptyCharacterDocument(characterId, new Date(0)) : normalizeCharacterDocument(read.value, characterId).value;
-        if (opts.expectedUpdatedAt !== undefined && opts.expectedUpdatedAt !== current.updatedAt) {
+        const current2 = read.value === undefined ? createEmptyCharacterDocument(characterId, new Date(0)) : normalizeCharacterDocument(read.value, characterId).value;
+        if (opts.expectedUpdatedAt !== undefined && opts.expectedUpdatedAt !== current2.updatedAt) {
           fail2("conflict", "The character data was changed elsewhere. Reload it, then apply your edit again.", {
             messageKo: "Asset Maid 전용 로어북 본문이 외부에서 변경되었습니다. 붙여넣은 본문을 적용하거나 현재 편집값으로 명시적으로 덮어쓸 때까지 자동 저장을 중단합니다.",
             detailCode: "ASSET_MAID_CHARX_EXTERNAL_CHANGE",
             retryable: false,
-            details: { expectedUpdatedAt: opts.expectedUpdatedAt, actualUpdatedAt: current.updatedAt }
+            details: { expectedUpdatedAt: opts.expectedUpdatedAt, actualUpdatedAt: current2.updatedAt }
           });
         }
-        const mutated = await mutate(jsonClone2(current));
+        const mutated = await mutate(jsonClone2(current2));
         const normalized = normalizeCharacterDocument(mutated, characterId);
         const doc = normalized.value;
         let stamp = now();
-        const previous = Date.parse(current.updatedAt);
+        const previous = Date.parse(current2.updatedAt);
         if (Number.isFinite(previous) && stamp.getTime() <= previous)
           stamp = new Date(previous + 1);
         doc.updatedAt = stamp.toISOString();
@@ -74825,8 +75434,8 @@ function createStorageService(host, userId, options = {}) {
       return queue.run(path, async () => {
         const read = await readVersioned("chat-data", path);
         assertWritable(read.tooNew, path);
-        const current = normalizeChatData(read.value, chatId, now().toISOString()).data;
-        const mutated = await mutate(jsonClone2(current));
+        const current2 = normalizeChatData(read.value, chatId, now().toISOString()).data;
+        const mutated = await mutate(jsonClone2(current2));
         const normalized = normalizeChatData(mutated, chatId, now().toISOString());
         if (normalized.repaired || normalized.issues.length)
           log("warn", `Chat data of ${chatId} was repaired before saving.`, normalized.issues.slice(0, 20));
@@ -74839,7 +75448,7 @@ function createStorageService(host, userId, options = {}) {
       await queue.run(CONFIG_QUEUE_KEY, async () => {
         for (const prefix of STORAGE_RESET_PREFIXES) {
           try {
-            await us.delete(prefix, userId);
+            await us2.delete(prefix, userId);
           } catch (error) {
             throw storageFailure(`Could not delete ${prefix}.`, error);
           }
@@ -74855,7 +75464,7 @@ function createStorageService(host, userId, options = {}) {
       await queue.run(docPath, async () => {
         for (const path of characterResetPaths(characterId)) {
           try {
-            await us.delete(path, userId);
+            await us2.delete(path, userId);
           } catch (error) {
             throw storageFailure(`Could not delete ${path}.`, error);
           }
@@ -75006,8 +75615,8 @@ function sharedArtistsChannel(userId) {
   const key = (userId ?? "").trim().toLowerCase();
   return `${SHARED_ARTISTS_CHANNEL}.${key && CHANNEL_SEGMENT.test(key) ? key : OWNER_CHANNEL}`;
 }
-function sharedArtistsValue(config) {
-  const novelai = listNovelAIArtists(config.characterPrompt.artistPrompts).filter((artist) => artist.id !== NO_ARTIST_ID).map((artist) => ({
+function sharedArtistsValue(config2) {
+  const novelai = listNovelAIArtists(config2.characterPrompt.artistPrompts).filter((artist) => artist.id !== NO_ARTIST_ID).map((artist) => ({
     id: artist.id,
     title: artist.displayTitle || artist.title,
     prompt: artist.prompt,
@@ -75016,8 +75625,8 @@ function sharedArtistsValue(config) {
     builtIn: !artist.userDefined
   }));
   const ids = new Set(novelai.map((artist) => artist.id));
-  const defaultArtistId = ids.has(config.characterPrompt.defaultArtistId) ? config.characterPrompt.defaultArtistId : NO_ARTIST_ID;
-  const anima = config.animaArtists.entries.map((entry) => ({ id: entry.id, title: entry.title, text: entry.text }));
+  const defaultArtistId = ids.has(config2.characterPrompt.defaultArtistId) ? config2.characterPrompt.defaultArtistId : NO_ARTIST_ID;
+  const anima = config2.animaArtists.entries.map((entry) => ({ id: entry.id, title: entry.title, text: entry.text }));
   return { version: SHARED_ARTISTS_VERSION, defaultArtistId, novelai, anima };
 }
 function shareArtists(host, userId, loadConfig) {
@@ -75041,33 +75650,33 @@ function shareArtists(host, userId, loadConfig) {
 function createServices(host, userId) {
   const events = createEventBus(host, userId);
   const log = createRunLog({ events, host });
-  const storage = createStorageService(host, userId, { events, log });
-  const loadConfig = () => storage.loadConfig();
-  const imageBytes = createImageBytesService({ host, userId, storage, log });
+  const storage3 = createStorageService(host, userId, { events, log });
+  const loadConfig = () => storage3.loadConfig();
+  const imageBytes = createImageBytesService({ host, userId, storage: storage3, log });
   const llm = createLlmService({ host, userId, loadConfig, log, getJson: (url, options) => imageBytes.getJson(url, options) });
   const images = createImageService({ host, userId, loadConfig, log });
-  const sources = createSourcesService({ host, userId, imageBytes, storage, log });
+  const sources = createSourcesService({ host, userId, imageBytes, storage: storage3, log });
   const decisions = createDecisionService(host, log, userId);
   shareArtists(host, userId, loadConfig);
-  return { host, userId, storage, llm, images, imageBytes, sources, events, log, decisions };
+  return { host, userId, storage: storage3, llm, images, imageBytes, sources, events, log, decisions };
 }
 function createServicesRegistry(host, factory = createServices) {
-  const byUser = new Map;
-  const get = (userId) => {
+  const byUser2 = new Map;
+  const get2 = (userId) => {
     const key = userId ?? "";
-    let services = byUser.get(key);
+    let services = byUser2.get(key);
     if (!services)
-      byUser.set(key, services = factory(host, userId));
+      byUser2.set(key, services = factory(host, userId));
     return services;
   };
   return {
-    get,
+    get: get2,
     acceptFrontendMessage(payload, userId) {
       if (!payload || typeof payload !== "object")
         return false;
-      return get(userId).imageBytes.acceptFrontendMessage(payload);
+      return get2(userId).imageBytes.acceptFrontendMessage(payload);
     },
-    all: () => [...byUser.values()]
+    all: () => [...byUser2.values()]
   };
 }
 
@@ -75091,18 +75700,18 @@ function createBackendRuntime(options) {
   const modules = (userId) => {
     const user = runtimeUser(userId);
     const key = user ?? "";
-    let current = modulesByUser.get(key);
-    if (current)
-      return current;
+    let current2 = modulesByUser.get(key);
+    if (current2)
+      return current2;
     const services = servicesByUser.get(user);
-    current = {};
-    modulesByUser.set(key, current);
-    const get = () => modulesByUser.get(key);
+    current2 = {};
+    modulesByUser.set(key, current2);
+    const get2 = () => modulesByUser.get(key);
     for (const factory of options.modules)
-      Object.assign(current, factory(services, get));
-    return current;
+      Object.assign(current2, factory(services, get2));
+    return current2;
   };
-  const context = (userId, meta = {}) => ({
+  const context2 = (userId, meta = {}) => ({
     ...registry.get(userId),
     ...meta,
     modules: modules(userId)
@@ -75110,7 +75719,7 @@ function createBackendRuntime(options) {
   const router = createRouter({
     host: options.host,
     handlers: options.handlers ?? allHandlers(),
-    getContext: (userId, meta) => context(userId, { clientId: meta.clientId, frontendSessionId: meta.frontendSessionId }),
+    getContext: (userId, meta) => context2(userId, { clientId: meta.clientId, frontendSessionId: meta.frontendSessionId }),
     onError: (error, meta) => {
       if (error.code === "cancelled")
         return;
@@ -75122,7 +75731,7 @@ function createBackendRuntime(options) {
     router,
     services: (userId) => registry.get(userId),
     modules,
-    context,
+    context: context2,
     users: () => [...modulesByUser.keys()].map((key) => key === "" ? undefined : key),
     async handleFrontendMessage(payload, userId, frontendSessionId) {
       if (registry.acceptFrontendMessage(payload, userId))

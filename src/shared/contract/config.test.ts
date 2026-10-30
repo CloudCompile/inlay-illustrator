@@ -58,6 +58,12 @@ describe("Lumiverse mapping", () => {
     expect(promptCodecForProvider("comfy-ui")).toBe("anima-flat");
     expect(normalizeConfig({ image: { provider: "comfyui" } }).runtime.generationProvider).toBe("comfy-ui");
   });
+  test("generic character reference source defaults to avatar and clamps the gallery index", () => {
+    expect(normalizeConfig({}).image).toMatchObject({ characterReferenceSource: "avatar", characterReferenceGalleryIndex: 0 });
+    expect(normalizeConfig({ image: { characterReferenceSource: "gallery", characterReferenceGalleryIndex: 2 } }).image).toMatchObject({ characterReferenceSource: "gallery", characterReferenceGalleryIndex: 2 });
+    expect(normalizeConfig({ image: { characterReferenceSource: "made-up" } }).image.characterReferenceSource).toBe("avatar");
+    expect(normalizeConfig({ image: { characterReferenceGalleryIndex: -5 } }).image.characterReferenceGalleryIndex).toBe(0);
+  });
   test("legacy AM analyzer fields map to reasoning, clamped", () => {
     const a = normalizeConfig({ analysis: { provider: "openai", thinkingMode: "on", thinkingLevel: "HIGH", temperature: 9, timeoutMs: 5 } }).analysis;
     expect(a.reasoning).toEqual({ mode: "custom", effort: "high" });

@@ -289,7 +289,12 @@ export const IMAGE_LABELS = {
   characterReference: "Enable character reference", // 레퍼런스 활성화
   outfitReference: "Enable outfit reference",
   genericBox: "Provider parameters",
-  genericNote: "This provider uses the connection's own parameters. Inlay Illustrator sends a flat prompt and no reference images."
+  genericNote: "This provider uses the connection's own parameters. OpenAI and Gemini connections get a natural-language prompt (attention weights stripped), no negative prompt or seed, and a supported size.",
+  referenceSource: "Character reference image",
+  referenceSourceHint: "Baseline image sent to the provider so the art matches the character's look and style. Sent when the provider supports a reference image.",
+  referenceSourceOptions: { avatar: "Character avatar", gallery: "Gallery image" },
+  referenceGalleryIndex: "Gallery image",
+  referenceGalleryIndexAria: "Gallery image index"
 } as const;
 
 /* ---------------------------------------------------------------------------------------------- */

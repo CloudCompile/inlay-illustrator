@@ -254,6 +254,11 @@ export interface ImageGenerateRequest {
   seed?: string | number;
   novelai?: NovelAIImageOptions;
   comfy?: ComfyImageOptions;
+  /**
+   * Reference/baseline images for generic (non-NovelAI/ComfyUI) providers, e.g. OpenAI `image`/`image[]`. Sent through
+   * the provider's reference parameter when one is available; ignored by families that take no reference image.
+   */
+  references?: ImageBytes[];
   ownerCharacterId?: string;
   ownerChatId?: string;
   connectionId?: string;

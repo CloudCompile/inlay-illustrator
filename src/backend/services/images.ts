@@ -37,7 +37,17 @@ import {
   type RpcError,
 } from "../../shared/contract/index.js";
 import { fail, isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
-import type { ImageGenerateRequest, ImageGenerateResult, ImageService, ResolvedImageTarget, RunLog, SpindleHost } from "./types.js";
+import { readCharacterReference } from "./character-reference.js";
+import {
+  buildGenericProviderParameters,
+  familySupportsNegativePrompt,
+  familySupportsSeed,
+  imageProviderFamily,
+  isTextDrivenFamily,
+  stripPromptWeights,
+  type ImageProviderFamily,
+} from "./image-providers.js";
+import type { ImageBytes, ImageGenerateRequest, ImageGenerateResult, ImageService, ResolvedImageTarget, RunLog, SpindleHost } from "./types.js";
 import { abortError, asArray, asRecord, errorMessage, raceAbort, sleep, str, TtlCache } from "./util.js";
 
 export const IMAGE_RETRY_DELAY_MS = 100;
@@ -289,13 +299,25 @@ export function buildComfyParameters(
   return { parameters, seed, width, height, notes: [] };
 }
 
-export function buildGenericParameters(request: ImageGenerateRequest, config: InlayConfig): BuiltImageRequest {
+export function buildGenericParameters(request: ImageGenerateRequest, config: InlayConfig, family: ImageProviderFamily = "generic", referenceParameter = ""): BuiltImageRequest {
   const width = clampInt(request.width, 64, 4096, 1024);
   const height = clampInt(request.height, 64, 4096, 1024);
-  const seed = parseSeed(request.seed);
-  const parameters: Record<string, unknown> = { ...config.image.parameters, width, height, negativePrompt: String(request.negativePrompt ?? "") };
+  const seed = familySupportsSeed(family) ? parseSeed(request.seed) : null;
+  const parameters = buildGenericProviderParameters(family, {
+    base: config.image.parameters,
+    width,
+    height,
+    model: String(request.model ?? ""),
+    references: request.references,
+    referenceParameter,
+  });
+  // The diffusion families read the negative prompt from the top-level field, not the parameters bag.
+  if (familySupportsNegativePrompt(family)) parameters.negativePrompt = String(request.negativePrompt ?? "");
   if (seed !== null) parameters.seed = seed;
-  return { parameters, seed, width, height, notes: [] };
+  const notes = isTextDrivenFamily(family) && String(request.negativePrompt ?? "").trim()
+    ? [`Negative prompt omitted: ${family} does not accept one.`]
+    : [];
+  return { parameters, seed, width, height, notes };
 }
 
 /** AM `byt` @120076 (+ host transport phrasing): is this image error transient? */
@@ -475,6 +497,36 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
     return q;
   }
 
+  // Reference-image parameter name of a provider from its parameter schema (type "image_array"): the host uses
+  // whatever key the provider declares (e.g. `image`), so we discover it instead of hardcoding one. Cached per provider.
+  const refParamCache = new Map<string, string | null>();
+  async function referenceParameterFor(providerId: string): Promise<string> {
+    const key = providerId.toLowerCase();
+    const cached = refParamCache.get(key);
+    if (cached !== undefined) return cached ?? "";
+    let found = "";
+    try {
+      const providers = asArray<Record<string, unknown>>(await host.imageGen.getProviders(userId));
+      const provider = providers.find((p) => str(p.id).toLowerCase() === key);
+      const parameters = asRecord(asRecord(provider?.capabilities).parameters);
+      found = Object.keys(parameters).find((name) => str(asRecord(parameters[name]).type) === "image_array") ?? "";
+    } catch {
+      found = "";
+    }
+    refParamCache.set(key, found || null);
+    return found;
+  }
+
+  /** Character reference images (avatar or gallery) as base64 bytes, per `image.characterReferenceSource`. */
+  async function referenceImages(characterId: string): Promise<ImageBytes[] | null> {
+    const config = normalizeConfig(await deps.loadConfig());
+    const image = await readCharacterReference(host, characterId, {
+      source: config.image.characterReferenceSource === "gallery" ? "gallery" : "avatar",
+      galleryIndex: config.image.characterReferenceGalleryIndex,
+    }, userId);
+    return image ? [image] : null;
+  }
+
   const service: ImageService = {
     async resolveTarget(overrides = {}) {
       const config = await deps.loadConfig();
@@ -491,18 +543,29 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
       const prompt = String(request.prompt ?? "").trim();
       if (!prompt) fail("bad-request", "The image prompt is empty.", { detailCode: "IMAGE_PROMPT_EMPTY" });
 
+      const family = imageProviderFamily(info.provider, target.model);
+      // Character reference images for generic providers: default to the character's avatar (canonical look), or a
+      // gallery image. Read lazily and only for families that take one, so a failure never blocks the generation.
+      let references = request.references;
+      if (!references && request.ownerCharacterId && isTextDrivenFamily(family)) {
+        references = (await referenceImages(request.ownerCharacterId).catch(() => [])) || undefined;
+      }
+      const referenceParameter = references?.length ? await referenceParameterFor(info.provider) : "";
+      // Text-driven providers (OpenAI/Gemini) render prompt weights as literal text, so strip them.
+      const sentPrompt = isTextDrivenFamily(family) ? stripPromptWeights(prompt) : prompt;
+
       const built =
         target.generationProvider === "novelai"
           ? buildNovelAIParameters(request, config, target, info.defaultParameters, seedSource)
           : target.generationProvider === "comfy-ui"
             ? buildComfyParameters(request, config, target, info.metadata, seedSource)
-            : buildGenericParameters(request, config);
+            : buildGenericParameters({ ...request, prompt: sentPrompt, references }, config, family, referenceParameter);
       for (const note of built.notes) log("info", note);
 
       const input: Record<string, unknown> = {
         connection_id: target.connectionId,
-        prompt,
-        negativePrompt: String(request.negativePrompt ?? ""),
+        prompt: sentPrompt,
+        negativePrompt: familySupportsNegativePrompt(family) ? String(request.negativePrompt ?? "") : "",
         model: target.model,
         parameters: built.parameters,
         includeDataUrl: request.includeData === true,

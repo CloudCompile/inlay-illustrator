@@ -400,6 +400,14 @@ export interface ImageGenerationSettings {
   model: string;
   /** ComfyUI: saved workflow id passed as `parameters.workflow_id`; "" = host active workflow. */
   comfyuiWorkflowId: string;
+  /**
+   * Generic providers (OpenAI/Gemini/...): where a character's baseline reference image comes from. "avatar" uses the
+   * character's avatar; "gallery" uses one image from their Lumiverse gallery. The image is sent to the provider as a
+   * reference so the art matches the character's established style and appearance.
+   */
+  characterReferenceSource: "avatar" | "gallery";
+  /** Gallery index (in gallery order) when `characterReferenceSource` is "gallery"; clamped on read. */
+  characterReferenceGalleryIndex: number;
   /** Extra provider parameters merged into every request (passthrough). */
   parameters: Record<string, unknown>;
 }
@@ -553,7 +561,7 @@ export function createDefaultConfig(): InlayConfig {
       characterPrompts: [],
       negativePrompt: "",
     },
-    image: { connectionId: "", provider: "", model: "", comfyuiWorkflowId: "", parameters: {} },
+    image: { connectionId: "", provider: "", model: "", comfyuiWorkflowId: "", characterReferenceSource: "avatar", characterReferenceGalleryIndex: 0, parameters: {} },
     animaArtists: createDefaultAnimaArtists(),
     presetCatalog: { rawJson: "", lastError: "" },
     characterPrompt: {
@@ -734,6 +742,8 @@ export function normalizeConfigWithIssues(raw: unknown): ConfigNormalizeResult {
     provider: trimString(imageIn.provider).toLowerCase() || (trimString(asRecord(input.runtime).generationProvider) === "novelai" ? "novelai" : trimString(asRecord(input.runtime).generationProvider) === "comfy-ui" ? "comfyui" : ""),
     model: trimString(imageIn.model) || legacyModel,
     comfyuiWorkflowId: trimString(imageIn.comfyuiWorkflowId),
+    characterReferenceSource: imageIn.characterReferenceSource === "gallery" ? "gallery" : "avatar",
+    characterReferenceGalleryIndex: clampInt(imageIn.characterReferenceGalleryIndex, 0, 0, 999),
     parameters: isPlainObject(imageIn.parameters) ? (jsonClone(imageIn.parameters) as Record<string, unknown>) : {},
   };
 
