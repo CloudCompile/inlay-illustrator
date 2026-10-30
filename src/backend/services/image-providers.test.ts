@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildGenericProviderParameters,
+  familyStripsWeights,
   familySupportsNegativePrompt,
+  familySupportsReferences,
   familySupportsSeed,
   imageProviderFamily,
-  isTextDrivenFamily,
   openAiImageSize,
   stripPromptWeights,
 } from "./image-providers.js";
@@ -25,10 +26,20 @@ describe("imageProviderFamily", () => {
     expect(imageProviderFamily("unknown", "mystery")).toBe("generic");
   });
 
+  test("OpenAI-compatible gateways stay generic and keep their parameters", () => {
+    // `custom_openai` (Together, LiteLLM, WAN, reverse proxies) is a Lumiverse provider id, not an OpenAI family.
+    expect(imageProviderFamily("custom_openai", "wan-2.6-image")).toBe("generic");
+    expect(imageProviderFamily("custom_openai", "flux-1.1-pro")).toBe("generic");
+    expect(familyStripsWeights("generic")).toBe(true);
+    expect(familySupportsNegativePrompt("generic")).toBe(true);
+    expect(familySupportsSeed("generic")).toBe(true);
+    expect(familySupportsReferences("generic")).toBe(true);
+  });
+
   test("text-driven families drop negatives and seeds", () => {
-    expect(isTextDrivenFamily("openai")).toBe(true);
-    expect(isTextDrivenFamily("gemini")).toBe(true);
-    expect(isTextDrivenFamily("swarmui")).toBe(false);
+    expect(familyStripsWeights("openai")).toBe(true);
+    expect(familyStripsWeights("gemini")).toBe(true);
+    expect(familyStripsWeights("swarmui")).toBe(false);
     expect(familySupportsNegativePrompt("openai")).toBe(false);
     expect(familySupportsNegativePrompt("swarmui")).toBe(true);
     expect(familySupportsSeed("gemini")).toBe(false);
@@ -68,7 +79,18 @@ describe("buildGenericProviderParameters", () => {
     expect(parameters).toEqual({ style: "vivid", size: "1024x1536" });
   });
 
-  test("diffusion families keep width/height and parameters", () => {
+  test("generic gateways get an exact size plus width/height and keep parameters", () => {
+    const parameters = buildGenericProviderParameters("generic", {
+      base: { seed: 5, steps: 30 },
+      width: 832,
+      height: 1216,
+      model: "wan-2.6-image",
+    });
+    // `size` reaches OpenAI-compatible providers; `width`/`height` reach sdapi-style ones. Each ignores the other.
+    expect(parameters).toEqual({ seed: 5, steps: 30, size: "832x1216", width: 832, height: 1216 });
+  });
+
+  test("diffusion families keep width/height and never get a size string", () => {
     const parameters = buildGenericProviderParameters("swarmui", {
       base: { seed: 5, steps: 30 },
       width: 832,
@@ -78,20 +100,19 @@ describe("buildGenericProviderParameters", () => {
     expect(parameters).toEqual({ seed: 5, steps: 30, width: 832, height: 1216 });
   });
 
-  test("attaches references to the discovered image_array parameter", () => {
+  test("attaches references to parameters.referenceImages (the host's manual-only path)", () => {
     const parameters = buildGenericProviderParameters("openai", {
       base: {},
       width: 1024,
       height: 1024,
       model: "gpt-image-1",
       references: [{ data: "QUJD", mimeType: "image/png" }],
-      referenceParameter: "image",
     });
-    expect(parameters).toEqual({ size: "1024x1024", image: ["QUJD"] });
+    expect(parameters).toEqual({ size: "1024x1024", referenceImages: [{ data: "QUJD", mimeType: "image/png" }] });
   });
 
-  test("no references -> no reference parameter", () => {
-    const parameters = buildGenericProviderParameters("openai", { base: {}, width: 1024, height: 1024, model: "gpt-image-1", referenceParameter: "image" });
-    expect(parameters.image).toBeUndefined();
+  test("no references -> no referenceImages key", () => {
+    const parameters = buildGenericProviderParameters("openai", { base: {}, width: 1024, height: 1024, model: "gpt-image-1" });
+    expect(parameters.referenceImages).toBeUndefined();
   });
 });

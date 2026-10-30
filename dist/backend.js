@@ -73316,6 +73316,14 @@ var DIFFUSION_ONLY_KEYS = Object.freeze([
   "comfyui_field_values",
   "rawRequestOverride"
 ]);
+var FAMILY_SHAPES = Object.freeze({
+  openai: { size: "snapped", widthHeight: false, negativePromptParam: false, seed: false, diffusionParams: false, stripWeights: true },
+  gemini: { size: "none", widthHeight: false, negativePromptParam: false, seed: false, diffusionParams: false, stripWeights: true },
+  generic: { size: "exact", widthHeight: true, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: true },
+  swarmui: { size: "none", widthHeight: true, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: false },
+  novelai: { size: "none", widthHeight: false, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: false },
+  "comfy-ui": { size: "none", widthHeight: false, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: false }
+});
 function imageProviderFamily(lumiverseProvider, model) {
   const provider = String(lumiverseProvider ?? "").trim().toLowerCase();
   const modelText = String(model ?? "").trim().toLowerCase();
@@ -73332,14 +73340,17 @@ function imageProviderFamily(lumiverseProvider, model) {
     return "gemini";
   return "generic";
 }
-function isTextDrivenFamily(family) {
-  return family === "openai" || family === "gemini";
+function familyStripsWeights(family) {
+  return FAMILY_SHAPES[family].stripWeights;
 }
 function familySupportsNegativePrompt(family) {
-  return !isTextDrivenFamily(family);
+  return FAMILY_SHAPES[family].negativePromptParam;
 }
 function familySupportsSeed(family) {
-  return !isTextDrivenFamily(family);
+  return FAMILY_SHAPES[family].seed;
+}
+function familySupportsReferences(family) {
+  return family === "openai" || family === "gemini" || family === "generic" || family === "swarmui";
 }
 var OPENAI_SIZES = Object.freeze(["1024x1024", "1536x1024", "1024x1536"]);
 var DALLE3_SIZES = Object.freeze(["1024x1024", "1792x1024", "1024x1792"]);
@@ -73364,20 +73375,23 @@ function stripPromptWeights(value) {
   return next.replace(/\s*::\s*-?\d+(?:\.\d+)?/gu, "").replace(/\s*::\s*/gu, ", ").replace(/[{}]/gu, "").replace(/\s*,\s*(?=,)/gu, "").replace(/\s{2,}/gu, " ").trim();
 }
 function buildGenericProviderParameters(family, input) {
+  const shape = FAMILY_SHAPES[family];
   const parameters = { ...input.base };
-  if (isTextDrivenFamily(family))
+  if (!shape.diffusionParams)
     for (const key of DIFFUSION_ONLY_KEYS)
       delete parameters[key];
-  if (family === "openai") {
-    if (parameters.size === undefined)
+  if (parameters.size === undefined) {
+    if (shape.size === "snapped")
       parameters.size = openAiImageSize(input.width, input.height, input.model);
-  } else if (!isTextDrivenFamily(family)) {
+    else if (shape.size === "exact")
+      parameters.size = `${input.width}x${input.height}`;
+  }
+  if (shape.widthHeight) {
     parameters.width = input.width;
     parameters.height = input.height;
   }
-  const referenceParameter = String(input.referenceParameter ?? "").trim();
-  if (referenceParameter && input.references?.length) {
-    parameters[referenceParameter] = input.references.map((r) => r.data);
+  if (input.references?.length) {
+    parameters.referenceImages = input.references.map((r) => ({ data: r.data, mimeType: r.mimeType }));
   }
   return parameters;
 }
@@ -73588,7 +73602,7 @@ function buildComfyParameters(request, config2, target, connectionMetadata, seed
   }
   return { parameters, seed, width, height, notes: [] };
 }
-function buildGenericParameters(request, config2, family = "generic", referenceParameter = "") {
+function buildGenericParameters(request, config2, family = "generic") {
   const width = clampInt2(request.width, 64, 4096, 1024);
   const height = clampInt2(request.height, 64, 4096, 1024);
   const seed = familySupportsSeed(family) ? parseSeed(request.seed) : null;
@@ -73597,14 +73611,17 @@ function buildGenericParameters(request, config2, family = "generic", referenceP
     width,
     height,
     model: String(request.model ?? ""),
-    references: request.references,
-    referenceParameter
+    references: request.references
   });
-  if (familySupportsNegativePrompt(family))
-    parameters.negativePrompt = String(request.negativePrompt ?? "");
+  const negativePrompt = String(request.negativePrompt ?? "");
+  if (familySupportsNegativePrompt(family)) {
+    parameters.negativePrompt = negativePrompt;
+    if (negativePrompt.trim())
+      parameters.negative_prompt = negativePrompt;
+  }
   if (seed !== null)
     parameters.seed = seed;
-  const notes = isTextDrivenFamily(family) && String(request.negativePrompt ?? "").trim() ? [`Negative prompt omitted: ${family} does not accept one.`] : [];
+  const notes = !familySupportsNegativePrompt(family) && negativePrompt.trim() ? [`Negative prompt omitted: ${family} does not accept one.`] : [];
   return { parameters, seed, width, height, notes };
 }
 function isRetryableImageError(error) {
@@ -73769,24 +73786,6 @@ function createImageService(deps) {
       queues.set(kind, q = new GapQueue(now, wait));
     return q;
   }
-  const refParamCache = new Map;
-  async function referenceParameterFor(providerId) {
-    const key = providerId.toLowerCase();
-    const cached = refParamCache.get(key);
-    if (cached !== undefined)
-      return cached ?? "";
-    let found = "";
-    try {
-      const providers = asArray2(await host.imageGen.getProviders(userId));
-      const provider = providers.find((p) => str5(p.id).toLowerCase() === key);
-      const parameters = asRecord3(asRecord3(provider?.capabilities).parameters);
-      found = Object.keys(parameters).find((name) => str5(asRecord3(parameters[name]).type) === "image_array") ?? "";
-    } catch {
-      found = "";
-    }
-    refParamCache.set(key, found || null);
-    return found;
-  }
   async function referenceImages(characterId) {
     const config2 = normalizeConfig(await deps.loadConfig());
     const image = await readCharacterReference(host, characterId, {
@@ -73813,12 +73812,11 @@ function createImageService(deps) {
         fail2("bad-request", "The image prompt is empty.", { detailCode: "IMAGE_PROMPT_EMPTY" });
       const family = imageProviderFamily(info.provider, target.model);
       let references = request.references;
-      if (!references && request.ownerCharacterId && isTextDrivenFamily(family)) {
+      if (!references && request.ownerCharacterId && familySupportsReferences(family)) {
         references = await referenceImages(request.ownerCharacterId).catch(() => []) || undefined;
       }
-      const referenceParameter = references?.length ? await referenceParameterFor(info.provider) : "";
-      const sentPrompt = isTextDrivenFamily(family) ? stripPromptWeights(prompt) : prompt;
-      const built = target.generationProvider === "novelai" ? buildNovelAIParameters(request, config2, target, info.defaultParameters, seedSource) : target.generationProvider === "comfy-ui" ? buildComfyParameters(request, config2, target, info.metadata, seedSource) : buildGenericParameters({ ...request, prompt: sentPrompt, references }, config2, family, referenceParameter);
+      const sentPrompt = familyStripsWeights(family) ? stripPromptWeights(prompt) : prompt;
+      const built = target.generationProvider === "novelai" ? buildNovelAIParameters(request, config2, target, info.defaultParameters, seedSource) : target.generationProvider === "comfy-ui" ? buildComfyParameters(request, config2, target, info.metadata, seedSource) : buildGenericParameters({ ...request, prompt: sentPrompt, references }, config2, family);
       for (const note of built.notes)
         log("info", note);
       const input = {

@@ -284,7 +284,6 @@ describe("image service", () => {
 
   test("OpenAI connection: size only, no seed/negative/weights, character avatar as reference image", async () => {
     const { fake, images } = setup({ image: { connectionId: "oa", characterReferenceSource: "avatar" } });
-    fake.imageProviders.push({ id: "openai", capabilities: { parameters: { image: { type: "image_array" }, size: { type: "select" } } } });
     fake.addCharacter({ id: "c1", name: "Alice", image_id: "avatar-1" });
     fake.addImage({ id: "avatar-1" }, Uint8Array.from(atob("QUJD"), (c) => c.charCodeAt(0)));
     const r = await images.generate({ purpose: "chat", prompt: "(red hair:1.2), blue eyes", negativePrompt: "bad", width: 832, height: 1216, seed: "9", ownerCharacterId: "c1" });
@@ -293,12 +292,11 @@ describe("image service", () => {
     const call = fake.imageGenCalls[0]!.input;
     expect(call.prompt).toBe("red hair, blue eyes");
     expect(call.negativePrompt).toBe("");
-    expect(call.parameters).toEqual({ size: "1024x1536", image: ["QUJD"] });
+    expect(call.parameters).toEqual({ size: "1024x1536", referenceImages: [{ data: "QUJD", mimeType: "image/png" }] });
   });
 
   test("OpenAI connection: gallery source picks the indexed image", async () => {
     const { fake, images } = setup({ image: { connectionId: "oa", characterReferenceSource: "gallery", characterReferenceGalleryIndex: 1 } });
-    fake.imageProviders.push({ id: "openai", capabilities: { parameters: { image: { type: "image_array" } } } });
     fake.addCharacter({ id: "c1", name: "Alice", image_id: "avatar-1" });
     fake.addImage({ id: "img-a" }, Uint8Array.from(atob("QUFB"), (c) => c.charCodeAt(0)));
     fake.addImage({ id: "img-b" }, Uint8Array.from(atob("QkJC"), (c) => c.charCodeAt(0)));
@@ -307,15 +305,25 @@ describe("image service", () => {
       { id: "g2", image_id: "img-b", reference: "gallery://b", caption: "", sort_order: 1, created_at: 0, width: null, height: null, mime_type: "image/png" },
     ]);
     await images.generate({ purpose: "chat", prompt: "p", negativePrompt: "", width: 1024, height: 1024, ownerCharacterId: "c1" });
-    expect(fake.imageGenCalls[0]!.input.parameters).toEqual({ size: "1024x1024", image: ["QkJC"] });
+    expect(fake.imageGenCalls[0]!.input.parameters).toEqual({ size: "1024x1024", referenceImages: [{ data: "QkJC", mimeType: "image/png" }] });
   });
 
-  test("OpenAI connection without a reference parameter in the schema sends no reference", async () => {
+  test("character with no avatar sends no reference image", async () => {
     const { fake, images } = setup({ image: { connectionId: "oa" } });
-    fake.addCharacter({ id: "c1", name: "Alice", image_id: "avatar-1" });
-    fake.addImage({ id: "avatar-1" });
+    fake.addCharacter({ id: "c1", name: "Alice" });
     await images.generate({ purpose: "chat", prompt: "p", negativePrompt: "", width: 1024, height: 1024, ownerCharacterId: "c1" });
     expect(fake.imageGenCalls[0]!.input.parameters).toEqual({ size: "1024x1024" });
+  });
+
+  test("OpenAI-compatible gateway keeps size/width/height and its own parameters", async () => {
+    const { fake, images } = setup({ image: { connectionId: "gw" } });
+    fake.imageConnections.push(conn("gw", "custom_openai", "wan-2.6-image"));
+    const r = await images.generate({ purpose: "chat", prompt: "(red hair:1.2)", negativePrompt: "bad", width: 832, height: 1216, seed: "9", connectionId: "gw" });
+    expect(r.seed).toBe("9");
+    const call = fake.imageGenCalls[0]!.input;
+    // Generic gateways are text-driven: weights stripped, but seed/negative are kept for providers that read them.
+    expect(call.prompt).toBe("red hair");
+    expect(call.parameters).toMatchObject({ size: "832x1216", width: 832, height: 1216, seed: 9, negativePrompt: "bad", negative_prompt: "bad" });
   });
 
   test("delete, connection list, models, connection test", async () => {

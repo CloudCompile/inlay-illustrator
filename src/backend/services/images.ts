@@ -40,10 +40,11 @@ import { fail, isAbortLike, RpcFailure, toRpcError } from "../rpc/errors.js";
 import { readCharacterReference } from "./character-reference.js";
 import {
   buildGenericProviderParameters,
+  familyStripsWeights,
   familySupportsNegativePrompt,
+  familySupportsReferences,
   familySupportsSeed,
   imageProviderFamily,
-  isTextDrivenFamily,
   stripPromptWeights,
   type ImageProviderFamily,
 } from "./image-providers.js";
@@ -299,7 +300,7 @@ export function buildComfyParameters(
   return { parameters, seed, width, height, notes: [] };
 }
 
-export function buildGenericParameters(request: ImageGenerateRequest, config: InlayConfig, family: ImageProviderFamily = "generic", referenceParameter = ""): BuiltImageRequest {
+export function buildGenericParameters(request: ImageGenerateRequest, config: InlayConfig, family: ImageProviderFamily = "generic"): BuiltImageRequest {
   const width = clampInt(request.width, 64, 4096, 1024);
   const height = clampInt(request.height, 64, 4096, 1024);
   const seed = familySupportsSeed(family) ? parseSeed(request.seed) : null;
@@ -309,12 +310,16 @@ export function buildGenericParameters(request: ImageGenerateRequest, config: In
     height,
     model: String(request.model ?? ""),
     references: request.references,
-    referenceParameter,
   });
-  // The diffusion families read the negative prompt from the top-level field, not the parameters bag.
-  if (familySupportsNegativePrompt(family)) parameters.negativePrompt = String(request.negativePrompt ?? "");
+  // Diffusion families read the negative prompt from the top-level field; text-driven ones read `negative_prompt`
+  // from the parameter bag (OpenAI-compatible gateways do), so put it where each provider looks.
+  const negativePrompt = String(request.negativePrompt ?? "");
+  if (familySupportsNegativePrompt(family)) {
+    parameters.negativePrompt = negativePrompt;
+    if (negativePrompt.trim()) parameters.negative_prompt = negativePrompt;
+  }
   if (seed !== null) parameters.seed = seed;
-  const notes = isTextDrivenFamily(family) && String(request.negativePrompt ?? "").trim()
+  const notes = !familySupportsNegativePrompt(family) && negativePrompt.trim()
     ? [`Negative prompt omitted: ${family} does not accept one.`]
     : [];
   return { parameters, seed, width, height, notes };
@@ -497,26 +502,6 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
     return q;
   }
 
-  // Reference-image parameter name of a provider from its parameter schema (type "image_array"): the host uses
-  // whatever key the provider declares (e.g. `image`), so we discover it instead of hardcoding one. Cached per provider.
-  const refParamCache = new Map<string, string | null>();
-  async function referenceParameterFor(providerId: string): Promise<string> {
-    const key = providerId.toLowerCase();
-    const cached = refParamCache.get(key);
-    if (cached !== undefined) return cached ?? "";
-    let found = "";
-    try {
-      const providers = asArray<Record<string, unknown>>(await host.imageGen.getProviders(userId));
-      const provider = providers.find((p) => str(p.id).toLowerCase() === key);
-      const parameters = asRecord(asRecord(provider?.capabilities).parameters);
-      found = Object.keys(parameters).find((name) => str(asRecord(parameters[name]).type) === "image_array") ?? "";
-    } catch {
-      found = "";
-    }
-    refParamCache.set(key, found || null);
-    return found;
-  }
-
   /** Character reference images (avatar or gallery) as base64 bytes, per `image.characterReferenceSource`. */
   async function referenceImages(characterId: string): Promise<ImageBytes[] | null> {
     const config = normalizeConfig(await deps.loadConfig());
@@ -544,22 +529,21 @@ export function createImageService(deps: ImageServiceDeps): ImageService {
       if (!prompt) fail("bad-request", "The image prompt is empty.", { detailCode: "IMAGE_PROMPT_EMPTY" });
 
       const family = imageProviderFamily(info.provider, target.model);
-      // Character reference images for generic providers: default to the character's avatar (canonical look), or a
-      // gallery image. Read lazily and only for families that take one, so a failure never blocks the generation.
+      // Character reference images: default to the character's avatar (canonical look), or a gallery image. Read lazily
+      // and only for families whose provider can consume one, so a failure never blocks the generation.
       let references = request.references;
-      if (!references && request.ownerCharacterId && isTextDrivenFamily(family)) {
+      if (!references && request.ownerCharacterId && familySupportsReferences(family)) {
         references = (await referenceImages(request.ownerCharacterId).catch(() => [])) || undefined;
       }
-      const referenceParameter = references?.length ? await referenceParameterFor(info.provider) : "";
-      // Text-driven providers (OpenAI/Gemini) render prompt weights as literal text, so strip them.
-      const sentPrompt = isTextDrivenFamily(family) ? stripPromptWeights(prompt) : prompt;
+      // Natural-language providers (OpenAI/Gemini/compatible gateways) render prompt weights as literal text.
+      const sentPrompt = familyStripsWeights(family) ? stripPromptWeights(prompt) : prompt;
 
       const built =
         target.generationProvider === "novelai"
           ? buildNovelAIParameters(request, config, target, info.defaultParameters, seedSource)
           : target.generationProvider === "comfy-ui"
             ? buildComfyParameters(request, config, target, info.metadata, seedSource)
-            : buildGenericParameters({ ...request, prompt: sentPrompt, references }, config, family, referenceParameter);
+            : buildGenericParameters({ ...request, prompt: sentPrompt, references }, config, family);
       for (const note of built.notes) log("info", note);
 
       const input: Record<string, unknown> = {

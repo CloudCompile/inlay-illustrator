@@ -1,6 +1,6 @@
 /**
  * Provider-aware request shaping for the "generic" Lumiverse image providers (everything that is not NovelAI or
- * ComfyUI: OpenAI, Google Gemini/Imagen, SwarmUI, sdapi, ...).
+ * ComfyUI: OpenAI, Google Gemini/Imagen, Together, xAI, the OpenAI-compatible "custom" connection, SwarmUI, sdapi, ...).
  *
  * The engine treats every generic provider as "chan-server" (anima-flat codec, tags only), but the host forwards our
  * `parameters` object verbatim to the provider. Providers disagree about what they accept:
@@ -8,21 +8,48 @@
  * - OpenAI (`gpt-image-*`, `dall-e-*`) rejects sampling controls, seeds and negative prompts, and only accepts a fixed
  *   set of `size` values, so an anima-flat request with `(tag:1.2)` weights, a seed and a negative prompt fails.
  * - Gemini/Imagen likewise take a natural-language prompt with no negative prompt or seed.
- * - SwarmUI / sdapi are Stable-Diffusion-style and keep the tags, weights, seed and negative prompt.
+ * - SwarmUI / sdapi are Stable-Diffusion-style and keep the tags, weights, seed, negative prompt and width/height.
+ * - OpenAI-compatible gateways (the `custom_openai` connection: Together, LiteLLM, WAN, reverse proxies, self-hosted
+ *   gateways) are text-driven like OpenAI but read `size` (a "WxH" string), `seed`, `steps` and `negative_prompt`.
  *
- * This module classifies the connection into a {@link ImageProviderFamily} and rewrites the parameters (and prompt
- * text) to match, so OpenAI-class models work without changing the shared engine.
+ * Providers build their request body field-by-field and ignore keys they do not read, so we send a *superset* shaped
+ * per family and let each provider pick what it understands, rather than trying to guess one exact schema.
  */
 
 export type ImageProviderFamily = "openai" | "gemini" | "novelai" | "comfy-ui" | "swarmui" | "generic";
 
-/** Parameter keys that only make sense for a diffusion backend (never sent to OpenAI/Gemini). */
+/** Parameter keys that only make sense for a diffusion backend (dropped for text-driven families). */
 const DIFFUSION_ONLY_KEYS: readonly string[] = Object.freeze([
   "seed", "steps", "cfg", "cfg_scale", "scale", "guidance", "sampler", "sampler_name", "scheduler",
   "noise_schedule", "cfg_rescale", "qualityToggle", "resolution", "negativePrompt", "negative_prompt",
   "characterTags", "resolvedReferenceImages", "resolvedSourceImages", "referenceFidelity", "denoise",
   "workflow", "workflow_id", "workflowFormat", "preserveImportedWorkflow", "comfyui_field_values", "rawRequestOverride",
 ]);
+
+/** How a family's provider expects the request to be shaped. */
+interface FamilyShape {
+  /** `size`: "snapped" = a supported OpenAI size, "exact" = the requested `WxH`, "none" = omit. */
+  size: "snapped" | "exact" | "none";
+  /** Send `width`/`height` (diffusion backends read these instead of `size`). */
+  widthHeight: boolean;
+  /** Add `negative_prompt` to the parameter bag (providers that read it from there). */
+  negativePromptParam: boolean;
+  /** Send an explicit `seed`. */
+  seed: boolean;
+  /** Keep diffusion-only keys (steps, cfg, sampler, ...) from the base parameters. */
+  diffusionParams: boolean;
+  /** Strip attention weights from the prompt (natural-language models render them as literal text). */
+  stripWeights: boolean;
+}
+
+const FAMILY_SHAPES: Readonly<Record<ImageProviderFamily, FamilyShape>> = Object.freeze({
+  openai: { size: "snapped", widthHeight: false, negativePromptParam: false, seed: false, diffusionParams: false, stripWeights: true },
+  gemini: { size: "none", widthHeight: false, negativePromptParam: false, seed: false, diffusionParams: false, stripWeights: true },
+  generic: { size: "exact", widthHeight: true, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: true },
+  swarmui: { size: "none", widthHeight: true, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: false },
+  novelai: { size: "none", widthHeight: false, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: false },
+  "comfy-ui": { size: "none", widthHeight: false, negativePromptParam: true, seed: true, diffusionParams: true, stripWeights: false },
+});
 
 /** Classify a Lumiverse image-gen connection into a request-shaping family. */
 export function imageProviderFamily(lumiverseProvider: unknown, model: unknown): ImageProviderFamily {
@@ -37,19 +64,24 @@ export function imageProviderFamily(lumiverseProvider: unknown, model: unknown):
   return "generic";
 }
 
-/** True for families that take a natural-language prompt (no attention weights, no negative prompt, no seed). */
-export function isTextDrivenFamily(family: ImageProviderFamily): boolean {
-  return family === "openai" || family === "gemini";
+/** True when the prompt should have attention weights stripped (natural-language families). */
+export function familyStripsWeights(family: ImageProviderFamily): boolean {
+  return FAMILY_SHAPES[family].stripWeights;
 }
 
-/** True for families that reject a negative prompt. */
+/** True for families that read a negative prompt from the parameter bag. */
 export function familySupportsNegativePrompt(family: ImageProviderFamily): boolean {
-  return !isTextDrivenFamily(family);
+  return FAMILY_SHAPES[family].negativePromptParam;
 }
 
 /** True for families that accept an explicit seed. */
 export function familySupportsSeed(family: ImageProviderFamily): boolean {
-  return !isTextDrivenFamily(family);
+  return FAMILY_SHAPES[family].seed;
+}
+
+/** True for families whose provider can consume a reference/source image (`parameters.referenceImages`). */
+export function familySupportsReferences(family: ImageProviderFamily): boolean {
+  return family === "openai" || family === "gemini" || family === "generic" || family === "swarmui";
 }
 
 /** The supported `size` values of the OpenAI image API. */
@@ -93,28 +125,29 @@ export interface GenericParameterInput {
   width: number;
   height: number;
   model: string;
-  /** Resolved reference images (data URLs / base64) when the provider takes one. */
+  /** Resolved reference images (base64 + mime) attached as `parameters.referenceImages`. */
   references?: Array<{ data: string; mimeType: string }>;
-  /** Parameter name discovered from the provider schema for reference images (e.g. `image`). */
-  referenceParameter?: string;
 }
 
 /**
- * Build the `parameters` object for a generic connection, shaped for its family. Diffusion families get width/height/
- * seed/negative; OpenAI and Gemini get only what they accept (plus `size` for OpenAI).
+ * Build the `parameters` object for a generic connection, shaped for its family. A superset is produced: diffusion
+ * families get `width`/`height`, text-driven families get a `size` string, and every family that can take one gets
+ * `referenceImages`. Each host provider reads only the keys it knows and ignores the rest.
  */
 export function buildGenericProviderParameters(family: ImageProviderFamily, input: GenericParameterInput): Record<string, unknown> {
+  const shape = FAMILY_SHAPES[family];
   const parameters: Record<string, unknown> = { ...input.base };
-  if (isTextDrivenFamily(family)) for (const key of DIFFUSION_ONLY_KEYS) delete parameters[key];
-  if (family === "openai") {
-    if (parameters.size === undefined) parameters.size = openAiImageSize(input.width, input.height, input.model);
-  } else if (!isTextDrivenFamily(family)) {
+  if (!shape.diffusionParams) for (const key of DIFFUSION_ONLY_KEYS) delete parameters[key];
+  if (parameters.size === undefined) {
+    if (shape.size === "snapped") parameters.size = openAiImageSize(input.width, input.height, input.model);
+    else if (shape.size === "exact") parameters.size = `${input.width}x${input.height}`;
+  }
+  if (shape.widthHeight) {
     parameters.width = input.width;
     parameters.height = input.height;
   }
-  const referenceParameter = String(input.referenceParameter ?? "").trim();
-  if (referenceParameter && input.references?.length) {
-    parameters[referenceParameter] = input.references.map((r) => r.data);
+  if (input.references?.length) {
+    parameters.referenceImages = input.references.map((r) => ({ data: r.data, mimeType: r.mimeType }));
   }
   return parameters;
 }

@@ -255,8 +255,9 @@ export interface ImageGenerateRequest {
   novelai?: NovelAIImageOptions;
   comfy?: ComfyImageOptions;
   /**
-   * Reference/baseline images for generic (non-NovelAI/ComfyUI) providers, e.g. OpenAI `image`/`image[]`. Sent through
-   * the provider's reference parameter when one is available; ignored by families that take no reference image.
+   * Reference/baseline images for generic (non-NovelAI/ComfyUI) providers. Sent as `parameters.referenceImages`
+   * (raw base64), the host's manual-only reference path that its providers read into `image`/`image[]`/edits;
+   * ignored by families whose provider cannot consume a reference image.
    */
   references?: ImageBytes[];
   ownerCharacterId?: string;

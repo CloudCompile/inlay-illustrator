@@ -82,7 +82,7 @@ export interface FakeHost {
   /* image generation */
   imageConnections: ImageGenConnectionDTO[];
   imageModels: Record<string, Array<{ id: string; label: string }>>;
-  /** Served by imageGen.getProviders: capability schemas used to discover a provider's reference-image parameter. */
+  /** Served by imageGen.getProviders: the capability schemas Lumiverse exposes for each image provider. */
   imageProviders: Array<{ id: string; capabilities: { parameters: Record<string, { type: string }> } }>;
   imageGenCalls: FakeImageGenCall[];
   imageGenQueue: Array<Scripted<ImageGenRequestDTO, ImageGenResultDTO>>;
